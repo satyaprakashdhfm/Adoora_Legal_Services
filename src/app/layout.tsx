@@ -9,18 +9,11 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: `${firm.name} — Launching Soon`,
-  description: `${firm.tagline}. ${firm.years} years of collective legal experience across Andhra Pradesh, Karnataka and Telangana. Our full website is coming soon.`,
-  keywords: [
-    "ADOORA Legal Services",
-    "corporate law firm South India",
-    "Hyderabad law firm",
-    "Bangalore law firm",
-    "Guntur advocates",
-  ],
+  title: `${firm.name} — Coming Soon`,
+  description: `${firm.tagline}. Our new website is coming soon — reach us at ${firm.phone} or ${firm.email}.`,
   openGraph: {
-    title: `${firm.name} — Launching Soon`,
-    description: `${firm.tagline}. ${firm.years} years of collective legal experience across South India.`,
+    title: `${firm.name} — Coming Soon`,
+    description: `${firm.tagline}. Our new website is coming soon.`,
     type: "website",
   },
 };
