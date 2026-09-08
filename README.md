@@ -1,8 +1,10 @@
 # ADOORA Legal Services — Coming Soon
 
+**Live:** https://adoora-legal-services.vercel.app
+
 A single-page holding site for **ADOORA Legal Services**, built with Next.js (App Router) and
-Tailwind CSS, and deployed on Vercel. It announces the upcoming full website while still giving
-visitors the essentials: what the firm does, where it operates, and how to reach it.
+Tailwind CSS, and deployed on Vercel. It announces the upcoming full website and gives visitors
+the two ways to reach the firm.
 
 ## Stack
 
@@ -32,36 +34,35 @@ npm run lint      # eslint
 src/
   app/
     layout.tsx     # fonts, metadata, <html> shell
-    page.tsx       # the entire single-page site
+    page.tsx       # the single coming-soon section
     globals.css    # brand tokens (@theme) and animations
     icon.svg       # favicon
   lib/
-    content.ts     # all copy: firm details, practice areas, offices, values
+    content.ts     # firm name, tagline, regions, phone and email
 ```
 
-Editing the copy is a `src/lib/content.ts` change — the phone number, office addresses,
-practice areas and stats all live there.
+Copy changes go in `src/lib/content.ts` — the phone number, email address and regions all live
+there, so the page itself rarely needs editing.
 
 ## Brand
 
 | Token | Value | Use |
 | --- | --- | --- |
 | `--color-ink` | `#0d0f12` | page background |
-| `--color-ink-soft` | `#14171c` | alternating section background |
+| `--color-ink-soft` | `#14171c` | raised surfaces |
 | `--color-ink-line` | `#23272f` | borders and dividers |
 | `--color-gold` | `#f5b800` | primary accent |
 | `--color-gold-deep` | `#e6a600` | accent hover |
 
-## Deploying to Vercel
+## Deploying
 
-1. Push this branch to GitHub.
-2. In Vercel, **Add New → Project** and import `satyaprakashdhfm/Adoora_Legal_Services`.
-3. Vercel auto-detects Next.js — framework preset **Next.js**, build `npm run build`, no
-   environment variables are required.
-4. Deploy. Every push to the connected branch triggers a new deployment; other branches get
-   preview URLs.
+The Vercel project `adoora-legal-services` is connected to this repository, with `main` as the
+production branch. **Pushing to `main` deploys to production automatically** — no manual step is
+needed. Pushes to any other branch get their own preview URL.
 
-Or from the CLI:
+Vercel auto-detects Next.js (build `npm run build`); no environment variables are required.
+
+To deploy manually from a local checkout if ever needed:
 
 ```bash
 npx vercel        # preview deployment
