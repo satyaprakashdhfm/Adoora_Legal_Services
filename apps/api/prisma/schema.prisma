@@ -1,0 +1,214 @@
+// ADOORA Legal Services — API data model.
+//
+// Scope note: this covers what the public website needs today (intake,
+// applications, subscriptions) plus the auth and audit foundation the admin
+// portal will sit on. The client portal, document storage and RAG/chatbot
+// models are deliberately not created yet — see docs/ARCHITECTURE.md for how
+// they attach to this schema when we get there. Empty tables are migration
+// noise; we add them when the feature lands.
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "../generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+  // The connection URL lives in prisma.config.ts (Prisma 7+).
+}
+
+// ---------------------------------------------------------------------------
+// Staff accounts and audit
+// ---------------------------------------------------------------------------
+
+enum UserRole {
+  OWNER // full access, can manage other users
+  ADMIN // manage enquiries, applications, content
+  EDITOR // content only
+}
+
+model User {
+  id           String    @id @default(uuid()) @db.Uuid
+  email        String    @unique
+  name         String
+  passwordHash String
+  role         UserRole  @default(EDITOR)
+  isActive     Boolean   @default(true)
+  lastLoginAt  DateTime?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  articles  Article[]
+  auditLogs AuditLog[]
+
+  @@index([email])
+}
+
+/// Append-only record of staff actions. Enquiries can contain privileged
+/// information, so who read or changed what needs to be reconstructable.
+model AuditLog {
+  id         String   @id @default(uuid()) @db.Uuid
+  actorId    String?  @db.Uuid
+  actor      User?    @relation(fields: [actorId], references: [id], onDelete: SetNull)
+  action     String // e.g. "enquiry.status_changed"
+  entityType String // e.g. "Enquiry"
+  entityId   String?
+  /// Before/after values, or request context for unauthenticated actions.
+  metadata   Json?
+  ipAddress  String?
+  createdAt  DateTime @default(now())
+
+  @@index([entityType, entityId])
+  @@index([actorId, createdAt])
+}
+
+// ---------------------------------------------------------------------------
+// Client intake
+// ---------------------------------------------------------------------------
+
+enum EnquiryStatus {
+  NEW
+  ACKNOWLEDGED
+  CONFLICT_CHECK
+  ENGAGED
+  DECLINED
+  CLOSED
+}
+
+/// A website enquiry. Not a client record: an enquiry becomes a client only
+/// after the conflicts check clears and an engagement is confirmed in writing.
+model Enquiry {
+  id          String        @id @default(uuid()) @db.Uuid
+  reference   String        @unique // human-quotable, e.g. ENQ-2A4F19
+  name        String
+  email       String
+  phone       String
+  matterType  String
+  description String        @db.Text
+  status      EnquiryStatus @default(NEW)
+
+  /// Explicit DPDP consent, plus when it was given. Both are required for
+  /// submission and are retained as evidence of the consent.
+  consent     Boolean
+  consentAt   DateTime
+
+  /// Request context, kept for abuse investigation and deleted with the record.
+  ipAddress   String?
+  userAgent   String?
+
+  /// Internal handling. Never exposed on a public endpoint.
+  assignedTo  String?
+  internalNote String?      @db.Text
+  acknowledgedAt DateTime?
+
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+
+  @@index([status, createdAt])
+  @@index([email])
+}
+
+// ---------------------------------------------------------------------------
+// Careers
+// ---------------------------------------------------------------------------
+
+enum ApplicationStatus {
+  NEW
+  REVIEWING
+  SHORTLISTED
+  REJECTED
+  WITHDRAWN
+}
+
+model CareerApplication {
+  id         String            @id @default(uuid()) @db.Uuid
+  reference  String            @unique // e.g. APP-7C1B03
+  name       String
+  email      String
+  phone      String
+  role       String
+  experience String
+  /// Bar Council enrolment number, where the applicant is enrolled.
+  enrolment  String?
+  message    String            @db.Text
+  status     ApplicationStatus @default(NEW)
+
+  consent    Boolean
+  consentAt  DateTime
+
+  ipAddress  String?
+  userAgent  String?
+
+  internalNote String?         @db.Text
+
+  createdAt  DateTime          @default(now())
+  updatedAt  DateTime          @updatedAt
+
+  @@index([status, createdAt])
+  @@index([email])
+}
+
+// ---------------------------------------------------------------------------
+// Newsletter
+// ---------------------------------------------------------------------------
+
+model Subscriber {
+  id             String    @id @default(uuid()) @db.Uuid
+  email          String    @unique
+  name           String?
+  /// Double opt-in: a subscriber is only mailed once confirmedAt is set.
+  confirmToken   String?   @unique
+  confirmedAt    DateTime?
+  unsubscribedAt DateTime?
+  /// Practice-area slugs the subscriber asked to hear about. Empty means all.
+  interests      String[]  @default([])
+
+  ipAddress      String?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  @@index([confirmedAt])
+}
+
+// ---------------------------------------------------------------------------
+// Content (CMS for Insights)
+// ---------------------------------------------------------------------------
+
+enum ArticleStatus {
+  DRAFT
+  REVIEW
+  PUBLISHED
+  ARCHIVED
+}
+
+/// Mirrors the shape of `apps/web/src/content/insights.ts` so the site can be
+/// switched from file-based content to the database without a page rewrite.
+model Article {
+  id           String        @id @default(uuid()) @db.Uuid
+  slug         String        @unique
+  title        String
+  category     String
+  summary      String        @db.Text
+  /// Block array — see the `Block` type in the web app.
+  body         Json
+  keyTakeaways String[]      @default([])
+  readingTime  String?
+  /// Practice-area and industry slugs, used for cross-linking.
+  practices    String[]      @default([])
+  industries   String[]      @default([])
+
+  status       ArticleStatus @default(DRAFT)
+  publishedAt  DateTime?
+
+  authorId     String?       @db.Uuid
+  author       User?         @relation(fields: [authorId], references: [id], onDelete: SetNull)
+  /// Person slug from the web app's people.ts, for the by-line, where the
+  /// author is not a portal user.
+  authorSlug   String?
+
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+
+  @@index([status, publishedAt])
+  @@index([slug])
+}
