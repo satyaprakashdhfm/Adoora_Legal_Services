@@ -1,0 +1,152 @@
+@import "tailwindcss";
+
+/*
+ * ADOORA brand tokens.
+ *
+ * The holding page was dark ink with a bright gold accent. The full site
+ * inverts that — a light, editorial ground with ink for authority and gold
+ * used sparingly — because a content-heavy law firm site has to be readable
+ * for long stretches. The gold is split into two values: `gold` passes
+ * contrast on light surfaces, `gold-bright` is for dark bands only.
+ */
+@theme {
+  --color-ink: #0f141c;
+  --color-ink-mid: #1b2330;
+  --color-ink-soft: #2b3545;
+  --color-slate: #55606f;
+  --color-slate-light: #7b8695;
+
+  --color-gold: #8a6a12;
+  --color-gold-deep: #6f5410;
+  --color-gold-bright: #f5b800;
+
+  --color-paper: #ffffff;
+  --color-paper-warm: #faf8f4;
+  --color-paper-tint: #f3efe7;
+  --color-line: #e4dfd4;
+  --color-line-strong: #cec7b8;
+
+  --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+  --font-serif: var(--font-serif-display), ui-serif, Georgia, serif;
+}
+
+html {
+  scroll-behavior: smooth;
+  /* Header is sticky; anchor targets need clearance. */
+  scroll-padding-top: 7rem;
+}
+
+body {
+  background: var(--color-paper);
+  color: var(--color-ink);
+  -webkit-font-smoothing: antialiased;
+}
+
+::selection {
+  background: var(--color-gold-bright);
+  color: var(--color-ink);
+}
+
+/* Visible focus for keyboard users everywhere (WCAG 2.1 AA). */
+:focus-visible {
+  outline: 2px solid var(--color-gold);
+  outline-offset: 2px;
+  border-radius: 2px;
+}
+
+/* Utility: the thin gold rule that sits under section eyebrows. */
+.eyebrow {
+  font-size: 0.6875rem;
+  font-weight: 600;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+}
+
+/* Long-form article body. Applied to the insight renderer. */
+.prose-adoora p {
+  margin-block: 1.15rem;
+  line-height: 1.75;
+  color: var(--color-ink-soft);
+}
+
+.prose-adoora h2 {
+  margin-block: 2.25rem 0.75rem;
+  font-family: var(--font-serif);
+  font-size: 1.5rem;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  color: var(--color-ink);
+}
+
+.prose-adoora ul,
+.prose-adoora ol {
+  margin-block: 1.15rem;
+  padding-inline-start: 1.35rem;
+  line-height: 1.7;
+  color: var(--color-ink-soft);
+}
+
+.prose-adoora ul {
+  list-style: disc;
+}
+
+.prose-adoora ol {
+  list-style: decimal;
+}
+
+.prose-adoora li {
+  margin-block: 0.5rem;
+  padding-inline-start: 0.25rem;
+}
+
+.prose-adoora li::marker {
+  color: var(--color-gold);
+}
+
+@keyframes rise {
+  from {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.rise {
+  animation: rise 0.6s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.fade-in {
+  animation: fade-in 0.4s ease both;
+}
+
+/* Hero slide cross-fade. The active slide is opacity-1, others 0. */
+.hero-slide {
+  transition: opacity 900ms ease-in-out;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+
+  .rise,
+  .fade-in {
+    animation: none;
+  }
+
+  .hero-slide {
+    transition: none;
+  }
+}
