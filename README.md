@@ -1,70 +1,143 @@
-# ADOORA Legal Services — Coming Soon
+# ADOORA Legal Services
 
-**Live:** https://adoora-legal-services.vercel.app
+The firm's website and the services behind it.
 
-A single-page holding site for **ADOORA Legal Services**, built with Next.js (App Router) and
-Tailwind CSS, and deployed on Vercel. It announces the upcoming full website and gives visitors
-the two ways to reach the firm.
+| App | Stack | Purpose |
+| --- | --- | --- |
+| [`apps/web`](apps/web) | Next.js 16 (App Router), Tailwind v4 | Public website |
+| [`apps/api`](apps/api) | Express 5, Prisma 7, Postgres | Forms, auth, admin API |
 
-## Stack
+`docs/ARCHITECTURE.md` covers how they fit together, the roadmap for the admin
+and client portals, and the known gaps.
 
-- Next.js 16 (App Router, TypeScript)
-- Tailwind CSS v4
-- `next/font` (Inter) — no external CSS or icon CDNs, everything is self-hosted
-- Static by default: the page is a server component with no client-side JavaScript
+## Branches
+
+- **`main`** — the single-page holding site, deployed to Vercel at
+  <https://adoora-legal-services.vercel.app>. Pushing to `main` deploys to
+  production. Leave it alone until the new site is signed off.
+- **`dev`** — the full website and API, deployed on Railway. All current work
+  happens here.
+
+> When `dev` merges to `main`, the Vercel project's **Root Directory** must be
+> changed to `apps/web`. The repository root is no longer a Next.js app, so the
+> Vercel build will fail otherwise.
 
 ## Getting started
 
+The two apps install separately — there is no workspace linking them.
+
 ```bash
+# Website
+cd apps/web
 npm install
-npm run dev       # http://localhost:3000
+cp .env.example .env.local
+npm run dev                 # http://localhost:3000
+
+# API (in a second terminal)
+cd apps/api
+npm install
+cp .env.example .env        # then set DATABASE_URL
+npm run migrate             # create the schema
+npm run dev                 # http://localhost:4000
 ```
 
-Other scripts:
+The website works without the API running — every page is prerendered. Only
+the contact and careers forms need it.
+
+Create the first staff account for the admin API:
 
 ```bash
-npm run build     # production build
-npm run start     # serve the production build
-npm run lint      # eslint
+cd apps/api
+SEED_OWNER_EMAIL=you@firm.com SEED_OWNER_PASSWORD='a-long-password' npm run seed
 ```
 
-## Project layout
+## Website structure
 
-```
-src/
-  app/
-    layout.tsx     # fonts, metadata, <html> shell
-    page.tsx       # the single coming-soon section
-    globals.css    # brand tokens (@theme) and animations
-    icon.svg       # favicon
-  lib/
-    content.ts     # firm name, tagline, regions, phone and email
-```
+| Route | Content |
+| --- | --- |
+| `/` | Hero, practice areas, domains, insights, recognitions, offices, careers |
+| `/services` · `/services/[slug]` | 8 practice areas, each with a tabbed detail page |
+| `/domains` · `/domains/[slug]` | 8 industry domains, same tabbed template |
+| `/insights` · `/insights/[slug]` | Explainers and regulatory updates |
+| `/achievements` | Recognitions by year and awarding body |
+| `/about` | Firm story, approach, compliance note, lawyer profiles |
+| `/contact` · `/careers` | Intake and application forms |
+| `/disclaimer` `/privacy` `/cookies` `/terms` | Policies |
+| `/notice` | Shown when a visitor declines the disclaimer |
 
-Copy changes go in `src/lib/content.ts` — the phone number, email address and regions all live
-there, so the page itself rarely needs editing.
+Content is typed data in `apps/web/src/content` — practice areas, industries,
+insights, people, awards and policies. Editing copy means editing those files,
+not the pages. The shapes match the API's `Article` model so the CMS can take
+over later without a page rewrite.
+
+## Bar Council of India compliance
+
+Indian advocates may not solicit work or advertise, and the site is built
+around that:
+
+- A **disclaimer gate** on first visit. Acceptance is stored in a first-party
+  cookie; declining routes to `/notice`, which carries no firm information and
+  hides the site navigation.
+- **Granular cookie consent** — strictly necessary, analytics, marketing.
+  Nothing optional is set without an opt-in, and continued browsing is not
+  treated as consent.
+- Copy carries **no testimonials, no superlatives and no outcome claims**.
+  Matter descriptions omit client names and state that they are not
+  representations about outcomes. Awards are listed factually with the year and
+  awarding body.
+- The footer disclaimer appears on every page, and every article carries a
+  not-legal-advice notice.
+
+The gate is a compliance convention, not an access control — the markup behind
+it is already in the page. Do not treat it as a security boundary.
+
+## Deploying
+
+### Railway (`dev`)
+
+Project **AdooraLegalServices**. The Postgres service is provisioned; the two
+app services are Git-connected to `dev`.
+
+| Service | Root directory | Start | Health check |
+| --- | --- | --- | --- |
+| `adoora-api` | `apps/api` | `npm start` | `/health` |
+| `adoora-web` | `apps/web` | `npm start` | `/` |
+
+`apps/*/railway.json` carries the build and health-check config. `npm start` on
+the API runs `prisma migrate deploy` first, so a deploy applies pending
+migrations before serving traffic.
+
+Environment variables are listed in `docs/ARCHITECTURE.md`. Set
+`DATABASE_URL` on the API as a reference to the Postgres service
+(`${{Postgres.DATABASE_URL}}`) rather than pasting the value, so it follows
+credential rotation.
+
+### Vercel (`main`)
+
+Unchanged — the holding page deploys from `main` automatically.
 
 ## Brand
 
 | Token | Value | Use |
 | --- | --- | --- |
-| `--color-ink` | `#0d0f12` | page background |
-| `--color-ink-soft` | `#14171c` | raised surfaces |
-| `--color-ink-line` | `#23272f` | borders and dividers |
-| `--color-gold` | `#f5b800` | primary accent |
-| `--color-gold-deep` | `#e6a600` | accent hover |
+| `--color-ink` | `#0f141c` | Headings, dark bands |
+| `--color-gold` | `#8a6a12` | Accent on light surfaces (contrast-safe) |
+| `--color-gold-bright` | `#f5b800` | Accent on dark bands only |
+| `--color-paper` | `#ffffff` | Page ground |
+| `--color-paper-warm` | `#faf8f4` | Raised surfaces |
+| `--color-line` | `#e4dfd4` | Borders and dividers |
 
-## Deploying
+Source Serif 4 for display, Inter for body, both self-hosted through
+`next/font`. Tokens live in `apps/web/src/app/globals.css`.
 
-The Vercel project `adoora-legal-services` is connected to this repository, with `main` as the
-production branch. **Pushing to `main` deploys to production automatically** — no manual step is
-needed. Pushes to any other branch get their own preview URL.
+## Before go-live
 
-Vercel auto-detects Next.js (build `npm run build`); no environment variables are required.
-
-To deploy manually from a local checkout if ever needed:
-
-```bash
-npx vercel        # preview deployment
-npx vercel --prod # production deployment
-```
+- Replace the placeholder lawyer profiles and Bar enrolment numbers in
+  `apps/web/src/content/people.ts`.
+- Confirm the office addresses in `apps/web/src/content/firm.ts`.
+- Have the firm sign off the policy pages in
+  `apps/web/src/content/policies.ts`, and name the analytics provider in the
+  cookie policy.
+- Configure enquiry notification email (`NOTIFY_EMAIL` plus a mail provider).
+- Point `NEXT_PUBLIC_SITE_URL` at the real domain — canonicals and
+  `sitemap.xml` are generated from it.
