@@ -3,6 +3,8 @@
 Node + Express + Prisma service backing the ADOORA Legal Services website, and
 the foundation for the admin and client portals.
 
+Deployed from `dev` at <https://adoora-api-production.up.railway.app>.
+
 ## Endpoints
 
 | Method | Path | Auth | Purpose |
