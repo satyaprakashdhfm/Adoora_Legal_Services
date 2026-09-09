@@ -17,6 +17,8 @@ and client portals, and the known gaps.
   production. Leave it alone until the new site is signed off.
 - **`dev`** — the full website and API, deployed on Railway. All current work
   happens here.
+  - Website: <https://adoora-web-production.up.railway.app>
+  - API: <https://adoora-api-production.up.railway.app>
 
 > When `dev` merges to `main`, the Vercel project's **Root Directory** must be
 > changed to `apps/web`. The repository root is no longer a Next.js app, so the
@@ -102,6 +104,11 @@ app services are Git-connected to `dev`.
 | --- | --- | --- | --- |
 | `adoora-api` | `apps/api` | `npm start` | `/health` |
 | `adoora-web` | `apps/web` | `npm start` | `/` |
+
+Both are Git-connected to `dev` and redeploy on push. Deploy from Git rather
+than uploading a directory: a tarball upload is rooted at whatever you upload,
+which collides with the service's Root Directory and fails in `railpack
+prepare`.
 
 `apps/*/railway.json` carries the build and health-check config. `npm start` on
 the API runs `prisma migrate deploy` first, so a deploy applies pending
