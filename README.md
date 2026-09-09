@@ -114,6 +114,21 @@ prepare`.
 the API runs `prisma migrate deploy` first, so a deploy applies pending
 migrations before serving traffic.
 
+#### If a deploy fails right after touching the GitHub connection
+
+Re-authorising the Railway GitHub App resets each service's deploy branch to
+the repository's **default branch**, which is `main`. `main` is still the
+single-page holding site and has no `apps/` directory, so with a Root
+Directory of `apps/api` or `apps/web` the build dies immediately in
+`railpack prepare`.
+
+Symptom: both services fail at the same second, on a commit that is `main`'s
+HEAD rather than `dev`'s.
+
+Fix: Settings → Source → Branch, set it back to `dev` on both services. The
+running version keeps serving throughout — Railway does not retire a healthy
+deploy for a failed build — so this is never an outage, only a stuck version.
+
 Environment variables are listed in `docs/ARCHITECTURE.md`. Set
 `DATABASE_URL` on the API as a reference to the Postgres service
 (`${{Postgres.DATABASE_URL}}`) rather than pasting the value, so it follows
