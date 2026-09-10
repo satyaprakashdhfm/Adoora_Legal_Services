@@ -78,7 +78,7 @@ export default function Home() {
         aria-label="The firm at a glance"
         className="border-b border-line bg-paper-warm"
       >
-        <div className="mx-auto grid max-w-7xl grid-cols-2 gap-y-10 px-6 py-12 lg:grid-cols-4">
+        <div className="container-page grid grid-cols-2 gap-y-10 py-12 lg:grid-cols-4">
           {stats.map((stat, index) => {
             /* Hairlines divide the columns, so the first cell in each row
                carries none: index 0 at every width, and index 2 only until
@@ -92,11 +92,7 @@ export default function Home() {
 
             return (
               <div key={stat.label} className={`px-2 lg:px-8 ${divider}`}>
-                <p
-                  className={`font-serif text-3xl font-semibold sm:text-4xl ${
-                    index === 0 ? "text-gold-deep" : "text-ink"
-                  }`}
-                >
+                <p className="font-serif text-3xl font-semibold text-gold-deep sm:text-4xl">
                   {stat.value}
                 </p>
                 <p className="mt-2 text-[0.7rem] uppercase tracking-[0.14em] text-slate">
@@ -109,7 +105,7 @@ export default function Home() {
       </section>
 
       {/* About — the heading and standing line sit opposite the prose. */}
-      <section className="mx-auto max-w-7xl px-6 py-20 sm:py-24">
+      <section className="container-page py-20 sm:py-24">
         <div className="grid gap-12 lg:grid-cols-[1fr_1.1fr] lg:gap-20">
           <div>
             <SectionHeading
@@ -166,7 +162,7 @@ export default function Home() {
 
       {/* Practice areas — one card per practice, in a four-up grid. */}
       <section className="border-y border-line bg-paper-warm">
-        <div className="mx-auto max-w-7xl px-6 py-20 sm:py-24">
+        <div className="container-page py-20 sm:py-24">
           <div className="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
             <SectionHeading
               eyebrow="Services"
@@ -225,7 +221,7 @@ export default function Home() {
 
       {/* Industry domains — dark tiles, name and sector line stacked at the
           foot of each. */}
-      <section className="mx-auto max-w-7xl px-6 py-20 sm:py-24">
+      <section className="container-page py-20 sm:py-24">
         <div className="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
           <SectionHeading
             eyebrow="Domains"
@@ -275,7 +271,7 @@ export default function Home() {
 
       {/* Insights */}
       <section className="border-y border-line bg-paper-warm">
-        <div className="mx-auto max-w-7xl px-6 py-20 sm:py-24">
+        <div className="container-page py-20 sm:py-24">
           <div className="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
             <SectionHeading
               eyebrow="Insights"
@@ -302,7 +298,7 @@ export default function Home() {
       </section>
 
       {/* Awards */}
-      <section className="mx-auto max-w-7xl px-6 py-20 sm:py-24">
+      <section className="container-page py-20 sm:py-24">
         <div className="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
           <SectionHeading
             eyebrow="Achievements"
@@ -341,7 +337,7 @@ export default function Home() {
 
       {/* Locations + Careers teaser */}
       <section className="border-t border-line bg-paper-warm">
-        <div className="mx-auto grid max-w-7xl gap-12 px-6 py-20 lg:grid-cols-2 lg:gap-20 sm:py-24">
+        <div className="container-page grid gap-12 py-20 lg:grid-cols-2 lg:gap-20 sm:py-24">
           <div>
             <SectionHeading eyebrow="Locations" title="Where we are" />
             <ul className="mt-8 space-y-6">

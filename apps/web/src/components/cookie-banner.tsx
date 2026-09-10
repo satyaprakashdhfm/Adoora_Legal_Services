@@ -56,7 +56,7 @@ export function CookieBanner() {
       aria-label="Cookie preferences"
       className="fade-in fixed inset-x-0 bottom-0 z-50 border-t border-line bg-paper shadow-[0_-8px_30px_rgba(15,20,28,0.08)]"
     >
-      <div className="mx-auto max-w-7xl px-6 py-5">
+      <div className="container-page py-5">
         <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
           <div className="max-w-2xl">
             <h2 className="text-sm font-semibold text-ink">

@@ -197,13 +197,13 @@ export default async function IndustryPage(
         ]}
       />
 
-      <div className="mx-auto max-w-7xl px-6">
+      <div className="container-page">
         <Tabs tabs={tabs} />
       </div>
 
       {relatedPractices.length > 0 && (
         <section className="border-t border-line bg-paper-warm">
-          <div className="mx-auto max-w-7xl px-6 py-16">
+          <div className="container-page py-16">
             <h2 className="eyebrow text-gold-deep">Related services</h2>
             <p className="mt-3 max-w-2xl font-serif text-2xl font-semibold tracking-tight text-ink">
               Practice areas that serve this domain

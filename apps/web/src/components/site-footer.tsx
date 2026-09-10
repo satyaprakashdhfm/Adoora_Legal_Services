@@ -30,7 +30,7 @@ const icons = {
 export function SiteFooter() {
   return (
     <footer className="mt-auto bg-ink text-white/70">
-      <div className="mx-auto max-w-7xl px-6 py-16">
+      <div className="container-page py-16">
         <div className="grid gap-12 lg:grid-cols-[1.1fr_2fr]">
           <div>
             <Wordmark tone="dark" />

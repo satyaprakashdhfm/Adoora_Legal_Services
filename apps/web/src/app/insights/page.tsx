@@ -37,7 +37,7 @@ export default function InsightsPage() {
         </ul>
       </PageHero>
 
-      <div className="mx-auto max-w-7xl px-6 py-16 sm:py-20">
+      <div className="container-page py-16 sm:py-20">
         {/* Lead article gets a wider treatment. */}
         {lead && (
           <article className="group grid gap-8 border-b border-line pb-14 lg:grid-cols-[1.4fr_1fr] lg:gap-14">

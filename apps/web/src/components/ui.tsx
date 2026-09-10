@@ -298,7 +298,7 @@ export function CtaBand({
         className="pointer-events-none absolute -right-24 -top-24 -z-10 h-96 w-96 rounded-full bg-gold/10 blur-3xl"
       />
 
-      <div className="mx-auto flex max-w-7xl flex-col gap-10 px-6 py-16 lg:flex-row lg:items-center lg:justify-between">
+      <div className="container-page flex flex-col gap-10 py-16 lg:flex-row lg:items-center lg:justify-between">
         <div className="max-w-2xl">
           <h2 className="font-serif text-3xl font-semibold tracking-tight text-balance sm:text-4xl">
             {title}
@@ -370,7 +370,7 @@ export function PageHero({
         aria-hidden="true"
         className="pointer-events-none absolute -left-32 top-[-14rem] h-[28rem] w-[28rem] rounded-full bg-gold-bright/10 blur-[120px]"
       />
-      <div className="relative mx-auto max-w-7xl px-6 py-14 sm:py-16">
+      <div className="container-page relative py-14 sm:py-16">
         {trail && <Breadcrumbs trail={trail} />}
         {eyebrow && (
           <p className="eyebrow mt-6 inline-flex items-center gap-2.5 text-gold-bright">

@@ -60,6 +60,28 @@ body {
   border-radius: 2px;
 }
 
+/*
+ * The page container. Every band on the site — header, hero, sections, footer
+ * — uses this so their content stays on one vertical line. It runs wider than
+ * Tailwind's `max-w-7xl` (80rem) did, because on a large display that left
+ * roughly 335px of dead gutter either side; the gutter now grows with the
+ * viewport instead of the content stopping short of it.
+ */
+@utility container-page {
+  width: 100%;
+  max-width: 100rem;
+  margin-inline: auto;
+  padding-inline: 1.5rem;
+
+  @media (min-width: 1024px) {
+    padding-inline: 2.5rem;
+  }
+
+  @media (min-width: 1536px) {
+    padding-inline: 4rem;
+  }
+}
+
 /* Utility: the thin gold rule that sits under section eyebrows. */
 .eyebrow {
   font-size: 0.6875rem;

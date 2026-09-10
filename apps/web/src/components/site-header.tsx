@@ -84,7 +84,7 @@ export function SiteHeader() {
     <header className="sticky top-0 z-40 border-b border-line bg-paper/95 backdrop-blur supports-[backdrop-filter]:bg-paper/85">
       {/* Utility bar — contact details, not a call to action. */}
       <div className="hidden border-b border-line bg-paper-warm lg:block">
-        <div className="mx-auto flex max-w-7xl items-center justify-between gap-6 px-6 py-2.5 text-xs text-slate">
+        <div className="container-page flex items-center justify-between gap-6 py-2.5 text-xs text-slate">
           <p className="flex items-center gap-1.5">
             <UtilityIcon path={icons.pin} />
             {firm.cities}
@@ -111,7 +111,7 @@ export function SiteHeader() {
       <nav
         ref={navRef}
         aria-label="Primary"
-        className="mx-auto max-w-7xl px-6"
+        className="container-page"
         onMouseLeave={() => setOpenMenu(null)}
       >
         <div className="flex items-center justify-between gap-6 py-4">

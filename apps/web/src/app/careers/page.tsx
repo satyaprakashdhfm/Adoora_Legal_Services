@@ -87,7 +87,7 @@ export default function CareersPage() {
       />
 
       {/* Culture */}
-      <section className="mx-auto max-w-7xl px-6 py-20">
+      <section className="container-page py-20">
         <div className="grid gap-12 lg:grid-cols-[1fr_1.15fr] lg:gap-20">
           <SectionHeading
             eyebrow="Working here"
@@ -119,7 +119,7 @@ export default function CareersPage() {
 
       {/* Roles */}
       <section className="border-y border-line bg-paper-warm">
-        <div className="mx-auto max-w-7xl px-6 py-20">
+        <div className="container-page py-20">
           <SectionHeading
             eyebrow="Open roles"
             title="Current vacancies"

@@ -142,7 +142,7 @@ export default async function InsightPage(
         </div>
       </PageHero>
 
-      <div className="mx-auto max-w-7xl px-6 py-14 sm:py-16">
+      <div className="container-page py-14 sm:py-16">
         <div className="grid gap-12 lg:grid-cols-[1fr_19rem] lg:gap-16">
           <article>
             <p className="border-l-2 border-gold pl-6 text-lg leading-relaxed text-ink">

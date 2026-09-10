@@ -114,7 +114,7 @@ export function Hero() {
         <div className="absolute inset-0 bg-linear-to-t from-ink/80 via-transparent to-ink/40" />
       </div>
 
-      <div className="relative mx-auto max-w-7xl px-6 py-20 sm:py-28 lg:py-36">
+      <div className="container-page relative py-20 sm:py-28 lg:py-36">
         <div className="max-w-2xl">
           {/* Slides are stacked so the container height does not jump between
               headings of different lengths. */}
@@ -161,8 +161,8 @@ export function Hero() {
             })}
           </div>
 
-          {/* Numbered slide controls, each with a rule that fills when active. */}
-          <div className="mt-14 flex items-center gap-8">
+          {/* Slide controls: a rule per slide, filling gold when active. */}
+          <div className="mt-14 flex items-center gap-3">
             {slides.map((slide, slideIndex) => {
               const isActive = slideIndex === index;
 
@@ -173,21 +173,16 @@ export function Hero() {
                   onClick={() => setIndex(slideIndex)}
                   aria-label={`Show slide ${slideIndex + 1}: ${slide.eyebrow}`}
                   aria-current={isActive}
-                  className="group flex flex-col gap-2"
+                  className="group py-2"
                 >
                   <span
                     aria-hidden="true"
-                    className={`h-0.5 w-9 transition-colors ${
-                      isActive ? "bg-gold" : "bg-white/25 group-hover:bg-white/50"
+                    className={`block h-0.5 transition-all ${
+                      isActive
+                        ? "w-12 bg-gold"
+                        : "w-8 bg-white/25 group-hover:bg-white/50"
                     }`}
                   />
-                  <span
-                    className={`text-xs font-semibold tabular-nums transition-colors ${
-                      isActive ? "text-white" : "text-white/45"
-                    }`}
-                  >
-                    {String(slideIndex + 1).padStart(2, "0")}
-                  </span>
                 </button>
               );
             })}
@@ -198,7 +193,7 @@ export function Hero() {
         </div>
 
         {/* Standing line from the firm's own collateral. */}
-        <p className="mt-14 max-w-[13rem] font-serif text-sm italic leading-relaxed text-white/60 lg:absolute lg:bottom-14 lg:right-6 lg:mt-0 lg:text-right">
+        <p className="mt-14 max-w-[13rem] font-serif text-sm italic leading-relaxed text-white/60 lg:absolute lg:bottom-14 lg:right-10 lg:mt-0 lg:text-right 2xl:right-16">
           &ldquo;{firm.heroQuote}&rdquo;
         </p>
       </div>

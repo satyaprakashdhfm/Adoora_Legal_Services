@@ -20,7 +20,7 @@ export default function ContactPage() {
         trail={[{ label: "Home", href: "/" }, { label: "Contact Us" }]}
       />
 
-      <div className="mx-auto max-w-7xl px-6 py-16 sm:py-20">
+      <div className="container-page py-16 sm:py-20">
         <div className="grid gap-12 lg:grid-cols-[1.3fr_1fr] lg:gap-16">
           <div>
             <h2 className="font-serif text-2xl font-semibold tracking-tight text-ink">

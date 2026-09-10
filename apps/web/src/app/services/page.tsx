@@ -23,7 +23,7 @@ export default function ServicesPage() {
         trail={[{ label: "Home", href: "/" }, { label: "Services" }]}
       />
 
-      <div className="mx-auto max-w-7xl px-6 py-16 sm:py-20">
+      <div className="container-page py-16 sm:py-20">
         <div className="space-y-16">
           {practiceGroups.map((group) => (
             <section key={group}>

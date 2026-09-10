@@ -23,7 +23,7 @@ export default function AboutPage() {
       />
 
       {/* Story */}
-      <section className="mx-auto max-w-7xl px-6 py-20">
+      <section className="container-page py-20">
         <div className="grid gap-12 lg:grid-cols-[1fr_1.15fr] lg:gap-20">
           <SectionHeading eyebrow="Our story" title="How the firm came together" />
           <div className="space-y-5 leading-relaxed text-ink-soft">
@@ -57,7 +57,7 @@ export default function AboutPage() {
 
       {/* Approach */}
       <section className="border-y border-line bg-paper-warm">
-        <div className="mx-auto max-w-7xl px-6 py-20">
+        <div className="container-page py-20">
           <SectionHeading
             eyebrow="Our approach"
             title="Four things we try to do consistently"
@@ -118,7 +118,7 @@ export default function AboutPage() {
       </section>
 
       {/* Governance & compliance */}
-      <section className="mx-auto max-w-7xl px-6 py-20">
+      <section className="container-page py-20">
         <div className="grid gap-12 lg:grid-cols-[1fr_1.15fr] lg:gap-20">
           <SectionHeading
             eyebrow="Governance & compliance"
@@ -162,7 +162,7 @@ export default function AboutPage() {
 
       {/* People */}
       <section id="people" className="border-y border-line bg-paper-warm">
-        <div className="mx-auto max-w-7xl px-6 py-20">
+        <div className="container-page py-20">
           <SectionHeading
             eyebrow="Our people"
             title="The lawyers who lead each practice"
@@ -292,7 +292,7 @@ export default function AboutPage() {
       </section>
 
       {/* Offices */}
-      <section className="mx-auto max-w-7xl px-6 py-20">
+      <section className="container-page py-20">
         <SectionHeading eyebrow="Offices" title="Where to find us" />
         <ul className="mt-12 grid gap-5 sm:grid-cols-3">
           {offices.map((office) => (

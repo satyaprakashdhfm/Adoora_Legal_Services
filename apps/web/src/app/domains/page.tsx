@@ -20,7 +20,7 @@ export default function DomainsPage() {
         trail={[{ label: "Home", href: "/" }, { label: "Domains" }]}
       />
 
-      <div className="mx-auto max-w-7xl px-6 py-16 sm:py-20">
+      <div className="container-page py-16 sm:py-20">
         <ul className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
           {industries.map((industry) => (
             <li key={industry.slug}>
