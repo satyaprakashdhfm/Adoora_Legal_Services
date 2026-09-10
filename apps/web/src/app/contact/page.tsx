@@ -87,12 +87,6 @@ export default function ContactPage() {
                       >
                         {office.phone}
                       </a>
-                      <a
-                        href={`mailto:${office.email}`}
-                        className="break-all text-ink-soft transition hover:text-gold-deep"
-                      >
-                        {office.email}
-                      </a>
                     </div>
                     <a
                       href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(

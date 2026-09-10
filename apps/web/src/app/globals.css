@@ -9,10 +9,12 @@
  * of one of those three, so the palette stays coherent as sections alternate
  * between the light ground and the navy bands.
  *
- * Gold is split into three values because one gold cannot do every job:
- * `gold` is the brand value, used for fills, rules, icons and CTA surfaces;
- * `gold-deep` is darkened until it clears 4.5:1 as text on the off-white
- * ground; `gold-bright` is lifted so eyebrows and links stay legible on navy.
+ * Gold is split into three values because one gold cannot do every job.
+ * `gold` (#C27C38) is the brand value, used for fills, rules, icons and CTA
+ * surfaces; at 3.3:1 on the off-white ground it is not a text colour, and a
+ * label sitting on it needs `ink-deep` rather than `ink` to clear 4.5:1.
+ * `gold-deep` is darkened until it clears 4.5:1 as text on the light ground;
+ * `gold-bright` is lifted so eyebrows and links stay legible on navy.
  */
 @theme {
   --color-ink: #28283c;
@@ -22,9 +24,9 @@
   --color-slate: #5c5c72;
   --color-slate-light: #70708a;
 
-  --color-gold: #c88a4e;
-  --color-gold-deep: #9c6428;
-  --color-gold-bright: #d9a166;
+  --color-gold: #c27c38;
+  --color-gold-deep: #9a6224;
+  --color-gold-bright: #dba063;
 
   --color-paper: #fcfef9;
   --color-paper-warm: #f6f4ed;

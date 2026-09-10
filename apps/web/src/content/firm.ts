@@ -49,7 +49,6 @@ export const offices = [
     ],
     phone: "+91 91548 25820",
     phoneHref: "tel:+919154825820",
-    email: "hyderabad@adooralegalservices.com",
   },
   {
     city: "Bengaluru",
@@ -62,7 +61,6 @@ export const offices = [
     ],
     phone: "+91 91548 25820",
     phoneHref: "tel:+919154825820",
-    email: "bengaluru@adooralegalservices.com",
   },
   {
     city: "Guntur",
@@ -75,7 +73,6 @@ export const offices = [
     ],
     phone: "+91 91548 25820",
     phoneHref: "tel:+919154825820",
-    email: "guntur@adooralegalservices.com",
   },
 ] as const;
 

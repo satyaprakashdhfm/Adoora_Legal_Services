@@ -152,7 +152,7 @@ export function CookieBanner() {
             <button
               type="button"
               onClick={() => save({ analytics, marketing })}
-              className="mt-4 rounded-md bg-gold px-6 py-2.5 text-sm font-semibold text-ink transition hover:bg-gold-bright"
+              className="mt-4 rounded-md bg-gold px-6 py-2.5 text-sm font-semibold text-ink-deep transition hover:bg-gold-bright"
             >
               Save preferences
             </button>

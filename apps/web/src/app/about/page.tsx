@@ -377,12 +377,6 @@ export default function AboutPage() {
                 >
                   {office.phone}
                 </a>
-                <a
-                  href={`mailto:${office.email}`}
-                  className="text-ink-soft transition hover:text-gold-deep"
-                >
-                  {office.email}
-                </a>
               </div>
             </li>
           ))}

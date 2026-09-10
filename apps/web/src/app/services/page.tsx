@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { PracticeIcon } from "@/components/practice-icon";
 import type { Metadata } from "next";
 import { CtaBand, PageHero } from "@/components/ui";
 import {
@@ -44,7 +45,9 @@ export default function ServicesPage() {
                       href={`/services/${area.slug}`}
                       className="group flex h-full flex-col rounded-xl border border-line bg-paper p-7 transition hover:-translate-y-0.5 hover:border-gold/40 hover:shadow-lg hover:shadow-ink/5"
                     >
-                      <h3 className="font-serif text-xl font-semibold leading-snug tracking-tight text-ink transition group-hover:text-gold-deep">
+                      <PracticeIcon slug={area.slug} className="h-8 w-8 text-gold" />
+
+                      <h3 className="mt-5 font-serif text-xl font-semibold leading-snug tracking-tight text-ink transition group-hover:text-gold-deep">
                         {area.name}
                       </h3>
                       <p className="mt-3 text-sm leading-relaxed text-ink-soft">

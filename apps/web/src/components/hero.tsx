@@ -128,7 +128,7 @@ export function Hero({ images }: { images: (string | null)[] }) {
                   <div className="mt-8 flex flex-col gap-3 sm:flex-row">
                     <Link
                       href={slide.href}
-                      className="inline-flex items-center justify-center gap-2 rounded-md bg-gold px-7 py-3.5 text-sm font-semibold text-ink transition hover:bg-gold-bright"
+                      className="inline-flex items-center justify-center gap-2 rounded-md bg-gold px-7 py-3.5 text-sm font-semibold text-ink-deep transition hover:bg-gold-bright"
                     >
                       {slide.cta}
                       <Arrow />
