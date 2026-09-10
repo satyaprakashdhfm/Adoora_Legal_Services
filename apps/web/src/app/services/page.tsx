@@ -47,7 +47,7 @@ export default function ServicesPage() {
                       <h3 className="font-serif text-xl font-semibold leading-snug tracking-tight text-ink transition group-hover:text-gold-deep">
                         {area.name}
                       </h3>
-                      <p className="mt-3 text-sm leading-relaxed text-slate">
+                      <p className="mt-3 text-sm leading-relaxed text-ink-soft">
                         {area.tagline}
                       </p>
 

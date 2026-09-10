@@ -45,7 +45,7 @@ export function SectionHeading({
       {lead && (
         <p
           className={`mt-4 text-base leading-relaxed ${
-            isDark ? "text-white/70" : "text-slate"
+            isDark ? "text-white/85" : "text-ink-soft"
           }`}
         >
           {lead}
@@ -172,7 +172,7 @@ export function ProcessSteps({
             {index + 1}
           </span>
           <h3 className="font-semibold text-ink">{step.stage}</h3>
-          <p className="mt-1.5 leading-relaxed text-slate">{step.detail}</p>
+          <p className="mt-1.5 leading-relaxed text-ink-soft">{step.detail}</p>
         </li>
       ))}
     </ol>
@@ -205,7 +205,7 @@ export function FaqList({ faqs }: { faqs: Faq[] }) {
               </svg>
             </span>
           </summary>
-          <p className="mt-3 max-w-3xl pr-8 leading-relaxed text-slate">
+          <p className="mt-3 max-w-3xl pr-8 leading-relaxed text-ink-soft">
             {faq.a}
           </p>
         </details>
@@ -237,9 +237,11 @@ export function TeamGrid({ slugs }: { slugs: string[] }) {
             {person.name}
           </h3>
           <p className="mt-1 text-sm text-gold-deep">{person.designation}</p>
-          <p className="mt-2 text-xs uppercase tracking-[0.14em] text-slate-light">
-            {person.office} &middot; {person.experience}
-          </p>
+          {(person.office || person.experience) && (
+            <p className="mt-2 text-xs uppercase tracking-[0.14em] text-slate-light">
+              {[person.office, person.experience].filter(Boolean).join(" · ")}
+            </p>
+          )}
           <Link
             href={`/about#${person.slug}`}
             className="mt-4 inline-block text-sm font-medium text-ink-soft underline decoration-line-strong underline-offset-4 transition hover:text-gold-deep"
@@ -270,7 +272,7 @@ export function InsightCard({ insight }: { insight: Insight }) {
         </Link>
       </h3>
 
-      <p className="mt-3 line-clamp-3 flex-1 text-sm leading-relaxed text-slate">
+      <p className="mt-3 line-clamp-3 flex-1 text-sm leading-relaxed text-ink-soft">
         {insight.summary}
       </p>
 
@@ -303,7 +305,7 @@ export function CtaBand({
           <h2 className="font-serif text-3xl font-semibold tracking-tight text-balance sm:text-4xl">
             {title}
           </h2>
-          <p className="mt-4 leading-relaxed text-white/70">{body}</p>
+          <p className="mt-4 leading-relaxed text-white/85">{body}</p>
           <p className="mt-3 text-sm text-white/50">{firm.responseTime}</p>
 
           <div className="mt-8 flex flex-col gap-3 sm:flex-row">
@@ -342,7 +344,7 @@ export function CtaBand({
           </div>
         </div>
 
-        <p className="shrink-0 font-serif text-base italic leading-relaxed text-white/60 lg:max-w-[12rem] lg:text-right">
+        <p className="shrink-0 font-serif text-base italic leading-relaxed text-white/75 lg:max-w-[12rem] lg:text-right">
           &ldquo;{firm.ctaQuote}&rdquo;
         </p>
       </div>
@@ -382,7 +384,7 @@ export function PageHero({
           {title}
         </h1>
         {lead && (
-          <p className="mt-5 max-w-3xl text-base leading-relaxed text-white/70 sm:text-lg">
+          <p className="mt-5 max-w-3xl text-base leading-relaxed text-white/85 sm:text-lg">
             {lead}
           </p>
         )}

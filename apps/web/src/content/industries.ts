@@ -77,7 +77,7 @@ export const industries: Industry[] = [
       "Securities Appellate Tribunal",
       "Financial Intelligence Unit – India (anti-money laundering reporting)",
     ],
-    team: ["r-adoora", "s-venkatesh", "p-lakshmi"],
+    team: [],
     relatedPractices: ["banking-finance", "corporate-ma", "dispute-resolution", "taxation"],
     faqs: [
       {
@@ -168,7 +168,7 @@ export const industries: Industry[] = [
       "State Pollution Control Boards; State and central Environment Impact Assessment Authorities",
       "APCRDA; HMDA; state industrial infrastructure corporations",
     ],
-    team: ["m-rao", "s-venkatesh", "r-adoora"],
+    team: [],
     relatedPractices: [
       "real-estate-infrastructure",
       "banking-finance",
@@ -264,7 +264,7 @@ export const industries: Industry[] = [
       "Directorate General of Foreign Trade; Customs authorities; DGTR for trade remedies",
       "State industrial infrastructure corporations — TSIIC, APIIC, KIADB",
     ],
-    team: ["m-rao", "p-lakshmi", "s-venkatesh"],
+    team: [],
     relatedPractices: [
       "corporate-ma",
       "labour-employment",
@@ -361,7 +361,7 @@ export const industries: Industry[] = [
       "Central Consumer Protection Authority",
       "Telecom Disputes Settlement and Appellate Tribunal",
     ],
-    team: ["a-krishnan", "p-lakshmi", "r-adoora"],
+    team: [],
     relatedPractices: [
       "technology-media-telecom",
       "intellectual-property",
@@ -457,7 +457,7 @@ export const industries: Industry[] = [
       "State Environment Impact Assessment Authorities",
       "Consumer Disputes Redressal Commissions",
     ],
-    team: ["m-rao", "p-lakshmi", "a-krishnan"],
+    team: [],
     relatedPractices: [
       "real-estate-infrastructure",
       "banking-finance",
@@ -553,7 +553,7 @@ export const industries: Industry[] = [
       "State Pollution Control Boards (biomedical waste); AERB (radiation safety)",
       "Data Protection Board of India; Consumer Disputes Redressal Commissions",
     ],
-    team: ["p-lakshmi", "a-krishnan", "m-rao"],
+    team: [],
     relatedPractices: [
       "corporate-ma",
       "technology-media-telecom",
@@ -650,7 +650,7 @@ export const industries: Industry[] = [
       "Data Protection Board of India",
       "Sector regulators — RBI for payments and lending, others as the product requires",
     ],
-    team: ["a-krishnan", "r-adoora", "p-lakshmi"],
+    team: [],
     relatedPractices: [
       "corporate-ma",
       "technology-media-telecom",
@@ -746,7 +746,7 @@ export const industries: Industry[] = [
       "High Court of Telangana; High Court of Andhra Pradesh; High Court of Karnataka (writ jurisdiction)",
       "Arbitral tribunals constituted under government contracts",
     ],
-    team: ["s-venkatesh", "m-rao", "r-adoora"],
+    team: [],
     relatedPractices: [
       "dispute-resolution",
       "real-estate-infrastructure",

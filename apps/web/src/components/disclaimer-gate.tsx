@@ -126,7 +126,7 @@ export function DisclaimerGate() {
                   aria-hidden="true"
                   className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-gold"
                 />
-                <span className="text-sm leading-relaxed text-slate">
+                <span className="text-sm leading-relaxed text-ink-soft">
                   {item}
                 </span>
               </li>

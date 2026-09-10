@@ -89,13 +89,13 @@ export function Hero({ images }: { images: (string | null)[] }) {
                   ? { preload: true }
                   : { loading: "eager" as const, fetchPriority: "low" as const })}
               />
-              {slide.bright && <div className="absolute inset-0 bg-ink/45" />}
+              {slide.bright && <div className="absolute inset-0 bg-ink/25" />}
             </div>
           );
         })}
 
-        <div className="absolute inset-0 bg-linear-to-r from-ink via-ink/90 to-ink/40" />
-        <div className="absolute inset-0 bg-linear-to-t from-ink/80 via-transparent to-ink/40" />
+        <div className="absolute inset-0 bg-linear-to-r from-ink from-30% via-ink/60 via-70% to-ink/5" />
+        <div className="absolute inset-0 bg-linear-to-t from-ink/60 via-transparent to-ink/20" />
       </div>
 
       <div className="container-page relative flex flex-col justify-center py-16 sm:py-20 lg:min-h-[calc(100svh-7.5rem)] lg:py-16">
@@ -121,7 +121,7 @@ export function Hero({ images }: { images: (string | null)[] }) {
                     <span className="text-gold-bright">{slide.accent}</span>
                   </h1>
 
-                  <p className="mt-5 max-w-xl text-sm leading-relaxed text-white/70 sm:text-base">
+                  <p className="mt-5 max-w-xl text-sm leading-relaxed text-white/85 sm:text-base">
                     {slide.body}
                   </p>
 
@@ -177,7 +177,7 @@ export function Hero({ images }: { images: (string | null)[] }) {
         </div>
 
         {/* Standing line from the firm's own collateral. */}
-        <p className="mt-12 max-w-[13rem] font-serif text-sm italic leading-relaxed text-white/60 lg:absolute lg:bottom-10 lg:right-10 lg:mt-0 lg:text-right 2xl:right-16">
+        <p className="mt-12 max-w-[13rem] font-serif text-sm italic leading-relaxed text-white/75 lg:absolute lg:bottom-10 lg:right-10 lg:mt-0 lg:text-right 2xl:right-16">
           &ldquo;{firm.heroQuote}&rdquo;
         </p>
       </div>

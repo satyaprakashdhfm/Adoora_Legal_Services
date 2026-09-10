@@ -87,7 +87,7 @@ export function EnquiryForm() {
         <h3 className="mt-5 font-serif text-xl font-semibold text-ink">
           Your enquiry has reached us
         </h3>
-        <p className="mt-3 text-sm leading-relaxed text-slate">
+        <p className="mt-3 text-sm leading-relaxed text-ink-soft">
           We aim to acknowledge every enquiry within one working day. We will
           run a conflicts check before responding substantively — until we
           confirm an engagement in writing, no lawyer&ndash;client relationship
@@ -193,7 +193,7 @@ export function EnquiryForm() {
           required
           className="mt-0.5 h-4 w-4 shrink-0 accent-[var(--color-gold)]"
         />
-        <span className="text-sm leading-relaxed text-slate">
+        <span className="text-sm leading-relaxed text-ink-soft">
           I consent to ADOORA Legal Services processing the personal data in
           this form in order to respond to my enquiry and to carry out a
           conflicts check, as described in the{" "}

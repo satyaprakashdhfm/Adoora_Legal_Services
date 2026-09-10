@@ -6,7 +6,7 @@ import { firm, offices } from "@/content/firm";
 export const metadata: Metadata = {
   title: "Contact Us",
   description:
-    "Contact ADOORA Legal Services — offices in Hyderabad, Amaravati and Bengaluru. Send a brief description of your matter and we will route it to the right person.",
+    "Contact ADOORA Legal Services — offices in Hyderabad, Bengaluru and Guntur. Send a brief description of your matter and we will route it to the right person.",
   alternates: { canonical: "/contact" },
 };
 
@@ -26,7 +26,7 @@ export default function ContactPage() {
             <h2 className="font-serif text-2xl font-semibold tracking-tight text-ink">
               Send an enquiry
             </h2>
-            <p className="mt-3 max-w-xl leading-relaxed text-slate">
+            <p className="mt-3 max-w-xl leading-relaxed text-ink-soft">
               {firm.responseTime} We run a conflicts check before responding
               substantively, and will tell you promptly if we are unable to act.
             </p>
@@ -75,7 +75,7 @@ export default function ContactPage() {
                     <p className="text-xs uppercase tracking-[0.14em] text-gold-deep">
                       {office.label}
                     </p>
-                    <address className="mt-2 space-y-0.5 text-sm not-italic text-slate">
+                    <address className="mt-2 space-y-0.5 text-sm not-italic text-ink-soft">
                       {office.lines.map((line) => (
                         <p key={line}>{line}</p>
                       ))}
@@ -109,7 +109,7 @@ export default function ContactPage() {
               </ul>
             </div>
 
-            <div className="rounded-2xl border border-line bg-ink p-7 text-white/70">
+            <div className="rounded-2xl border border-line bg-ink p-7 text-white/85">
               <h2 className="eyebrow text-gold-bright">Before you write</h2>
               <ul className="mt-4 space-y-3 text-sm leading-relaxed">
                 <li>

@@ -120,7 +120,7 @@ export const practiceAreas: PracticeArea[] = [
           "Covenant monitoring support, waivers and amendments, annual compliance filings, and — if the credit deteriorates — early advice on restructuring or enforcement options.",
       },
     ],
-    team: ["r-adoora", "s-venkatesh", "p-lakshmi"],
+    team: [],
     relatedIndustries: [
       "financial-services",
       "infrastructure-energy",
@@ -268,7 +268,7 @@ export const practiceAreas: PracticeArea[] = [
           "Closing mechanics and deliverables, statutory filings including FC-GPR or FC-TRS, board and register updates, and the integration steps that carry a legal deadline.",
       },
     ],
-    team: ["r-adoora", "a-krishnan", "p-lakshmi"],
+    team: [],
     relatedIndustries: [
       "financial-services",
       "manufacturing",
@@ -413,7 +413,7 @@ export const practiceAreas: PracticeArea[] = [
           "Execution or enforcement, or challenge and appeal. We advise on the cost-benefit of appeal separately from the outcome below, because the two questions are not the same.",
       },
     ],
-    team: ["s-venkatesh", "m-rao", "r-adoora"],
+    team: [],
     relatedIndustries: [
       "infrastructure-energy",
       "real-estate-construction",
@@ -557,7 +557,7 @@ export const practiceAreas: PracticeArea[] = [
           "Construction contracts, ongoing RERA disclosures, occupancy and completion certificates, allottee conveyances, and formation and handover to the owners' association.",
       },
     ],
-    team: ["m-rao", "p-lakshmi", "a-krishnan"],
+    team: [],
     relatedIndustries: [
       "real-estate-construction",
       "infrastructure-energy",
@@ -701,7 +701,7 @@ export const practiceAreas: PracticeArea[] = [
           "Conciliation, tribunal proceedings or writ petition, with a settlement assessment kept live throughout — most employment matters are better resolved than tried.",
       },
     ],
-    team: ["p-lakshmi", "a-krishnan", "m-rao"],
+    team: [],
     relatedIndustries: [
       "manufacturing",
       "technology-media-telecom",
@@ -846,7 +846,7 @@ export const practiceAreas: PracticeArea[] = [
           "Rights request handling, breach readiness and live incident support, and reassessment as rules under the Act and the CERT-In directions develop.",
       },
     ],
-    team: ["a-krishnan", "p-lakshmi", "r-adoora"],
+    team: [],
     relatedIndustries: [
       "technology-media-telecom",
       "startups-emerging",
@@ -990,7 +990,7 @@ export const practiceAreas: PracticeArea[] = [
           "Appellate strategy including stay of demand, grounds of appeal, and a view on whether to litigate or settle taken on the numbers rather than on principle.",
       },
     ],
-    team: ["s-venkatesh", "r-adoora", "a-krishnan"],
+    team: [],
     relatedIndustries: [
       "financial-services",
       "manufacturing",
@@ -1134,7 +1134,7 @@ export const practiceAreas: PracticeArea[] = [
           "Graduated response — notice, platform takedown, suit and interim injunction, or criminal complaint — chosen on the infringer's profile and the commercial harm, not reflexively.",
       },
     ],
-    team: ["a-krishnan", "m-rao", "p-lakshmi"],
+    team: [],
     relatedIndustries: [
       "technology-media-telecom",
       "healthcare-life-sciences",

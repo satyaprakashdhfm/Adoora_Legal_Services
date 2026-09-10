@@ -29,7 +29,7 @@ export default function InsightsPage() {
           {activeCategories.map((category) => (
             <li
               key={category}
-              className="rounded-full border border-white/20 px-3.5 py-1.5 text-xs text-white/70"
+              className="rounded-full border border-white/20 px-3.5 py-1.5 text-xs text-white/85"
             >
               {category}
             </li>
@@ -65,7 +65,7 @@ export default function InsightsPage() {
                 </a>
               </h2>
 
-              <p className="mt-4 leading-relaxed text-slate">{lead.summary}</p>
+              <p className="mt-4 leading-relaxed text-ink-soft">{lead.summary}</p>
 
               <a
                 href={`/insights/${lead.slug}`}

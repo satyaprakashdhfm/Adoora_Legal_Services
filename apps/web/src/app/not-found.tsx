@@ -16,7 +16,7 @@ export default function NotFound() {
         <h1 className="mt-3 font-serif text-3xl font-semibold tracking-tight text-ink">
           We could not find that page
         </h1>
-        <p className="mt-4 leading-relaxed text-slate">
+        <p className="mt-4 leading-relaxed text-ink-soft">
           The address may have changed, or the page may no longer exist. The
           links below cover most of the site.
         </p>

@@ -124,7 +124,7 @@ export default async function InsightPage(
           { label: insight.category },
         ]}
       >
-        <div className="mt-8 flex flex-wrap items-center gap-x-6 gap-y-2 text-sm text-white/60">
+        <div className="mt-8 flex flex-wrap items-center gap-x-6 gap-y-2 text-sm text-white/75">
           {author && (
             <span>
               By{" "}
@@ -156,7 +156,7 @@ export default async function InsightPage(
             {/* Not-legal-advice notice — required on every article. */}
             <aside className="mt-12 rounded-xl border border-line bg-paper-warm p-6">
               <h2 className="eyebrow text-gold-deep">Please note</h2>
-              <p className="mt-3 text-sm leading-relaxed text-slate">
+              <p className="mt-3 text-sm leading-relaxed text-ink-soft">
                 This article is for general information only. It reflects the
                 position as understood on the date of publication, is not legal
                 advice, and does not create a lawyer&ndash;client relationship.

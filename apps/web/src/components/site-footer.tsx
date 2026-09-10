@@ -29,7 +29,7 @@ const icons = {
 
 export function SiteFooter() {
   return (
-    <footer className="mt-auto bg-ink text-white/70">
+    <footer className="mt-auto bg-ink text-white/85">
       <div className="container-page py-16">
         <div className="grid gap-12 lg:grid-cols-[1.1fr_2fr]">
           <div>
@@ -115,7 +115,7 @@ export function SiteFooter() {
         {/* BCI disclaimer — required on every page. */}
         <div className="mt-12 rounded-xl border border-white/10 bg-white/[0.03] p-6">
           <h2 className="eyebrow text-gold-bright/80">Disclaimer</h2>
-          <p className="mt-3 text-xs leading-relaxed text-white/60">
+          <p className="mt-3 text-xs leading-relaxed text-white/75">
             {footerDisclaimer}
           </p>
         </div>

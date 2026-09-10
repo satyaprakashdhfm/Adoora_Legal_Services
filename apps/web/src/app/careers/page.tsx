@@ -5,7 +5,7 @@ import { CareerForm } from "@/components/career-form";
 export const metadata: Metadata = {
   title: "Careers",
   description:
-    "Open roles at ADOORA Legal Services across our Hyderabad, Amaravati and Bengaluru offices, with eligibility and how to apply.",
+    "Open roles at ADOORA Legal Services across our Hyderabad, Bengaluru and Guntur offices, with eligibility and how to apply.",
   alternates: { canonical: "/careers" },
 };
 
@@ -41,7 +41,7 @@ const roles = [
   },
   {
     title: "Associate — Real Estate",
-    office: "Amaravati",
+    office: "Guntur",
     experience: "1–3 years PQE",
     detail:
       "Title investigation, development documentation and RERA compliance. You will trace chains of title, prepare title reports, and draft acquisition and development documents.",
@@ -65,7 +65,7 @@ const roles = [
   },
   {
     title: "Legal Intern",
-    office: "Hyderabad, Amaravati or Bengaluru",
+    office: "Hyderabad, Bengaluru or Guntur",
     experience: "3rd, 4th or 5th year students",
     detail:
       "Six to eight week internships across practices. Research, drafting support and hearing attendance, with a written assessment at the end.",
@@ -157,7 +157,7 @@ export default function CareersPage() {
                             aria-hidden="true"
                             className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-gold"
                           />
-                          <span className="text-sm leading-relaxed text-slate">
+                          <span className="text-sm leading-relaxed text-ink-soft">
                             {item}
                           </span>
                         </li>

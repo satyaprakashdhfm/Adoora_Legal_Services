@@ -2,7 +2,7 @@ import Link from "next/link";
 import type { Metadata } from "next";
 import { CtaBand, PageHero, SectionHeading } from "@/components/ui";
 import { firm, offices, stats } from "@/content/firm";
-import { people } from "@/content/people";
+import { people, peopleByGroup } from "@/content/people";
 import { practiceAreaBySlug } from "@/content/practice-areas";
 
 export const metadata: Metadata = {
@@ -11,6 +11,17 @@ export const metadata: Metadata = {
     "ADOORA Legal Services — the firm's story, its approach to client work, its governance and compliance position, and profiles of the lawyers who lead each practice.",
   alternates: { canonical: "/about" },
 };
+
+const rosters = [
+  { heading: "Leadership & advocates", members: peopleByGroup("legal") },
+  {
+    heading: "Business development & corporate relations",
+    members: peopleByGroup("business"),
+  },
+].filter((roster) => roster.members.length > 0);
+
+/** Only people with a bio earn a long-form card beneath the roster. */
+const profiled = people.filter((person) => person.bio?.length);
 
 export default function AboutPage() {
   return (
@@ -44,7 +55,7 @@ export default function AboutPage() {
               rather than in sequence.
             </p>
             <p>
-              We work from Hyderabad, Amaravati and Bengaluru, and appear before
+              We work from Hyderabad, Bengaluru and Guntur, and appear before
               the courts, tribunals and regulators of Telangana, Andhra Pradesh
               and Karnataka. Our clients include domestic and foreign commercial
               enterprises, banks and financial institutions, private equity and
@@ -95,7 +106,7 @@ export default function AboutPage() {
                 <h3 className="mt-3 font-serif text-lg font-semibold leading-snug tracking-tight text-ink">
                   {item.title}
                 </h3>
-                <p className="mt-2.5 text-sm leading-relaxed text-slate">
+                <p className="mt-2.5 text-sm leading-relaxed text-ink-soft">
                   {item.body}
                 </p>
               </li>
@@ -161,133 +172,181 @@ export default function AboutPage() {
       </section>
 
       {/* People */}
+      {/* The brochure supplies names and designations only, so this renders as
+          a roster. Anyone given a `bio` in people.ts is promoted to the
+          long-form profile card beneath it. */}
       <section id="people" className="border-y border-line bg-paper-warm">
         <div className="container-page py-20">
           <SectionHeading
             eyebrow="Our people"
             title="The lawyers who lead each practice"
-            lead="Profiles set out education, experience and the practices each lawyer leads."
+            lead="An efficient team of hardworking, sincere and talented professionals working across South India, from our offices in Telangana, Karnataka and Andhra Pradesh."
           />
 
-          <div className="mt-14 space-y-6">
-            {people.map((person) => (
-              <article
-                key={person.slug}
-                id={person.slug}
-                className="scroll-mt-32 rounded-2xl border border-line bg-paper p-7 sm:p-9"
-              >
-                <div className="grid gap-8 lg:grid-cols-[16rem_1fr] lg:gap-12">
-                  <div>
+          {rosters.map((roster) => (
+            <div key={roster.heading} className="mt-14">
+              <h3 className="eyebrow border-b border-line-strong pb-4 text-ink">
+                {roster.heading}
+              </h3>
+
+              <ul className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                {roster.members.map((person) => (
+                  <li
+                    key={person.slug}
+                    id={person.slug}
+                    className="flex scroll-mt-32 items-center gap-4 rounded-xl border border-line bg-paper p-5"
+                  >
                     <span
                       aria-hidden="true"
-                      className="flex h-16 w-16 items-center justify-center rounded-full border border-line-strong bg-paper-warm font-serif text-lg font-semibold text-gold-deep"
+                      className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full border border-line-strong bg-paper-warm font-serif text-sm font-semibold text-gold-deep"
                     >
                       {person.initials}
                     </span>
-                    <h3 className="mt-5 font-serif text-xl font-semibold tracking-tight text-ink">
-                      {person.name}
-                    </h3>
-                    <p className="mt-1 text-sm text-gold-deep">
-                      {person.designation}
-                    </p>
+                    <div className="min-w-0">
+                      <p className="font-serif font-semibold leading-snug tracking-tight text-ink">
+                        {person.name}
+                      </p>
+                      <p className="mt-1 text-sm text-gold-deep">
+                        {person.designation}
+                        {person.qualification && (
+                          <span className="text-slate">
+                            {" "}
+                            &middot; {person.qualification}
+                          </span>
+                        )}
+                      </p>
+                    </div>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          ))}
 
-                    <dl className="mt-5 space-y-2.5 text-sm">
-                      <div>
-                        <dt className="text-xs uppercase tracking-[0.14em] text-slate-light">
-                          Office
-                        </dt>
-                        <dd className="text-ink-soft">{person.office}</dd>
-                      </div>
-                      <div>
-                        <dt className="text-xs uppercase tracking-[0.14em] text-slate-light">
-                          Experience
-                        </dt>
-                        <dd className="text-ink-soft">{person.experience}</dd>
-                      </div>
-                      {/* Enrolment details render only once the firm supplies
-                          them — see the note at the top of people.ts. */}
-                      {person.enrolment && person.stateBar && (
-                        <div>
-                          <dt className="text-xs uppercase tracking-[0.14em] text-slate-light">
-                            Enrolment
-                          </dt>
-                          <dd className="text-ink-soft">
-                            {person.enrolment} &middot; {person.stateBar}
-                            {person.enrolledSince
-                              ? ` · ${person.enrolledSince}`
-                              : ""}
-                          </dd>
-                        </div>
-                      )}
-                    </dl>
-                  </div>
+          {profiled.length > 0 && (
+            <div className="mt-16 space-y-6">
+              {profiled.map((person) => (
+                <article
+                  key={person.slug}
+                  id={`${person.slug}-profile`}
+                  className="scroll-mt-32 rounded-2xl border border-line bg-paper p-7 sm:p-9"
+                >
+                  <div className="grid gap-8 lg:grid-cols-[16rem_1fr] lg:gap-12">
+                    <div>
+                      <h3 className="font-serif text-xl font-semibold tracking-tight text-ink">
+                        {person.name}
+                      </h3>
+                      <p className="mt-1 text-sm text-gold-deep">
+                        {person.designation}
+                      </p>
 
-                  <div>
-                    <div className="space-y-4 leading-relaxed text-ink-soft">
-                      {person.bio.map((paragraph) => (
-                        <p key={paragraph.slice(0, 40)}>{paragraph}</p>
-                      ))}
+                      <dl className="mt-5 space-y-2.5 text-sm">
+                        {person.office && (
+                          <div>
+                            <dt className="text-xs uppercase tracking-[0.14em] text-slate-light">
+                              Office
+                            </dt>
+                            <dd className="text-ink-soft">{person.office}</dd>
+                          </div>
+                        )}
+                        {person.experience && (
+                          <div>
+                            <dt className="text-xs uppercase tracking-[0.14em] text-slate-light">
+                              Experience
+                            </dt>
+                            <dd className="text-ink-soft">{person.experience}</dd>
+                          </div>
+                        )}
+                        {/* Enrolment details render only once the firm supplies
+                            them — see the note at the top of people.ts. */}
+                        {person.enrolment && person.stateBar && (
+                          <div>
+                            <dt className="text-xs uppercase tracking-[0.14em] text-slate-light">
+                              Enrolment
+                            </dt>
+                            <dd className="text-ink-soft">
+                              {person.enrolment} &middot; {person.stateBar}
+                              {person.enrolledSince
+                                ? ` · ${person.enrolledSince}`
+                                : ""}
+                            </dd>
+                          </div>
+                        )}
+                      </dl>
                     </div>
 
-                    <div className="mt-7 grid gap-7 sm:grid-cols-2">
-                      <div>
-                        <h4 className="eyebrow text-slate-light">Practices</h4>
-                        <ul className="mt-3 flex flex-wrap gap-2">
-                          {person.practices.map((practiceSlug) => {
-                            const practice =
-                              practiceAreaBySlug.get(practiceSlug);
-                            if (!practice) return null;
-
-                            return (
-                              <li key={practiceSlug}>
-                                <Link
-                                  href={`/services/${practice.slug}`}
-                                  className="inline-block rounded-full border border-line px-3 py-1 text-xs text-ink-soft transition hover:border-gold hover:text-gold-deep"
-                                >
-                                  {practice.shortName}
-                                </Link>
-                              </li>
-                            );
-                          })}
-                        </ul>
+                    <div>
+                      <div className="space-y-4 leading-relaxed text-ink-soft">
+                        {person.bio?.map((paragraph) => (
+                          <p key={paragraph.slice(0, 40)}>{paragraph}</p>
+                        ))}
                       </div>
 
-                      <div>
-                        <h4 className="eyebrow text-slate-light">Education</h4>
-                        <ul className="mt-3 space-y-1 text-sm text-slate">
-                          {person.education.map((entry) => (
-                            <li key={entry}>{entry}</li>
-                          ))}
-                        </ul>
-                      </div>
+                      <div className="mt-7 grid gap-7 sm:grid-cols-2">
+                        {person.practices?.length ? (
+                          <div>
+                            <h4 className="eyebrow text-slate-light">Practices</h4>
+                            <ul className="mt-3 flex flex-wrap gap-2">
+                              {person.practices.map((practiceSlug) => {
+                                const practice =
+                                  practiceAreaBySlug.get(practiceSlug);
+                                if (!practice) return null;
 
-                      <div>
-                        <h4 className="eyebrow text-slate-light">
-                          Publications & speaking
-                        </h4>
-                        <ul className="mt-3 space-y-1.5 text-sm text-slate">
-                          {person.publications.map((entry) => (
-                            <li key={entry}>{entry}</li>
-                          ))}
-                        </ul>
-                      </div>
+                                return (
+                                  <li key={practiceSlug}>
+                                    <Link
+                                      href={`/services/${practice.slug}`}
+                                      className="inline-block rounded-full border border-line px-3 py-1 text-xs text-ink-soft transition hover:border-gold hover:text-gold-deep"
+                                    >
+                                      {practice.shortName}
+                                    </Link>
+                                  </li>
+                                );
+                              })}
+                            </ul>
+                          </div>
+                        ) : null}
 
-                      <div>
-                        <h4 className="eyebrow text-slate-light">
-                          Memberships
-                        </h4>
-                        <ul className="mt-3 space-y-1 text-sm text-slate">
-                          {person.memberships.map((entry) => (
-                            <li key={entry}>{entry}</li>
-                          ))}
-                        </ul>
+                        {person.education?.length ? (
+                          <div>
+                            <h4 className="eyebrow text-slate-light">Education</h4>
+                            <ul className="mt-3 space-y-1 text-sm text-ink-soft">
+                              {person.education.map((entry) => (
+                                <li key={entry}>{entry}</li>
+                              ))}
+                            </ul>
+                          </div>
+                        ) : null}
+
+                        {person.publications?.length ? (
+                          <div>
+                            <h4 className="eyebrow text-slate-light">
+                              Publications &amp; speaking
+                            </h4>
+                            <ul className="mt-3 space-y-1.5 text-sm text-ink-soft">
+                              {person.publications.map((entry) => (
+                                <li key={entry}>{entry}</li>
+                              ))}
+                            </ul>
+                          </div>
+                        ) : null}
+
+                        {person.memberships?.length ? (
+                          <div>
+                            <h4 className="eyebrow text-slate-light">Memberships</h4>
+                            <ul className="mt-3 space-y-1 text-sm text-ink-soft">
+                              {person.memberships.map((entry) => (
+                                <li key={entry}>{entry}</li>
+                              ))}
+                            </ul>
+                          </div>
+                        ) : null}
                       </div>
                     </div>
                   </div>
-                </div>
-              </article>
-            ))}
-          </div>
+                </article>
+              ))}
+            </div>
+          )}
         </div>
       </section>
 
@@ -306,7 +365,7 @@ export default function AboutPage() {
               <p className="text-xs uppercase tracking-[0.14em] text-gold-deep">
                 {office.label}
               </p>
-              <address className="mt-3 space-y-0.5 text-sm not-italic text-slate">
+              <address className="mt-3 space-y-0.5 text-sm not-italic text-ink-soft">
                 {office.lines.map((line) => (
                   <p key={line}>{line}</p>
                 ))}

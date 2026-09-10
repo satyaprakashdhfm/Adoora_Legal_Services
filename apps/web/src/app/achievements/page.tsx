@@ -63,7 +63,7 @@ export default function AchievementsPage() {
 
         <aside className="mt-16 rounded-xl border border-line p-6">
           <h2 className="eyebrow text-slate-light">A note on rankings</h2>
-          <p className="mt-3 text-sm leading-relaxed text-slate">
+          <p className="mt-3 text-sm leading-relaxed text-ink-soft">
             Directory rankings and awards are decided by the publishers named
             above on their own criteria and research. They are recorded here as
             a matter of fact. They are not a representation by the firm about

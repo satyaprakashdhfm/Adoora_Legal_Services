@@ -62,7 +62,7 @@ export function CookieBanner() {
             <h2 className="text-sm font-semibold text-ink">
               Cookies on this website
             </h2>
-            <p className="mt-1.5 text-sm leading-relaxed text-slate">
+            <p className="mt-1.5 text-sm leading-relaxed text-ink-soft">
               We use strictly necessary cookies to make this website work.
               We&rsquo;d also like to set optional cookies to understand how the
               site is used. Nothing optional is set unless you allow it. See our{" "}
@@ -139,7 +139,7 @@ export function CookieBanner() {
                             </span>
                           )}
                         </span>
-                        <span className="mt-1 block text-xs leading-relaxed text-slate">
+                        <span className="mt-1 block text-xs leading-relaxed text-ink-soft">
                           {category.description}
                         </span>
                       </span>

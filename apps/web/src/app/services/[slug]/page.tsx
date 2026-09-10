@@ -13,6 +13,7 @@ import {
   ServiceList,
   TeamGrid,
 } from "@/components/ui";
+import { peopleBySlugs } from "@/content/people";
 import { practiceAreas, practiceAreaBySlug } from "@/content/practice-areas";
 import { industryBySlug } from "@/content/industries";
 import { insightsForPractice } from "@/content/insights";
@@ -93,7 +94,7 @@ export default async function PracticeAreaPage(
             <h2 className="font-serif text-2xl font-semibold tracking-tight text-ink">
               How the work is sequenced
             </h2>
-            <p className="mt-3 max-w-2xl leading-relaxed text-slate">
+            <p className="mt-3 max-w-2xl leading-relaxed text-ink-soft">
               Indicative stages and what each produces. Timelines depend on the
               matter — where we can give a realistic range, the FAQs below say
               so.
@@ -107,7 +108,7 @@ export default async function PracticeAreaPage(
             <h2 className="font-serif text-2xl font-semibold tracking-tight text-ink">
               Jurisdictions, forums and regulators
             </h2>
-            <p className="mt-3 max-w-2xl leading-relaxed text-slate">
+            <p className="mt-3 max-w-2xl leading-relaxed text-ink-soft">
               Where matters in this practice are heard, filed or determined.
             </p>
             <div className="mt-8">
@@ -125,7 +126,7 @@ export default async function PracticeAreaPage(
           <h2 className="font-serif text-2xl font-semibold tracking-tight text-ink">
             Representative matters
           </h2>
-          <p className="mt-3 max-w-2xl leading-relaxed text-slate">
+          <p className="mt-3 max-w-2xl leading-relaxed text-ink-soft">
             Descriptions of the kind of work the team handles. Client names and
             identifying details are omitted, and nothing here should be read as
             a representation about the outcome of any matter.
@@ -144,7 +145,7 @@ export default async function PracticeAreaPage(
           <h2 className="font-serif text-2xl font-semibold tracking-tight text-ink">
             Practice team
           </h2>
-          <p className="mt-3 max-w-2xl leading-relaxed text-slate">
+          <p className="mt-3 max-w-2xl leading-relaxed text-ink-soft">
             The lawyers who lead this practice.
           </p>
           <div className="mt-8">
@@ -170,7 +171,7 @@ export default async function PracticeAreaPage(
               ))}
             </ul>
           ) : (
-            <p className="mt-4 leading-relaxed text-slate">
+            <p className="mt-4 leading-relaxed text-ink-soft">
               We have not yet published an insight in this practice area.{" "}
               <Link href="/insights" className="text-gold-deep underline underline-offset-4">
                 Browse all insights
@@ -189,7 +190,7 @@ export default async function PracticeAreaPage(
           <h2 className="font-serif text-2xl font-semibold tracking-tight text-ink">
             Frequently asked questions
           </h2>
-          <p className="mt-3 max-w-2xl leading-relaxed text-slate">
+          <p className="mt-3 max-w-2xl leading-relaxed text-ink-soft">
             General information about how this practice works. It is not legal
             advice and does not create a lawyer&ndash;client relationship.
           </p>
@@ -199,7 +200,12 @@ export default async function PracticeAreaPage(
         </section>
       ),
     },
-  ];
+  ]
+    // The firm has not assigned lawyers to individual practices yet, so
+    // the Team tab only appears once `team` resolves to somebody.
+    .filter(
+      (tab) => tab.id !== "team" || peopleBySlugs(area.team).length > 0,
+    );
 
   return (
     <>
@@ -236,7 +242,7 @@ export default async function PracticeAreaPage(
                     <h3 className="font-semibold text-ink transition group-hover:text-gold-deep">
                       {industry.name}
                     </h3>
-                    <p className="mt-2 text-sm leading-relaxed text-slate">
+                    <p className="mt-2 text-sm leading-relaxed text-ink-soft">
                       {industry.tagline}
                     </p>
                   </Link>

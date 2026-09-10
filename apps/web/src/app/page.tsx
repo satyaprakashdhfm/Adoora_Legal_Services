@@ -139,7 +139,7 @@ export default function Home() {
               exposure; a regulatory notice turns into litigation. The firm is
               organised so that the person who structures a matter is still
               involved when it is tested — across offices in Hyderabad,
-              Amaravati and Bengaluru, and before the courts, tribunals and
+              Bengaluru and Guntur, and before the courts, tribunals and
               regulators of Telangana, Andhra Pradesh and Karnataka.
             </p>
             <div className="flex flex-wrap gap-x-8 gap-y-3 pt-4">
@@ -203,7 +203,7 @@ export default function Home() {
                   <h3 className="mt-5 font-serif text-lg font-semibold leading-snug tracking-tight text-ink transition group-hover:text-gold-deep">
                     {area.shortName}
                   </h3>
-                  <p className="mt-3 flex-1 text-sm leading-relaxed text-slate">
+                  <p className="mt-3 flex-1 text-sm leading-relaxed text-ink-soft">
                     {area.tagline}
                   </p>
 
@@ -328,7 +328,7 @@ export default function Home() {
               <h3 className="mt-3 font-serif text-base font-semibold leading-snug text-ink">
                 {award.title}
               </h3>
-              <p className="mt-2.5 flex-1 text-sm leading-relaxed text-slate">
+              <p className="mt-2.5 flex-1 text-sm leading-relaxed text-ink-soft">
                 {award.detail}
               </p>
               <p className="mt-4 text-xs text-slate-light">{award.body}</p>
@@ -351,7 +351,7 @@ export default function Home() {
                   <p className="text-xs uppercase tracking-[0.14em] text-gold-deep">
                     {office.label}
                   </p>
-                  <address className="mt-2 space-y-0.5 text-sm not-italic text-slate">
+                  <address className="mt-2 space-y-0.5 text-sm not-italic text-ink-soft">
                     {office.lines.map((line) => (
                       <p key={line}>{line}</p>
                     ))}

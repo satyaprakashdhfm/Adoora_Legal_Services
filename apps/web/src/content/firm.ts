@@ -15,7 +15,7 @@ export const firm = {
   years: "25+",
   regions: "Andhra Pradesh · Karnataka · Telangana",
   /** The three offices, in the order the utility bar lists them. */
-  cities: "Hyderabad · Amaravati · Bengaluru",
+  cities: "Hyderabad · Bengaluru · Guntur",
 
   /* `phone` is the display string; `phoneE164` is the form the structured
      data needs. */
@@ -36,30 +36,46 @@ export const firm = {
   linkedin: "",
 } as const;
 
+/** Street addresses as printed in the firm's brochure. */
 export const offices = [
   {
     city: "Hyderabad",
     label: "Principal office",
-    lines: ["Road No. 12, Banjara Hills", "Hyderabad 500034", "Telangana, India"],
+    lines: [
+      "SRT 1032, 5th Floor, CZECH Colony",
+      "Street No. 5, Sanath Nagar",
+      "Hyderabad 500018",
+      "Telangana, India",
+    ],
     phone: "+91 91548 25820",
     phoneHref: "tel:+919154825820",
     email: "hyderabad@adooralegalservices.com",
   },
   {
-    city: "Amaravati",
-    label: "Andhra Pradesh",
-    lines: ["Seed Access Road", "Amaravati 522020", "Andhra Pradesh, India"],
-    phone: "+91 91548 25820",
-    phoneHref: "tel:+919154825820",
-    email: "amaravati@adooralegalservices.com",
-  },
-  {
     city: "Bengaluru",
     label: "Karnataka",
-    lines: ["Vittal Mallya Road", "Bengaluru 560001", "Karnataka, India"],
+    lines: [
+      "2nd Floor, Juice Junction Building",
+      "2nd Block, 9th Main Road, Jayanagar East",
+      "Bengaluru 560011",
+      "Karnataka, India",
+    ],
     phone: "+91 91548 25820",
     phoneHref: "tel:+919154825820",
     email: "bengaluru@adooralegalservices.com",
+  },
+  {
+    city: "Guntur",
+    label: "Andhra Pradesh",
+    lines: [
+      "D. No. 4-5-62, Sai Baba Road",
+      "Chandramouli Nagar",
+      "Guntur 522007",
+      "Andhra Pradesh, India",
+    ],
+    phone: "+91 91548 25820",
+    phoneHref: "tel:+919154825820",
+    email: "guntur@adooralegalservices.com",
   },
 ] as const;
 

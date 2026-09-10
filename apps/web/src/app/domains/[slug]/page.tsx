@@ -12,6 +12,7 @@ import {
   ServiceList,
   TeamGrid,
 } from "@/components/ui";
+import { peopleBySlugs } from "@/content/people";
 import { industries, industryBySlug } from "@/content/industries";
 import { practiceAreaBySlug } from "@/content/practice-areas";
 import { insightsForIndustry } from "@/content/insights";
@@ -90,7 +91,7 @@ export default async function IndustryPage(
           <h2 className="font-serif text-2xl font-semibold tracking-tight text-ink">
             Representative work
           </h2>
-          <p className="mt-3 max-w-2xl leading-relaxed text-slate">
+          <p className="mt-3 max-w-2xl leading-relaxed text-ink-soft">
             Factual descriptions of the kind of work handled in this sector.
             Client names and identifying details are omitted, and nothing here
             is a representation about the outcome of any matter.
@@ -109,7 +110,7 @@ export default async function IndustryPage(
           <h2 className="font-serif text-2xl font-semibold tracking-tight text-ink">
             Regulators and forums
           </h2>
-          <p className="mt-3 max-w-2xl leading-relaxed text-slate">
+          <p className="mt-3 max-w-2xl leading-relaxed text-ink-soft">
             The authorities, tribunals and courts that matters in this sector
             most often involve.
           </p>
@@ -127,7 +128,7 @@ export default async function IndustryPage(
           <h2 className="font-serif text-2xl font-semibold tracking-tight text-ink">
             Sector team
           </h2>
-          <p className="mt-3 max-w-2xl leading-relaxed text-slate">
+          <p className="mt-3 max-w-2xl leading-relaxed text-ink-soft">
             The lawyers who most often advise clients in this domain.
           </p>
           <div className="mt-8">
@@ -153,7 +154,7 @@ export default async function IndustryPage(
               ))}
             </ul>
           ) : (
-            <p className="mt-4 leading-relaxed text-slate">
+            <p className="mt-4 leading-relaxed text-ink-soft">
               We have not yet published an insight for this domain.{" "}
               <Link href="/insights" className="text-gold-deep underline underline-offset-4">
                 Browse all insights
@@ -172,7 +173,7 @@ export default async function IndustryPage(
           <h2 className="font-serif text-2xl font-semibold tracking-tight text-ink">
             Frequently asked questions
           </h2>
-          <p className="mt-3 max-w-2xl leading-relaxed text-slate">
+          <p className="mt-3 max-w-2xl leading-relaxed text-ink-soft">
             General information about legal issues in this sector. It is not
             legal advice and does not create a lawyer&ndash;client relationship.
           </p>
@@ -182,7 +183,12 @@ export default async function IndustryPage(
         </section>
       ),
     },
-  ];
+  ]
+    // The firm has not assigned lawyers to individual practices yet, so
+    // the Team tab only appears once `team` resolves to somebody.
+    .filter(
+      (tab) => tab.id !== "team" || peopleBySlugs(industry.team).length > 0,
+    );
 
   return (
     <>
@@ -218,7 +224,7 @@ export default async function IndustryPage(
                     <h3 className="font-semibold text-ink transition group-hover:text-gold-deep">
                       {practice.shortName}
                     </h3>
-                    <p className="mt-2 text-sm leading-relaxed text-slate">
+                    <p className="mt-2 text-sm leading-relaxed text-ink-soft">
                       {practice.tagline}
                     </p>
                   </Link>

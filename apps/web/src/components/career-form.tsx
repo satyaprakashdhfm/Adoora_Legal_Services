@@ -69,7 +69,7 @@ export function CareerForm({ roles }: { roles: string[] }) {
         <h3 className="font-serif text-xl font-semibold text-ink">
           Application received
         </h3>
-        <p className="mt-3 text-sm leading-relaxed text-slate">
+        <p className="mt-3 text-sm leading-relaxed text-ink-soft">
           Thank you. Please email your CV and a short covering note to{" "}
           <a
             href="mailto:careers@adooralegalservices.com"
@@ -176,7 +176,7 @@ export function CareerForm({ roles }: { roles: string[] }) {
           required
           className="mt-0.5 h-4 w-4 shrink-0 accent-[var(--color-gold)]"
         />
-        <span className="text-sm leading-relaxed text-slate">
+        <span className="text-sm leading-relaxed text-ink-soft">
           I consent to ADOORA Legal Services processing the personal data in
           this form to assess my application, as described in the{" "}
           <Link href="/privacy" className="text-gold-deep underline underline-offset-2">

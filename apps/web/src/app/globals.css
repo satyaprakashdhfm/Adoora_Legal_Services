@@ -82,13 +82,30 @@ body {
   }
 }
 
+/*
+ * Running text is set in the display serif at medium weight, so body copy
+ * shares the voice of the headings instead of switching to a UI sans halfway
+ * down the page. Interface chrome — nav, buttons, labels, form fields — stays
+ * in the sans, which is what `.eyebrow` below re-asserts.
+ */
+p,
+address,
+blockquote,
+dd,
+figcaption {
+  font-family: var(--font-serif);
+  font-weight: 500;
+}
+
 /* Utility: the thin gold rule that sits under section eyebrows. */
 .eyebrow {
+  font-family: var(--font-sans);
   font-size: 0.6875rem;
   font-weight: 600;
   letter-spacing: 0.18em;
   text-transform: uppercase;
 }
+
 
 /* Long-form article body. Applied to the insight renderer. */
 .prose-adoora p {
@@ -110,6 +127,8 @@ body {
 .prose-adoora ol {
   margin-block: 1.15rem;
   padding-inline-start: 1.35rem;
+  font-family: var(--font-serif);
+  font-weight: 500;
   line-height: 1.7;
   color: var(--color-ink-soft);
 }
