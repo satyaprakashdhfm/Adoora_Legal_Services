@@ -3,49 +3,8 @@
 import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
+import { heroSlides } from "@/content/hero-slides";
 import { firm } from "@/content/firm";
-
-type Slide = {
-  eyebrow: string;
-  /** The heading is split so the closing phrase can carry the gold accent. */
-  heading: string;
-  accent: string;
-  body: string;
-  href: string;
-  cta: string;
-};
-
-/**
- * Hero slides. Each is framed around what the client is trying to achieve
- * rather than what the firm sells — and none of them make a claim about
- * outcomes, which the BCI rules would not permit.
- */
-const slides: Slide[] = [
-  {
-    eyebrow: "Corporate & M&A",
-    heading: "Transactions structured for the rules they have",
-    accent: "to survive",
-    body: "Acquisitions, investments and joint ventures where the structuring question and the regulatory question cannot be separated — foreign investment routes, competition clearance and completion mechanics handled as one problem.",
-    href: "/services/corporate-ma",
-    cta: "Corporate & M&A",
-  },
-  {
-    eyebrow: "Dispute Resolution",
-    heading: "Strategy before pleadings, in the forum that",
-    accent: "fits the relief",
-    body: "Commercial litigation and arbitration across the High Courts, tribunals and arbitral forums of Telangana, Andhra Pradesh and Karnataka — with a candid view on what a claim is worth after cost and time.",
-    href: "/services/dispute-resolution",
-    cta: "Dispute Resolution",
-  },
-  {
-    eyebrow: "Banking & Finance",
-    heading: "Security that holds at the point it matters —",
-    accent: "enforcement",
-    body: "Rupee and foreign currency lending, external commercial borrowings and security documentation, with stamp duty, registration and perfection mapped for every state in which an asset sits.",
-    href: "/services/banking-finance",
-    cta: "Banking & Finance",
-  },
-];
 
 const ROTATE_MS = 7000;
 
@@ -65,7 +24,12 @@ function Arrow({ className = "" }: { className?: string }) {
   );
 }
 
-export function Hero() {
+/**
+ * `images` is resolved on the server, one entry per slide in `heroSlides`
+ * order, so a photograph that has not been supplied yet is simply null and the
+ * navy gradient carries that slide on its own.
+ */
+export function Hero({ images }: { images: (string | null)[] }) {
   const [index, setIndex] = useState(0);
   const [paused, setPaused] = useState(false);
   const reducedMotion = useRef(false);
@@ -80,13 +44,13 @@ export function Hero() {
     if (paused || reducedMotion.current) return;
 
     const timer = window.setInterval(
-      () => setIndex((current) => (current + 1) % slides.length),
+      () => setIndex((current) => (current + 1) % heroSlides.length),
       ROTATE_MS,
     );
     return () => window.clearInterval(timer);
   }, [paused]);
 
-  const active = slides[index];
+  const active = heroSlides[index];
 
   return (
     <section
@@ -98,18 +62,38 @@ export function Hero() {
       aria-roledescription="carousel"
       aria-label="Firm practice highlights"
     >
-      {/* Photography sits to the right; the navy wash keeps the left-hand
-          column readable at every width. If the file is absent the gradient
-          alone still carries the band. */}
+      {/* One photograph per slide, cross-fading with the copy. The navy wash
+          sits above all of them, so the left-hand column reads identically
+          whichever frame is showing. */}
       <div aria-hidden="true" className="absolute inset-0 -z-10">
-        <Image
-          src="/hero-law-justice.png"
-          alt=""
-          fill
-          preload
-          sizes="100vw"
-          className="object-cover object-right"
-        />
+        {heroSlides.map((slide, slideIndex) => {
+          const src = images[slideIndex];
+          if (!src) return null;
+
+          return (
+            <div
+              key={slide.eyebrow}
+              className={`hero-slide absolute inset-0 ${
+                slideIndex === index ? "opacity-100" : "opacity-0"
+              }`}
+            >
+              <Image
+                src={src}
+                alt=""
+                fill
+                sizes="100vw"
+                className="object-cover object-right"
+                /* The first frame is the LCP element; the other two only need
+                   to be in hand before the rotation reaches them. */
+                {...(slideIndex === 0
+                  ? { preload: true }
+                  : { loading: "eager" as const, fetchPriority: "low" as const })}
+              />
+              {slide.bright && <div className="absolute inset-0 bg-ink/45" />}
+            </div>
+          );
+        })}
+
         <div className="absolute inset-0 bg-linear-to-r from-ink via-ink/90 to-ink/40" />
         <div className="absolute inset-0 bg-linear-to-t from-ink/80 via-transparent to-ink/40" />
       </div>
@@ -119,7 +103,7 @@ export function Hero() {
           {/* Slides are stacked so the container height does not jump between
               headings of different lengths. */}
           <div className="grid">
-            {slides.map((slide, slideIndex) => {
+            {heroSlides.map((slide, slideIndex) => {
               const isActive = slideIndex === index;
 
               return (
@@ -163,7 +147,7 @@ export function Hero() {
 
           {/* Slide controls: a rule per slide, filling gold when active. */}
           <div className="mt-10 flex items-center gap-3">
-            {slides.map((slide, slideIndex) => {
+            {heroSlides.map((slide, slideIndex) => {
               const isActive = slideIndex === index;
 
               return (

@@ -6,6 +6,8 @@ import { firm, stats, awards, offices } from "@/content/firm";
 import { practiceAreas } from "@/content/practice-areas";
 import { industries } from "@/content/industries";
 import { insightsByDate } from "@/content/insights";
+import { heroSlides } from "@/content/hero-slides";
+import { publicImage } from "@/lib/public-image";
 import { siteUrl } from "@/lib/site";
 
 export const metadata: Metadata = {
@@ -71,7 +73,7 @@ export default function Home() {
 
   return (
     <>
-      <Hero />
+      <Hero images={heroSlides.map((slide) => publicImage(slide.imageBase))} />
 
       {/* Trust strip — factual counters only, divided by hairlines. */}
       <section
