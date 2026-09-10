@@ -28,7 +28,7 @@ export default function DomainsPage() {
                 href={`/domains/${industry.slug}`}
                 className="group flex h-full flex-col rounded-xl border border-line bg-paper p-7 transition hover:-translate-y-0.5 hover:border-gold/40 hover:shadow-lg hover:shadow-ink/5"
               >
-                <h2 className="font-serif text-xl font-semibold leading-snug tracking-tight text-ink transition group-hover:text-gold">
+                <h2 className="font-serif text-xl font-semibold leading-snug tracking-tight text-ink transition group-hover:text-gold-deep">
                   {industry.name}
                 </h2>
                 <p className="mt-3 text-sm leading-relaxed text-slate">
@@ -53,7 +53,7 @@ export default function DomainsPage() {
 
                 <span
                   aria-hidden="true"
-                  className="mt-6 inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.14em] text-gold"
+                  className="mt-6 inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.14em] text-gold-deep"
                 >
                   View domain
                   <svg viewBox="0 0 16 16" className="h-3 w-3">

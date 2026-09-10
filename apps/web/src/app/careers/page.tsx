@@ -137,7 +137,7 @@ export default function CareersPage() {
                     <h3 className="font-serif text-xl font-semibold tracking-tight text-ink">
                       {role.title}
                     </h3>
-                    <div className="mt-2.5 flex flex-wrap gap-x-4 gap-y-1 text-xs uppercase tracking-[0.14em] text-gold">
+                    <div className="mt-2.5 flex flex-wrap gap-x-4 gap-y-1 text-xs uppercase tracking-[0.14em] text-gold-deep">
                       <span>{role.office}</span>
                       <span className="text-slate-light">
                         {role.experience}

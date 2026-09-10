@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { useRouter, usePathname } from "next/navigation";
-import { ScalesMark } from "@/components/brand";
+import { BrandMark } from "@/components/brand";
 import {
   COOKIE_DISCLAIMER,
   disclaimer,
@@ -98,8 +98,8 @@ export function DisclaimerGate() {
         className="rise my-auto w-full max-w-2xl overflow-hidden rounded-2xl bg-paper shadow-2xl"
       >
         <div className="flex items-center gap-3 border-b border-line bg-paper-warm px-6 py-5 sm:px-8">
-          <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border border-line-strong bg-paper text-gold">
-            <ScalesMark className="h-6 w-6" />
+          <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border border-line-strong bg-paper text-gold-deep">
+            <BrandMark className="h-7 w-auto" />
           </span>
           <div>
             <h2

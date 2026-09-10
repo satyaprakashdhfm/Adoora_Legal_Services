@@ -37,7 +37,7 @@ export default function ContactPage() {
 
           <aside className="space-y-5">
             <div className="rounded-2xl border border-line bg-paper-warm p-7">
-              <h2 className="eyebrow text-gold">Direct</h2>
+              <h2 className="eyebrow text-gold-deep">Direct</h2>
               <div className="mt-4 space-y-4">
                 <div>
                   <p className="text-xs uppercase tracking-[0.14em] text-slate-light">
@@ -45,7 +45,7 @@ export default function ContactPage() {
                   </p>
                   <a
                     href={firm.phoneHref}
-                    className="mt-1 block font-serif text-xl font-semibold text-ink transition hover:text-gold"
+                    className="mt-1 block font-serif text-xl font-semibold text-ink transition hover:text-gold-deep"
                   >
                     {firm.phone}
                   </a>
@@ -56,7 +56,7 @@ export default function ContactPage() {
                   </p>
                   <a
                     href={firm.emailHref}
-                    className="mt-1 block break-all font-medium text-ink transition hover:text-gold"
+                    className="mt-1 block break-all font-medium text-ink transition hover:text-gold-deep"
                   >
                     {firm.email}
                   </a>
@@ -65,14 +65,14 @@ export default function ContactPage() {
             </div>
 
             <div className="rounded-2xl border border-line p-7">
-              <h2 className="eyebrow text-gold">Offices</h2>
+              <h2 className="eyebrow text-gold-deep">Offices</h2>
               <ul className="mt-5 space-y-6">
                 {offices.map((office) => (
                   <li key={office.city} className="border-l-2 border-gold/25 pl-5">
                     <h3 className="font-serif text-lg font-semibold text-ink">
                       {office.city}
                     </h3>
-                    <p className="text-xs uppercase tracking-[0.14em] text-gold">
+                    <p className="text-xs uppercase tracking-[0.14em] text-gold-deep">
                       {office.label}
                     </p>
                     <address className="mt-2 space-y-0.5 text-sm not-italic text-slate">
@@ -83,13 +83,13 @@ export default function ContactPage() {
                     <div className="mt-2.5 flex flex-col gap-0.5 text-sm">
                       <a
                         href={office.phoneHref}
-                        className="text-ink-soft transition hover:text-gold"
+                        className="text-ink-soft transition hover:text-gold-deep"
                       >
                         {office.phone}
                       </a>
                       <a
                         href={`mailto:${office.email}`}
-                        className="break-all text-ink-soft transition hover:text-gold"
+                        className="break-all text-ink-soft transition hover:text-gold-deep"
                       >
                         {office.email}
                       </a>
@@ -100,7 +100,7 @@ export default function ContactPage() {
                       )}`}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="mt-3 inline-block text-xs font-semibold uppercase tracking-[0.14em] text-gold"
+                      className="mt-3 inline-block text-xs font-semibold uppercase tracking-[0.14em] text-gold-deep"
                     >
                       Open in maps
                     </a>

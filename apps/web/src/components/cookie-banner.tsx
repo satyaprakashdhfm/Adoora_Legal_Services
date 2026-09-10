@@ -66,7 +66,7 @@ export function CookieBanner() {
               We use strictly necessary cookies to make this website work.
               We&rsquo;d also like to set optional cookies to understand how the
               site is used. Nothing optional is set unless you allow it. See our{" "}
-              <Link href="/cookies" className="text-gold underline underline-offset-2">
+              <Link href="/cookies" className="text-gold-deep underline underline-offset-2">
                 Cookie Policy
               </Link>
               .
@@ -76,7 +76,7 @@ export function CookieBanner() {
               type="button"
               onClick={() => setShowDetail((open) => !open)}
               aria-expanded={showDetail}
-              className="mt-2.5 text-xs font-semibold uppercase tracking-[0.14em] text-gold transition hover:text-gold-deep"
+              className="mt-2.5 text-xs font-semibold uppercase tracking-[0.14em] text-gold-deep transition hover:text-gold-deep"
             >
               {showDetail ? "Hide preferences" : "Manage preferences"}
             </button>
@@ -152,7 +152,7 @@ export function CookieBanner() {
             <button
               type="button"
               onClick={() => save({ analytics, marketing })}
-              className="mt-4 rounded-full bg-gold px-6 py-2.5 text-sm font-semibold text-white transition hover:bg-gold-deep"
+              className="mt-4 rounded-md bg-gold px-6 py-2.5 text-sm font-semibold text-ink transition hover:bg-gold-bright"
             >
               Save preferences
             </button>

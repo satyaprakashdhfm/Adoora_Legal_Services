@@ -71,7 +71,7 @@ export function EnquiryForm() {
       <div className="rounded-2xl border border-line bg-paper-warm p-8 text-center">
         <span
           aria-hidden="true"
-          className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-gold/10 text-gold"
+          className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-gold/10 text-gold-deep"
         >
           <svg viewBox="0 0 20 20" className="h-6 w-6">
             <path
@@ -96,7 +96,7 @@ export function EnquiryForm() {
         <button
           type="button"
           onClick={() => setStatus("idle")}
-          className="mt-6 text-sm font-semibold text-gold underline decoration-gold/30 underline-offset-4"
+          className="mt-6 text-sm font-semibold text-gold-deep underline decoration-gold/30 underline-offset-4"
         >
           Send another enquiry
         </button>
@@ -129,7 +129,7 @@ export function EnquiryForm() {
             htmlFor="matterType"
             className="block text-sm font-medium text-ink"
           >
-            Matter type <span className="text-gold">*</span>
+            Matter type <span className="text-gold-deep">*</span>
           </label>
           <select
             id="matterType"
@@ -156,7 +156,7 @@ export function EnquiryForm() {
           htmlFor="description"
           className="block text-sm font-medium text-ink"
         >
-          Brief description <span className="text-gold">*</span>
+          Brief description <span className="text-gold-deep">*</span>
         </label>
         <textarea
           id="description"
@@ -199,7 +199,7 @@ export function EnquiryForm() {
           conflicts check, as described in the{" "}
           <Link
             href="/privacy"
-            className="text-gold underline underline-offset-2"
+            className="text-gold-deep underline underline-offset-2"
           >
             Privacy Policy
           </Link>
@@ -247,7 +247,7 @@ function Field({
   return (
     <div>
       <label htmlFor={name} className="block text-sm font-medium text-ink">
-        {label} {required && <span className="text-gold">*</span>}
+        {label} {required && <span className="text-gold-deep">*</span>}
       </label>
       <input
         id={name}

@@ -172,7 +172,7 @@ export default async function PracticeAreaPage(
           ) : (
             <p className="mt-4 leading-relaxed text-slate">
               We have not yet published an insight in this practice area.{" "}
-              <Link href="/insights" className="text-gold underline underline-offset-4">
+              <Link href="/insights" className="text-gold-deep underline underline-offset-4">
                 Browse all insights
               </Link>
               .
@@ -222,7 +222,7 @@ export default async function PracticeAreaPage(
       {relatedIndustries.length > 0 && (
         <section className="border-t border-line bg-paper-warm">
           <div className="mx-auto max-w-7xl px-6 py-16">
-            <h2 className="eyebrow text-gold">Related domains</h2>
+            <h2 className="eyebrow text-gold-deep">Related domains</h2>
             <p className="mt-3 max-w-2xl font-serif text-2xl font-semibold tracking-tight text-ink">
               Industries where this practice is most active
             </p>
@@ -233,7 +233,7 @@ export default async function PracticeAreaPage(
                     href={`/domains/${industry.slug}`}
                     className="group block h-full rounded-xl border border-line bg-paper p-5 transition hover:border-gold/40"
                   >
-                    <h3 className="font-semibold text-ink transition group-hover:text-gold">
+                    <h3 className="font-semibold text-ink transition group-hover:text-gold-deep">
                       {industry.name}
                     </h3>
                     <p className="mt-2 text-sm leading-relaxed text-slate">

@@ -1,17 +1,9 @@
 import Link from "next/link";
 import type { Metadata } from "next";
 import { Hero } from "@/components/hero";
-import {
-  CtaBand,
-  InsightCard,
-  SectionHeading,
-} from "@/components/ui";
+import { CtaBand, InsightCard, SectionHeading } from "@/components/ui";
 import { firm, stats, awards, offices } from "@/content/firm";
-import {
-  practiceAreas,
-  practiceGroups,
-  practiceAreasByGroup,
-} from "@/content/practice-areas";
+import { practiceAreas } from "@/content/practice-areas";
 import { industries } from "@/content/industries";
 import { insightsByDate } from "@/content/insights";
 import { siteUrl } from "@/lib/site";
@@ -22,13 +14,56 @@ export const metadata: Metadata = {
   alternates: { canonical: "/" },
 };
 
-/** Icons for the four practice groups. Kept inline — no icon font needed. */
-const groupIcon: Record<string, string> = {
-  Corporate: "M4 17V7l6-3 6 3v10M8 17v-5h4v5",
-  Finance: "M3 16h14M5 16V9M9 16V6M13 16v-5M17 16v-8",
-  Disputes: "M10 3v14M5 17h10M4 7h12M4 7l-2 5h4zM16 7l-2 5h4z",
-  Regulatory: "M10 2l6 3v5c0 4-2.6 6.6-6 8-3.4-1.4-6-4-6-8V5l6-3z",
+/**
+ * One icon per practice area, keyed by slug. Kept inline as 20×20 stroke
+ * paths — no icon font, and they inherit the gold from the card.
+ */
+const practiceIcon: Record<string, string> = {
+  "corporate-ma":
+    "M4 17h12M6 17V4h8v13M8.5 7h1M11 7h1M8.5 10h1M11 10h1M8.5 13h1M11 13h1",
+  "banking-finance": "M3 16.5h14M6 16.5V9M10 16.5V4.5M14 16.5v-4.5",
+  "dispute-resolution":
+    "M10 4v12M6.5 16h7M4 8h12M4 8l-2 4.5h4zM16 8l-2 4.5h4z",
+  "technology-media-telecom": "M10 2.5l6 2.8v4.6c0 3.8-2.5 6.3-6 7.6-3.5-1.3-6-3.8-6-7.6V5.3l6-2.8z",
+  "real-estate-infrastructure": "M2.8 9L10 3.6 17.2 9M4.6 10.4V17h10.8v-6.6M8.4 17v-4h3.2v4",
+  taxation: "M5 2.8h6.5L15 6.3V17.2H5zM11.5 2.8v3.5H15M7.6 10h4.8M7.6 13.2h4.8",
+  "labour-employment":
+    "M7 9.2a2.3 2.3 0 100-4.6 2.3 2.3 0 000 4.6zM13 9.2a2.3 2.3 0 100-4.6 2.3 2.3 0 000 4.6zM2.8 16.4c0-2.3 1.9-4.2 4.2-4.2s4.2 1.9 4.2 4.2M11.6 12.6a4.2 4.2 0 015.6 3.8",
+  "intellectual-property":
+    "M10 2.8a4.6 4.6 0 00-2.7 8.3c.4.3.7.8.7 1.3v.6h4v-.6c0-.5.3-1 .7-1.3A4.6 4.6 0 0010 2.8zM8.4 16.6h3.2",
 };
+
+/** Practice order for the home grid — flagship practices first. */
+const practiceOrder = [
+  "corporate-ma",
+  "banking-finance",
+  "dispute-resolution",
+  "technology-media-telecom",
+  "real-estate-infrastructure",
+  "taxation",
+  "labour-employment",
+  "intellectual-property",
+];
+
+const homePractices = [...practiceAreas].sort(
+  (a, b) => practiceOrder.indexOf(a.slug) - practiceOrder.indexOf(b.slug),
+);
+
+/** Right-pointing arrow shared by the links and pills on this page. */
+function Arrow({ className = "" }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 16 16" aria-hidden="true" className={`h-3.5 w-3.5 ${className}`}>
+      <path
+        d="M2 8h11M9 4l4 4-4 4"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth={1.6}
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+}
 
 export default function Home() {
   const latestInsights = insightsByDate.slice(0, 3);
@@ -38,32 +73,59 @@ export default function Home() {
     <>
       <Hero />
 
-      {/* Trust strip — factual counters only. */}
+      {/* Trust strip — factual counters only, divided by hairlines. */}
       <section
         aria-label="The firm at a glance"
         className="border-b border-line bg-paper-warm"
       >
-        <div className="mx-auto grid max-w-7xl grid-cols-2 gap-y-8 px-6 py-10 lg:grid-cols-4">
-          {stats.map((stat) => (
-            <div key={stat.label} className="text-center lg:text-left">
-              <p className="font-serif text-3xl font-semibold text-ink sm:text-4xl">
-                {stat.value}
-              </p>
-              <p className="mt-1.5 text-xs uppercase tracking-[0.14em] text-slate">
-                {stat.label}
-              </p>
-            </div>
-          ))}
+        <div className="mx-auto grid max-w-7xl grid-cols-2 gap-y-10 px-6 py-12 lg:grid-cols-4">
+          {stats.map((stat, index) => {
+            /* Hairlines divide the columns, so the first cell in each row
+               carries none: index 0 at every width, and index 2 only until
+               the grid widens from two columns to four. */
+            const divider =
+              index === 0
+                ? "lg:pl-0"
+                : index % 2 === 1
+                  ? "border-l border-line-strong"
+                  : "lg:border-l lg:border-line-strong";
+
+            return (
+              <div key={stat.label} className={`px-2 lg:px-8 ${divider}`}>
+                <p
+                  className={`font-serif text-3xl font-semibold sm:text-4xl ${
+                    index === 0 ? "text-gold-deep" : "text-ink"
+                  }`}
+                >
+                  {stat.value}
+                </p>
+                <p className="mt-2 text-[0.7rem] uppercase tracking-[0.14em] text-slate">
+                  {stat.label}
+                </p>
+              </div>
+            );
+          })}
         </div>
       </section>
 
-      {/* About */}
+      {/* About — the heading and standing line sit opposite the prose. */}
       <section className="mx-auto max-w-7xl px-6 py-20 sm:py-24">
-        <div className="grid gap-12 lg:grid-cols-[1fr_1.15fr] lg:gap-20">
-          <SectionHeading
-            eyebrow="About the firm"
-            title="A full-service practice built around how work actually reaches a client"
-          />
+        <div className="grid gap-12 lg:grid-cols-[1fr_1.1fr] lg:gap-20">
+          <div>
+            <SectionHeading
+              eyebrow="About the firm"
+              title="A full-service practice built around how work actually reaches a client"
+            />
+            <span
+              aria-hidden="true"
+              className="mt-8 block h-0.5 w-16 bg-gold"
+            />
+            <p className="mt-8 max-w-sm font-serif text-lg leading-relaxed text-ink-soft">
+              Strategic legal solutions for businesses, institutions and
+              individuals.
+            </p>
+          </div>
+
           <div className="space-y-5 text-base leading-relaxed text-ink-soft">
             <p>
               {firm.name} advises Indian and international clients on corporate
@@ -82,25 +144,27 @@ export default function Home() {
               Amaravati and Bengaluru, and before the courts, tribunals and
               regulators of Telangana, Andhra Pradesh and Karnataka.
             </p>
-            <div className="flex flex-wrap gap-x-6 gap-y-3 pt-2">
+            <div className="flex flex-wrap gap-x-8 gap-y-3 pt-4">
               <Link
                 href="/about"
-                className="text-sm font-semibold text-gold underline decoration-gold/30 underline-offset-4 transition hover:decoration-gold"
+                className="inline-flex items-center gap-2 text-sm font-semibold text-gold-deep underline decoration-gold/40 underline-offset-[6px] transition hover:decoration-gold"
               >
                 Read about our approach
+                <Arrow />
               </Link>
               <Link
                 href="/about#people"
-                className="text-sm font-semibold text-ink-soft underline decoration-line-strong underline-offset-4 transition hover:text-gold"
+                className="inline-flex items-center gap-2 text-sm font-semibold text-ink-soft underline decoration-line-strong underline-offset-[6px] transition hover:text-gold-deep"
               >
                 Meet the team
+                <Arrow />
               </Link>
             </div>
           </div>
         </div>
       </section>
 
-      {/* Practice areas — four grouped columns, mirroring the reference site. */}
+      {/* Practice areas — one card per practice, in a four-up grid. */}
       <section className="border-y border-line bg-paper-warm">
         <div className="mx-auto max-w-7xl px-6 py-20 sm:py-24">
           <div className="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
@@ -111,58 +175,56 @@ export default function Home() {
             />
             <Link
               href="/services"
-              className="shrink-0 rounded-full border border-line-strong px-6 py-3 text-sm font-semibold text-ink transition hover:border-gold hover:text-gold"
+              className="inline-flex shrink-0 items-center gap-2 self-start rounded-full border border-line-strong px-6 py-3 text-sm font-semibold text-ink transition hover:border-gold hover:text-gold-deep lg:self-auto"
             >
-              All practice areas
+              View all practice areas
+              <Arrow />
             </Link>
           </div>
 
-          <div className="mt-14 grid gap-x-8 gap-y-12 sm:grid-cols-2 lg:grid-cols-4">
-            {practiceGroups.map((group) => (
-              <div key={group}>
-                <div className="flex items-center gap-3 border-b border-line-strong pb-4">
-                  <span
-                    aria-hidden="true"
-                    className="flex h-9 w-9 items-center justify-center rounded-lg bg-ink text-gold-bright"
-                  >
-                    <svg viewBox="0 0 20 20" className="h-5 w-5">
+          <ul className="mt-14 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
+            {homePractices.map((area) => (
+              <li key={area.slug}>
+                <Link
+                  href={`/services/${area.slug}`}
+                  className="group flex h-full flex-col rounded-xl border border-line bg-paper p-6 transition hover:-translate-y-0.5 hover:border-gold/50 hover:shadow-lg hover:shadow-ink/5"
+                >
+                  <span aria-hidden="true" className="text-gold">
+                    <svg viewBox="0 0 20 20" className="h-7 w-7">
                       <path
-                        d={groupIcon[group]}
+                        d={practiceIcon[area.slug]}
                         fill="none"
                         stroke="currentColor"
-                        strokeWidth={1.5}
+                        strokeWidth={1.4}
                         strokeLinecap="round"
                         strokeLinejoin="round"
                       />
                     </svg>
                   </span>
-                  <h3 className="eyebrow text-ink">{group}</h3>
-                </div>
 
-                <ul className="mt-5 space-y-4">
-                  {practiceAreasByGroup(group).map((area) => (
-                    <li key={area.slug}>
-                      <Link
-                        href={`/services/${area.slug}`}
-                        className="group block"
-                      >
-                        <span className="font-serif text-lg font-semibold leading-snug tracking-tight text-ink transition group-hover:text-gold">
-                          {area.shortName}
-                        </span>
-                        <span className="mt-1.5 block text-sm leading-relaxed text-slate">
-                          {area.tagline}
-                        </span>
-                      </Link>
-                    </li>
-                  ))}
-                </ul>
-              </div>
+                  <h3 className="mt-5 font-serif text-lg font-semibold leading-snug tracking-tight text-ink transition group-hover:text-gold-deep">
+                    {area.shortName}
+                  </h3>
+                  <p className="mt-3 flex-1 text-sm leading-relaxed text-slate">
+                    {area.tagline}
+                  </p>
+
+                  <span
+                    aria-hidden="true"
+                    className="mt-6 inline-flex items-center gap-2 text-sm font-semibold text-gold-deep"
+                  >
+                    Learn more
+                    <Arrow className="transition-transform group-hover:translate-x-0.5" />
+                  </span>
+                </Link>
+              </li>
             ))}
-          </div>
+          </ul>
         </div>
       </section>
 
-      {/* Industry domains */}
+      {/* Industry domains — dark tiles, name and sector line stacked at the
+          foot of each. */}
       <section className="mx-auto max-w-7xl px-6 py-20 sm:py-24">
         <div className="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
           <SectionHeading
@@ -172,9 +234,10 @@ export default function Home() {
           />
           <Link
             href="/domains"
-            className="shrink-0 rounded-full border border-line-strong px-6 py-3 text-sm font-semibold text-ink transition hover:border-gold hover:text-gold"
+            className="inline-flex shrink-0 items-center gap-2 self-start rounded-full border border-line-strong px-6 py-3 text-sm font-semibold text-ink transition hover:border-gold hover:text-gold-deep lg:self-auto"
           >
-            All domains
+            View all domains
+            <Arrow />
           </Link>
         </div>
 
@@ -183,30 +246,27 @@ export default function Home() {
             <li key={industry.slug}>
               <Link
                 href={`/domains/${industry.slug}`}
-                className="group flex h-full flex-col rounded-xl border border-line bg-paper p-6 transition hover:-translate-y-0.5 hover:border-gold/40 hover:shadow-lg hover:shadow-ink/5"
+                className="group relative flex aspect-[4/3] flex-col justify-end overflow-hidden rounded-xl bg-ink p-6 text-white transition hover:-translate-y-0.5 hover:shadow-xl hover:shadow-ink/15"
               >
-                <h3 className="font-serif text-lg font-semibold leading-snug tracking-tight text-ink transition group-hover:text-gold">
-                  {industry.name}
-                </h3>
-                <p className="mt-3 flex-1 text-sm leading-relaxed text-slate">
-                  {industry.tagline}
-                </p>
                 <span
                   aria-hidden="true"
-                  className="mt-5 inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.14em] text-gold"
-                >
-                  Explore
-                  <svg viewBox="0 0 16 16" className="h-3 w-3">
-                    <path
-                      d="M2 8h11M9 4l4 4-4 4"
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth={1.6}
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                    />
-                  </svg>
-                </span>
+                  className="absolute inset-0 bg-[linear-gradient(135deg,var(--color-ink-mid),var(--color-ink-deep))] transition-opacity group-hover:opacity-90"
+                />
+                <span
+                  aria-hidden="true"
+                  className="absolute -right-10 -top-10 h-32 w-32 rounded-full bg-gold/15 blur-2xl"
+                />
+                <span
+                  aria-hidden="true"
+                  className="absolute inset-x-6 top-6 h-px bg-gold/40"
+                />
+
+                <h3 className="relative font-serif text-lg font-semibold leading-snug tracking-tight">
+                  {industry.name}
+                </h3>
+                <p className="relative mt-2 text-xs leading-relaxed text-white/65">
+                  {industry.tagline}
+                </p>
               </Link>
             </li>
           ))}
@@ -224,9 +284,10 @@ export default function Home() {
             />
             <Link
               href="/insights"
-              className="shrink-0 rounded-full border border-line-strong px-6 py-3 text-sm font-semibold text-ink transition hover:border-gold hover:text-gold"
+              className="inline-flex shrink-0 items-center gap-2 self-start rounded-full border border-line-strong px-6 py-3 text-sm font-semibold text-ink transition hover:border-gold hover:text-gold-deep lg:self-auto"
             >
-              All insights
+              View all insights
+              <Arrow />
             </Link>
           </div>
 
@@ -250,9 +311,10 @@ export default function Home() {
           />
           <Link
             href="/achievements"
-            className="shrink-0 rounded-full border border-line-strong px-6 py-3 text-sm font-semibold text-ink transition hover:border-gold hover:text-gold"
+            className="inline-flex shrink-0 items-center gap-2 self-start rounded-full border border-line-strong px-6 py-3 text-sm font-semibold text-ink transition hover:border-gold hover:text-gold-deep lg:self-auto"
           >
-            All recognitions
+            View all recognitions
+            <Arrow />
           </Link>
         </div>
 
@@ -262,7 +324,7 @@ export default function Home() {
               key={award.title}
               className="flex flex-col rounded-xl border border-line bg-paper-warm p-6"
             >
-              <span className="text-xs font-semibold uppercase tracking-[0.16em] text-gold">
+              <span className="text-xs font-semibold uppercase tracking-[0.16em] text-gold-deep">
                 {award.year}
               </span>
               <h3 className="mt-3 font-serif text-base font-semibold leading-snug text-ink">
@@ -284,14 +346,11 @@ export default function Home() {
             <SectionHeading eyebrow="Locations" title="Where we are" />
             <ul className="mt-8 space-y-6">
               {offices.map((office) => (
-                <li
-                  key={office.city}
-                  className="border-l-2 border-gold/30 pl-5"
-                >
+                <li key={office.city} className="border-l-2 border-gold/40 pl-5">
                   <h3 className="font-serif text-lg font-semibold text-ink">
                     {office.city}
                   </h3>
-                  <p className="text-xs uppercase tracking-[0.14em] text-gold">
+                  <p className="text-xs uppercase tracking-[0.14em] text-gold-deep">
                     {office.label}
                   </p>
                   <address className="mt-2 space-y-0.5 text-sm not-italic text-slate">
@@ -304,7 +363,16 @@ export default function Home() {
             </ul>
           </div>
 
-          <div className="flex flex-col justify-between rounded-2xl border border-line bg-ink p-8 text-white sm:p-10">
+          <div className="relative isolate flex flex-col justify-between overflow-hidden rounded-2xl bg-ink p-8 text-white sm:p-10">
+            <div
+              aria-hidden="true"
+              className="absolute inset-0 -z-10 bg-[linear-gradient(135deg,var(--color-ink-mid),var(--color-ink-deep))]"
+            />
+            <div
+              aria-hidden="true"
+              className="pointer-events-none absolute -right-16 -top-16 -z-10 h-64 w-64 rounded-full bg-gold/15 blur-3xl"
+            />
+
             <div>
               <SectionHeading
                 eyebrow="Careers"
@@ -316,13 +384,14 @@ export default function Home() {
             <div className="mt-10 flex flex-col gap-3 sm:flex-row">
               <Link
                 href="/careers"
-                className="rounded-full bg-gold-bright px-7 py-3.5 text-center text-sm font-semibold text-ink transition hover:bg-white"
+                className="inline-flex items-center justify-center gap-2 rounded-md bg-gold px-7 py-3.5 text-sm font-semibold text-ink transition hover:bg-gold-bright"
               >
                 Open roles
+                <Arrow />
               </Link>
               <Link
                 href="/about"
-                className="rounded-full border border-white/25 px-7 py-3.5 text-center text-sm font-semibold text-white transition hover:border-white/60"
+                className="inline-flex items-center justify-center rounded-md border border-white/30 px-7 py-3.5 text-sm font-semibold text-white transition hover:border-white hover:bg-white/5"
               >
                 About the firm
               </Link>
@@ -343,7 +412,7 @@ export default function Home() {
             name: firm.name,
             description: firm.descriptor,
             url: siteUrl,
-            telephone: `+91${firm.phone}`,
+            telephone: firm.phoneE164,
             email: firm.email,
             areaServed: ["Telangana", "Andhra Pradesh", "Karnataka"],
             address: offices.map((office) => ({

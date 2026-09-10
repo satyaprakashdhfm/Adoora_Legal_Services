@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { ScalesMark } from "@/components/brand";
+import { BrandMark } from "@/components/brand";
 
 export default function NotFound() {
   return (
@@ -7,12 +7,12 @@ export default function NotFound() {
       <div className="max-w-lg text-center">
         <span
           aria-hidden="true"
-          className="mx-auto flex h-14 w-14 items-center justify-center rounded-xl border border-line-strong bg-paper-warm text-gold"
+          className="mx-auto flex h-14 w-14 items-center justify-center rounded-xl border border-line-strong bg-paper-warm text-gold-deep"
         >
-          <ScalesMark className="h-8 w-8" />
+          <BrandMark className="h-9 w-auto" />
         </span>
 
-        <p className="mt-8 eyebrow text-gold">404</p>
+        <p className="mt-8 eyebrow text-gold-deep">404</p>
         <h1 className="mt-3 font-serif text-3xl font-semibold tracking-tight text-ink">
           We could not find that page
         </h1>
@@ -32,7 +32,7 @@ export default function NotFound() {
             <Link
               key={link.href}
               href={link.href}
-              className="rounded-full border border-line-strong px-5 py-2.5 text-sm font-medium text-ink transition hover:border-gold hover:text-gold"
+              className="rounded-full border border-line-strong px-5 py-2.5 text-sm font-medium text-ink transition hover:border-gold hover:text-gold-deep"
             >
               {link.label}
             </Link>

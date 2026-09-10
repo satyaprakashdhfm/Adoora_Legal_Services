@@ -1,6 +1,6 @@
 import Link from "next/link";
 import type { Metadata } from "next";
-import { ScalesMark } from "@/components/brand";
+import { BrandMark } from "@/components/brand";
 import { declineNotice } from "@/content/legal";
 import { firm } from "@/content/firm";
 
@@ -24,9 +24,9 @@ export default function NoticePage() {
       <div className="w-full max-w-xl text-center">
         <span
           aria-hidden="true"
-          className="mx-auto flex h-14 w-14 items-center justify-center rounded-xl border border-line-strong bg-paper text-gold"
+          className="mx-auto flex h-14 w-14 items-center justify-center rounded-xl border border-line-strong bg-paper text-gold-deep"
         >
-          <ScalesMark className="h-8 w-8" />
+          <BrandMark className="h-9 w-auto" />
         </span>
 
         <h1 className="mt-8 font-serif text-3xl font-semibold tracking-tight text-ink">
@@ -47,7 +47,7 @@ export default function NoticePage() {
         <div className="mt-10">
           <Link
             href="/"
-            className="inline-block rounded-full border border-line-strong px-7 py-3 text-sm font-semibold text-ink transition hover:border-gold hover:text-gold"
+            className="inline-block rounded-full border border-line-strong px-7 py-3 text-sm font-semibold text-ink transition hover:border-gold hover:text-gold-deep"
           >
             Return to the disclaimer
           </Link>

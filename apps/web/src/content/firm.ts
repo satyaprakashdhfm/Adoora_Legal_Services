@@ -14,11 +14,26 @@ export const firm = {
     "A full-service law practice advising Indian and international clients on corporate transactions, financing, regulatory matters and dispute resolution.",
   years: "25+",
   regions: "Andhra Pradesh · Karnataka · Telangana",
-  phone: "9154825820",
+  /** The three offices, in the order the utility bar lists them. */
+  cities: "Hyderabad · Amaravati · Bengaluru",
+
+  /* `phone` is the display string; `phoneE164` is the form the structured
+     data needs. */
+  phone: "+91 91548 25820",
   phoneHref: "tel:+919154825820",
+  phoneE164: "+919154825820",
   email: "info@adooralegalservices.com",
   emailHref: "mailto:info@adooralegalservices.com",
   responseTime: "We aim to acknowledge every enquiry within one working day.",
+
+  /* Short lines used as pull quotes on the home page. They describe how the
+     firm works; they are not claims about outcomes — see `legal.ts`. */
+  heroQuote: "Sound legal counsel for a stronger tomorrow.",
+  ctaQuote: "Practical advice. Lasting impact.",
+  signOff: "Sound counsel for what's next.",
+
+  /** Left empty until the firm confirms the handle; the footer hides it. */
+  linkedin: "",
 } as const;
 
 export const offices = [
@@ -26,7 +41,7 @@ export const offices = [
     city: "Hyderabad",
     label: "Principal office",
     lines: ["Road No. 12, Banjara Hills", "Hyderabad 500034", "Telangana, India"],
-    phone: "9154825820",
+    phone: "+91 91548 25820",
     phoneHref: "tel:+919154825820",
     email: "hyderabad@adooralegalservices.com",
   },
@@ -34,7 +49,7 @@ export const offices = [
     city: "Amaravati",
     label: "Andhra Pradesh",
     lines: ["Seed Access Road", "Amaravati 522020", "Andhra Pradesh, India"],
-    phone: "9154825820",
+    phone: "+91 91548 25820",
     phoneHref: "tel:+919154825820",
     email: "amaravati@adooralegalservices.com",
   },
@@ -42,7 +57,7 @@ export const offices = [
     city: "Bengaluru",
     label: "Karnataka",
     lines: ["Vittal Mallya Road", "Bengaluru 560001", "Karnataka, India"],
-    phone: "9154825820",
+    phone: "+91 91548 25820",
     phoneHref: "tel:+919154825820",
     email: "bengaluru@adooralegalservices.com",
   },

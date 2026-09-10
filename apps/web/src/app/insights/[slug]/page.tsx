@@ -155,7 +155,7 @@ export default async function InsightPage(
 
             {/* Not-legal-advice notice — required on every article. */}
             <aside className="mt-12 rounded-xl border border-line bg-paper-warm p-6">
-              <h2 className="eyebrow text-gold">Please note</h2>
+              <h2 className="eyebrow text-gold-deep">Please note</h2>
               <p className="mt-3 text-sm leading-relaxed text-slate">
                 This article is for general information only. It reflects the
                 position as understood on the date of publication, is not legal
@@ -174,7 +174,7 @@ export default async function InsightPage(
                     <li key={`${tag.href}-${tag.label}`}>
                       <Link
                         href={tag.href}
-                        className="inline-block rounded-full border border-line px-3.5 py-1.5 text-sm text-ink-soft transition hover:border-gold hover:text-gold"
+                        className="inline-block rounded-full border border-line px-3.5 py-1.5 text-sm text-ink-soft transition hover:border-gold hover:text-gold-deep"
                       >
                         {tag.label}
                       </Link>
@@ -188,7 +188,7 @@ export default async function InsightPage(
           {/* Sticky takeaways + author rail */}
           <aside className="lg:sticky lg:top-32 lg:self-start">
             <div className="rounded-xl border border-line bg-paper-warm p-6">
-              <h2 className="eyebrow text-gold">Key takeaways</h2>
+              <h2 className="eyebrow text-gold-deep">Key takeaways</h2>
               <ul className="mt-4 space-y-3">
                 {insight.keyTakeaways.map((takeaway) => (
                   <li key={takeaway} className="flex gap-3">
@@ -210,7 +210,7 @@ export default async function InsightPage(
                 <div className="mt-4 flex items-center gap-3">
                   <span
                     aria-hidden="true"
-                    className="flex h-11 w-11 items-center justify-center rounded-full border border-line-strong bg-paper-warm font-serif text-sm font-semibold text-gold"
+                    className="flex h-11 w-11 items-center justify-center rounded-full border border-line-strong bg-paper-warm font-serif text-sm font-semibold text-gold-deep"
                   >
                     {author.initials}
                   </span>
@@ -221,7 +221,7 @@ export default async function InsightPage(
                 </div>
                 <Link
                   href={`/about#${author.slug}`}
-                  className="mt-4 inline-block text-sm font-medium text-gold underline decoration-gold/30 underline-offset-4"
+                  className="mt-4 inline-block text-sm font-medium text-gold-deep underline decoration-gold/30 underline-offset-4"
                 >
                   Full profile
                 </Link>

@@ -3,28 +3,34 @@
 /*
  * ADOORA brand tokens.
  *
- * The holding page was dark ink with a bright gold accent. The full site
- * inverts that — a light, editorial ground with ink for authority and gold
- * used sparingly — because a content-heavy law firm site has to be readable
- * for long stretches. The gold is split into two values: `gold` passes
- * contrast on light surfaces, `gold-bright` is for dark bands only.
+ * Three colours carry the brand, taken from the firm's own letterhead and
+ * logo: deep navy #28283C (primary), warm gold #C88A4E (accent and CTA) and
+ * warm off-white #FCFEF9 (background). Everything below is a tint or a shade
+ * of one of those three, so the palette stays coherent as sections alternate
+ * between the light ground and the navy bands.
+ *
+ * Gold is split into three values because one gold cannot do every job:
+ * `gold` is the brand value, used for fills, rules, icons and CTA surfaces;
+ * `gold-deep` is darkened until it clears 4.5:1 as text on the off-white
+ * ground; `gold-bright` is lifted so eyebrows and links stay legible on navy.
  */
 @theme {
-  --color-ink: #0f141c;
-  --color-ink-mid: #1b2330;
-  --color-ink-soft: #2b3545;
-  --color-slate: #55606f;
-  --color-slate-light: #7b8695;
+  --color-ink: #28283c;
+  --color-ink-deep: #1d1d2c;
+  --color-ink-mid: #33334a;
+  --color-ink-soft: #4a4a63;
+  --color-slate: #5c5c72;
+  --color-slate-light: #70708a;
 
-  --color-gold: #8a6a12;
-  --color-gold-deep: #6f5410;
-  --color-gold-bright: #f5b800;
+  --color-gold: #c88a4e;
+  --color-gold-deep: #9c6428;
+  --color-gold-bright: #d9a166;
 
-  --color-paper: #ffffff;
-  --color-paper-warm: #faf8f4;
-  --color-paper-tint: #f3efe7;
-  --color-line: #e4dfd4;
-  --color-line-strong: #cec7b8;
+  --color-paper: #fcfef9;
+  --color-paper-warm: #f6f4ed;
+  --color-paper-tint: #eeebe1;
+  --color-line: #e5e2d8;
+  --color-line-strong: #cfcbbd;
 
   --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
   --font-serif: var(--font-serif-display), ui-serif, Georgia, serif;
@@ -43,13 +49,13 @@ body {
 }
 
 ::selection {
-  background: var(--color-gold-bright);
+  background: var(--color-gold);
   color: var(--color-ink);
 }
 
 /* Visible focus for keyboard users everywhere (WCAG 2.1 AA). */
 :focus-visible {
-  outline: 2px solid var(--color-gold);
+  outline: 2px solid var(--color-gold-deep);
   outline-offset: 2px;
   border-radius: 2px;
 }

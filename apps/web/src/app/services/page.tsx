@@ -44,7 +44,7 @@ export default function ServicesPage() {
                       href={`/services/${area.slug}`}
                       className="group flex h-full flex-col rounded-xl border border-line bg-paper p-7 transition hover:-translate-y-0.5 hover:border-gold/40 hover:shadow-lg hover:shadow-ink/5"
                     >
-                      <h3 className="font-serif text-xl font-semibold leading-snug tracking-tight text-ink transition group-hover:text-gold">
+                      <h3 className="font-serif text-xl font-semibold leading-snug tracking-tight text-ink transition group-hover:text-gold-deep">
                         {area.name}
                       </h3>
                       <p className="mt-3 text-sm leading-relaxed text-slate">
@@ -69,7 +69,7 @@ export default function ServicesPage() {
 
                       <span
                         aria-hidden="true"
-                        className="mt-6 inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.14em] text-gold"
+                        className="mt-6 inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.14em] text-gold-deep"
                       >
                         View practice
                         <svg viewBox="0 0 16 16" className="h-3 w-3">

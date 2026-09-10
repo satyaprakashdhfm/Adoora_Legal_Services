@@ -91,7 +91,7 @@ export function Tabs({ tabs }: { tabs: TabDefinition[] }) {
                 onClick={() => selectTab(tab.id)}
                 className={`shrink-0 border-b-2 px-4 py-4 text-sm font-medium whitespace-nowrap transition ${
                   isActive
-                    ? "border-gold text-gold"
+                    ? "border-gold text-gold-deep"
                     : "border-transparent text-slate hover:border-line-strong hover:text-ink"
                 }`}
               >

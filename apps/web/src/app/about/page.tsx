@@ -147,7 +147,7 @@ export default function AboutPage() {
               accordance with our{" "}
               <Link
                 href="/privacy"
-                className="text-gold underline decoration-gold/30 underline-offset-4"
+                className="text-gold-deep underline decoration-gold/30 underline-offset-4"
               >
                 Privacy Policy
               </Link>{" "}
@@ -180,14 +180,14 @@ export default function AboutPage() {
                   <div>
                     <span
                       aria-hidden="true"
-                      className="flex h-16 w-16 items-center justify-center rounded-full border border-line-strong bg-paper-warm font-serif text-lg font-semibold text-gold"
+                      className="flex h-16 w-16 items-center justify-center rounded-full border border-line-strong bg-paper-warm font-serif text-lg font-semibold text-gold-deep"
                     >
                       {person.initials}
                     </span>
                     <h3 className="mt-5 font-serif text-xl font-semibold tracking-tight text-ink">
                       {person.name}
                     </h3>
-                    <p className="mt-1 text-sm text-gold">
+                    <p className="mt-1 text-sm text-gold-deep">
                       {person.designation}
                     </p>
 
@@ -242,7 +242,7 @@ export default function AboutPage() {
                               <li key={practiceSlug}>
                                 <Link
                                   href={`/services/${practice.slug}`}
-                                  className="inline-block rounded-full border border-line px-3 py-1 text-xs text-ink-soft transition hover:border-gold hover:text-gold"
+                                  className="inline-block rounded-full border border-line px-3 py-1 text-xs text-ink-soft transition hover:border-gold hover:text-gold-deep"
                                 >
                                   {practice.shortName}
                                 </Link>
@@ -303,7 +303,7 @@ export default function AboutPage() {
               <h3 className="font-serif text-lg font-semibold text-ink">
                 {office.city}
               </h3>
-              <p className="text-xs uppercase tracking-[0.14em] text-gold">
+              <p className="text-xs uppercase tracking-[0.14em] text-gold-deep">
                 {office.label}
               </p>
               <address className="mt-3 space-y-0.5 text-sm not-italic text-slate">
@@ -314,13 +314,13 @@ export default function AboutPage() {
               <div className="mt-4 flex flex-col gap-1 text-sm">
                 <a
                   href={office.phoneHref}
-                  className="text-ink-soft transition hover:text-gold"
+                  className="text-ink-soft transition hover:text-gold-deep"
                 >
                   {office.phone}
                 </a>
                 <a
                   href={`mailto:${office.email}`}
-                  className="text-ink-soft transition hover:text-gold"
+                  className="text-ink-soft transition hover:text-gold-deep"
                 >
                   {office.email}
                 </a>

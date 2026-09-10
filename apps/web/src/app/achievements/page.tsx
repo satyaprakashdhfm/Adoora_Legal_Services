@@ -47,7 +47,7 @@ export default function AchievementsPage() {
                       key={award.title}
                       className="rounded-xl border border-line bg-paper-warm p-6 sm:p-7"
                     >
-                      <p className="eyebrow text-gold">{award.body}</p>
+                      <p className="eyebrow text-gold-deep">{award.body}</p>
                       <h3 className="mt-2.5 font-serif text-xl font-semibold leading-snug tracking-tight text-ink">
                         {award.title}
                       </h3>

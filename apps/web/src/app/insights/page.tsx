@@ -59,7 +59,7 @@ export default function InsightsPage() {
               <h2 className="mt-4 font-serif text-2xl font-semibold leading-snug tracking-tight text-ink text-balance sm:text-3xl">
                 <a
                   href={`/insights/${lead.slug}`}
-                  className="transition group-hover:text-gold"
+                  className="transition group-hover:text-gold-deep"
                 >
                   {lead.title}
                 </a>
@@ -69,7 +69,7 @@ export default function InsightsPage() {
 
               <a
                 href={`/insights/${lead.slug}`}
-                className="mt-6 inline-flex items-center gap-2 text-sm font-semibold text-gold"
+                className="mt-6 inline-flex items-center gap-2 text-sm font-semibold text-gold-deep"
               >
                 Read the article
                 <svg viewBox="0 0 16 16" aria-hidden="true" className="h-3 w-3">
@@ -86,7 +86,7 @@ export default function InsightsPage() {
             </div>
 
             <aside className="rounded-xl border border-line bg-paper-warm p-6">
-              <h3 className="eyebrow text-gold">Key takeaways</h3>
+              <h3 className="eyebrow text-gold-deep">Key takeaways</h3>
               <ul className="mt-4 space-y-3">
                 {lead.keyTakeaways.slice(0, 4).map((takeaway) => (
                   <li key={takeaway} className="flex gap-3">

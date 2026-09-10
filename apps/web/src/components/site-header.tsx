@@ -7,6 +7,29 @@ import { Wordmark } from "@/components/brand";
 import { primaryNav } from "@/lib/nav";
 import { firm } from "@/content/firm";
 
+/** 14×14 stroke icons for the utility bar. */
+function UtilityIcon({ path }: { path: string }) {
+  return (
+    <svg viewBox="0 0 14 14" aria-hidden="true" className="h-3.5 w-3.5 shrink-0 text-gold">
+      <path
+        d={path}
+        fill="none"
+        stroke="currentColor"
+        strokeWidth={1.2}
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+}
+
+const icons = {
+  pin: "M7 1.6c2 0 3.6 1.6 3.6 3.6 0 2.6-3.6 7.2-3.6 7.2S3.4 7.8 3.4 5.2C3.4 3.2 5 1.6 7 1.6zM7 6.6a1.4 1.4 0 100-2.8 1.4 1.4 0 000 2.8z",
+  phone:
+    "M2.6 2.2h2l.9 2.2-1.2.9a6.6 6.6 0 003.4 3.4l.9-1.2 2.2.9v2a.9.9 0 01-1 .9A9.3 9.3 0 011.7 3.2a.9.9 0 01.9-1z",
+  mail: "M1.8 3.2h10.4v7.6H1.8zM1.8 3.6L7 7.4l5.2-3.8",
+} as const;
+
 export function SiteHeader() {
   const pathname = usePathname();
   /** Label of the open desktop mega-menu, or null. */
@@ -61,13 +84,24 @@ export function SiteHeader() {
     <header className="sticky top-0 z-40 border-b border-line bg-paper/95 backdrop-blur supports-[backdrop-filter]:bg-paper/85">
       {/* Utility bar — contact details, not a call to action. */}
       <div className="hidden border-b border-line bg-paper-warm lg:block">
-        <div className="mx-auto flex max-w-7xl items-center justify-between gap-6 px-6 py-2 text-xs text-slate">
-          <p>{firm.regions}</p>
-          <div className="flex items-center gap-5">
-            <a href={firm.phoneHref} className="transition hover:text-gold">
+        <div className="mx-auto flex max-w-7xl items-center justify-between gap-6 px-6 py-2.5 text-xs text-slate">
+          <p className="flex items-center gap-1.5">
+            <UtilityIcon path={icons.pin} />
+            {firm.cities}
+          </p>
+          <div className="flex items-center gap-6">
+            <a
+              href={firm.phoneHref}
+              className="flex items-center gap-1.5 transition hover:text-gold-deep"
+            >
+              <UtilityIcon path={icons.phone} />
               {firm.phone}
             </a>
-            <a href={firm.emailHref} className="transition hover:text-gold">
+            <a
+              href={firm.emailHref}
+              className="flex items-center gap-1.5 transition hover:text-gold-deep"
+            >
+              <UtilityIcon path={icons.mail} />
               {firm.email}
             </a>
           </div>
@@ -104,8 +138,8 @@ export function SiteHeader() {
                       onClick={() => setOpenMenu(expanded ? null : item.label)}
                       className={`flex items-center gap-1.5 rounded px-3 py-2 text-sm font-medium transition ${
                         active || expanded
-                          ? "text-gold"
-                          : "text-ink-soft hover:text-gold"
+                          ? "text-gold-deep"
+                          : "text-ink-soft hover:text-gold-deep"
                       }`}
                     >
                       {item.label}
@@ -130,7 +164,7 @@ export function SiteHeader() {
                     <Link
                       href={item.href}
                       className={`block rounded px-3 py-2 text-sm font-medium transition ${
-                        active ? "text-gold" : "text-ink-soft hover:text-gold"
+                        active ? "text-gold-deep" : "text-ink-soft hover:text-gold-deep"
                       }`}
                     >
                       {item.label}
@@ -148,9 +182,9 @@ export function SiteHeader() {
                             >
                               <Link
                                 href={child.href}
-                                className={`block rounded-lg px-3 py-2.5 text-sm transition hover:bg-paper-warm hover:text-gold ${
+                                className={`block rounded-lg px-3 py-2.5 text-sm transition hover:bg-paper-warm hover:text-gold-deep ${
                                   index === 0
-                                    ? "font-semibold text-gold"
+                                    ? "font-semibold text-gold-deep"
                                     : "text-ink-soft"
                                 }`}
                               >
@@ -170,9 +204,19 @@ export function SiteHeader() {
           <div className="flex items-center gap-3">
             <Link
               href="/contact"
-              className="hidden rounded-full bg-ink px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-ink-mid lg:inline-block"
+              className="hidden items-center gap-2 rounded-md bg-gold px-5 py-2.5 text-sm font-semibold text-ink transition hover:bg-gold-bright lg:inline-flex"
             >
-              Request information
+              Request Consultation
+              <svg viewBox="0 0 16 16" aria-hidden="true" className="h-3.5 w-3.5">
+                <path
+                  d="M2 8h11M9 4l4 4-4 4"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth={1.6}
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+              </svg>
             </Link>
 
             <button
@@ -256,7 +300,7 @@ export function SiteHeader() {
                             <li key={child.href}>
                               <Link
                                 href={child.href}
-                                className="block py-2 pl-3 text-sm text-slate transition hover:text-gold"
+                                className="block py-2 pl-3 text-sm text-slate transition hover:text-gold-deep"
                               >
                                 {child.label}
                               </Link>
@@ -268,7 +312,7 @@ export function SiteHeader() {
                   ) : (
                     <Link
                       href={item.href}
-                      className="block py-3.5 text-[0.95rem] font-medium text-ink transition hover:text-gold"
+                      className="block py-3.5 text-[0.95rem] font-medium text-ink transition hover:text-gold-deep"
                     >
                       {item.label}
                     </Link>
@@ -281,11 +325,11 @@ export function SiteHeader() {
           <div className="border-t border-line bg-paper-warm px-6 py-5">
             <Link
               href="/contact"
-              className="block rounded-full bg-ink px-5 py-3 text-center text-sm font-semibold text-white"
+              className="block rounded-md bg-gold px-5 py-3 text-center text-sm font-semibold text-ink"
             >
-              Request information
+              Request Consultation
             </Link>
-            <div className="mt-4 flex flex-col gap-1 text-sm text-slate">
+            <div className="mt-4 flex flex-col gap-1.5 text-sm text-slate">
               <a href={firm.phoneHref}>{firm.phone}</a>
               <a href={firm.emailHref}>{firm.email}</a>
             </div>

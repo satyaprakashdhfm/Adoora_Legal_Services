@@ -26,7 +26,7 @@ export function SectionHeading({
       {eyebrow && (
         <p
           className={`eyebrow inline-flex items-center gap-2.5 ${
-            isDark ? "text-gold-bright" : "text-gold"
+            isDark ? "text-gold-bright" : "text-gold-deep"
           }`}
         >
           <span
@@ -167,7 +167,7 @@ export function ProcessSteps({
         <li key={step.stage} className="relative">
           <span
             aria-hidden="true"
-            className="absolute -left-[2.4rem] flex h-6 w-6 items-center justify-center rounded-full border border-line-strong bg-paper text-[0.65rem] font-semibold text-gold"
+            className="absolute -left-[2.4rem] flex h-6 w-6 items-center justify-center rounded-full border border-line-strong bg-paper text-[0.65rem] font-semibold text-gold-deep"
           >
             {index + 1}
           </span>
@@ -192,7 +192,7 @@ export function FaqList({ faqs }: { faqs: Faq[] }) {
             <span>{faq.q}</span>
             <span
               aria-hidden="true"
-              className="mt-1 shrink-0 text-gold transition-transform group-open:rotate-45"
+              className="mt-1 shrink-0 text-gold-deep transition-transform group-open:rotate-45"
             >
               <svg viewBox="0 0 14 14" className="h-3.5 w-3.5">
                 <path
@@ -229,20 +229,20 @@ export function TeamGrid({ slugs }: { slugs: string[] }) {
         >
           <span
             aria-hidden="true"
-            className="flex h-12 w-12 items-center justify-center rounded-full border border-line-strong bg-paper font-serif text-sm font-semibold text-gold"
+            className="flex h-12 w-12 items-center justify-center rounded-full border border-line-strong bg-paper font-serif text-sm font-semibold text-gold-deep"
           >
             {person.initials}
           </span>
           <h3 className="mt-4 font-serif text-lg font-semibold tracking-tight text-ink">
             {person.name}
           </h3>
-          <p className="mt-1 text-sm text-gold">{person.designation}</p>
+          <p className="mt-1 text-sm text-gold-deep">{person.designation}</p>
           <p className="mt-2 text-xs uppercase tracking-[0.14em] text-slate-light">
             {person.office} &middot; {person.experience}
           </p>
           <Link
             href={`/about#${person.slug}`}
-            className="mt-4 inline-block text-sm font-medium text-ink-soft underline decoration-line-strong underline-offset-4 transition hover:text-gold"
+            className="mt-4 inline-block text-sm font-medium text-ink-soft underline decoration-line-strong underline-offset-4 transition hover:text-gold-deep"
           >
             Profile
           </Link>
@@ -265,7 +265,7 @@ export function InsightCard({ insight }: { insight: Insight }) {
       </div>
 
       <h3 className="mt-4 font-serif text-lg font-semibold leading-snug tracking-tight text-ink">
-        <Link href={`/insights/${insight.slug}`} className="transition group-hover:text-gold">
+        <Link href={`/insights/${insight.slug}`} className="transition group-hover:text-gold-deep">
           {insight.title}
         </Link>
       </h3>
@@ -288,30 +288,63 @@ export function CtaBand({
   body?: string;
 }) {
   return (
-    <section className="bg-ink text-white">
-      <div className="mx-auto flex max-w-7xl flex-col gap-8 px-6 py-16 lg:flex-row lg:items-center lg:justify-between">
+    <section className="relative isolate overflow-hidden bg-ink text-white">
+      <div
+        aria-hidden="true"
+        className="absolute inset-0 -z-10 bg-[linear-gradient(120deg,var(--color-ink-deep),var(--color-ink-mid))]"
+      />
+      <div
+        aria-hidden="true"
+        className="pointer-events-none absolute -right-24 -top-24 -z-10 h-96 w-96 rounded-full bg-gold/10 blur-3xl"
+      />
+
+      <div className="mx-auto flex max-w-7xl flex-col gap-10 px-6 py-16 lg:flex-row lg:items-center lg:justify-between">
         <div className="max-w-2xl">
           <h2 className="font-serif text-3xl font-semibold tracking-tight text-balance sm:text-4xl">
             {title}
           </h2>
           <p className="mt-4 leading-relaxed text-white/70">{body}</p>
           <p className="mt-3 text-sm text-white/50">{firm.responseTime}</p>
+
+          <div className="mt-8 flex flex-col gap-3 sm:flex-row">
+            <Link
+              href="/contact"
+              className="inline-flex items-center justify-center gap-2 rounded-md bg-gold px-7 py-3.5 text-sm font-semibold text-ink transition hover:bg-gold-bright"
+            >
+              Contact us
+              <svg viewBox="0 0 16 16" aria-hidden="true" className="h-3.5 w-3.5">
+                <path
+                  d="M2 8h11M9 4l4 4-4 4"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth={1.6}
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+              </svg>
+            </Link>
+            <a
+              href={firm.phoneHref}
+              className="inline-flex items-center justify-center gap-2.5 rounded-md border border-white/30 px-7 py-3.5 text-sm font-semibold text-white transition hover:border-white hover:bg-white/5"
+            >
+              <svg viewBox="0 0 16 16" aria-hidden="true" className="h-3.5 w-3.5">
+                <path
+                  d="M3 3.8h2.4l1 2.6-1.4 1a7.5 7.5 0 003.6 3.6l1-1.4 2.6 1V13a1 1 0 01-1.1 1A10.6 10.6 0 012 4.9 1 1 0 013 3.8z"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth={1.3}
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+              </svg>
+              {firm.phone}
+            </a>
+          </div>
         </div>
 
-        <div className="flex shrink-0 flex-col gap-3 sm:flex-row">
-          <Link
-            href="/contact"
-            className="rounded-full bg-gold-bright px-7 py-3.5 text-center text-sm font-semibold text-ink transition hover:bg-white"
-          >
-            Contact us
-          </Link>
-          <a
-            href={firm.phoneHref}
-            className="rounded-full border border-white/25 px-7 py-3.5 text-center text-sm font-semibold text-white transition hover:border-white/60"
-          >
-            {firm.phone}
-          </a>
-        </div>
+        <p className="shrink-0 font-serif text-base italic leading-relaxed text-white/60 lg:max-w-[12rem] lg:text-right">
+          &ldquo;{firm.ctaQuote}&rdquo;
+        </p>
       </div>
     </section>
   );

@@ -73,7 +73,7 @@ export function CareerForm({ roles }: { roles: string[] }) {
           Thank you. Please email your CV and a short covering note to{" "}
           <a
             href="mailto:careers@adooralegalservices.com"
-            className="text-gold underline underline-offset-2"
+            className="text-gold-deep underline underline-offset-2"
           >
             careers@adooralegalservices.com
           </a>{" "}
@@ -84,7 +84,7 @@ export function CareerForm({ roles }: { roles: string[] }) {
         <button
           type="button"
           onClick={() => setStatus("idle")}
-          className="mt-6 text-sm font-semibold text-gold underline decoration-gold/30 underline-offset-4"
+          className="mt-6 text-sm font-semibold text-gold-deep underline decoration-gold/30 underline-offset-4"
         >
           Submit another application
         </button>
@@ -107,7 +107,7 @@ export function CareerForm({ roles }: { roles: string[] }) {
 
         <div>
           <label htmlFor="role" className="block text-sm font-medium text-ink">
-            Role <span className="text-gold">*</span>
+            Role <span className="text-gold-deep">*</span>
           </label>
           <select
             id="role"
@@ -145,7 +145,7 @@ export function CareerForm({ roles }: { roles: string[] }) {
 
       <div className="mt-5">
         <label htmlFor="message" className="block text-sm font-medium text-ink">
-          Why this role <span className="text-gold">*</span>
+          Why this role <span className="text-gold-deep">*</span>
         </label>
         <textarea
           id="message"
@@ -179,7 +179,7 @@ export function CareerForm({ roles }: { roles: string[] }) {
         <span className="text-sm leading-relaxed text-slate">
           I consent to ADOORA Legal Services processing the personal data in
           this form to assess my application, as described in the{" "}
-          <Link href="/privacy" className="text-gold underline underline-offset-2">
+          <Link href="/privacy" className="text-gold-deep underline underline-offset-2">
             Privacy Policy
           </Link>
           .
@@ -224,7 +224,7 @@ function Input({
   return (
     <div>
       <label htmlFor={name} className="block text-sm font-medium text-ink">
-        {label} {required && <span className="text-gold">*</span>}
+        {label} {required && <span className="text-gold-deep">*</span>}
       </label>
       <input
         id={name}
