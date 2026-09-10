@@ -114,8 +114,8 @@ export function Hero() {
         <div className="absolute inset-0 bg-linear-to-t from-ink/80 via-transparent to-ink/40" />
       </div>
 
-      <div className="container-page relative py-20 sm:py-28 lg:py-36">
-        <div className="max-w-2xl">
+      <div className="container-page relative flex flex-col justify-center py-16 sm:py-20 lg:min-h-[calc(100svh-7.5rem)] lg:py-16">
+        <div className="max-w-3xl">
           {/* Slides are stacked so the container height does not jump between
               headings of different lengths. */}
           <div className="grid">
@@ -132,16 +132,16 @@ export function Hero() {
                 >
                   <p className="eyebrow text-gold-bright">{slide.eyebrow}</p>
 
-                  <h1 className="mt-5 font-serif text-4xl font-semibold leading-[1.14] tracking-tight text-balance sm:text-5xl lg:text-[3.5rem]">
+                  <h1 className="mt-5 font-serif text-3xl font-semibold leading-[1.12] tracking-tight text-balance sm:text-4xl lg:text-[2.75rem] xl:text-[3.15rem]">
                     {slide.heading}{" "}
                     <span className="text-gold-bright">{slide.accent}</span>
                   </h1>
 
-                  <p className="mt-6 max-w-xl text-sm leading-relaxed text-white/70 sm:text-base">
+                  <p className="mt-5 max-w-xl text-sm leading-relaxed text-white/70 sm:text-base">
                     {slide.body}
                   </p>
 
-                  <div className="mt-9 flex flex-col gap-3 sm:flex-row">
+                  <div className="mt-8 flex flex-col gap-3 sm:flex-row">
                     <Link
                       href={slide.href}
                       className="inline-flex items-center justify-center gap-2 rounded-md bg-gold px-7 py-3.5 text-sm font-semibold text-ink transition hover:bg-gold-bright"
@@ -162,7 +162,7 @@ export function Hero() {
           </div>
 
           {/* Slide controls: a rule per slide, filling gold when active. */}
-          <div className="mt-14 flex items-center gap-3">
+          <div className="mt-10 flex items-center gap-3">
             {slides.map((slide, slideIndex) => {
               const isActive = slideIndex === index;
 
@@ -193,7 +193,7 @@ export function Hero() {
         </div>
 
         {/* Standing line from the firm's own collateral. */}
-        <p className="mt-14 max-w-[13rem] font-serif text-sm italic leading-relaxed text-white/60 lg:absolute lg:bottom-14 lg:right-10 lg:mt-0 lg:text-right 2xl:right-16">
+        <p className="mt-12 max-w-[13rem] font-serif text-sm italic leading-relaxed text-white/60 lg:absolute lg:bottom-10 lg:right-10 lg:mt-0 lg:text-right 2xl:right-16">
           &ldquo;{firm.heroQuote}&rdquo;
         </p>
       </div>
