@@ -81,10 +81,10 @@ export function SiteHeader() {
   }
 
   return (
-    <header className="sticky top-0 z-40 border-b border-line bg-paper/95 backdrop-blur supports-[backdrop-filter]:bg-paper/85">
+    <header className="sticky top-0 z-40 border-b border-white/10 bg-ink/95 text-white backdrop-blur supports-[backdrop-filter]:bg-ink/85">
       {/* Utility bar — contact details, not a call to action. */}
-      <div className="hidden border-b border-line-strong bg-paper-tint lg:block">
-        <div className="container-page flex items-center justify-between gap-6 py-2.5 text-xs text-ink-soft">
+      <div className="hidden border-b border-white/10 bg-ink-deep lg:block">
+        <div className="container-page flex items-center justify-between gap-6 py-2.5 text-xs text-white/70">
           <p className="flex items-center gap-1.5">
             <UtilityIcon path={icons.pin} />
             {firm.cities}
@@ -92,14 +92,14 @@ export function SiteHeader() {
           <div className="flex items-center gap-6">
             <a
               href={firm.phoneHref}
-              className="flex items-center gap-1.5 transition hover:text-gold-deep"
+              className="flex items-center gap-1.5 transition hover:text-gold-bright"
             >
               <UtilityIcon path={icons.phone} />
               {firm.phone}
             </a>
             <a
               href={firm.emailHref}
-              className="flex items-center gap-1.5 transition hover:text-gold-deep"
+              className="flex items-center gap-1.5 transition hover:text-gold-bright"
             >
               <UtilityIcon path={icons.mail} />
               {firm.email}
@@ -115,7 +115,7 @@ export function SiteHeader() {
         onMouseLeave={() => setOpenMenu(null)}
       >
         <div className="flex items-center justify-between gap-6 py-4">
-          <Wordmark />
+          <Wordmark tone="dark" />
 
           {/* Desktop navigation */}
           <ul className="hidden items-center gap-1 lg:flex">
@@ -138,8 +138,8 @@ export function SiteHeader() {
                       onClick={() => setOpenMenu(expanded ? null : item.label)}
                       className={`flex items-center gap-1.5 rounded px-3 py-2 text-sm font-medium transition ${
                         active || expanded
-                          ? "text-gold-deep"
-                          : "text-ink-soft hover:text-gold-deep"
+                          ? "text-gold-bright"
+                          : "text-white/80 hover:text-gold-bright"
                       }`}
                     >
                       {item.label}
@@ -164,7 +164,7 @@ export function SiteHeader() {
                     <Link
                       href={item.href}
                       className={`block rounded px-3 py-2 text-sm font-medium transition ${
-                        active ? "text-gold-deep" : "text-ink-soft hover:text-gold-deep"
+                        active ? "text-gold-bright" : "text-white/80 hover:text-gold-bright"
                       }`}
                     >
                       {item.label}
@@ -173,7 +173,7 @@ export function SiteHeader() {
 
                   {hasChildren && expanded && (
                     <div className="fade-in absolute left-1/2 top-full z-50 w-[34rem] -translate-x-1/2 pt-3">
-                      <div className="overflow-hidden rounded-xl border border-line bg-paper shadow-xl shadow-ink/5">
+                      <div className="overflow-hidden rounded-xl border border-white/10 bg-ink-deep shadow-xl shadow-black/40">
                         <ul className="grid grid-cols-2 gap-x-2 gap-y-0.5 p-3">
                           {item.children?.map((child, index) => (
                             <li
@@ -182,10 +182,10 @@ export function SiteHeader() {
                             >
                               <Link
                                 href={child.href}
-                                className={`block rounded-lg px-3 py-2.5 text-sm transition hover:bg-paper-warm hover:text-gold-deep ${
+                                className={`block rounded-lg px-3 py-2.5 text-sm transition hover:bg-white/5 hover:text-gold-bright ${
                                   index === 0
-                                    ? "font-semibold text-gold-deep"
-                                    : "text-ink-soft"
+                                    ? "font-semibold text-gold-bright"
+                                    : "text-white/80"
                                 }`}
                               >
                                 {child.label}
@@ -224,7 +224,7 @@ export function SiteHeader() {
               onClick={() => setMobileOpen((open) => !open)}
               aria-expanded={mobileOpen}
               aria-controls="mobile-nav"
-              className="flex h-10 w-10 items-center justify-center rounded-lg border border-line text-ink lg:hidden"
+              className="flex h-10 w-10 items-center justify-center rounded-lg border border-white/20 text-white lg:hidden"
             >
               <span className="sr-only">
                 {mobileOpen ? "Close menu" : "Open menu"}
@@ -257,7 +257,7 @@ export function SiteHeader() {
       {mobileOpen && (
         <div
           id="mobile-nav"
-          className="fade-in max-h-[calc(100vh-5rem)] overflow-y-auto border-t border-line bg-paper lg:hidden"
+          className="fade-in max-h-[calc(100vh-5rem)] overflow-y-auto border-t border-white/10 bg-ink lg:hidden"
         >
           <ul className="px-6 py-4">
             {primaryNav.map((item) => {
@@ -265,7 +265,7 @@ export function SiteHeader() {
               const expanded = mobileSection === item.label;
 
               return (
-                <li key={item.label} className="border-b border-line last:border-0">
+                <li key={item.label} className="border-b border-white/10 last:border-0">
                   {hasChildren ? (
                     <>
                       <button
@@ -274,13 +274,13 @@ export function SiteHeader() {
                         onClick={() =>
                           setMobileSection(expanded ? null : item.label)
                         }
-                        className="flex w-full items-center justify-between py-3.5 text-left text-[0.95rem] font-medium text-ink"
+                        className="flex w-full items-center justify-between py-3.5 text-left text-[0.95rem] font-medium text-white"
                       >
                         {item.label}
                         <svg
                           viewBox="0 0 12 12"
                           aria-hidden="true"
-                          className={`h-3 w-3 text-slate transition-transform ${
+                          className={`h-3 w-3 text-white/60 transition-transform ${
                             expanded ? "rotate-180" : ""
                           }`}
                         >
@@ -300,7 +300,7 @@ export function SiteHeader() {
                             <li key={child.href}>
                               <Link
                                 href={child.href}
-                                className="block py-2 pl-3 text-sm text-slate transition hover:text-gold-deep"
+                                className="block py-2 pl-3 text-sm text-white/75 transition hover:text-gold-bright"
                               >
                                 {child.label}
                               </Link>
@@ -312,7 +312,7 @@ export function SiteHeader() {
                   ) : (
                     <Link
                       href={item.href}
-                      className="block py-3.5 text-[0.95rem] font-medium text-ink transition hover:text-gold-deep"
+                      className="block py-3.5 text-[0.95rem] font-medium text-white transition hover:text-gold-bright"
                     >
                       {item.label}
                     </Link>
@@ -322,14 +322,14 @@ export function SiteHeader() {
             })}
           </ul>
 
-          <div className="border-t border-line bg-paper-warm px-6 py-5">
+          <div className="border-t border-white/10 bg-ink-deep px-6 py-5">
             <Link
               href="/contact"
               className="block rounded-md bg-gold px-5 py-3 text-center text-sm font-semibold text-ink-deep"
             >
               Request Consultation
             </Link>
-            <div className="mt-4 flex flex-col gap-1.5 text-sm text-slate">
+            <div className="mt-4 flex flex-col gap-1.5 text-sm text-white/75">
               <a href={firm.phoneHref}>{firm.phone}</a>
               <a href={firm.emailHref}>{firm.email}</a>
             </div>

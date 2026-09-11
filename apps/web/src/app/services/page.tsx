@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { CtaBand, PageHero } from "@/components/ui";
+import { PageHero } from "@/components/ui";
 import { PracticesIndex } from "@/components/practices-index";
 
 export const metadata: Metadata = {
@@ -22,8 +22,6 @@ export default function ServicesPage() {
       <div className="container-page py-14 sm:py-16">
         <PracticesIndex />
       </div>
-
-      <CtaBand />
     </>
   );
 }

@@ -1,6 +1,6 @@
 import Link from "next/link";
 import type { Metadata } from "next";
-import { CtaBand, PageHero } from "@/components/ui";
+import { PageHero } from "@/components/ui";
 import { industries } from "@/content/industries";
 
 export const metadata: Metadata = {
@@ -72,8 +72,6 @@ export default function DomainsPage() {
           ))}
         </ul>
       </div>
-
-      <CtaBand />
     </>
   );
 }

@@ -3,7 +3,6 @@ import type { ReactNode } from "react";
 import type { Faq } from "@/content/types";
 import { peopleBySlugs } from "@/content/people";
 import type { Insight } from "@/content/insights";
-import { firm } from "@/content/firm";
 
 /** Eyebrow + heading + optional lead, used at the top of every section. */
 export function SectionHeading({
@@ -278,77 +277,6 @@ export function InsightCard({ insight }: { insight: Insight }) {
 
       <p className="mt-4 text-xs text-slate-light">{insight.readingTime}</p>
     </article>
-  );
-}
-
-/** Closing call-to-action band. Informational wording, not solicitation. */
-export function CtaBand({
-  title = "Request information",
-  body = "Tell us briefly what the matter concerns and we will point you to the right person in the firm.",
-}: {
-  title?: string;
-  body?: string;
-}) {
-  return (
-    <section className="relative isolate overflow-hidden bg-ink text-white">
-      <div
-        aria-hidden="true"
-        className="absolute inset-0 -z-10 bg-[linear-gradient(120deg,var(--color-ink-deep),var(--color-ink-mid))]"
-      />
-      <div
-        aria-hidden="true"
-        className="pointer-events-none absolute -right-24 -top-24 -z-10 h-96 w-96 rounded-full bg-gold/10 blur-3xl"
-      />
-
-      <div className="container-page flex flex-col gap-10 py-16 lg:flex-row lg:items-center lg:justify-between">
-        <div className="max-w-2xl">
-          <h2 className="font-serif text-3xl font-semibold tracking-tight text-balance sm:text-4xl">
-            {title}
-          </h2>
-          <p className="mt-4 leading-relaxed text-white/85">{body}</p>
-          <p className="mt-3 text-sm text-white/50">{firm.responseTime}</p>
-
-          <div className="mt-8 flex flex-col gap-3 sm:flex-row">
-            <Link
-              href="/contact"
-              className="inline-flex items-center justify-center gap-2 rounded-md bg-gold px-7 py-3.5 text-sm font-semibold text-ink-deep transition hover:bg-gold-bright"
-            >
-              Contact us
-              <svg viewBox="0 0 16 16" aria-hidden="true" className="h-3.5 w-3.5">
-                <path
-                  d="M2 8h11M9 4l4 4-4 4"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth={1.6}
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                />
-              </svg>
-            </Link>
-            <a
-              href={firm.phoneHref}
-              className="inline-flex items-center justify-center gap-2.5 rounded-md border border-white/30 px-7 py-3.5 text-sm font-semibold text-white transition hover:border-white hover:bg-white/5"
-            >
-              <svg viewBox="0 0 16 16" aria-hidden="true" className="h-3.5 w-3.5">
-                <path
-                  d="M3 3.8h2.4l1 2.6-1.4 1a7.5 7.5 0 003.6 3.6l1-1.4 2.6 1V13a1 1 0 01-1.1 1A10.6 10.6 0 012 4.9 1 1 0 013 3.8z"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth={1.3}
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                />
-              </svg>
-              {firm.phone}
-            </a>
-          </div>
-        </div>
-
-        <p className="shrink-0 font-serif text-base italic leading-relaxed text-white/75 lg:max-w-[12rem] lg:text-right">
-          &ldquo;{firm.ctaQuote}&rdquo;
-        </p>
-      </div>
-    </section>
   );
 }
 

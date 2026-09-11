@@ -1,7 +1,7 @@
 import Link from "next/link";
 import type { Metadata } from "next";
 import { Hero } from "@/components/hero";
-import { CtaBand, InsightCard, SectionHeading } from "@/components/ui";
+import { InsightCard, SectionHeading } from "@/components/ui";
 import { PracticesIndex } from "@/components/practices-index";
 import { firm, differentiators, offices } from "@/content/firm";
 import { practiceAreas } from "@/content/practice-areas";
@@ -246,8 +246,6 @@ export default function Home() {
           </div>
         </div>
       </section>
-
-      <CtaBand />
 
       {/* Organisation schema. Practice and industry pages add their own. */}
       <script

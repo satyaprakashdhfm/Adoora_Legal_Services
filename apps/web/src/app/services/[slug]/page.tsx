@@ -3,7 +3,6 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { Tabs, type TabDefinition } from "@/components/tabs";
 import {
-  CtaBand,
   FactList,
   FaqList,
   InsightCard,
@@ -252,11 +251,6 @@ export default async function PracticeAreaPage(
           </div>
         </section>
       )}
-
-      <CtaBand
-        title={`Request information — ${area.shortName}`}
-        body="Describe the matter briefly and we will route it to the right person in this practice."
-      />
 
       {/* FAQPage structured data, for search and AI-overview citation. */}
       <script

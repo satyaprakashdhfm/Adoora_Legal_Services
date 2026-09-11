@@ -1,7 +1,7 @@
 import Link from "next/link";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import { CtaBand, InsightCard, PageHero, formatDate } from "@/components/ui";
+import { InsightCard, PageHero, formatDate } from "@/components/ui";
 import {
   insights,
   insightBySlug,
@@ -245,8 +245,6 @@ export default async function InsightPage(
           </section>
         )}
       </div>
-
-      <CtaBand />
 
       <script
         type="application/ld+json"

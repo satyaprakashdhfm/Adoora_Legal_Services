@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { CtaBand, InsightCard, PageHero } from "@/components/ui";
+import { InsightCard, PageHero } from "@/components/ui";
 import { insightsByDate, insightCategories } from "@/content/insights";
 
 export const metadata: Metadata = {
@@ -112,8 +112,6 @@ export default function InsightsPage() {
           ))}
         </ul>
       </div>
-
-      <CtaBand />
     </>
   );
 }

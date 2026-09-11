@@ -40,7 +40,7 @@ export const metadata: Metadata = {
 };
 
 export const viewport: Viewport = {
-  themeColor: "#28283c",
+  themeColor: "#0b1834",
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {

@@ -3,7 +3,6 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { Tabs, type TabDefinition } from "@/components/tabs";
 import {
-  CtaBand,
   FactList,
   FaqList,
   InsightCard,
@@ -234,11 +233,6 @@ export default async function IndustryPage(
           </div>
         </section>
       )}
-
-      <CtaBand
-        title={`Request information — ${industry.shortName}`}
-        body="Describe the matter briefly and we will route it to the right person for this sector."
-      />
 
       <script
         type="application/ld+json"

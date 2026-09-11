@@ -3,11 +3,12 @@
 /*
  * ADOORA brand tokens.
  *
- * Three colours carry the brand, taken from the firm's own letterhead and
- * logo: deep navy #28283C (primary), warm gold #C88A4E (accent and CTA) and
- * warm off-white #FCFEF9 (background). Everything below is a tint or a shade
- * of one of those three, so the palette stays coherent as sections alternate
- * between the light ground and the navy bands.
+ * Three colours carry the brand: deep navy #0B1834 (primary), warm gold
+ * #C88A4E (accent and CTA) and warm off-white #FCFEF9 (background).
+ * Everything below is a tint or a shade of one of those three, so the palette
+ * stays coherent as sections alternate between the light ground and the navy
+ * bands. The navy shades hold the same hue as #0B1834 and only move in
+ * lightness, so nothing in the family reads as a second, competing blue.
  *
  * Gold is split into three values because one gold cannot do every job.
  * `gold` (#C27C38) is the brand value, used for fills, rules, icons and CTA
@@ -17,12 +18,12 @@
  * `gold-bright` is lifted so eyebrows and links stay legible on navy.
  */
 @theme {
-  --color-ink: #28283c;
-  --color-ink-deep: #1d1d2c;
-  --color-ink-mid: #33334a;
-  --color-ink-soft: #4a4a63;
-  --color-slate: #5c5c72;
-  --color-slate-light: #70708a;
+  --color-ink: #0b1834;
+  --color-ink-deep: #070f22;
+  --color-ink-mid: #16294f;
+  --color-ink-soft: #3b4a6b;
+  --color-slate: #4f6086;
+  --color-slate-light: #62738f;
 
   --color-gold: #c27c38;
   --color-gold-deep: #9a6224;

@@ -1,6 +1,6 @@
 import Link from "next/link";
 import type { Metadata } from "next";
-import { CtaBand, PageHero, SectionHeading } from "@/components/ui";
+import { PageHero, SectionHeading } from "@/components/ui";
 import { firm, offices, stats } from "@/content/firm";
 import { people, peopleByGroup } from "@/content/people";
 import { practiceAreaBySlug } from "@/content/practice-areas";
@@ -382,8 +382,6 @@ export default function AboutPage() {
           ))}
         </ul>
       </section>
-
-      <CtaBand />
     </>
   );
 }
