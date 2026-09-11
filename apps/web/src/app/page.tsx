@@ -1,8 +1,10 @@
+import Image from "next/image";
 import Link from "next/link";
 import type { Metadata } from "next";
 import { Hero } from "@/components/hero";
 import { InsightCard, SectionHeading } from "@/components/ui";
 import { PracticesIndex } from "@/components/practices-index";
+import { CityIcon } from "@/components/city-icon";
 import { firm, differentiators, offices } from "@/content/firm";
 import { practiceAreas } from "@/content/practice-areas";
 import { insightsByDate } from "@/content/insights";
@@ -34,6 +36,9 @@ function Arrow({ className = "" }: { className?: string }) {
 
 export default function Home() {
   const latestInsights = insightsByDate.slice(0, 3);
+  /* Resolved at build time; a missing file falls back to the navy gradient,
+     exactly as the hero frames do. */
+  const careersImage = publicImage("careers-office");
 
   return (
     <>
@@ -186,33 +191,31 @@ export default function Home() {
       </section>
 
       {/* Locations and the careers teaser share one row — offices on the
-          left, careers on the right. Plain paper; the why-us band above it
-          is warm. */}
+          left, careers on the right. */}
       <section className="border-t border-line">
-        <div className="container-page grid gap-12 py-14 sm:py-16 lg:grid-cols-[1.55fr_1fr] lg:gap-16">
-          {/* The three offices read across, held between the display quotes. */}
+        <div className="container-page grid items-stretch gap-10 py-14 sm:py-16 lg:grid-cols-[1.35fr_1fr] lg:gap-12">
+          {/* The three offices, each card led by its city's landmark. */}
           <div>
-            <span
-              aria-hidden="true"
-              className="block font-serif text-6xl leading-none text-gold sm:text-7xl"
-            >
-              &ldquo;
-            </span>
+            <SectionHeading
+              eyebrow="Locations"
+              title="Where we are"
+              lead="Our offices across South India keep us close to our clients, their communities and the matters that move them forward."
+            />
 
-            <div className="mt-6">
-              <SectionHeading eyebrow="Locations" title="Where we are" />
-            </div>
-
-            <div className="mt-10 grid gap-8 sm:grid-cols-3 sm:gap-6">
+            <div className="mt-9 grid gap-5 sm:grid-cols-3">
               {offices.map((office) => (
-                <div key={office.city}>
-                  <h3 className="font-serif text-lg font-semibold text-ink">
+                <div
+                  key={office.city}
+                  className="rounded-xl border border-line bg-paper-warm p-5"
+                >
+                  <CityIcon city={office.city} className="h-9 w-9 text-gold" />
+                  <h3 className="mt-4 font-serif text-lg font-semibold text-ink">
                     {office.city}
                   </h3>
-                  <p className="mt-1 text-xs uppercase tracking-[0.14em] text-gold-deep">
+                  <p className="mt-1 text-[0.65rem] uppercase tracking-[0.14em] text-gold-deep">
                     {office.label}
                   </p>
-                  <address className="mt-3 space-y-0.5 text-sm not-italic leading-relaxed text-ink-soft">
+                  <address className="mt-3 space-y-0.5 text-[0.8rem] not-italic leading-relaxed text-ink-soft">
                     {office.lines.map((line) => (
                       <p key={line}>{line}</p>
                     ))}
@@ -220,51 +223,76 @@ export default function Home() {
                 </div>
               ))}
             </div>
-
-            <span
-              aria-hidden="true"
-              className="mt-4 block text-right font-serif text-6xl leading-none text-gold sm:text-7xl"
-            >
-              &rdquo;
-            </span>
           </div>
 
-          {/* Careers. Four corner brackets rather than a card, so the teaser
-              is framed without putting a second surface on the paper. */}
-          <div className="relative flex flex-col justify-center px-8 py-12 text-center sm:px-10 sm:py-14">
+          {/* Careers. A photograph under the navy wash, framed by four corner
+              brackets — no card edge, so it reads as a window rather than a
+              second surface. */}
+          <div className="relative isolate flex flex-col justify-center overflow-hidden rounded-xl bg-ink p-8 text-white sm:p-10">
+            {careersImage ? (
+              <>
+                <Image
+                  src={careersImage}
+                  alt=""
+                  fill
+                  sizes="(min-width: 1024px) 40vw, 100vw"
+                  className="-z-20 object-cover object-right"
+                />
+                <div
+                  aria-hidden="true"
+                  className="absolute inset-0 -z-10 bg-[linear-gradient(to_right,var(--color-ink)_0%,color-mix(in_oklab,var(--color-ink)_92%,transparent)_45%,color-mix(in_oklab,var(--color-ink)_55%,transparent)_100%)]"
+                />
+              </>
+            ) : (
+              <div
+                aria-hidden="true"
+                className="absolute inset-0 -z-10 bg-[linear-gradient(135deg,var(--color-ink-mid),var(--color-ink-deep))]"
+              />
+            )}
+
             {[
-              "left-0 top-0 border-l-2 border-t-2",
-              "right-0 top-0 border-r-2 border-t-2",
-              "bottom-0 left-0 border-b-2 border-l-2",
-              "bottom-0 right-0 border-b-2 border-r-2",
+              "left-5 top-5 border-l border-t",
+              "right-5 top-5 border-r border-t",
+              "bottom-5 left-5 border-b border-l",
+              "bottom-5 right-5 border-b border-r",
             ].map((corner) => (
               <span
                 key={corner}
                 aria-hidden="true"
-                className={`pointer-events-none absolute h-12 w-12 border-ink ${corner}`}
+                className={`pointer-events-none absolute h-9 w-9 border-white/45 ${corner}`}
               />
             ))}
 
-            <SectionHeading
-              eyebrow="Careers"
-              title="Work with us"
-              align="center"
-              lead="We look for lawyers who want responsibility early and are willing to learn a matter properly before forming a view. Roles are listed with the eligibility and the practice they sit in."
-            />
-            <div className="mt-9 flex flex-col items-center justify-center gap-3 sm:flex-row">
-              <Link
-                href="/careers"
-                className="inline-flex items-center justify-center gap-2 rounded-md bg-gold px-7 py-3.5 text-sm font-semibold text-ink-deep transition hover:bg-gold-bright"
-              >
-                Open roles
-                <Arrow />
-              </Link>
-              <Link
-                href="/about"
-                className="inline-flex items-center justify-center rounded-md border border-line-strong px-7 py-3.5 text-sm font-semibold text-ink transition hover:border-gold hover:text-gold-deep"
-              >
-                About the firm
-              </Link>
+            <div className="px-2 sm:px-4">
+              <SectionHeading
+                eyebrow="Careers"
+                title="Work with us"
+                tone="dark"
+                lead="We look for lawyers who want responsibility early and are willing to learn a matter properly before forming a view. Roles are listed with the eligibility and the practice they sit in."
+              />
+
+              <div className="mt-8 flex flex-col gap-3 sm:flex-row">
+                <Link
+                  href="/careers"
+                  className="inline-flex items-center justify-center gap-2 rounded-md bg-gold px-6 py-3 text-sm font-semibold text-ink-deep transition hover:bg-gold-bright"
+                >
+                  Open roles
+                  <Arrow />
+                </Link>
+                <Link
+                  href="/about"
+                  className="inline-flex items-center justify-center rounded-md border border-white/30 px-6 py-3 text-sm font-semibold text-white transition hover:border-white hover:bg-white/5"
+                >
+                  About the firm
+                </Link>
+              </div>
+
+              {/* The triad the firm's own photography carries. */}
+              <ul className="mt-10 space-y-1.5 border-t border-white/15 pt-6 text-[0.65rem] font-semibold uppercase tracking-[0.22em] text-white/60">
+                <li>People</li>
+                <li>Ideas</li>
+                <li>Impact</li>
+              </ul>
             </div>
           </div>
         </div>

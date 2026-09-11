@@ -30,6 +30,17 @@ on that side is lost. Landscape, at least 1920px wide.
 A bright frame gets an extra scrim so it stays on brand against the navy bands
 — set `bright: true` on that slide in `src/content/hero-slides.ts`.
 
+## Careers photography
+
+`careers-office` — the frame behind the careers teaser on the home page,
+resolved by the same `publicImage` helper, so the extension does not matter
+and a missing file falls back to the navy gradient.
+
+What the framing needs to do: keep the subject on the **right**. The navy wash
+runs solid down the left of the panel, where the heading, buttons and the
+PEOPLE / IDEAS / IMPACT triad sit. Portrait or square crops best — the panel is
+roughly a third of the row and as tall as the locations beside it.
+
 ## App icons
 
 `src/app/icon.png` and `src/app/apple-icon.png`. Next.js picks those up from the
