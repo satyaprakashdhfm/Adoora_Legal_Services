@@ -185,15 +185,16 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Locations, then the careers teaser — one band, each block running
-          the full width. Plain paper; the why-us band above it is warm. */}
+      {/* Locations and the careers teaser share one row — offices on the
+          left, careers on the right. Plain paper; the why-us band above it
+          is warm. */}
       <section className="border-t border-line">
-        <div className="container-page py-14 sm:py-16">
+        <div className="container-page grid gap-12 py-14 sm:py-16 lg:grid-cols-[1.55fr_1fr] lg:gap-16">
           {/* The three offices read across, held between the display quotes. */}
           <div>
             <span
               aria-hidden="true"
-              className="block font-serif text-6xl leading-none text-gold/40 sm:text-7xl"
+              className="block font-serif text-6xl leading-none text-gold sm:text-7xl"
             >
               &ldquo;
             </span>
@@ -202,7 +203,7 @@ export default function Home() {
               <SectionHeading eyebrow="Locations" title="Where we are" />
             </div>
 
-            <div className="mt-10 grid gap-10 sm:grid-cols-2 lg:grid-cols-3 lg:gap-16">
+            <div className="mt-10 grid gap-8 sm:grid-cols-3 sm:gap-6">
               {offices.map((office) => (
                 <div key={office.city}>
                   <h3 className="font-serif text-lg font-semibold text-ink">
@@ -222,15 +223,28 @@ export default function Home() {
 
             <span
               aria-hidden="true"
-              className="mt-4 block text-right font-serif text-6xl leading-none text-gold/40 sm:text-7xl"
+              className="mt-4 block text-right font-serif text-6xl leading-none text-gold sm:text-7xl"
             >
               &rdquo;
             </span>
           </div>
 
-          {/* Careers. A rule above and below rather than a card, so the band
-              stays on the paper ground the locations sit on. */}
-          <div className="mt-10 border-y border-line-strong py-12 text-center sm:py-14">
+          {/* Careers. Four corner brackets rather than a card, so the teaser
+              is framed without putting a second surface on the paper. */}
+          <div className="relative flex flex-col justify-center px-8 py-12 text-center sm:px-10 sm:py-14">
+            {[
+              "left-0 top-0 border-l-2 border-t-2",
+              "right-0 top-0 border-r-2 border-t-2",
+              "bottom-0 left-0 border-b-2 border-l-2",
+              "bottom-0 right-0 border-b-2 border-r-2",
+            ].map((corner) => (
+              <span
+                key={corner}
+                aria-hidden="true"
+                className={`pointer-events-none absolute h-12 w-12 border-ink ${corner}`}
+              />
+            ))}
+
             <SectionHeading
               eyebrow="Careers"
               title="Work with us"
