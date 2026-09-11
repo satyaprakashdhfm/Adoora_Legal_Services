@@ -5,7 +5,6 @@ import { CtaBand, InsightCard, SectionHeading } from "@/components/ui";
 import { PracticesIndex } from "@/components/practices-index";
 import { firm, differentiators, offices } from "@/content/firm";
 import { practiceAreas } from "@/content/practice-areas";
-import { industries } from "@/content/industries";
 import { insightsByDate } from "@/content/insights";
 import { heroSlides } from "@/content/hero-slides";
 import { publicImage } from "@/lib/public-image";
@@ -96,10 +95,11 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Practices — one block per practice area, listing its case types.
+      {/* Practices — a numbered row per practice, listing its case types.
           This replaced two card grids (practices and industry domains): the
           cards described the practice in a line and hid the work, and a
-          visitor arrives looking for "insolvency" or "RERA". */}
+          visitor arrives looking for "insolvency" or "RERA". Sector pages are
+          reached from each practice page and the footer. */}
       <section className="border-y border-line bg-paper-warm">
         <div className="container-page py-14 sm:py-16">
           <div className="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
@@ -119,28 +119,6 @@ export default function Home() {
 
           <div className="mt-12">
             <PracticesIndex />
-          </div>
-
-          {/* Industry pages keep their own URLs and content; they are reached
-              from here and from each practice page rather than competing for a
-              top-level nav slot. */}
-          <div className="mt-14 border-t border-line-strong pt-8">
-            <h3 className="eyebrow text-slate">Sectors we work in</h3>
-            {/* No separators between these: the list wraps, and an interpunct
-                rendered before each item ends up at the start of the wrapped
-                line. The underlines already delimit them. */}
-            <ul className="mt-4 flex flex-wrap gap-x-6 gap-y-2 text-sm">
-              {industries.map((industry) => (
-                <li key={industry.slug}>
-                  <Link
-                    href={`/domains/${industry.slug}`}
-                    className="text-ink-soft underline decoration-line-strong underline-offset-4 transition hover:text-gold-deep hover:decoration-gold/50"
-                  >
-                    {industry.name}
-                  </Link>
-                </li>
-              ))}
-            </ul>
           </div>
         </div>
       </section>
