@@ -89,13 +89,14 @@ export function Hero({ images }: { images: (string | null)[] }) {
                   ? { preload: true }
                   : { loading: "eager" as const, fetchPriority: "low" as const })}
               />
-              {slide.bright && <div className="absolute inset-0 bg-ink/25" />}
+              {slide.bright && (
+                <div className="hero-bright-lift absolute inset-0" />
+              )}
             </div>
           );
         })}
 
-        <div className="absolute inset-0 bg-linear-to-r from-ink from-30% via-ink/60 via-70% to-ink/5" />
-        <div className="absolute inset-0 bg-linear-to-t from-ink/60 via-transparent to-ink/20" />
+        <div className="hero-scrim absolute inset-0" />
       </div>
 
       <div className="container-page relative flex flex-col justify-center py-16 sm:py-20 lg:min-h-[calc(100svh-7.5rem)] lg:py-16">

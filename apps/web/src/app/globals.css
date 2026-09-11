@@ -185,6 +185,67 @@ figcaption {
   transition: opacity 900ms ease-in-out;
 }
 
+/*
+ * Hero scrim.
+ *
+ * The photograph has two jobs at once: stay out of the way of the copy on the
+ * left, and stay genuinely visible on the right, where each frame's subject
+ * sits. So the wash is horizontal and finishes before the right edge. A
+ * full-bleed tint is what flattens a hero photograph — it costs the image its
+ * contrast everywhere in order to fix legibility in one corner.
+ */
+.hero-scrim {
+  /*
+   * Below lg the copy spans the full width, so the wash has to as well —
+   * vertical rather than horizontal. Held at roughly three-quarters so the
+   * photograph still reads as texture behind the copy; heavier than this and
+   * the image may as well not be there.
+   */
+  background: linear-gradient(
+    to bottom,
+    color-mix(in oklab, var(--color-ink) 80%, transparent) 0%,
+    color-mix(in oklab, var(--color-ink) 68%, transparent) 55%,
+    color-mix(in oklab, var(--color-ink) 86%, transparent) 100%
+  );
+}
+
+@media (min-width: 64rem) {
+  .hero-scrim {
+    background:
+      /* A shallow lift off the bottom edge for the slide controls and the
+         standing quote. Clears by a fifth of the height, so it never reaches
+         the books in the lower right. */
+      linear-gradient(
+        to top,
+        color-mix(in oklab, var(--color-ink) 42%, transparent) 0%,
+        transparent 20%
+      ),
+      /* The scrim proper: solid under the eyebrow and heading, gone by 70%. */
+      linear-gradient(
+        to right,
+        var(--color-ink) 0%,
+        color-mix(in oklab, var(--color-ink) 90%, transparent) 26%,
+        color-mix(in oklab, var(--color-ink) 52%, transparent) 45%,
+        color-mix(in oklab, var(--color-ink) 16%, transparent) 60%,
+        transparent 70%
+      );
+  }
+}
+
+/*
+ * Extra hold for the brighter photographs. Left-biased so it never touches the
+ * right-hand side, and it lives inside the slide rather than above the stack so
+ * it cross-fades with its own frame.
+ */
+.hero-bright-lift {
+  background: linear-gradient(
+    to right,
+    color-mix(in oklab, var(--color-ink) 34%, transparent) 0%,
+    color-mix(in oklab, var(--color-ink) 18%, transparent) 30%,
+    transparent 55%
+  );
+}
+
 @media (prefers-reduced-motion: reduce) {
   html {
     scroll-behavior: auto;
