@@ -83,8 +83,8 @@ export function SiteHeader() {
   return (
     <header className="sticky top-0 z-40 border-b border-line bg-paper/95 backdrop-blur supports-[backdrop-filter]:bg-paper/85">
       {/* Utility bar — contact details, not a call to action. */}
-      <div className="hidden border-b border-line bg-paper-warm lg:block">
-        <div className="container-page flex items-center justify-between gap-6 py-2.5 text-xs text-slate">
+      <div className="hidden border-b border-line-strong bg-paper-tint lg:block">
+        <div className="container-page flex items-center justify-between gap-6 py-2.5 text-xs text-ink-soft">
           <p className="flex items-center gap-1.5">
             <UtilityIcon path={icons.pin} />
             {firm.cities}

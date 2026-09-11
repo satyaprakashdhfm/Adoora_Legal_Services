@@ -3,7 +3,7 @@ import type { Metadata } from "next";
 import { Hero } from "@/components/hero";
 import { PracticeIcon } from "@/components/practice-icon";
 import { CtaBand, InsightCard, SectionHeading } from "@/components/ui";
-import { firm, stats, awards, offices } from "@/content/firm";
+import { firm, awards, offices } from "@/content/firm";
 import { practiceAreas } from "@/content/practice-areas";
 import { industries } from "@/content/industries";
 import { insightsByDate } from "@/content/insights";
@@ -57,39 +57,8 @@ export default function Home() {
     <>
       <Hero images={heroSlides.map((slide) => publicImage(slide.imageBase))} />
 
-      {/* Trust strip — factual counters only, divided by hairlines. */}
-      <section
-        aria-label="The firm at a glance"
-        className="border-b border-line bg-paper-warm"
-      >
-        <div className="container-page grid grid-cols-2 gap-y-10 py-12 lg:grid-cols-4">
-          {stats.map((stat, index) => {
-            /* Hairlines divide the columns, so the first cell in each row
-               carries none: index 0 at every width, and index 2 only until
-               the grid widens from two columns to four. */
-            const divider =
-              index === 0
-                ? "lg:pl-0"
-                : index % 2 === 1
-                  ? "border-l border-line-strong"
-                  : "lg:border-l lg:border-line-strong";
-
-            return (
-              <div key={stat.label} className={`px-2 lg:px-8 ${divider}`}>
-                <p className="font-serif text-3xl font-semibold text-gold-deep sm:text-4xl">
-                  {stat.value}
-                </p>
-                <p className="mt-2 text-[0.7rem] uppercase tracking-[0.14em] text-slate">
-                  {stat.label}
-                </p>
-              </div>
-            );
-          })}
-        </div>
-      </section>
-
       {/* About — the heading and standing line sit opposite the prose. */}
-      <section className="container-page py-20 sm:py-24">
+      <section className="container-page py-14 sm:py-16">
         <div className="grid gap-12 lg:grid-cols-[1fr_1.1fr] lg:gap-20">
           <div>
             <SectionHeading
@@ -146,7 +115,7 @@ export default function Home() {
 
       {/* Practice areas — one card per practice, in a four-up grid. */}
       <section className="border-y border-line bg-paper-warm">
-        <div className="container-page py-20 sm:py-24">
+        <div className="container-page py-14 sm:py-16">
           <div className="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
             <SectionHeading
               eyebrow="Services"
@@ -162,18 +131,26 @@ export default function Home() {
             </Link>
           </div>
 
-          <ul className="mt-14 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
+          <ul className="mt-10 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
             {homePractices.map((area) => (
               <li key={area.slug}>
                 <Link
                   href={`/services/${area.slug}`}
                   className="group flex h-full flex-col rounded-xl border border-line bg-paper p-6 transition hover:-translate-y-0.5 hover:border-gold/50 hover:shadow-lg hover:shadow-ink/5"
                 >
-                  <PracticeIcon slug={area.slug} className="h-7 w-7 text-gold" />
+                  {/* Icon and title share a line. `items-start` with the
+                      icon nudged down keeps it on the first line's cap height
+                      for the titles that wrap to two. */}
+                  <div className="flex items-start gap-3">
+                    <PracticeIcon
+                      slug={area.slug}
+                      className="mt-0.5 h-6 w-6 shrink-0 text-gold"
+                    />
+                    <h3 className="font-serif text-lg font-semibold leading-snug tracking-tight text-ink transition group-hover:text-gold-deep">
+                      {area.shortName}
+                    </h3>
+                  </div>
 
-                  <h3 className="mt-5 font-serif text-lg font-semibold leading-snug tracking-tight text-ink transition group-hover:text-gold-deep">
-                    {area.shortName}
-                  </h3>
                   <p className="mt-3 flex-1 text-sm leading-relaxed text-ink-soft">
                     {area.tagline}
                   </p>
@@ -194,7 +171,7 @@ export default function Home() {
 
       {/* Industry domains — dark tiles, name and sector line stacked at the
           foot of each. */}
-      <section className="container-page py-20 sm:py-24">
+      <section className="container-page py-14 sm:py-16">
         <div className="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
           <SectionHeading
             eyebrow="Domains"
@@ -210,7 +187,7 @@ export default function Home() {
           </Link>
         </div>
 
-        <ul className="mt-14 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
+        <ul className="mt-10 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
           {industries.map((industry) => (
             <li key={industry.slug}>
               <Link
@@ -244,7 +221,7 @@ export default function Home() {
 
       {/* Insights */}
       <section className="border-y border-line bg-paper-warm">
-        <div className="container-page py-20 sm:py-24">
+        <div className="container-page py-14 sm:py-16">
           <div className="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
             <SectionHeading
               eyebrow="Insights"
@@ -260,7 +237,7 @@ export default function Home() {
             </Link>
           </div>
 
-          <ul className="mt-14 grid gap-5 lg:grid-cols-3">
+          <ul className="mt-10 grid gap-5 lg:grid-cols-3">
             {latestInsights.map((insight) => (
               <li key={insight.slug}>
                 <InsightCard insight={insight} />
@@ -271,7 +248,7 @@ export default function Home() {
       </section>
 
       {/* Awards */}
-      <section className="container-page py-20 sm:py-24">
+      <section className="container-page py-14 sm:py-16">
         <div className="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
           <SectionHeading
             eyebrow="Achievements"
@@ -287,7 +264,7 @@ export default function Home() {
           </Link>
         </div>
 
-        <ul className="mt-14 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
+        <ul className="mt-10 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
           {featuredAwards.map((award) => (
             <li
               key={award.title}
@@ -310,7 +287,7 @@ export default function Home() {
 
       {/* Locations + Careers teaser */}
       <section className="border-t border-line bg-paper-warm">
-        <div className="container-page grid gap-12 py-20 lg:grid-cols-2 lg:gap-20 sm:py-24">
+        <div className="container-page grid gap-12 py-14 lg:grid-cols-2 lg:gap-16 sm:py-16">
           <div>
             <SectionHeading eyebrow="Locations" title="Where we are" />
             <ul className="mt-8 space-y-6">
