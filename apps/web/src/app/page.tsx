@@ -185,50 +185,59 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Locations + Careers teaser. Plain paper — the why-us band above
-          it is warm. */}
+      {/* Locations, then the careers teaser — one band, each block running
+          the full width. Plain paper; the why-us band above it is warm. */}
       <section className="border-t border-line">
-        <div className="container-page grid gap-12 py-14 lg:grid-cols-2 lg:gap-16 sm:py-16">
+        <div className="container-page py-14 sm:py-16">
+          {/* The three offices read across, held between the display quotes. */}
           <div>
-            <SectionHeading eyebrow="Locations" title="Where we are" />
-            <ul className="mt-8 space-y-6">
+            <span
+              aria-hidden="true"
+              className="block font-serif text-6xl leading-none text-gold/40 sm:text-7xl"
+            >
+              &ldquo;
+            </span>
+
+            <div className="mt-6">
+              <SectionHeading eyebrow="Locations" title="Where we are" />
+            </div>
+
+            <div className="mt-10 grid gap-10 sm:grid-cols-2 lg:grid-cols-3 lg:gap-16">
               {offices.map((office) => (
-                <li key={office.city} className="border-l-2 border-gold/40 pl-5">
+                <div key={office.city}>
                   <h3 className="font-serif text-lg font-semibold text-ink">
                     {office.city}
                   </h3>
-                  <p className="text-xs uppercase tracking-[0.14em] text-gold-deep">
+                  <p className="mt-1 text-xs uppercase tracking-[0.14em] text-gold-deep">
                     {office.label}
                   </p>
-                  <address className="mt-2 space-y-0.5 text-sm not-italic text-ink-soft">
+                  <address className="mt-3 space-y-0.5 text-sm not-italic leading-relaxed text-ink-soft">
                     {office.lines.map((line) => (
                       <p key={line}>{line}</p>
                     ))}
                   </address>
-                </li>
+                </div>
               ))}
-            </ul>
+            </div>
+
+            <span
+              aria-hidden="true"
+              className="mt-4 block text-right font-serif text-6xl leading-none text-gold/40 sm:text-7xl"
+            >
+              &rdquo;
+            </span>
           </div>
 
-          <div className="relative isolate flex flex-col justify-between overflow-hidden rounded-2xl bg-ink p-8 text-white sm:p-10">
-            <div
-              aria-hidden="true"
-              className="absolute inset-0 -z-10 bg-[linear-gradient(135deg,var(--color-ink-mid),var(--color-ink-deep))]"
+          {/* Careers. A rule above and below rather than a card, so the band
+              stays on the paper ground the locations sit on. */}
+          <div className="mt-10 border-y border-line-strong py-12 text-center sm:py-14">
+            <SectionHeading
+              eyebrow="Careers"
+              title="Work with us"
+              align="center"
+              lead="We look for lawyers who want responsibility early and are willing to learn a matter properly before forming a view. Roles are listed with the eligibility and the practice they sit in."
             />
-            <div
-              aria-hidden="true"
-              className="pointer-events-none absolute -right-16 -top-16 -z-10 h-64 w-64 rounded-full bg-gold/15 blur-3xl"
-            />
-
-            <div>
-              <SectionHeading
-                eyebrow="Careers"
-                title="Work with us"
-                tone="dark"
-                lead="We look for lawyers who want responsibility early and are willing to learn a matter properly before forming a view. Roles are listed with the eligibility and the practice they sit in."
-              />
-            </div>
-            <div className="mt-10 flex flex-col gap-3 sm:flex-row">
+            <div className="mt-9 flex flex-col items-center justify-center gap-3 sm:flex-row">
               <Link
                 href="/careers"
                 className="inline-flex items-center justify-center gap-2 rounded-md bg-gold px-7 py-3.5 text-sm font-semibold text-ink-deep transition hover:bg-gold-bright"
@@ -238,7 +247,7 @@ export default function Home() {
               </Link>
               <Link
                 href="/about"
-                className="inline-flex items-center justify-center rounded-md border border-white/30 px-7 py-3.5 text-sm font-semibold text-white transition hover:border-white hover:bg-white/5"
+                className="inline-flex items-center justify-center rounded-md border border-line-strong px-7 py-3.5 text-sm font-semibold text-ink transition hover:border-gold hover:text-gold-deep"
               >
                 About the firm
               </Link>
