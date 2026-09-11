@@ -41,36 +41,43 @@ export const practiceAreas: PracticeArea[] = [
     ],
     services: [
       {
+        short: "rupee & foreign currency debt",
         title: "Rupee and foreign currency debt",
         body:
           "Structuring and drafting for term loans, working capital facilities and syndicated credit — facility agreements, inter-creditor arrangements, hypothecation and mortgage documents, guarantees and pledges. On the lender side we run legal due diligence on the borrower and the security package; on the borrower side we negotiate conditions precedent, covenant packages and events of default the business can actually live with.",
       },
       {
+        short: "external commercial borrowings",
         title: "External commercial borrowings and cross-border credit",
         body:
           "Eligibility, end-use restrictions, all-in-cost ceilings, minimum average maturity, hedging requirements and Loan Registration Number filings under the RBI's ECB framework. We also advise on overseas direct investment structures and the FEMA consequences of guarantees given by Indian parents for offshore subsidiaries.",
       },
       {
+        short: "corporate debt & debt markets",
         title: "Corporate debt and debt capital markets",
         body:
           "Private placements of non-convertible debentures, debenture trust deeds and security trustee arrangements, information memorandum review, stock exchange listing formalities, and compliance with SEBI's issue and listing regulations and the electronic book provider platform requirements.",
       },
       {
+        short: "restructuring & stressed assets",
         title: "Restructuring and stressed assets",
         body:
           "Refinancing and resolution plans within the RBI's prudential framework, one-time settlements, securitisation and assignment of loans to asset reconstruction companies, and analysis of existing security documents to establish what can be enforced, by whom, and in what order.",
       },
       {
+        short: "insolvency & bankruptcy",
         title: "Insolvency advisory and litigation support",
         body:
           "Section 7 and Section 9 applications, defending admission, claim filing and verification, committee of creditors representation, scrutiny of resolution plans, avoidance applications and appeals. We run the insolvency, restructuring and dispute resolution angles as one brief rather than three.",
       },
       {
+        short: "enforcement & recovery",
         title: "Enforcement and recovery",
         body:
           "Measures under the SARFAESI Act, 2002 and proceedings before the Debts Recovery Tribunals, possession and sale of secured assets, and coordination of parallel civil, criminal and regulatory tracks where a default has more than one cause.",
       },
       {
+        short: "banking regulatory",
         title: "Banking regulatory advice",
         body:
           "Specialised advice on questions arising under the Foreign Exchange Management Act, 1999, RBI licensing and Master Directions, NBFC scale-based regulation, digital lending guidelines, priority sector lending classification, and the outsourcing and customer protection frameworks.",
@@ -190,36 +197,43 @@ export const practiceAreas: PracticeArea[] = [
     ],
     services: [
       {
+        short: "mergers & acquisitions",
         title: "Mergers and acquisitions",
         body:
           "Share and asset acquisitions, control and minority deals, competitive auctions and bilateral negotiations. We handle structuring, legal due diligence, share purchase and shareholders' agreements, escrow and deferred consideration mechanics, and completion.",
       },
       {
+        short: "private equity & venture capital",
         title: "Private equity and venture capital",
         body:
           "Growth and late-stage investments, seed and Series rounds, convertible instruments, liquidation preference and anti-dilution mechanics, information and governance rights, drag and tag provisions, and secondary sales. We act for funds and for founders, and the drafting reflects which side we are on.",
       },
       {
+        short: "joint ventures",
         title: "Joint ventures and strategic alliances",
         body:
           "Formation, capital and governance structure, reserved matters, deadlock resolution, non-compete and exclusivity arrangements, and exit machinery. Most of the drafting effort goes on what happens when the parties stop agreeing.",
       },
       {
+        short: "restructuring & schemes",
         title: "Corporate restructuring and schemes",
         body:
           "Mergers, demergers and amalgamations under Sections 230 to 232 of the Companies Act, 2013, capital reduction, buy-backs, slump sales and business transfers, and intra-group reorganisations — including the NCLT process and creditor and shareholder meetings.",
       },
       {
+        short: "foreign investment & FEMA",
         title: "Foreign investment and exchange control",
         body:
           "Entry route and sectoral cap analysis, pricing guidelines, downstream investment and indirect foreign investment computation, Form FC-GPR and FC-TRS filings, and press note conditions on investment from specified jurisdictions.",
       },
       {
+        short: "competition / merger control",
         title: "Competition and merger control",
         body:
           "Assessment against the Competition Act, 2002 notification thresholds including the deal value threshold, de minimis and exemption analysis, Form I and Form II filings before the Competition Commission of India, and gun-jumping risk management between signing and clearance.",
       },
       {
+        short: "corporate governance",
         title: "Corporate governance and secretarial advisory",
         body:
           "Board and committee composition, related party transaction approvals, listed company obligations under the SEBI Listing Obligations and Disclosure Requirements Regulations, insider trading codes, and directors' duties.",
@@ -334,36 +348,43 @@ export const practiceAreas: PracticeArea[] = [
     ],
     services: [
       {
+        short: "commercial litigation",
         title: "Commercial litigation",
         body:
           "Contractual claims, recovery suits, specific performance, shareholder and joint venture disputes, guarantee and indemnity claims, and appeals. We handle proceedings before the commercial divisions, the district judiciary, the High Courts and — where the matter warrants it — the Supreme Court of India.",
       },
       {
+        short: "arbitration",
         title: "Domestic and international arbitration",
         body:
           "Drafting and reviewing arbitration clauses, Section 11 applications for appointment of arbitrators, ad hoc and institutional references, claims and counterclaims, and hearings. We act in construction and infrastructure arbitrations, shareholder disputes, and supply and distribution claims.",
       },
       {
+        short: "interim & urgent relief",
         title: "Interim and urgent relief",
         body:
           "Injunctions and ex parte applications, Section 9 and Section 17 relief under the Arbitration and Conciliation Act, attachment before judgment, appointment of receivers, and Order XXXIX applications — together with the undertakings and security a court will usually require in return.",
       },
       {
+        short: "enforcement of awards",
         title: "Enforcement of awards and decrees",
         body:
           "Execution of domestic awards and decrees, enforcement of foreign awards under Part II of the Arbitration Act, resisting enforcement on public policy and other permitted grounds, and Section 34 challenges and appeals under Section 37.",
       },
       {
+        short: "insolvency & company litigation",
         title: "Insolvency and company litigation",
         body:
           "Proceedings before the NCLT and NCLAT — insolvency applications and objections, oppression and mismanagement petitions under Sections 241 and 242 of the Companies Act, 2013, and scheme objections.",
       },
       {
+        short: "writ & regulatory litigation",
         title: "Writ and regulatory litigation",
         body:
           "Writ petitions before the High Courts challenging regulatory action, licensing decisions, tender and procurement outcomes, and tax and levy demands, together with statutory appeals before sectoral appellate tribunals.",
       },
       {
+        short: "mediation & settlement",
         title: "Mediation and negotiated settlement",
         body:
           "Pre-institution mediation under the Commercial Courts Act, private mediation, settlement structuring, and consent terms drafted so that they are enforceable rather than merely agreed.",
@@ -479,36 +500,43 @@ export const practiceAreas: PracticeArea[] = [
     ],
     services: [
       {
+        short: "title investigation",
         title: "Title investigation and due diligence",
         body:
           "Chain of title review, encumbrance certificate and revenue record searches, litigation and land acquisition checks, verification of the seller's authority and capacity, and a written title report identifying defects together with what can and cannot be cured before completion.",
       },
       {
+        short: "acquisition & disposal",
         title: "Acquisition and disposal",
         body:
           "Agreements to sell, sale deeds, conveyances and gift and partition deeds, structuring for stamp duty and registration efficiency within the applicable state law, power of attorney arrangements, and completion and mutation of records.",
       },
       {
+        short: "development structures",
         title: "Development structures",
         body:
           "Joint development agreements and revenue or area sharing arrangements, development management agreements, landowner and developer allocation mechanics, and the security and step-in rights that protect each side if the project stalls.",
       },
       {
+        short: "RERA compliance",
         title: "RERA and project compliance",
         body:
           "Project registration, promoter disclosures, allottee agreement drafting compliant with the state rules, the separate account and withdrawal discipline, quarterly updates, extension applications, and representation in proceedings before the authority and the appellate tribunal.",
       },
       {
+        short: "leasing & occupancy",
         title: "Leasing and occupancy",
         body:
           "Commercial, retail, industrial and warehousing leases, leave and licence arrangements, fit-out and rent-free periods, lock-in and exit provisions, maintenance and CAM structures, and registration and stamp duty on lease instruments.",
       },
       {
+        short: "infrastructure & projects",
         title: "Infrastructure and project documentation",
         body:
           "Concession agreements and public-private partnership documentation, EPC and construction contracts, operation and maintenance contracts, land aggregation for linear projects, and right of way and easement arrangements.",
       },
       {
+        short: "real estate disputes",
         title: "Real estate disputes",
         body:
           "Specific performance and injunction suits, allottee and consumer commission claims, construction and delay arbitrations, partition and inheritance disputes affecting project land, and writ petitions against acquisition or approval decisions.",
@@ -623,36 +651,43 @@ export const practiceAreas: PracticeArea[] = [
     ],
     services: [
       {
+        short: "contracts & policies",
         title: "Employment documentation and policy",
         body:
           "Employment contracts and appointment letters, senior executive and managing director terms, employee handbooks, leave, remote work and moonlighting policies, code of conduct, and disciplinary and grievance procedures aligned to standing orders where they apply.",
       },
       {
+        short: "labour codes & compliance",
         title: "Labour code transition and compliance",
         body:
           "Gap analysis against the four codes, wage definition and salary restructuring implications for provident fund, gratuity and bonus, registration and licensing under central and state law, statutory registers and returns, and the compliance calendar.",
       },
       {
+        short: "contract labour",
         title: "Contract labour and flexible workforce",
         body:
           "Principal employer obligations and licensing under the Contract Labour (Regulation and Abolition) Act, 1970, contractor agreements and indemnities, deemed employment and permanency risk, fixed-term employment, gig and platform arrangements, and independent contractor classification.",
       },
       {
+        short: "industrial relations",
         title: "Industrial relations",
         body:
           "Standing orders certification, trade union recognition and negotiation, long-term settlements and wage agreements, strike, lock-out and go-slow situations, disciplinary enquiries and domestic enquiry procedure, and conciliation before the labour authorities.",
       },
       {
+        short: "termination & retrenchment",
         title: "Terminations, retrenchment and closure",
         body:
           "Individual exits and performance-based separations, group retrenchment and the notice and approval requirements, plant closure and transfer of undertaking consequences, severance structuring, and settlement and release documentation.",
       },
       {
+        short: "POSH & investigations",
         title: "POSH and workplace investigations",
         body:
           "Internal Committee constitution and training, policy drafting and display obligations, conducting and advising on inquiries under the Sexual Harassment of Women at Workplace (Prevention, Prohibition and Redressal) Act, 2013, annual reporting, and appeals.",
       },
       {
+        short: "employment litigation",
         title: "Employment litigation",
         body:
           "Proceedings before Labour Courts and Industrial Tribunals, wrongful termination and reinstatement claims, provident fund and ESI assessments and appeals, gratuity and wage claims, injunctions to enforce confidentiality obligations, and writ petitions against labour authority orders.",
@@ -767,36 +802,43 @@ export const practiceAreas: PracticeArea[] = [
     ],
     services: [
       {
+        short: "data protection (DPDP)",
         title: "Data protection and privacy",
         body:
           "DPDP Act readiness assessments, data mapping and records of processing, privacy notices and consent architecture, consent manager arrangements, data principal rights processes, retention schedules, data processing and sub-processor agreements, cross-border transfer analysis, and breach notification procedure.",
       },
       {
+        short: "cybersecurity & incidents",
         title: "Cybersecurity and incident response",
         body:
           "CERT-In directions compliance including reporting timelines and log retention, security policy and access control documentation, vendor security terms, incident response playbooks, and advice during a live breach — including what must be reported, to whom, and in what timeframe.",
       },
       {
+        short: "technology contracting",
         title: "Technology contracting",
         body:
           "Software licensing, SaaS and subscription terms, cloud and hosting agreements, master services agreements and statements of work, systems integration and implementation contracts, support and maintenance, escrow, and the service level, liability and IP ownership provisions that decide the value of the deal.",
       },
       {
+        short: "outsourcing",
         title: "Outsourcing and services",
         body:
           "IT and business process outsourcing, offshore delivery and captive arrangements, transition and exit management, benchmarking, personnel and subcontracting terms, and — where the customer is regulated — flow-through of the regulator's own outsourcing conditions.",
       },
       {
+        short: "platform & intermediary",
         title: "Platform and intermediary regulation",
         body:
           "Safe harbour and due diligence obligations under the Intermediary Guidelines, grievance redressal and takedown process, significant social media intermediary requirements, content policy drafting, and advice on notices from law enforcement and government.",
       },
       {
+        short: "digital consumer & advertising",
         title: "Digital consumer and advertising compliance",
         body:
           "E-commerce rules and marketplace obligations, dark pattern guidelines, influencer and endorsement disclosure, online gaming regulation, subscription and auto-renewal practice, and terms of use and refund policies.",
       },
       {
+        short: "telecom & broadcasting",
         title: "Telecommunications and broadcasting",
         body:
           "Licensing and authorisation under the Telecommunications Act, 2023, TRAI regulatory compliance, infrastructure and tower sharing arrangements, spectrum-related advice, interconnection, and broadcasting and distribution agreements.",
@@ -912,36 +954,43 @@ export const practiceAreas: PracticeArea[] = [
     ],
     services: [
       {
+        short: "transaction & structuring tax",
         title: "Transaction and structuring tax",
         body:
           "Tax analysis of acquisitions, slump sales and business transfers, amalgamations and demergers and the conditions for tax neutrality, capital gains computation and indirect transfer rules, characterisation of consideration, and stamp duty and GST interaction on transaction documents.",
       },
       {
+        short: "international tax & treaties",
         title: "International tax and treaties",
         body:
           "Double taxation avoidance agreement interpretation and beneficial ownership, permanent establishment and business connection analysis, place of effective management, withholding on payments to non-residents and Section 195 certificates, royalty and fees for technical services characterisation, equalisation levy, and GAAR risk assessment.",
       },
       {
+        short: "goods & services tax",
         title: "Goods and services tax",
         body:
           "Classification and rate determination, place and time of supply, input tax credit eligibility and reversal, valuation and related party supplies, reverse charge, refunds including export and inverted duty structures, e-invoicing and e-way bill compliance, and anti-profiteering.",
       },
       {
+        short: "transfer pricing",
         title: "Transfer pricing",
         body:
           "Related party transaction policy and benchmarking support, documentation and master file and country-by-country reporting obligations, advance pricing agreements, safe harbour evaluation, and defence of transfer pricing adjustments in assessment and appeal.",
       },
       {
+        short: "assessment & DRP",
         title: "Tax assessment and dispute resolution",
         body:
           "Response to notices under Sections 142, 143 and 148, faceless assessment representation, Dispute Resolution Panel proceedings, GST show cause notices and adjudication, and appeals through the departmental and tribunal hierarchy.",
       },
       {
+        short: "tax litigation",
         title: "Tax litigation",
         body:
           "Appeals before the Commissioner (Appeals) and the Income Tax Appellate Tribunal, the GST Appellate Tribunal, writ petitions before the High Courts on jurisdiction, limitation and natural justice, and appeals to the High Courts and the Supreme Court on substantial questions of law.",
       },
       {
+        short: "personal & succession tax",
         title: "Personal and succession tax",
         body:
           "Residential status and taxation of foreign income, taxation of trusts and family arrangements, gift and inheritance consequences of succession planning, capital gains on property and securities, and disclosure obligations for foreign assets.",
@@ -1056,36 +1105,43 @@ export const practiceAreas: PracticeArea[] = [
     ],
     services: [
       {
+        short: "trade marks",
         title: "Trade marks",
         body:
           "Availability and clearance searches, application filing and class selection, responses to examination reports, hearings, opposition and counter-statement, rectification and cancellation, renewals, assignment and recordal, and international filings through the Madrid Protocol.",
       },
       {
+        short: "copyright & content",
         title: "Copyright and content",
         body:
           "Subsistence and ownership analysis, voluntary registration, assignment and licensing, moral rights, works made in the course of employment and commissioned works, publishing and music agreements, software licensing, and fair dealing advice.",
       },
       {
+        short: "designs & patents",
         title: "Designs and patents support",
         body:
           "Design registration and infringement advice, patentability and freedom-to-operate coordination with technical agents, patent licensing and assignment, and advice on the patentability exclusions relevant to software and business methods.",
       },
       {
+        short: "trade secrets",
         title: "Trade secrets and confidential information",
         body:
           "Confidentiality frameworks and NDAs, employee and contractor confidentiality obligations, technical know-how protection where patenting is not the right route, and injunctive relief where confidential information has been taken.",
       },
       {
+        short: "licensing & franchising",
         title: "IP commercialisation",
         body:
           "Licensing and assignment structures and royalty mechanics, franchising and area development agreements, technology transfer, merchandising and character licensing, co-branding and sponsorship, and IP-related warranties in transaction documents.",
       },
       {
+        short: "IP enforcement",
         title: "Enforcement and litigation",
         body:
           "Cease and desist correspondence, infringement and passing off suits, interim and ex parte injunctions, John Doe and search and seizure orders, damages and accounts of profits, criminal complaints for counterfeiting, and customs recordation under the IPR enforcement rules.",
       },
       {
+        short: "online & marketplace",
         title: "Online and marketplace enforcement",
         body:
           "Marketplace and platform takedown notices, domain name disputes including INDRP and UDRP proceedings, social media impersonation, and coordinated action against repeat counterfeiters.",

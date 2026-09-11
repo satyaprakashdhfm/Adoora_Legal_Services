@@ -1,9 +1,9 @@
 import Link from "next/link";
 import type { Metadata } from "next";
 import { Hero } from "@/components/hero";
-import { PracticeIcon } from "@/components/practice-icon";
 import { CtaBand, InsightCard, SectionHeading } from "@/components/ui";
-import { firm, awards, offices } from "@/content/firm";
+import { PracticesIndex } from "@/components/practices-index";
+import { firm, differentiators, offices } from "@/content/firm";
 import { practiceAreas } from "@/content/practice-areas";
 import { industries } from "@/content/industries";
 import { insightsByDate } from "@/content/insights";
@@ -16,22 +16,6 @@ export const metadata: Metadata = {
   description: firm.descriptor,
   alternates: { canonical: "/" },
 };
-
-/** Practice order for the home grid — flagship practices first. */
-const practiceOrder = [
-  "corporate-ma",
-  "banking-finance",
-  "dispute-resolution",
-  "technology-media-telecom",
-  "real-estate-infrastructure",
-  "taxation",
-  "labour-employment",
-  "intellectual-property",
-];
-
-const homePractices = [...practiceAreas].sort(
-  (a, b) => practiceOrder.indexOf(a.slug) - practiceOrder.indexOf(b.slug),
-);
 
 /** Right-pointing arrow shared by the links and pills on this page. */
 function Arrow({ className = "" }: { className?: string }) {
@@ -51,7 +35,6 @@ function Arrow({ className = "" }: { className?: string }) {
 
 export default function Home() {
   const latestInsights = insightsByDate.slice(0, 3);
-  const featuredAwards = awards.slice(0, 4);
 
   return (
     <>
@@ -113,114 +96,58 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Practice areas — one card per practice, in a four-up grid. */}
+      {/* Practices — one block per practice area, listing its case types.
+          This replaced two card grids (practices and industry domains): the
+          cards described the practice in a line and hid the work, and a
+          visitor arrives looking for "insolvency" or "RERA". */}
       <section className="border-y border-line bg-paper-warm">
         <div className="container-page py-14 sm:py-16">
           <div className="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
             <SectionHeading
-              eyebrow="Services"
-              title="Our practice areas"
-              lead="Each practice has its own page setting out the matters we handle, the process and timelines, the forums we appear before, and answers to the questions clients ask most."
+              eyebrow="Practices"
+              title="Our practices"
+              lead="The matters we handle, grouped by practice. Each practice has its own page setting out the process and timelines, the forums we appear before, and answers to the questions clients ask most."
             />
             <Link
               href="/services"
               className="inline-flex shrink-0 items-center gap-2 self-start rounded-full border border-line-strong px-6 py-3 text-sm font-semibold text-ink transition hover:border-gold hover:text-gold-deep lg:self-auto"
             >
-              View all practice areas
+              View all practices
               <Arrow />
             </Link>
           </div>
 
-          <ul className="mt-10 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
-            {homePractices.map((area) => (
-              <li key={area.slug}>
-                <Link
-                  href={`/services/${area.slug}`}
-                  className="group flex h-full flex-col rounded-xl border border-line bg-paper p-6 transition hover:-translate-y-0.5 hover:border-gold/50 hover:shadow-lg hover:shadow-ink/5"
-                >
-                  {/* Icon and title share a line. `items-start` with the
-                      icon nudged down keeps it on the first line's cap height
-                      for the titles that wrap to two. */}
-                  <div className="flex items-start gap-3">
-                    <PracticeIcon
-                      slug={area.slug}
-                      className="mt-0.5 h-6 w-6 shrink-0 text-gold"
-                    />
-                    <h3 className="font-serif text-lg font-semibold leading-snug tracking-tight text-ink transition group-hover:text-gold-deep">
-                      {area.shortName}
-                    </h3>
-                  </div>
+          <div className="mt-12">
+            <PracticesIndex />
+          </div>
 
-                  <p className="mt-3 flex-1 text-sm leading-relaxed text-ink-soft">
-                    {area.tagline}
-                  </p>
-
-                  <span
-                    aria-hidden="true"
-                    className="mt-6 inline-flex items-center gap-2 text-sm font-semibold text-gold-deep"
+          {/* Industry pages keep their own URLs and content; they are reached
+              from here and from each practice page rather than competing for a
+              top-level nav slot. */}
+          <div className="mt-14 border-t border-line-strong pt-8">
+            <h3 className="eyebrow text-slate">Sectors we work in</h3>
+            {/* No separators between these: the list wraps, and an interpunct
+                rendered before each item ends up at the start of the wrapped
+                line. The underlines already delimit them. */}
+            <ul className="mt-4 flex flex-wrap gap-x-6 gap-y-2 text-sm">
+              {industries.map((industry) => (
+                <li key={industry.slug}>
+                  <Link
+                    href={`/domains/${industry.slug}`}
+                    className="text-ink-soft underline decoration-line-strong underline-offset-4 transition hover:text-gold-deep hover:decoration-gold/50"
                   >
-                    Learn more
-                    <Arrow className="transition-transform group-hover:translate-x-0.5" />
-                  </span>
-                </Link>
-              </li>
-            ))}
-          </ul>
+                    {industry.name}
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </div>
         </div>
       </section>
 
-      {/* Industry domains — dark tiles, name and sector line stacked at the
-          foot of each. */}
-      <section className="container-page py-14 sm:py-16">
-        <div className="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
-          <SectionHeading
-            eyebrow="Domains"
-            title="Industries we work in"
-            lead="Sector pages describe the regulatory landscape and transaction patterns a business in that industry actually faces, and the matters that follow from them."
-          />
-          <Link
-            href="/domains"
-            className="inline-flex shrink-0 items-center gap-2 self-start rounded-full border border-line-strong px-6 py-3 text-sm font-semibold text-ink transition hover:border-gold hover:text-gold-deep lg:self-auto"
-          >
-            View all domains
-            <Arrow />
-          </Link>
-        </div>
-
-        <ul className="mt-10 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
-          {industries.map((industry) => (
-            <li key={industry.slug}>
-              <Link
-                href={`/domains/${industry.slug}`}
-                className="group relative flex aspect-[4/3] flex-col justify-end overflow-hidden rounded-xl bg-ink p-6 text-white transition hover:-translate-y-0.5 hover:shadow-xl hover:shadow-ink/15"
-              >
-                <span
-                  aria-hidden="true"
-                  className="absolute inset-0 bg-[linear-gradient(135deg,var(--color-ink-mid),var(--color-ink-deep))] transition-opacity group-hover:opacity-90"
-                />
-                <span
-                  aria-hidden="true"
-                  className="absolute -right-10 -top-10 h-32 w-32 rounded-full bg-gold/15 blur-2xl"
-                />
-                <span
-                  aria-hidden="true"
-                  className="absolute inset-x-6 top-6 h-px bg-gold/40"
-                />
-
-                <h3 className="relative font-serif text-lg font-semibold leading-snug tracking-tight">
-                  {industry.name}
-                </h3>
-                <p className="relative mt-2 text-xs leading-relaxed text-white/65">
-                  {industry.tagline}
-                </p>
-              </Link>
-            </li>
-          ))}
-        </ul>
-      </section>
-
-      {/* Insights */}
-      <section className="border-y border-line bg-paper-warm">
+      {/* Insights. Plain paper — the practices band above it is warm, and two
+          warm bands in a row read as one section. */}
+      <section>
         <div className="container-page py-14 sm:py-16">
           <div className="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
             <SectionHeading
@@ -247,46 +174,42 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Awards */}
-      <section className="container-page py-14 sm:py-16">
-        <div className="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
+      {/* Why clients work with us. Replaced a recognitions list whose entries
+          the firm could not substantiate. Every line here is a statement about
+          how the firm works, not a ranking claim — the BCI rules on
+          advertising do not permit the latter. */}
+      <section className="border-y border-line bg-paper-warm">
+        <div className="container-page py-14 sm:py-16">
           <SectionHeading
-            eyebrow="Achievements"
-            title="Recognitions"
-            lead="Listed factually, with the year and the awarding body."
+            eyebrow="Why clients work with us"
+            title="What you can hold us to"
+            lead="Not a ranking and not a claim about other firms — four things we try to do on every matter."
           />
-          <Link
-            href="/achievements"
-            className="inline-flex shrink-0 items-center gap-2 self-start rounded-full border border-line-strong px-6 py-3 text-sm font-semibold text-ink transition hover:border-gold hover:text-gold-deep lg:self-auto"
-          >
-            View all recognitions
-            <Arrow />
-          </Link>
-        </div>
 
-        <ul className="mt-10 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
-          {featuredAwards.map((award) => (
-            <li
-              key={award.title}
-              className="flex flex-col rounded-xl border border-line bg-paper-warm p-6"
-            >
-              <span className="text-xs font-semibold uppercase tracking-[0.16em] text-gold-deep">
-                {award.year}
-              </span>
-              <h3 className="mt-3 font-serif text-base font-semibold leading-snug text-ink">
-                {award.title}
-              </h3>
-              <p className="mt-2.5 flex-1 text-sm leading-relaxed text-ink-soft">
-                {award.detail}
-              </p>
-              <p className="mt-4 text-xs text-slate-light">{award.body}</p>
-            </li>
-          ))}
-        </ul>
+          <ul className="mt-10 grid gap-x-8 gap-y-10 sm:grid-cols-2 lg:grid-cols-4">
+            {differentiators.map((item, index) => (
+              <li key={item.title}>
+                <span
+                  aria-hidden="true"
+                  className="font-serif text-2xl font-semibold text-gold/50"
+                >
+                  {String(index + 1).padStart(2, "0")}
+                </span>
+                <h3 className="mt-3 font-serif text-lg font-semibold leading-snug tracking-tight text-ink">
+                  {item.title}
+                </h3>
+                <p className="mt-2.5 text-sm leading-relaxed text-ink-soft">
+                  {item.body}
+                </p>
+              </li>
+            ))}
+          </ul>
+        </div>
       </section>
 
-      {/* Locations + Careers teaser */}
-      <section className="border-t border-line bg-paper-warm">
+      {/* Locations + Careers teaser. Plain paper — the why-us band above
+          it is warm. */}
+      <section className="border-t border-line">
         <div className="container-page grid gap-12 py-14 lg:grid-cols-2 lg:gap-16 sm:py-16">
           <div>
             <SectionHeading eyebrow="Locations" title="Where we are" />

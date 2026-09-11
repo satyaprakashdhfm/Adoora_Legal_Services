@@ -7,6 +7,11 @@ export type OverviewBlock = {
 };
 
 export type ServiceItem = {
+  /**
+   * Terse lower-case label for the practices index, where the case types are
+   * listed densely rather than described. Falls back to `title` when absent.
+   */
+  short?: string;
   title: string;
   body: string;
 };

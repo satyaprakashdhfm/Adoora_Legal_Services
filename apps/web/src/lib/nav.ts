@@ -10,31 +10,27 @@ export type NavItem = {
   children?: NavChild[];
 };
 
+/**
+ * Primary navigation.
+ *
+ * Practices and sectors used to be two top-level items. They are one now:
+ * a visitor thinks in terms of the matter they have, not whether we file it
+ * under a practice or an industry. Sector pages keep their URLs and are
+ * reached from the practices index, each practice page, and the footer.
+ */
 export const primaryNav: NavItem[] = [
   {
-    label: "Services",
+    label: "Practices",
     href: "/services",
     children: [
-      { label: "All practice areas", href: "/services" },
+      { label: "All practices and sectors", href: "/services" },
       ...practiceAreas.map((area) => ({
         label: area.name,
         href: `/services/${area.slug}`,
       })),
     ],
   },
-  {
-    label: "Domains",
-    href: "/domains",
-    children: [
-      { label: "All industry domains", href: "/domains" },
-      ...industries.map((industry) => ({
-        label: industry.name,
-        href: `/domains/${industry.slug}`,
-      })),
-    ],
-  },
   { label: "Insights", href: "/insights" },
-  { label: "Achievements", href: "/achievements" },
   { label: "About Us", href: "/about" },
   { label: "Careers", href: "/careers" },
   { label: "Contact", href: "/contact" },
@@ -42,14 +38,14 @@ export const primaryNav: NavItem[] = [
 
 export const footerNav = [
   {
-    heading: "Services",
+    heading: "Practices",
     links: practiceAreas.map((area) => ({
       label: area.shortName,
       href: `/services/${area.slug}`,
     })),
   },
   {
-    heading: "Domains",
+    heading: "Sectors",
     links: industries.map((industry) => ({
       label: industry.shortName,
       href: `/domains/${industry.slug}`,
@@ -60,7 +56,6 @@ export const footerNav = [
     links: [
       { label: "About Us", href: "/about" },
       { label: "Insights", href: "/insights" },
-      { label: "Achievements", href: "/achievements" },
       { label: "Careers", href: "/careers" },
       { label: "Contact Us", href: "/contact" },
     ],

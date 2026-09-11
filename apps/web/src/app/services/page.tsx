@@ -1,16 +1,13 @@
 import Link from "next/link";
-import { PracticeIcon } from "@/components/practice-icon";
 import type { Metadata } from "next";
 import { CtaBand, PageHero } from "@/components/ui";
-import {
-  practiceGroups,
-  practiceAreasByGroup,
-} from "@/content/practice-areas";
+import { PracticesIndex } from "@/components/practices-index";
+import { industries } from "@/content/industries";
 
 export const metadata: Metadata = {
-  title: "Services — Practice Areas",
+  title: "Our Practices",
   description:
-    "Practice areas at ADOORA Legal Services: corporate and M&A, banking and finance, dispute resolution, real estate, labour and employment, technology, taxation and intellectual property.",
+    "Practices at ADOORA Legal Services and the matters inside each: corporate and M&A, banking and finance, dispute resolution, real estate, labour and employment, technology, taxation and intellectual property.",
   alternates: { canonical: "/services" },
 };
 
@@ -18,82 +15,48 @@ export default function ServicesPage() {
   return (
     <>
       <PageHero
-        eyebrow="Services"
-        title="Practice areas"
-        lead="Each practice area has its own page setting out the matters we handle, how the work is sequenced, the courts, tribunals and regulators involved, and the questions clients ask most often."
-        trail={[{ label: "Home", href: "/" }, { label: "Services" }]}
+        eyebrow="Practices"
+        title="Our practices"
+        lead="The matters we handle, grouped by practice. Each practice has its own page setting out how the work is sequenced, the courts, tribunals and regulators involved, and the questions clients ask most often."
+        trail={[{ label: "Home", href: "/" }, { label: "Practices" }]}
       />
 
-      <div className="container-page py-16 sm:py-20">
-        <div className="space-y-16">
-          {practiceGroups.map((group) => (
-            <section key={group}>
-              <div className="flex items-baseline gap-4 border-b border-line-strong pb-4">
-                <h2 className="font-serif text-2xl font-semibold tracking-tight text-ink">
-                  {group}
-                </h2>
-                <span className="text-xs uppercase tracking-[0.14em] text-slate-light">
-                  {practiceAreasByGroup(group).length} practice
-                  {practiceAreasByGroup(group).length === 1 ? "" : "s"}
-                </span>
-              </div>
-
-              <ul className="mt-8 grid gap-5 lg:grid-cols-2">
-                {practiceAreasByGroup(group).map((area) => (
-                  <li key={area.slug}>
-                    <Link
-                      href={`/services/${area.slug}`}
-                      className="group flex h-full flex-col rounded-xl border border-line bg-paper p-7 transition hover:-translate-y-0.5 hover:border-gold/40 hover:shadow-lg hover:shadow-ink/5"
-                    >
-                      <PracticeIcon slug={area.slug} className="h-8 w-8 text-gold" />
-
-                      <h3 className="mt-5 font-serif text-xl font-semibold leading-snug tracking-tight text-ink transition group-hover:text-gold-deep">
-                        {area.name}
-                      </h3>
-                      <p className="mt-3 text-sm leading-relaxed text-ink-soft">
-                        {area.tagline}
-                      </p>
-
-                      <ul className="mt-5 flex flex-1 flex-wrap gap-2">
-                        {area.services.slice(0, 4).map((service) => (
-                          <li
-                            key={service.title}
-                            className="rounded-full bg-paper-tint px-3 py-1 text-xs text-ink-soft"
-                          >
-                            {service.title}
-                          </li>
-                        ))}
-                        {area.services.length > 4 && (
-                          <li className="rounded-full px-2 py-1 text-xs text-slate-light">
-                            +{area.services.length - 4} more
-                          </li>
-                        )}
-                      </ul>
-
-                      <span
-                        aria-hidden="true"
-                        className="mt-6 inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.14em] text-gold-deep"
-                      >
-                        View practice
-                        <svg viewBox="0 0 16 16" className="h-3 w-3">
-                          <path
-                            d="M2 8h11M9 4l4 4-4 4"
-                            fill="none"
-                            stroke="currentColor"
-                            strokeWidth={1.6}
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                          />
-                        </svg>
-                      </span>
-                    </Link>
-                  </li>
-                ))}
-              </ul>
-            </section>
-          ))}
-        </div>
+      <div className="container-page py-14 sm:py-16">
+        <PracticesIndex />
       </div>
+
+      {/* Sector pages sit alongside the practices rather than in the nav. */}
+      <section className="border-t border-line bg-paper-warm">
+        <div className="container-page py-14 sm:py-16">
+          <h2 className="eyebrow text-gold-deep">Sectors</h2>
+          <p className="mt-3 max-w-2xl font-serif text-2xl font-semibold tracking-tight text-ink">
+            The industries these practices serve
+          </p>
+          <p className="mt-3 max-w-2xl leading-relaxed text-ink-soft">
+            Each sector page sets out the regulatory landscape and transaction
+            patterns a business in that industry actually faces, and the matters
+            that follow from them.
+          </p>
+
+          <ul className="mt-8 grid gap-x-8 gap-y-3 sm:grid-cols-2 lg:grid-cols-4">
+            {industries.map((industry) => (
+              <li key={industry.slug}>
+                <Link
+                  href={`/domains/${industry.slug}`}
+                  className="group block border-t border-line-strong pt-3 transition"
+                >
+                  <span className="font-medium text-ink transition group-hover:text-gold-deep">
+                    {industry.name}
+                  </span>
+                  <span className="mt-1 block text-sm leading-snug text-slate">
+                    {industry.tagline}
+                  </span>
+                </Link>
+              </li>
+            ))}
+          </ul>
+        </div>
+      </section>
 
       <CtaBand />
     </>

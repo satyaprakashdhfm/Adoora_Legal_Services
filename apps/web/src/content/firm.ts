@@ -85,65 +85,43 @@ export const stats = [
 ] as const;
 
 /**
- * Recognitions, listed factually with the year and the awarding body.
- * Superlatives appear only where they are part of the award title itself.
+ * Why clients work with us.
+ *
+ * This replaced a list of recognitions. The entries that were here (ALB,
+ * Chambers, Legal 500, ET, IBLJ) came from the original brief as examples
+ * and were not the firm's own, so they were published claims the firm could
+ * not substantiate. They have been removed.
+ *
+ * What sits here instead has to stay on the right side of the Bar Council
+ * of India rules on advertising: no superlatives, no ranking claims, no
+ * comparison with other firms. Every line below is a statement about how
+ * the firm works that a client could hold us to.
+ *
+ * When real recognitions exist, list them factually with the year and the
+ * awarding body — the template for that is in this file's history.
  */
-export const awards = [
+export const differentiators = [
   {
-    year: "2026",
-    body: "Asian Legal Business",
-    title: "ALB India Firms to Watch 2026",
-    detail: 'Recognised amongst "Firms to Watch in 2026" by Asian Legal Business.',
+    title: "The person who structures a matter stays on it",
+    body:
+      "Teams are small and overlapping, so the lawyer who set up a transaction is still involved when it is tested. You are not handed to a different team when the work turns contentious.",
   },
   {
-    year: "2026",
-    body: "Asian Legal Business",
-    title: "ALB India Law Awards 2026",
-    detail: "Winner: Emerging Markets Law Firm of the Year.",
+    title: "A written estimate before the work starts",
+    body:
+      "Fee arrangements are confirmed in writing at the outset, broken down by stage, and we tell you when a development is likely to move the estimate rather than explaining it afterwards.",
   },
   {
-    year: "2026",
-    body: "Benchmark Litigation",
-    title: "Benchmark Litigation Asia-Pacific Rankings 2026",
-    detail:
-      'Recognised across three practice areas; "Highly Recommended Firm" in Hyderabad.',
+    title: "We say when a claim is not worth bringing",
+    body:
+      "Merits, limitation, forum and enforceability get assessed together, with a candid view of what a matter is worth after cost and time. Where a commercial settlement is the better outcome, we say so early.",
   },
   {
-    year: "2026",
-    body: "Chambers and Partners",
-    title: "Chambers and Partners Asia Pacific 2026",
-    detail:
-      "Band 1 in Corporate/Commercial: Hyderabad; ranked in Dispute Resolution.",
-  },
-  {
-    year: "2025",
-    body: "The Economic Times",
-    title: "ET Global Legal Awards 2025",
-    detail:
-      "Winner: Regional Law Firm of the Year – Hyderabad (3rd edition, 2025–26).",
-  },
-  {
-    year: "2025",
-    body: "India Business Law Journal",
-    title: "IBLJ Deals of the Year 2025",
-    detail:
-      "Two deals recognised: RUSAL's three-stage investment in Pioneer Aluminium (USD 468.7m); and APCRDA's financing from NaBFID for the Amaravati Capital City development (USD 811m).",
-  },
-  {
-    year: "2026",
-    body: "India Business Law Journal",
-    title: "IBLJ Regional Law Firm Awards 2026",
-    detail:
-      "Winner in Arbitration & ADR, Finance, Real Estate, and Technology (Hyderabad).",
-  },
-  {
-    year: "2026",
-    body: "The Legal 500",
-    title: "The Legal 500 – Asia Pacific 2026",
-    detail:
-      "Top Tier Firm in Hyderabad; ranked across four practice areas including Banking & Finance, Corporate & M&A, and Labour & Employment.",
+    title: "Advice that leads with the position",
+    body:
+      "Diligence reports ranked by deal consequence rather than by subject. Contracts whose operative clauses match their compliance schedules. The answer first, then the reasoning behind it.",
   },
 ] as const;
 
-export type Award = (typeof awards)[number];
+export type Differentiator = (typeof differentiators)[number];
 export type Office = (typeof offices)[number];
