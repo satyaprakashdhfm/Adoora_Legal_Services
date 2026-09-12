@@ -41,6 +41,29 @@ runs solid down the left of the panel, where the heading, buttons and the
 PEOPLE / IDEAS / IMPACT triad sit. Portrait or square crops best — the panel is
 roughly a third of the row and as tall as the locations beside it.
 
+## Why-us photography
+
+`why-us` — **one file holding four photographs in a 2×2 grid**, one per card in
+the "Why partner with us?" band. The cards do not slice it: each renders the
+source at twice its own size and offsets it to bring its quadrant into view, so
+the file stays a single request and nothing is squashed.
+
+Quadrants map to the cards in reading order, which is the order
+`differentiators` is declared in `src/content/firm.ts`:
+
+| Quadrant | Card |
+| --- | --- |
+| top-left | Proven Legal Expertise |
+| top-right | Client-First Approach |
+| bottom-left | Cross-Border & Regulatory Mastery |
+| bottom-right | Strategic Legal Solutions |
+
+Each quadrant is cropped to the card, which is tall and narrow, so keep the
+subject centred in its quadrant rather than at an edge. A navy gradient runs up
+from the bottom of every card behind the heading and body text. Resolved by
+`publicImage`, so the extension does not matter and a missing file leaves the
+cards on the navy they sit on.
+
 ## App icons
 
 `src/app/icon.png` and `src/app/apple-icon.png`. Next.js picks those up from the

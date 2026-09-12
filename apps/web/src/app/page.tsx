@@ -7,7 +7,6 @@ import { PracticesIndex } from "@/components/practices-index";
 import { CityIcon } from "@/components/city-icon";
 import { firm, firmOverview, differentiators, offices } from "@/content/firm";
 import { peopleByGroup } from "@/content/people";
-import { PersonCard } from "@/components/person-card";
 import { practiceAreas } from "@/content/practice-areas";
 import { insightsByDate } from "@/content/insights";
 import { heroSlides } from "@/content/hero-slides";
@@ -19,12 +18,6 @@ export const metadata: Metadata = {
   description: firm.descriptor,
   alternates: { canonical: "/" },
 };
-
-/** The same two rosters the About page splits its people into. */
-const homeRosters = [
-  { heading: "Leadership & advocates", members: peopleByGroup("legal") },
-  { heading: "Operations & business services", members: peopleByGroup("business") },
-];
 
 /** Right-pointing arrow shared by the links and pills on this page. */
 function Arrow({ className = "" }: { className?: string }) {
@@ -47,6 +40,9 @@ export default function Home() {
   /* Resolved at build time; a missing file falls back to the navy gradient,
      exactly as the hero frames do. */
   const careersImage = publicImage("careers-office");
+  /* One file holding four photographs in a 2×2 grid, one per "why us" card.
+     Absent, the cards fall back to the navy they sit on. */
+  const whyUsImage = publicImage("why-us");
 
   return (
     <>
@@ -94,15 +90,14 @@ export default function Home() {
         </div>
       </section>
 
-      {/* The team, below the about band. The same roster the About page
-          carries — one component, so the two cannot drift. */}
+      {/* The team, below the about band. Names in two columns rather than a
+          card each — sixteen cards cost most of a screen for the same list. */}
       <section className="border-t border-line">
         <div className="container-page py-14 sm:py-16">
           <div className="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
             <SectionHeading
               eyebrow="Our people"
               title="The lawyers who lead each practice"
-              lead="An efficient team of hardworking, sincere and talented professionals working across South India, from our offices in Telangana, Karnataka and Andhra Pradesh."
             />
             <Link
               href="/about#people"
@@ -113,20 +108,49 @@ export default function Home() {
             </Link>
           </div>
 
-          {homeRosters.map((roster) => (
-            <div key={roster.heading} className="mt-12">
-              <h3 className="eyebrow border-b border-line-strong pb-4 text-ink">
-                {roster.heading}
+          <div className="mt-10 grid gap-10 lg:grid-cols-[1.7fr_1fr] lg:gap-16">
+            <div>
+              <h3 className="eyebrow border-b border-line-strong pb-3 text-ink">
+                Leadership &amp; advocates
               </h3>
-              <ul className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-                {roster.members.map((person) => (
-                  <li key={person.slug}>
-                    <PersonCard person={person} />
+              <ul className="mt-4 grid gap-x-10 sm:grid-cols-2">
+                {peopleByGroup("legal").map((person) => (
+                  <li
+                    key={person.slug}
+                    className="flex items-baseline justify-between gap-4 border-b border-line py-2.5"
+                  >
+                    <span className="font-serif text-sm font-semibold text-ink">
+                      {person.name}
+                    </span>
+                    <span className="shrink-0 text-xs text-gold-deep">
+                      {person.designation}
+                    </span>
                   </li>
                 ))}
               </ul>
             </div>
-          ))}
+
+            <div>
+              <h3 className="eyebrow border-b border-line-strong pb-3 text-ink">
+                Operations &amp; business services
+              </h3>
+              <ul className="mt-4">
+                {peopleByGroup("business").map((person) => (
+                  <li
+                    key={person.slug}
+                    className="flex items-baseline justify-between gap-4 border-b border-line py-2.5"
+                  >
+                    <span className="font-serif text-sm font-semibold text-ink">
+                      {person.name}
+                    </span>
+                    <span className="shrink-0 text-xs text-gold-deep">
+                      {person.designation}
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          </div>
         </div>
       </section>
 
@@ -193,19 +217,46 @@ export default function Home() {
         <div className="container-page py-14 sm:py-16">
           <SectionHeading eyebrow="Why us" title="Why partner with us?" />
 
-          <ul className="mt-10 grid gap-x-8 gap-y-10 sm:grid-cols-2 lg:grid-cols-4">
+          <ul className="mt-10 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
             {differentiators.map((item, index) => (
-              <li key={item.title}>
+              <li
+                key={item.title}
+                className="relative isolate flex min-h-[20rem] flex-col justify-end overflow-hidden rounded-xl bg-ink p-6 text-white"
+              >
+                {whyUsImage && (
+                  /* One source image holds all four photographs in a 2×2 grid.
+                     The inner box is twice the card in each direction and is
+                     offset to bring this card's quadrant into view — `cover` on
+                     that box rather than a stretched background, so nothing is
+                     squashed to the card's proportions. */
+                  <div className="absolute inset-0 -z-20 overflow-hidden">
+                    <div
+                      aria-hidden="true"
+                      className="absolute h-[200%] w-[200%] bg-cover bg-center"
+                      style={{
+                        backgroundImage: `url("${whyUsImage}")`,
+                        left: index % 2 === 0 ? "0" : "-100%",
+                        top: index < 2 ? "0" : "-100%",
+                      }}
+                    />
+                  </div>
+                )}
+
+                <div
+                  aria-hidden="true"
+                  className="absolute inset-0 -z-10 bg-[linear-gradient(to_top,var(--color-ink)_0%,color-mix(in_oklab,var(--color-ink)_88%,transparent)_42%,color-mix(in_oklab,var(--color-ink)_45%,transparent)_100%)]"
+                />
+
                 <span
                   aria-hidden="true"
-                  className="font-serif text-2xl font-semibold text-gold/50"
+                  className="font-serif text-2xl font-semibold text-gold-bright/70"
                 >
                   {String(index + 1).padStart(2, "0")}
                 </span>
-                <h3 className="mt-3 font-serif text-lg font-semibold leading-snug tracking-tight text-ink">
+                <h3 className="mt-2 font-serif text-lg font-semibold leading-snug tracking-tight text-white">
                   {item.title}
                 </h3>
-                <p className="mt-2.5 text-sm leading-relaxed text-ink-soft">
+                <p className="mt-2.5 text-sm leading-relaxed text-white/80">
                   {item.body}
                 </p>
               </li>

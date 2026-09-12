@@ -1,7 +1,15 @@
 import Link from "next/link";
 import type { Metadata } from "next";
 import { PageHero, SectionHeading } from "@/components/ui";
-import { firm, offices, stats } from "@/content/firm";
+import {
+  firm,
+  firmOverview,
+  coreValues,
+  coverage,
+  industryFocus,
+  offices,
+  stats,
+} from "@/content/firm";
 import { people, peopleByGroup } from "@/content/people";
 import { PersonCard } from "@/components/person-card";
 import { practiceAreaBySlug } from "@/content/practice-areas";
@@ -34,34 +42,43 @@ export default function AboutPage() {
         trail={[{ label: "Home", href: "/" }, { label: "About Us" }]}
       />
 
-      {/* Story */}
-      <section className="container-page py-20">
-        <div className="grid gap-12 lg:grid-cols-[1fr_1.15fr] lg:gap-20">
-          <SectionHeading eyebrow="Our story" title="How the firm came together" />
-          <div className="space-y-5 leading-relaxed text-ink-soft">
-            <p>
-              {firm.name} was built by lawyers who had spent years watching
-              matters fall between practice areas. A financing would stall on a
-              land title question that nobody in the deal team was equipped to
-              answer. An acquisition would be repriced late because an
-              employment exposure surfaced after the term sheet. A regulatory
-              notice would be handled as a compliance item until it became
-              litigation.
+      {/* Overview and core values, as the brochure sets them out. Replaced
+          the firm's origin story, which the brochure does not carry. */}
+      <section className="container-page py-14 sm:py-16">
+        <div className="grid gap-10 lg:grid-cols-[1fr_1.15fr] lg:gap-16">
+          <div>
+            <SectionHeading eyebrow="Overview" title="Who we are" />
+            <div className="mt-6 space-y-4 leading-relaxed text-ink-soft">
+              {firmOverview.map((paragraph) => (
+                <p key={paragraph}>{paragraph}</p>
+              ))}
+            </div>
+          </div>
+
+          <div>
+            <h2 className="eyebrow inline-flex items-center gap-2.5 text-gold-deep">
+              <span aria-hidden="true" className="h-px w-8 bg-gold/50" />
+              Core values
+            </h2>
+            <p className="mt-4 leading-relaxed text-ink-soft">
+              {coreValues.intro}
             </p>
-            <p>
-              The firm is organised to close those gaps. We keep practice teams
-              small and overlapping, so the person who structures a matter is
-              still involved when it is tested, and so the corporate, finance,
-              employment and disputes views on a problem are formed together
-              rather than in sequence.
-            </p>
-            <p>
-              We work from Hyderabad, Bengaluru and Guntur, and appear before
-              the courts, tribunals and regulators of Telangana, Andhra Pradesh
-              and Karnataka. Our clients include domestic and foreign commercial
-              enterprises, banks and financial institutions, private equity and
-              venture capital funds, promoter-led and family businesses,
-              start-ups, and government and public sector entities.
+
+            <div className="mt-7 grid gap-x-10 gap-y-6 sm:grid-cols-2">
+              {coreValues.values.map((value) => (
+                <div key={value.title} className="border-t border-line pt-4">
+                  <h3 className="font-serif text-base font-semibold text-ink">
+                    {value.title}
+                  </h3>
+                  <p className="mt-1.5 text-sm leading-relaxed text-ink-soft">
+                    {value.body}
+                  </p>
+                </div>
+              ))}
+            </div>
+
+            <p className="mt-6 font-serif text-sm italic leading-relaxed text-slate">
+              {coreValues.close}
             </p>
           </div>
         </div>
@@ -69,29 +86,26 @@ export default function AboutPage() {
 
       {/* Approach */}
       <section className="border-y border-line bg-paper-warm">
-        <div className="container-page py-20">
-          <SectionHeading
-            eyebrow="Our approach"
-            title="Four things we try to do consistently"
-          />
+        <div className="container-page py-14 sm:py-16">
+          <SectionHeading eyebrow="Our approach" title="Key strengths" />
 
-          <ul className="mt-12 grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
+          <ul className="mt-10 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
             {[
               {
-                title: "Give the answer, then the reasoning",
-                body: "Advice that opens with three pages of context and reaches a view in the last paragraph is not useful to someone who has to decide today. We lead with the position and the risk, and put the analysis behind it.",
+                title: "Regional Expertise",
+                body: "Extensive knowledge of legal and regulatory frameworks across Andhra Pradesh, Karnataka and Telangana, ensuring precise jurisdictional compliance.",
               },
               {
-                title: "Say when a claim is weak",
-                body: "We would rather advise against a matter at assessment than at the hearing. Where the commercial settlement is the better outcome, we say so early, even when that means less work for us.",
+                title: "Strategic Legal Solutions",
+                body: "Tailored legal counsel designed to mitigate risks, ensure regulatory adherence and address industry-specific challenges.",
               },
               {
-                title: "Price the regulatory reality in",
-                body: "Structuring, approvals and enforcement are the same question at different stages. We test a structure against the rules it will have to survive before it is drafted, not after.",
+                title: "Proven Legal Expertise",
+                body: "A highly skilled team of attorneys and legal professionals with extensive experience in corporate law, dispute resolution and compliance.",
               },
               {
-                title: "Write documents to be used",
-                body: "Diligence reports ranked by deal consequence. Contracts whose operative clauses match their compliance schedules. Advice a non-lawyer in your team can act on.",
+                title: "Client-Focused Advocacy",
+                body: "Dedicated to safeguarding clients' interests through proactive legal representation, strategic advisory and result-oriented solutions.",
               },
             ].map((item, index) => (
               <li
@@ -130,7 +144,7 @@ export default function AboutPage() {
       </section>
 
       {/* Governance & compliance */}
-      <section className="container-page py-20">
+      <section className="container-page py-14 sm:py-16">
         <div className="grid gap-12 lg:grid-cols-[1fr_1.15fr] lg:gap-20">
           <SectionHeading
             eyebrow="Governance & compliance"
@@ -177,7 +191,7 @@ export default function AboutPage() {
           a roster. Anyone given a `bio` in people.ts is promoted to the
           long-form profile card beneath it. */}
       <section id="people" className="border-y border-line bg-paper-warm">
-        <div className="container-page py-20">
+        <div className="container-page py-14 sm:py-16">
           <SectionHeading
             eyebrow="Our people"
             title="The lawyers who lead each practice"
@@ -328,38 +342,87 @@ export default function AboutPage() {
         </div>
       </section>
 
-      {/* Offices */}
-      <section className="container-page py-20">
-        <SectionHeading eyebrow="Offices" title="Where to find us" />
-        <ul className="mt-12 grid gap-5 sm:grid-cols-3">
-          {offices.map((office) => (
-            <li
-              key={office.city}
-              className="rounded-xl border border-line bg-paper-warm p-6"
-            >
-              <h3 className="font-serif text-lg font-semibold text-ink">
-                {office.city}
-              </h3>
-              <p className="text-xs uppercase tracking-[0.14em] text-gold-deep">
-                {office.label}
-              </p>
-              <address className="mt-3 space-y-0.5 text-sm not-italic text-ink-soft">
-                {office.lines.map((line) => (
-                  <p key={line}>{line}</p>
-                ))}
-              </address>
-              <div className="mt-4 flex flex-col gap-1 text-sm">
-                <a
-                  href={office.phoneHref}
-                  className="text-ink-soft transition hover:text-gold-deep"
+      {/* Geographical coverage and industry focus, the brochure's framing of
+          the offices — the addresses were already here under a bare heading. */}
+      <section className="container-page py-14 sm:py-16">
+        <div className="grid gap-10 lg:grid-cols-[1.6fr_1fr] lg:gap-16">
+          <div>
+            <SectionHeading
+              eyebrow="Geographical coverage"
+              title="Where to find us"
+              lead={coverage.intro}
+            />
+
+            <ul className="mt-6 flex flex-wrap gap-x-8 gap-y-2">
+              {coverage.places.map((place) => (
+                <li
+                  key={place}
+                  className="flex items-center gap-2.5 font-serif text-base font-semibold text-ink"
                 >
-                  {office.phone}
-                </a>
-              </div>
-            </li>
-          ))}
-        </ul>
+                  <span
+                    aria-hidden="true"
+                    className="h-1.5 w-1.5 shrink-0 rounded-full bg-gold"
+                  />
+                  {place}
+                </li>
+              ))}
+            </ul>
+
+            <p className="mt-5 max-w-2xl text-sm leading-relaxed text-ink-soft">
+              {coverage.close}
+            </p>
+
+            <ul className="mt-8 grid gap-4 sm:grid-cols-3">
+              {offices.map((office) => (
+                <li
+                  key={office.city}
+                  className="rounded-xl border border-line bg-paper-warm p-5"
+                >
+                  <h3 className="font-serif text-base font-semibold text-ink">
+                    {office.city}
+                  </h3>
+                  <p className="text-[0.65rem] uppercase tracking-[0.14em] text-gold-deep">
+                    {office.label}
+                  </p>
+                  <address className="mt-2.5 space-y-0.5 text-[0.8rem] not-italic leading-relaxed text-ink-soft">
+                    {office.lines.map((line) => (
+                      <p key={line}>{line}</p>
+                    ))}
+                  </address>
+                  <a
+                    href={office.phoneHref}
+                    className="mt-3 inline-block text-[0.8rem] text-ink-soft transition hover:text-gold-deep"
+                  >
+                    {office.phone}
+                  </a>
+                </li>
+              ))}
+            </ul>
+          </div>
+
+          <div>
+            <h2 className="eyebrow inline-flex items-center gap-2.5 text-gold-deep">
+              <span aria-hidden="true" className="h-px w-8 bg-gold/50" />
+              Industry focus
+            </h2>
+            <ul className="mt-5">
+              {industryFocus.map((sector) => (
+                <li
+                  key={sector}
+                  className="flex items-center gap-2.5 border-b border-line py-2.5 text-sm text-ink"
+                >
+                  <span
+                    aria-hidden="true"
+                    className="h-1.5 w-1.5 shrink-0 rounded-full bg-gold"
+                  />
+                  {sector}
+                </li>
+              ))}
+            </ul>
+          </div>
+        </div>
       </section>
+
     </>
   );
 }

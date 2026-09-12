@@ -113,13 +113,9 @@ export function SiteHeader() {
   const hidden = scrolling && !openMenu && !mobileOpen;
 
   return (
-    <header
-      className={`sticky top-0 z-40 border-b border-white/10 bg-ink text-white transition-transform duration-300 ease-out motion-reduce:transition-none ${
-        hidden ? "-translate-y-full" : "translate-y-0"
-      }`}
-    >
+    <header className="pointer-events-none sticky top-0 z-40 text-white">
       {/* Utility bar — contact details, not a call to action. */}
-      <div className="hidden border-b border-white/10 bg-ink-mid lg:block">
+      <div className="pointer-events-auto relative z-10 hidden border-b border-white/10 bg-ink-mid lg:block">
         <div className="container-page flex items-center justify-between gap-6 py-2.5 text-xs text-white/70">
           <p className="flex items-center gap-1.5">
             <UtilityIcon path={icons.pin} />
@@ -144,179 +140,50 @@ export function SiteHeader() {
         </div>
       </div>
 
-      <nav
-        ref={navRef}
-        aria-label="Primary"
-        className="container-page"
-        onMouseLeave={() => setOpenMenu(null)}
+      <div
+        className={`pointer-events-auto border-b border-white/10 bg-ink transition-transform duration-300 ease-out motion-reduce:transition-none ${
+          hidden ? "-translate-y-full" : "translate-y-0"
+        }`}
       >
-        <div className="flex items-center justify-between gap-6 py-4">
-          <Wordmark tone="dark" />
-
-          {/* Desktop navigation */}
-          <ul className="hidden items-center gap-1 lg:flex">
-            {primaryNav.map((item) => {
-              const hasChildren = Boolean(item.children?.length);
-              const active = isActive(item.href);
-              const expanded = openMenu === item.label;
-
-              return (
-                <li
-                  key={item.label}
-                  className="relative"
-                  onMouseEnter={() => hasChildren && setOpenMenu(item.label)}
-                >
-                  {hasChildren ? (
-                    <button
-                      type="button"
-                      aria-expanded={expanded}
-                      aria-haspopup="true"
-                      onClick={() => setOpenMenu(expanded ? null : item.label)}
-                      className={`flex items-center gap-1.5 rounded px-3 py-2 text-sm font-medium transition ${
-                        active || expanded
-                          ? "text-gold-bright"
-                          : "text-white/80 hover:text-gold-bright"
-                      }`}
-                    >
-                      {item.label}
-                      <svg
-                        viewBox="0 0 12 12"
-                        aria-hidden="true"
-                        className={`h-2.5 w-2.5 transition-transform ${
-                          expanded ? "rotate-180" : ""
-                        }`}
-                      >
-                        <path
-                          d="M2 4.5 6 8.5 10 4.5"
-                          fill="none"
-                          stroke="currentColor"
-                          strokeWidth={1.6}
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                        />
-                      </svg>
-                    </button>
-                  ) : (
-                    <Link
-                      href={item.href}
-                      className={`block rounded px-3 py-2 text-sm font-medium transition ${
-                        active ? "text-gold-bright" : "text-white/80 hover:text-gold-bright"
-                      }`}
-                    >
-                      {item.label}
-                    </Link>
-                  )}
-
-                  {hasChildren && expanded && (
-                    <div className="fade-in absolute left-1/2 top-full z-50 w-[34rem] -translate-x-1/2 pt-3">
-                      <div className="overflow-hidden rounded-xl border border-white/10 bg-ink-deep shadow-xl shadow-black/40">
-                        <ul className="grid grid-cols-2 gap-x-2 gap-y-0.5 p-3">
-                          {item.children?.map((child, index) => (
-                            <li
-                              key={child.href}
-                              className={index === 0 ? "col-span-2" : undefined}
-                            >
-                              <Link
-                                href={child.href}
-                                className={`block rounded-lg px-3 py-2.5 text-sm transition hover:bg-white/5 hover:text-gold-bright ${
-                                  index === 0
-                                    ? "font-semibold text-gold-bright"
-                                    : "text-white/80"
-                                }`}
-                              >
-                                {child.label}
-                              </Link>
-                            </li>
-                          ))}
-                        </ul>
-                      </div>
-                    </div>
-                  )}
-                </li>
-              );
-            })}
-          </ul>
-
-          <div className="flex items-center gap-3">
-            <Link
-              href="/contact"
-              className="hidden items-center gap-2 rounded-md bg-gold px-5 py-2.5 text-sm font-semibold text-ink-deep transition hover:bg-gold-bright lg:inline-flex"
-            >
-              Request Consultation
-              <svg viewBox="0 0 16 16" aria-hidden="true" className="h-3.5 w-3.5">
-                <path
-                  d="M2 8h11M9 4l4 4-4 4"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth={1.6}
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                />
-              </svg>
-            </Link>
-
-            <button
-              type="button"
-              onClick={() => setMobileOpen((open) => !open)}
-              aria-expanded={mobileOpen}
-              aria-controls="mobile-nav"
-              className="flex h-10 w-10 items-center justify-center rounded-lg border border-white/20 text-white lg:hidden"
-            >
-              <span className="sr-only">
-                {mobileOpen ? "Close menu" : "Open menu"}
-              </span>
-              <svg viewBox="0 0 20 20" aria-hidden="true" className="h-5 w-5">
-                {mobileOpen ? (
-                  <path
-                    d="M5 5l10 10M15 5L5 15"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth={1.7}
-                    strokeLinecap="round"
-                  />
-                ) : (
-                  <path
-                    d="M3 6h14M3 10h14M3 14h14"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth={1.7}
-                    strokeLinecap="round"
-                  />
-                )}
-              </svg>
-            </button>
-          </div>
-        </div>
-      </nav>
-
-      {/* Mobile drawer */}
-      {mobileOpen && (
-        <div
-          id="mobile-nav"
-          className="fade-in max-h-[calc(100vh-5rem)] overflow-y-auto border-t border-white/10 bg-ink lg:hidden"
+        <nav
+          ref={navRef}
+          aria-label="Primary"
+          className="container-page"
+          onMouseLeave={() => setOpenMenu(null)}
         >
-          <ul className="px-6 py-4">
-            {primaryNav.map((item) => {
-              const hasChildren = Boolean(item.children?.length);
-              const expanded = mobileSection === item.label;
+        <div className="flex items-center justify-between gap-6 py-4">
+            <Wordmark tone="dark" />
 
-              return (
-                <li key={item.label} className="border-b border-white/10 last:border-0">
-                  {hasChildren ? (
-                    <>
+            {/* Desktop navigation */}
+            <ul className="hidden items-center gap-1 lg:flex">
+              {primaryNav.map((item) => {
+                const hasChildren = Boolean(item.children?.length);
+                const active = isActive(item.href);
+                const expanded = openMenu === item.label;
+
+                return (
+                  <li
+                    key={item.label}
+                    className="relative"
+                    onMouseEnter={() => hasChildren && setOpenMenu(item.label)}
+                  >
+                    {hasChildren ? (
                       <button
                         type="button"
                         aria-expanded={expanded}
-                        onClick={() =>
-                          setMobileSection(expanded ? null : item.label)
-                        }
-                        className="flex w-full items-center justify-between py-3.5 text-left text-[0.95rem] font-medium text-white"
+                        aria-haspopup="true"
+                        onClick={() => setOpenMenu(expanded ? null : item.label)}
+                        className={`flex items-center gap-1.5 rounded px-3 py-2 text-sm font-medium transition ${
+                          active || expanded
+                            ? "text-gold-bright"
+                            : "text-white/80 hover:text-gold-bright"
+                        }`}
                       >
                         {item.label}
                         <svg
                           viewBox="0 0 12 12"
                           aria-hidden="true"
-                          className={`h-3 w-3 text-white/60 transition-transform ${
+                          className={`h-2.5 w-2.5 transition-transform ${
                             expanded ? "rotate-180" : ""
                           }`}
                         >
@@ -330,48 +197,183 @@ export function SiteHeader() {
                           />
                         </svg>
                       </button>
-                      {expanded && (
-                        <ul className="pb-3">
-                          {item.children?.map((child) => (
-                            <li key={child.href}>
-                              <Link
-                                href={child.href}
-                                className="block py-2 pl-3 text-sm text-white/75 transition hover:text-gold-bright"
-                              >
-                                {child.label}
-                              </Link>
-                            </li>
-                          ))}
-                        </ul>
-                      )}
-                    </>
-                  ) : (
-                    <Link
-                      href={item.href}
-                      className="block py-3.5 text-[0.95rem] font-medium text-white transition hover:text-gold-bright"
-                    >
-                      {item.label}
-                    </Link>
-                  )}
-                </li>
-              );
-            })}
-          </ul>
+                    ) : (
+                      <Link
+                        href={item.href}
+                        className={`block rounded px-3 py-2 text-sm font-medium transition ${
+                          active ? "text-gold-bright" : "text-white/80 hover:text-gold-bright"
+                        }`}
+                      >
+                        {item.label}
+                      </Link>
+                    )}
 
-          <div className="border-t border-white/10 bg-ink-deep px-6 py-5">
-            <Link
-              href="/contact"
-              className="block rounded-md bg-gold px-5 py-3 text-center text-sm font-semibold text-ink-deep"
-            >
-              Request Consultation
-            </Link>
-            <div className="mt-4 flex flex-col gap-1.5 text-sm text-white/75">
-              <a href={firm.phoneHref}>{firm.phone}</a>
-              <a href={firm.emailHref}>{firm.email}</a>
+                    {hasChildren && expanded && (
+                      <div className="fade-in absolute left-1/2 top-full z-50 w-[34rem] -translate-x-1/2 pt-3">
+                        <div className="overflow-hidden rounded-xl border border-white/10 bg-ink-deep shadow-xl shadow-black/40">
+                          <ul className="grid grid-cols-2 gap-x-2 gap-y-0.5 p-3">
+                            {item.children?.map((child, index) => (
+                              <li
+                                key={child.href}
+                                className={index === 0 ? "col-span-2" : undefined}
+                              >
+                                <Link
+                                  href={child.href}
+                                  className={`block rounded-lg px-3 py-2.5 text-sm transition hover:bg-white/5 hover:text-gold-bright ${
+                                    index === 0
+                                      ? "font-semibold text-gold-bright"
+                                      : "text-white/80"
+                                  }`}
+                                >
+                                  {child.label}
+                                </Link>
+                              </li>
+                            ))}
+                          </ul>
+                        </div>
+                      </div>
+                    )}
+                  </li>
+                );
+              })}
+            </ul>
+
+            <div className="flex items-center gap-3">
+              <Link
+                href="/contact"
+                className="hidden items-center gap-2 rounded-md bg-gold px-5 py-2.5 text-sm font-semibold text-ink-deep transition hover:bg-gold-bright lg:inline-flex"
+              >
+                Request Consultation
+                <svg viewBox="0 0 16 16" aria-hidden="true" className="h-3.5 w-3.5">
+                  <path
+                    d="M2 8h11M9 4l4 4-4 4"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth={1.6}
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
+                </svg>
+              </Link>
+
+              <button
+                type="button"
+                onClick={() => setMobileOpen((open) => !open)}
+                aria-expanded={mobileOpen}
+                aria-controls="mobile-nav"
+                className="flex h-10 w-10 items-center justify-center rounded-lg border border-white/20 text-white lg:hidden"
+              >
+                <span className="sr-only">
+                  {mobileOpen ? "Close menu" : "Open menu"}
+                </span>
+                <svg viewBox="0 0 20 20" aria-hidden="true" className="h-5 w-5">
+                  {mobileOpen ? (
+                    <path
+                      d="M5 5l10 10M15 5L5 15"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth={1.7}
+                      strokeLinecap="round"
+                    />
+                  ) : (
+                    <path
+                      d="M3 6h14M3 10h14M3 14h14"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth={1.7}
+                      strokeLinecap="round"
+                    />
+                  )}
+                </svg>
+              </button>
             </div>
           </div>
-        </div>
-      )}
+        </nav>
+
+        {/* Mobile drawer */}
+        {mobileOpen && (
+          <div
+            id="mobile-nav"
+            className="fade-in max-h-[calc(100vh-5rem)] overflow-y-auto border-t border-white/10 bg-ink lg:hidden"
+          >
+            <ul className="px-6 py-4">
+              {primaryNav.map((item) => {
+                const hasChildren = Boolean(item.children?.length);
+                const expanded = mobileSection === item.label;
+
+                return (
+                  <li key={item.label} className="border-b border-white/10 last:border-0">
+                    {hasChildren ? (
+                      <>
+                        <button
+                          type="button"
+                          aria-expanded={expanded}
+                          onClick={() =>
+                            setMobileSection(expanded ? null : item.label)
+                          }
+                          className="flex w-full items-center justify-between py-3.5 text-left text-[0.95rem] font-medium text-white"
+                        >
+                          {item.label}
+                          <svg
+                            viewBox="0 0 12 12"
+                            aria-hidden="true"
+                            className={`h-3 w-3 text-white/60 transition-transform ${
+                              expanded ? "rotate-180" : ""
+                            }`}
+                          >
+                            <path
+                              d="M2 4.5 6 8.5 10 4.5"
+                              fill="none"
+                              stroke="currentColor"
+                              strokeWidth={1.6}
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                            />
+                          </svg>
+                        </button>
+                        {expanded && (
+                          <ul className="pb-3">
+                            {item.children?.map((child) => (
+                              <li key={child.href}>
+                                <Link
+                                  href={child.href}
+                                  className="block py-2 pl-3 text-sm text-white/75 transition hover:text-gold-bright"
+                                >
+                                  {child.label}
+                                </Link>
+                              </li>
+                            ))}
+                          </ul>
+                        )}
+                      </>
+                    ) : (
+                      <Link
+                        href={item.href}
+                        className="block py-3.5 text-[0.95rem] font-medium text-white transition hover:text-gold-bright"
+                      >
+                        {item.label}
+                      </Link>
+                    )}
+                  </li>
+                );
+              })}
+            </ul>
+
+            <div className="border-t border-white/10 bg-ink-deep px-6 py-5">
+              <Link
+                href="/contact"
+                className="block rounded-md bg-gold px-5 py-3 text-center text-sm font-semibold text-ink-deep"
+              >
+                Request Consultation
+              </Link>
+              <div className="mt-4 flex flex-col gap-1.5 text-sm text-white/75">
+                <a href={firm.phoneHref}>{firm.phone}</a>
+                <a href={firm.emailHref}>{firm.email}</a>
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
     </header>
   );
 }
