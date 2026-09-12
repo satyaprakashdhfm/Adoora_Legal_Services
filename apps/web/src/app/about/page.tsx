@@ -44,8 +44,8 @@ export default function AboutPage() {
 
       {/* Overview and core values, as the brochure sets them out. Replaced
           the firm's origin story, which the brochure does not carry. */}
-      <section className="container-page py-14 sm:py-16">
-        <div className="grid gap-10 lg:grid-cols-[1fr_1.15fr] lg:gap-16">
+      <section className="container-page py-12 sm:py-14">
+        <div className="grid gap-8 lg:grid-cols-[0.85fr_1.5fr] lg:gap-12">
           <div>
             <SectionHeading eyebrow="Overview" title="Who we are" />
             <div className="mt-6 space-y-4 leading-relaxed text-ink-soft">
@@ -86,10 +86,10 @@ export default function AboutPage() {
 
       {/* Approach */}
       <section className="border-y border-line bg-paper-warm">
-        <div className="container-page py-14 sm:py-16">
+        <div className="container-page py-12 sm:py-14">
           <SectionHeading eyebrow="Our approach" title="Key strengths" />
 
-          <ul className="mt-10 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
+          <ul className="mt-8 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
             {[
               {
                 title: "Regional Expertise",
@@ -128,7 +128,7 @@ export default function AboutPage() {
             ))}
           </ul>
 
-          <div className="mt-14 grid grid-cols-2 gap-y-8 border-t border-line-strong pt-10 lg:grid-cols-4">
+          <div className="mt-10 grid grid-cols-2 gap-y-6 border-t border-line-strong pt-8 lg:grid-cols-4">
             {stats.map((stat) => (
               <div key={stat.label}>
                 <p className="font-serif text-3xl font-semibold text-ink">
@@ -144,8 +144,8 @@ export default function AboutPage() {
       </section>
 
       {/* Governance & compliance */}
-      <section className="container-page py-14 sm:py-16">
-        <div className="grid gap-12 lg:grid-cols-[1fr_1.15fr] lg:gap-20">
+      <section className="container-page py-12 sm:py-14">
+        <div className="grid gap-8 lg:grid-cols-[0.85fr_1.5fr] lg:gap-12">
           <SectionHeading
             eyebrow="Governance & compliance"
             title="How we operate within the professional rules"
@@ -191,7 +191,7 @@ export default function AboutPage() {
           a roster. Anyone given a `bio` in people.ts is promoted to the
           long-form profile card beneath it. */}
       <section id="people" className="border-y border-line bg-paper-warm">
-        <div className="container-page py-14 sm:py-16">
+        <div className="container-page py-12 sm:py-14">
           <SectionHeading
             eyebrow="Our people"
             title="The lawyers who lead each practice"
@@ -199,12 +199,12 @@ export default function AboutPage() {
           />
 
           {rosters.map((roster) => (
-            <div key={roster.heading} className="mt-14">
+            <div key={roster.heading} className="mt-10">
               <h3 className="eyebrow border-b border-line-strong pb-4 text-ink">
                 {roster.heading}
               </h3>
 
-              <ul className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+              <ul className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
                 {roster.members.map((person) => (
                   <li key={person.slug} id={person.slug} className="scroll-mt-32">
                     <PersonCard person={person} />
@@ -215,14 +215,14 @@ export default function AboutPage() {
           ))}
 
           {profiled.length > 0 && (
-            <div className="mt-16 space-y-6">
+            <div className="mt-12 space-y-5">
               {profiled.map((person) => (
                 <article
                   key={person.slug}
                   id={`${person.slug}-profile`}
-                  className="scroll-mt-32 rounded-2xl border border-line bg-paper p-7 sm:p-9"
+                  className="scroll-mt-32 rounded-2xl border border-line bg-paper p-6 sm:p-7"
                 >
-                  <div className="grid gap-8 lg:grid-cols-[16rem_1fr] lg:gap-12">
+                  <div className="grid gap-6 lg:grid-cols-[16rem_1fr] lg:gap-10">
                     <div>
                       <h3 className="font-serif text-xl font-semibold tracking-tight text-ink">
                         {person.name}
@@ -344,35 +344,16 @@ export default function AboutPage() {
 
       {/* Geographical coverage and industry focus, the brochure's framing of
           the offices — the addresses were already here under a bare heading. */}
-      <section className="container-page py-14 sm:py-16">
-        <div className="grid gap-10 lg:grid-cols-[1.6fr_1fr] lg:gap-16">
+      <section className="container-page py-12 sm:py-14">
+        <div className="grid gap-9 lg:grid-cols-[1.6fr_1fr] lg:gap-14">
           <div>
             <SectionHeading
               eyebrow="Geographical coverage"
               title="Where to find us"
-              lead={coverage.intro}
+              lead={coverage.close}
             />
 
-            <ul className="mt-6 flex flex-wrap gap-x-8 gap-y-2">
-              {coverage.places.map((place) => (
-                <li
-                  key={place}
-                  className="flex items-center gap-2.5 font-serif text-base font-semibold text-ink"
-                >
-                  <span
-                    aria-hidden="true"
-                    className="h-1.5 w-1.5 shrink-0 rounded-full bg-gold"
-                  />
-                  {place}
-                </li>
-              ))}
-            </ul>
-
-            <p className="mt-5 max-w-2xl text-sm leading-relaxed text-ink-soft">
-              {coverage.close}
-            </p>
-
-            <ul className="mt-8 grid gap-4 sm:grid-cols-3">
+            <ul className="mt-7 grid gap-4 sm:grid-cols-3">
               {offices.map((office) => (
                 <li
                   key={office.city}

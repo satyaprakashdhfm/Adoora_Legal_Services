@@ -47,6 +47,13 @@ export type Insight = {
    * one. Set it and the card uses it in place of the artwork.
    */
   image?: string;
+  /**
+   * Set when several articles share one image file laid out as a horizontal
+   * strip: `index` is this article's frame, `frames` how many the file holds.
+   * The card offsets the file rather than the file being sliced, so the strip
+   * stays one request.
+   */
+  imageFrame?: { index: number; frames: number };
   keyTakeaways: string[];
   /** Practice-area slugs. */
   practices: string[];
@@ -65,6 +72,8 @@ export const insights: Insight[] = [
     author: "r-adoora",
     readingTime: "7 min read",
     artwork: "network",
+    image: "/three-article-images.png",
+    imageFrame: { index: 0, frames: 3 },
     summary:
       "Most digital lending arrangements we review were drafted as ordinary service contracts and then patched for the RBI's directions. That order is the problem — the framework changes who may hold the customer, who may collect money, and what must be disclosed before the borrower commits.",
     keyTakeaways: [
@@ -148,6 +157,8 @@ export const insights: Insight[] = [
     author: "m-rao",
     readingTime: "8 min read",
     artwork: "parcels",
+    image: "/three-article-images.png",
+    imageFrame: { index: 1, frames: 3 },
     summary:
       "Buyers often ask for a title report as a formality before completion. It is better understood as the exercise that decides whether there is anything to complete — and the defects it finds in Telangana and Andhra Pradesh follow recognisable patterns.",
     keyTakeaways: [
@@ -231,6 +242,8 @@ export const insights: Insight[] = [
     author: "p-lakshmi",
     readingTime: "6 min read",
     artwork: "boundary",
+    image: "/three-article-images.png",
+    imageFrame: { index: 2, frames: 3 },
     summary:
       "Employers keep asking us to strengthen post-termination non-compete clauses. The more useful conversation is about what Section 27 of the Contract Act permits, and where the protection you actually need can be found instead.",
     keyTakeaways: [
