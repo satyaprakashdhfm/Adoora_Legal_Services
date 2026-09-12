@@ -109,11 +109,19 @@ export const keyStrengths = [
   },
   {
     title: "Strategic Legal Solutions",
+    image: "/why-us-solutions.png",
+    /* The card is portrait and the frame landscape, so `cover` crops the
+       sides — this keeps the subject in shot. */
+    focus: "62% 50%",
     body:
       "Tailored legal counsel designed to mitigate risks, ensure regulatory adherence and address industry-specific challenges.",
   },
   {
     title: "Proven Legal Expertise",
+    image: "/why-us-expertise.png",
+    /* The card is portrait and the frame landscape, so `cover` crops the
+       sides — this keeps the subject in shot. */
+    focus: "30% 50%",
     body:
       "A highly skilled team of attorneys and legal professionals with extensive experience in corporate law, dispute resolution and compliance.",
   },
@@ -191,21 +199,37 @@ export const stats = [
 export const differentiators = [
   {
     title: "Proven Legal Expertise",
+    image: "/why-us-expertise.png",
+    /* The card is portrait and the frame landscape, so `cover` crops the
+       sides — this keeps the subject in shot. */
+    focus: "30% 50%",
     body:
       "A strong track record in corporate law, M&A, and high-stakes legal matters.",
   },
   {
     title: "Client-First Approach",
+    image: "/why-us-client-first.png",
+    /* The card is portrait and the frame landscape, so `cover` crops the
+       sides — this keeps the subject in shot. */
+    focus: "50% 50%",
     body:
       "Transparent, responsive, and committed to protecting your interests.",
   },
   {
     title: "Cross-Border & Regulatory Mastery",
+    image: "/why-us-cross-border.png",
+    /* The card is portrait and the frame landscape, so `cover` crops the
+       sides — this keeps the subject in shot. */
+    focus: "32% 50%",
     body:
       "Expertise in international transactions and regional compliance.",
   },
   {
     title: "Strategic Legal Solutions",
+    image: "/why-us-solutions.png",
+    /* The card is portrait and the frame landscape, so `cover` crops the
+       sides — this keeps the subject in shot. */
+    focus: "62% 50%",
     body:
       "Practical, business-aligned counsel for sustainable growth.",
   },

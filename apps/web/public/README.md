@@ -43,26 +43,29 @@ roughly a third of the row and as tall as the locations beside it.
 
 ## Why-us photography
 
-`why-us` — **one file holding four photographs in a 2×2 grid**, one per card in
-the "Why partner with us?" band. The cards do not slice it: each renders the
-source at twice its own size and offsets it to bring its quadrant into view, so
-the file stays a single request and nothing is squashed.
+Four frames behind the cards in the "Why partner with us?" band, one per entry
+in `differentiators` (`src/content/firm.ts`), which names its own file:
 
-Quadrants map to the cards in reading order, which is the order
-`differentiators` is declared in `src/content/firm.ts`:
-
-| Quadrant | Card |
+| File | Card |
 | --- | --- |
-| top-left | Proven Legal Expertise |
-| top-right | Client-First Approach |
-| bottom-left | Cross-Border & Regulatory Mastery |
-| bottom-right | Strategic Legal Solutions |
+| `why-us-expertise.png` | Proven Legal Expertise |
+| `why-us-client-first.png` | Client-First Approach |
+| `why-us-cross-border.png` | Cross-Border & Regulatory Mastery |
+| `why-us-solutions.png` | Strategic Legal Solutions |
 
-Each quadrant is cropped to the card, which is tall and narrow, so keep the
-subject centred in its quadrant rather than at an edge. A navy gradient runs up
-from the bottom of every card behind the heading and body text. Resolved by
-`publicImage`, so the extension does not matter and a missing file leaves the
-cards on the navy they sit on.
+The cards are portrait and the frames landscape, so `cover` crops the sides.
+Each entry carries a `focus` value — a CSS `object-position` — to keep the
+subject in shot; adjust that rather than re-cropping the file. A navy gradient
+runs up from the bottom of the card behind the text, held back to the lower
+half so the photograph still reads.
+
+## Insight photography
+
+One frame per article, named by `image` on that article in
+`src/content/insights.ts`: `insight-digital-lending.png`,
+`insight-title-report.png`, `insight-non-compete.png`. An article without an
+`image` falls back to the drawn composition in `insight-artwork.tsx` — nothing
+breaks, so add them as they arrive. Cards are 16:9 and crop to the centre.
 
 ## App icons
 

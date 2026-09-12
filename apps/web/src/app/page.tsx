@@ -7,6 +7,7 @@ import { PracticesIndex } from "@/components/practices-index";
 import { CityIcon } from "@/components/city-icon";
 import { firm, firmOverview, differentiators, offices } from "@/content/firm";
 import { peopleByGroup } from "@/content/people";
+import { TeamTabs } from "@/components/team-tabs";
 import { practiceAreas } from "@/content/practice-areas";
 import { insightsByDate } from "@/content/insights";
 import { heroSlides } from "@/content/hero-slides";
@@ -40,9 +41,6 @@ export default function Home() {
   /* Resolved at build time; a missing file falls back to the navy gradient,
      exactly as the hero frames do. */
   const careersImage = publicImage("careers-office");
-  /* One file holding four photographs in a 2×2 grid, one per "why us" card.
-     Absent, the cards fall back to the navy they sit on. */
-  const whyUsImage = publicImage("why-us");
 
   return (
     <>
@@ -108,48 +106,21 @@ export default function Home() {
             </Link>
           </div>
 
-          <div className="mt-10 grid gap-10 lg:grid-cols-[1.7fr_1fr] lg:gap-16">
-            <div>
-              <h3 className="eyebrow border-b border-line-strong pb-3 text-ink">
-                Leadership &amp; advocates
-              </h3>
-              <ul className="mt-4 grid gap-x-10 sm:grid-cols-2">
-                {peopleByGroup("legal").map((person) => (
-                  <li
-                    key={person.slug}
-                    className="flex items-baseline justify-between gap-4 border-b border-line py-2.5"
-                  >
-                    <span className="font-serif text-sm font-semibold text-ink">
-                      {person.name}
-                    </span>
-                    <span className="shrink-0 text-xs text-gold-deep">
-                      {person.designation}
-                    </span>
-                  </li>
-                ))}
-              </ul>
-            </div>
-
-            <div>
-              <h3 className="eyebrow border-b border-line-strong pb-3 text-ink">
-                Operations &amp; business services
-              </h3>
-              <ul className="mt-4">
-                {peopleByGroup("business").map((person) => (
-                  <li
-                    key={person.slug}
-                    className="flex items-baseline justify-between gap-4 border-b border-line py-2.5"
-                  >
-                    <span className="font-serif text-sm font-semibold text-ink">
-                      {person.name}
-                    </span>
-                    <span className="shrink-0 text-xs text-gold-deep">
-                      {person.designation}
-                    </span>
-                  </li>
-                ))}
-              </ul>
-            </div>
+          <div className="mt-10">
+            <TeamTabs
+              groups={[
+                {
+                  id: "advocates",
+                  label: "Leadership & Advocates",
+                  members: peopleByGroup("legal"),
+                },
+                {
+                  id: "business",
+                  label: "Operations & Business Services",
+                  members: peopleByGroup("business"),
+                },
+              ]}
+            />
           </div>
         </div>
       </section>
@@ -221,30 +192,22 @@ export default function Home() {
             {differentiators.map((item, index) => (
               <li
                 key={item.title}
-                className="relative isolate flex min-h-[20rem] flex-col justify-end overflow-hidden rounded-xl bg-ink p-6 text-white"
+                className="relative isolate flex min-h-[18rem] flex-col justify-end overflow-hidden rounded-xl bg-ink p-6 text-white"
               >
-                {whyUsImage && (
-                  /* One source image holds all four photographs in a 2×2 grid.
-                     The inner box is twice the card in each direction and is
-                     offset to bring this card's quadrant into view — `cover` on
-                     that box rather than a stretched background, so nothing is
-                     squashed to the card's proportions. */
-                  <div className="absolute inset-0 -z-20 overflow-hidden">
-                    <div
-                      aria-hidden="true"
-                      className="absolute h-[200%] w-[200%] bg-cover bg-center"
-                      style={{
-                        backgroundImage: `url("${whyUsImage}")`,
-                        left: index % 2 === 0 ? "0" : "-100%",
-                        top: index < 2 ? "0" : "-100%",
-                      }}
-                    />
-                  </div>
-                )}
+                <Image
+                  src={item.image}
+                  alt=""
+                  fill
+                  sizes="(min-width: 1024px) 25vw, (min-width: 640px) 50vw, 100vw"
+                  style={{ objectPosition: item.focus }}
+                  className="-z-20 object-cover"
+                />
 
+                {/* Held back to the lower half so the photograph still reads.
+                    Solid enough under the text to clear 4.5:1 on white. */}
                 <div
                   aria-hidden="true"
-                  className="absolute inset-0 -z-10 bg-[linear-gradient(to_top,var(--color-ink)_0%,color-mix(in_oklab,var(--color-ink)_88%,transparent)_42%,color-mix(in_oklab,var(--color-ink)_45%,transparent)_100%)]"
+                  className="absolute inset-0 -z-10 bg-[linear-gradient(to_top,var(--color-ink)_0%,color-mix(in_oklab,var(--color-ink)_86%,transparent)_38%,color-mix(in_oklab,var(--color-ink)_34%,transparent)_72%,color-mix(in_oklab,var(--color-ink)_12%,transparent)_100%)]"
                 />
 
                 <span

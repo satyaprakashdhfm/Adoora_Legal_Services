@@ -261,21 +261,7 @@ export function InsightCard({ insight }: { insight: Insight }) {
       {/* The frame. A real photograph when the article has one, otherwise the
           drawn composition for its subject. */}
       <div className="relative aspect-[16/9] overflow-hidden bg-ink">
-        {insight.image && insight.imageFrame ? (
-          /* Several articles share one file laid out as a horizontal strip.
-             The inner box is as many times the card's width as the strip has
-             frames, offset so this article's frame lands in view — `cover` on
-             that box, so a frame is cropped rather than squashed. */
-          <div
-            aria-hidden="true"
-            className="absolute inset-0 bg-cover bg-center transition duration-500 group-hover:scale-[1.03]"
-            style={{
-              backgroundImage: `url("${insight.image}")`,
-              width: `${insight.imageFrame.frames * 100}%`,
-              left: `-${insight.imageFrame.index * 100}%`,
-            }}
-          />
-        ) : insight.image ? (
+        {insight.image ? (
           <Image
             src={insight.image}
             alt=""
