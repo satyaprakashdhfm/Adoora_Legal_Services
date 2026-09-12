@@ -1224,6 +1224,150 @@ export const practiceAreas: PracticeArea[] = [
       },
     ],
   },
+  {
+    slug: "regulatory-environmental",
+    name: "Regulatory & Environmental Law",
+    shortName: "Regulatory & Environmental",
+    group: "Regulatory",
+    tagline:
+      "Consents, clearances and the conditions attached to them — and what happens when a regulator says the conditions were not met.",
+    overview: [
+      {
+        heading: "The regulatory environment",
+        body: [
+          "Environmental regulation in India runs on a permission-and-condition model. The Water Act, 1974, the Air Act, 1981 and the Environment (Protection) Act, 1986 give the State Pollution Control Boards the power to consent to an operation and to attach conditions to that consent; the Environment Impact Assessment Notification, 2006 adds a prior clearance for projects above threshold size. Most disputes in this area are about a condition rather than about the permission itself.",
+          "Two shifts have changed the exposure. The first is the National Green Tribunal, which since 2010 has been willing to hear environmental challenges quickly, on suo motu cognisance as well as on application, and to order interim closure. The second is the move of environmental compliance into corporate reporting — Extended Producer Responsibility under the plastic, e-waste and battery waste rules, and the BRSR disclosures listed companies now make — which turns an operating obligation into a statement a board has signed.",
+          "Sector regulation sits alongside it: licensing and tariff questions before the electricity commissions, approvals under the Legal Metrology Act, 2009 and the food safety framework, consumer protection and product liability under the 2019 Act, and the administrative-law question of whether a regulator followed its own procedure before acting.",
+        ],
+      },
+      {
+        heading: "How we support you",
+        body: [
+          "We map the consents a project or a plant actually needs before capital is committed, take them through the State Board and the appraisal committee, and then hold the compliance calendar those conditions create. Where a consent is refused, made conditional or revoked, we appeal it — to the Appellate Authority, the NGT or the High Court, depending on what is being challenged.",
+          "On the transactional side we run environmental and regulatory diligence for acquisitions and financings: whether consents are current, whether they transfer with the asset, what the last inspection found, and what a purchaser is assuming. Legacy non-compliance is frequently the item that moves an indemnity.",
+          "Where an authority has issued a show cause notice, a closure direction or a demand for environmental compensation, we respond on the facts and the procedure together — a direction made without hearing is challengeable on that ground alone, and the merits usually still need answering.",
+        ],
+      },
+      {
+        heading: "Who we act for",
+        body: [
+          "Manufacturers and process industries, infrastructure and renewable energy developers, real estate and township projects, waste management and recycling operators, producers and brand owners carrying EPR obligations, and public sector undertakings.",
+          "We also advise boards and investors on the accuracy of environmental and regulatory disclosure, which is increasingly where the question is asked first.",
+        ],
+      },
+    ],
+    services: [
+      {
+        short: "consents & clearances",
+        title: "Consents, clearances and approvals",
+        body:
+          "Consent to Establish and Consent to Operate under the Water and Air Acts, prior environmental clearance under the EIA Notification, 2006, forest and wildlife clearances, coastal regulation zone approvals, and hazardous waste authorisation — including the scoping, public consultation and appraisal stages, and the conditions we expect the authority to attach.",
+      },
+      {
+        short: "compliance & audits",
+        title: "Compliance programmes and audits",
+        body:
+          "Building the compliance calendar a consent condition actually creates, periodic environmental compliance audits, review of monitoring and reporting obligations, and remediation plans where an audit finds a gap before an inspector does.",
+      },
+      {
+        short: "EPR & waste rules",
+        title: "Extended Producer Responsibility and waste",
+        body:
+          "Registration and target compliance under the Plastic Waste Management Rules, E-Waste Management Rules and Battery Waste Management Rules, producer and brand-owner classification, recycler and PRO agreements, and the record-keeping the annual return requires.",
+      },
+      {
+        short: "NGT & enforcement defence",
+        title: "Enforcement, show cause and NGT proceedings",
+        body:
+          "Replies to show cause notices, challenges to closure and stop-work directions, defence of environmental compensation demands, appeals to the Appellate Authority and the National Green Tribunal, and writ petitions where the challenge is to the procedure the authority followed.",
+      },
+      {
+        short: "sector regulatory advice",
+        title: "Sectoral regulatory advice",
+        body:
+          "Licensing, tariff and open access questions before the Central and State Electricity Regulatory Commissions, legal metrology and packaged commodity compliance, food safety licensing and labelling under the FSSAI framework, and consumer protection and product liability exposure under the 2019 Act.",
+      },
+      {
+        short: "sustainability & disclosure",
+        title: "Sustainability and disclosure",
+        body:
+          "Business Responsibility and Sustainability Reporting, review of environmental representations made to lenders, investors and the market, and the exposure that attaches to a claim about a product or a process that cannot be substantiated.",
+      },
+      {
+        short: "regulatory diligence",
+        title: "Regulatory diligence on transactions",
+        body:
+          "Consent and clearance status on an asset or share acquisition, transferability of permissions, open notices and pending proceedings, quantification of legacy liability, and the representations, indemnities and conditions precedent that follow from it.",
+      },
+    ],
+    matters: [
+      "Advised a Telangana-based process manufacturer on Consent to Operate renewal and the compliance calendar arising from the conditions attached to it.",
+      "Represented a project developer before the National Green Tribunal in proceedings challenging an environmental clearance granted for an infrastructure project.",
+      "Advised a brand owner on producer registration and target compliance under the Plastic Waste Management Rules, including the recycler agreements underpinning the annual return.",
+      "Conducted environmental and regulatory diligence on the acquisition of a manufacturing facility in Karnataka, quantifying legacy consent and hazardous waste exposure for the indemnity package.",
+      "Responded to a show cause notice and a proposed environmental compensation demand issued by a State Pollution Control Board, on both the procedural and the factual grounds.",
+    ],
+    forums: [
+      "National Green Tribunal, Principal and Southern Benches",
+      "Telangana, Andhra Pradesh and Karnataka State Pollution Control Boards",
+      "Ministry of Environment, Forest and Climate Change and the State Environment Impact Assessment Authorities",
+      "Central and State Electricity Regulatory Commissions",
+      "High Court of Telangana; High Court of Andhra Pradesh; High Court of Karnataka",
+      "Supreme Court of India",
+    ],
+    process: [
+      {
+        stage: "Permission mapping",
+        detail:
+          "What consents, clearances and registrations the activity needs, in what order, and what each realistically takes — done before capital is committed rather than after a notice arrives.",
+      },
+      {
+        stage: "Application and appraisal",
+        detail:
+          "Preparing the application and the supporting studies, taking it through scoping, public consultation and appraisal, and negotiating the conditions the authority proposes to attach.",
+      },
+      {
+        stage: "Condition management",
+        detail:
+          "Converting the conditions into a compliance calendar with named owners and reporting dates, because most enforcement action begins with a condition nobody was tracking.",
+      },
+      {
+        stage: "Audit and remediation",
+        detail:
+          "Periodic review against the conditions, and a remediation plan with a timeline where there is a gap — voluntarily disclosed where that improves the position.",
+      },
+      {
+        stage: "Challenge and defence",
+        detail:
+          "Reply, appeal or writ, chosen on whether the real objection is to the merits or to the procedure. Interim protection is usually the first thing that matters.",
+      },
+    ],
+    team: [],
+    relatedIndustries: [
+      "infrastructure-energy",
+      "manufacturing",
+      "real-estate-construction",
+      "public-sector",
+    ],
+    faqs: [
+      {
+        q: "Does a Consent to Operate transfer with the plant when we buy it?",
+        a: "Not automatically. A consent is granted to an occupier for a specified activity and capacity, and a change in occupier generally requires an application to the State Board to amend or reissue it. Treat it as a condition to be satisfied rather than an asset that arrives on completion, and check the consent's expiry and its conditions in diligence — an expired or breached consent is the seller's problem only until you own the plant.",
+      },
+      {
+        q: "We have received a show cause notice from the Pollution Control Board. What actually matters?",
+        a: "Two things at once. The facts — what the inspection found, whether the reading is disputed, what has been done since — and the procedure, meaning whether you were given a hearing and whether the Board has power to make the direction it proposes. A closure direction issued without hearing is challengeable on that ground, but the factual answer still has to be filed, and filing it late is what usually costs the interim protection.",
+      },
+      {
+        q: "When does a project need prior environmental clearance rather than just a consent?",
+        a: "When it falls within the schedule to the EIA Notification, 2006 and crosses the threshold for its category. Category A projects are appraised centrally, Category B by the State authority, and B1 projects need an impact assessment and public consultation while B2 projects do not. Expansion of an existing unit can cross a threshold the original project did not, which is a common and expensive surprise.",
+      },
+      {
+        q: "Who carries the Extended Producer Responsibility obligation — us or our packaging supplier?",
+        a: "It follows the classification. For plastic waste the obligation sits with producers, importers and brand owners, and a brand owner cannot contract out of the target by pointing at the supplier. You can discharge it through registered recyclers or a producer responsibility organisation, but the registration, the target and the annual return remain yours, and the record-keeping behind the return is what an audit tests.",
+      },
+    ],
+  },
 ];
 
 /** Fast lookup used by the dynamic route and by cross-links. */

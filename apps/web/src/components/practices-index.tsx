@@ -24,6 +24,7 @@ const displayOrder = [
   "taxation",
   "labour-employment",
   "intellectual-property",
+  "regulatory-environmental",
 ];
 
 const ordered = [...practiceAreas].sort(
