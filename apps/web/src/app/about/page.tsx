@@ -3,6 +3,7 @@ import type { Metadata } from "next";
 import { PageHero, SectionHeading } from "@/components/ui";
 import { firm, offices, stats } from "@/content/firm";
 import { people, peopleByGroup } from "@/content/people";
+import { PersonCard } from "@/components/person-card";
 import { practiceAreaBySlug } from "@/content/practice-areas";
 
 export const metadata: Metadata = {
@@ -191,31 +192,8 @@ export default function AboutPage() {
 
               <ul className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
                 {roster.members.map((person) => (
-                  <li
-                    key={person.slug}
-                    id={person.slug}
-                    className="flex scroll-mt-32 items-center gap-4 rounded-xl border border-line bg-paper p-5"
-                  >
-                    <span
-                      aria-hidden="true"
-                      className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full border border-line-strong bg-paper-warm font-serif text-sm font-semibold text-gold-deep"
-                    >
-                      {person.initials}
-                    </span>
-                    <div className="min-w-0">
-                      <p className="font-serif font-semibold leading-snug tracking-tight text-ink">
-                        {person.name}
-                      </p>
-                      <p className="mt-1 text-sm text-gold-deep">
-                        {person.designation}
-                        {person.qualification && (
-                          <span className="text-slate">
-                            {" "}
-                            &middot; {person.qualification}
-                          </span>
-                        )}
-                      </p>
-                    </div>
+                  <li key={person.slug} id={person.slug} className="scroll-mt-32">
+                    <PersonCard person={person} />
                   </li>
                 ))}
               </ul>

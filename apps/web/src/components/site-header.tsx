@@ -36,6 +36,8 @@ export function SiteHeader() {
   const [openMenu, setOpenMenu] = useState<string | null>(null);
   const [mobileOpen, setMobileOpen] = useState(false);
   const [mobileSection, setMobileSection] = useState<string | null>(null);
+  /** True while the page is being scrolled; the bar slides out of the way. */
+  const [scrolling, setScrolling] = useState(false);
   const navRef = useRef<HTMLElement>(null);
 
   // Close everything on navigation.
@@ -67,6 +69,32 @@ export function SiteHeader() {
     };
   }, []);
 
+  /*
+   * Hide the bar while the page is moving and bring it back when it settles.
+   * The idle delay is the whole feature: too short and the bar flickers
+   * between wheel events, too long and it feels stuck. 200ms clears a trackpad
+   * flick without being noticeable once you stop.
+   *
+   * Never hides at the very top of the page — there is nothing to get out of
+   * the way of there — and never while a menu is open, which would take the
+   * open menu with it.
+   */
+  useEffect(() => {
+    let idle: number;
+
+    function onScroll() {
+      window.clearTimeout(idle);
+      setScrolling(window.scrollY > 80);
+      idle = window.setTimeout(() => setScrolling(false), 200);
+    }
+
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => {
+      window.removeEventListener("scroll", onScroll);
+      window.clearTimeout(idle);
+    };
+  }, []);
+
   // Lock body scroll behind the mobile drawer.
   useEffect(() => {
     document.body.style.overflow = mobileOpen ? "hidden" : "";
@@ -80,8 +108,16 @@ export function SiteHeader() {
     return pathname === href || pathname.startsWith(`${href}/`);
   }
 
+  /* An open menu pins the bar in place — sliding it away would take the menu
+     with it. */
+  const hidden = scrolling && !openMenu && !mobileOpen;
+
   return (
-    <header className="sticky top-0 z-40 border-b border-white/10 bg-ink text-white">
+    <header
+      className={`sticky top-0 z-40 border-b border-white/10 bg-ink text-white transition-transform duration-300 ease-out motion-reduce:transition-none ${
+        hidden ? "-translate-y-full" : "translate-y-0"
+      }`}
+    >
       {/* Utility bar — contact details, not a call to action. */}
       <div className="hidden border-b border-white/10 bg-ink-mid lg:block">
         <div className="container-page flex items-center justify-between gap-6 py-2.5 text-xs text-white/70">

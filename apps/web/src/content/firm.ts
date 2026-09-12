@@ -36,6 +36,13 @@ export const firm = {
   linkedin: "",
 } as const;
 
+/** The firm overview, as the brochure sets it out. */
+export const firmOverview = [
+  "ADOORA Legal Services is a preeminent law firm, with 25+ years of collective team experience, specializing in corporate legal solutions across South India, with a well-established presence in Andhra Pradesh, Karnataka and Telangana.",
+  "With a team of highly skilled legal professionals and extensive industry expertise, the firm is committed to delivering precise, strategic and time-sensitive legal counsel.",
+  "ADOORA Legal Services is dedicated to ensuring corporate clients remain compliant with evolving legal frameworks while effectively navigating complex regulatory and contractual landscapes.",
+] as const;
+
 /** Street addresses as printed in the firm's brochure. */
 export const offices = [
   {
@@ -102,24 +109,24 @@ export const stats = [
  */
 export const differentiators = [
   {
-    title: "The person who structures a matter stays on it",
+    title: "Proven Legal Expertise",
     body:
-      "Teams are small and overlapping, so the lawyer who set up a transaction is still involved when it is tested. You are not handed to a different team when the work turns contentious.",
+      "A strong track record in corporate law, M&A, and high-stakes legal matters.",
   },
   {
-    title: "A written estimate before the work starts",
+    title: "Client-First Approach",
     body:
-      "Fee arrangements are confirmed in writing at the outset, broken down by stage, and we tell you when a development is likely to move the estimate rather than explaining it afterwards.",
+      "Transparent, responsive, and committed to protecting your interests.",
   },
   {
-    title: "We say when a claim is not worth bringing",
+    title: "Cross-Border & Regulatory Mastery",
     body:
-      "Merits, limitation, forum and enforceability get assessed together, with a candid view of what a matter is worth after cost and time. Where a commercial settlement is the better outcome, we say so early.",
+      "Expertise in international transactions and regional compliance.",
   },
   {
-    title: "Advice that leads with the position",
+    title: "Strategic Legal Solutions",
     body:
-      "Diligence reports ranked by deal consequence rather than by subject. Contracts whose operative clauses match their compliance schedules. The answer first, then the reasoning behind it.",
+      "Practical, business-aligned counsel for sustainable growth.",
   },
 ] as const;
 

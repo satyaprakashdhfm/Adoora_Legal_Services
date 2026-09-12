@@ -5,7 +5,9 @@ import { Hero } from "@/components/hero";
 import { InsightCard, SectionHeading } from "@/components/ui";
 import { PracticesIndex } from "@/components/practices-index";
 import { CityIcon } from "@/components/city-icon";
-import { firm, differentiators, offices } from "@/content/firm";
+import { firm, firmOverview, differentiators, offices } from "@/content/firm";
+import { peopleByGroup } from "@/content/people";
+import { PersonCard } from "@/components/person-card";
 import { practiceAreas } from "@/content/practice-areas";
 import { insightsByDate } from "@/content/insights";
 import { heroSlides } from "@/content/hero-slides";
@@ -17,6 +19,12 @@ export const metadata: Metadata = {
   description: firm.descriptor,
   alternates: { canonical: "/" },
 };
+
+/** The same two rosters the About page splits its people into. */
+const homeRosters = [
+  { heading: "Leadership & advocates", members: peopleByGroup("legal") },
+  { heading: "Operations & business services", members: peopleByGroup("business") },
+];
 
 /** Right-pointing arrow shared by the links and pills on this page. */
 function Arrow({ className = "" }: { className?: string }) {
@@ -63,23 +71,9 @@ export default function Home() {
           </div>
 
           <div className="space-y-5 text-base leading-relaxed text-ink-soft">
-            <p>
-              {firm.name} advises Indian and international clients on corporate
-              transactions, financing, regulatory matters and dispute
-              resolution. We act for domestic and foreign commercial
-              enterprises, financial institutions, private equity and venture
-              capital funds, promoter-led businesses, start-ups, and government
-              and regulatory bodies.
-            </p>
-            <p>
-              Most instructions do not arrive neatly labelled. A financing turns
-              on a land title question; an acquisition turns on an employment
-              exposure; a regulatory notice turns into litigation. The firm is
-              organised so that the person who structures a matter is still
-              involved when it is tested — across offices in Hyderabad,
-              Bengaluru and Guntur, and before the courts, tribunals and
-              regulators of Telangana, Andhra Pradesh and Karnataka.
-            </p>
+            {firmOverview.map((paragraph) => (
+              <p key={paragraph}>{paragraph}</p>
+            ))}
             <div className="flex flex-wrap gap-x-8 gap-y-3 pt-4">
               <Link
                 href="/about"
@@ -97,6 +91,42 @@ export default function Home() {
               </Link>
             </div>
           </div>
+        </div>
+      </section>
+
+      {/* The team, below the about band. The same roster the About page
+          carries — one component, so the two cannot drift. */}
+      <section className="border-t border-line">
+        <div className="container-page py-14 sm:py-16">
+          <div className="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
+            <SectionHeading
+              eyebrow="Our people"
+              title="The lawyers who lead each practice"
+              lead="An efficient team of hardworking, sincere and talented professionals working across South India, from our offices in Telangana, Karnataka and Andhra Pradesh."
+            />
+            <Link
+              href="/about#people"
+              className="inline-flex shrink-0 items-center gap-2 self-start rounded-full border border-line-strong px-6 py-3 text-sm font-semibold text-ink transition hover:border-gold hover:text-gold-deep lg:self-auto"
+            >
+              Meet the whole team
+              <Arrow />
+            </Link>
+          </div>
+
+          {homeRosters.map((roster) => (
+            <div key={roster.heading} className="mt-12">
+              <h3 className="eyebrow border-b border-line-strong pb-4 text-ink">
+                {roster.heading}
+              </h3>
+              <ul className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                {roster.members.map((person) => (
+                  <li key={person.slug}>
+                    <PersonCard person={person} />
+                  </li>
+                ))}
+              </ul>
+            </div>
+          ))}
         </div>
       </section>
 
@@ -157,17 +187,11 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Why clients work with us. Replaced a recognitions list whose entries
-          the firm could not substantiate. Every line here is a statement about
-          how the firm works, not a ranking claim — the BCI rules on
-          advertising do not permit the latter. */}
+      {/* Why partner with us. Copy supplied by the firm — see the note on
+          `differentiators` in firm.ts about the BCI advertising rules. */}
       <section className="border-y border-line bg-paper-warm">
         <div className="container-page py-14 sm:py-16">
-          <SectionHeading
-            eyebrow="Why clients work with us"
-            title="What you can hold us to"
-            lead="Not a ranking and not a claim about other firms — four things we try to do on every matter."
-          />
+          <SectionHeading eyebrow="Why us" title="Why partner with us?" />
 
           <ul className="mt-10 grid gap-x-8 gap-y-10 sm:grid-cols-2 lg:grid-cols-4">
             {differentiators.map((item, index) => (
