@@ -225,9 +225,7 @@ export default function Home() {
             </div>
           </div>
 
-          {/* Careers. A photograph under the navy wash, framed by four corner
-              brackets — no card edge, so it reads as a window rather than a
-              second surface. */}
+          {/* Careers. A photograph under the navy wash. */}
           <div className="relative isolate flex flex-col justify-center overflow-hidden rounded-xl bg-ink p-8 text-white sm:p-10">
             {careersImage ? (
               <>
@@ -249,19 +247,6 @@ export default function Home() {
                 className="absolute inset-0 -z-10 bg-[linear-gradient(135deg,var(--color-ink-mid),var(--color-ink-deep))]"
               />
             )}
-
-            {[
-              "left-5 top-5 border-l border-t",
-              "right-5 top-5 border-r border-t",
-              "bottom-5 left-5 border-b border-l",
-              "bottom-5 right-5 border-b border-r",
-            ].map((corner) => (
-              <span
-                key={corner}
-                aria-hidden="true"
-                className={`pointer-events-none absolute h-9 w-9 border-white/45 ${corner}`}
-              />
-            ))}
 
             <div className="px-2 sm:px-4">
               <SectionHeading
@@ -287,11 +272,18 @@ export default function Home() {
                 </Link>
               </div>
 
-              {/* The triad the firm's own photography carries. */}
-              <ul className="mt-10 space-y-1.5 border-t border-white/15 pt-6 text-[0.65rem] font-semibold uppercase tracking-[0.22em] text-white/60">
-                <li>People</li>
-                <li>Ideas</li>
-                <li>Impact</li>
+              {/* The triad the firm's own photography carries, bulleted the
+                  way the practice lists are. */}
+              <ul className="mt-10 space-y-2.5 border-t border-white/15 pt-6 text-[0.65rem] font-semibold uppercase tracking-[0.22em] text-white/70">
+                {["People", "Ideas", "Impact"].map((word) => (
+                  <li key={word} className="flex items-center gap-2.5">
+                    <span
+                      aria-hidden="true"
+                      className="h-1.5 w-1.5 shrink-0 rounded-full bg-gold"
+                    />
+                    {word}
+                  </li>
+                ))}
               </ul>
             </div>
           </div>
