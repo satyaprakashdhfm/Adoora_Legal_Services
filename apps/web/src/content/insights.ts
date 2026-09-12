@@ -74,7 +74,7 @@ export const insights: Insight[] = [
       "Data collected must be need-based and consented, and the LSP cannot retain borrower data on its own account.",
       "A cooling-off period must be genuinely available, not disclosed and then made impractical.",
     ],
-    practices: ["banking-finance", "technology-media-telecom"],
+    practices: ["banking-finance"],
     industries: ["financial-services", "technology-media-telecom"],
     body: [
       {
@@ -324,7 +324,7 @@ export const insights: Insight[] = [
       "Retention and deletion capability has to exist in the product, not only in the policy.",
       "Processor contracts run down the whole chain, including sub-processors.",
     ],
-    practices: ["technology-media-telecom"],
+    practices: ["corporate-ma"],
     industries: ["technology-media-telecom", "financial-services", "healthcare-life-sciences", "startups-emerging"],
     body: [
       {

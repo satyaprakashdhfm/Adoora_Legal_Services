@@ -363,7 +363,6 @@ export const industries: Industry[] = [
     ],
     team: [],
     relatedPractices: [
-      "technology-media-telecom",
       "intellectual-property",
       "corporate-ma",
       "labour-employment",
@@ -556,7 +555,6 @@ export const industries: Industry[] = [
     team: [],
     relatedPractices: [
       "corporate-ma",
-      "technology-media-telecom",
       "labour-employment",
       "intellectual-property",
       "dispute-resolution",
@@ -653,7 +651,6 @@ export const industries: Industry[] = [
     team: [],
     relatedPractices: [
       "corporate-ma",
-      "technology-media-telecom",
       "intellectual-property",
       "labour-employment",
     ],

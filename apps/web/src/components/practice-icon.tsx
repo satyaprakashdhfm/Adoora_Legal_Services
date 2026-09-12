@@ -16,9 +16,6 @@ const practiceIconPath: Record<string, string> = {
   // Three figures — the parties to a dispute.
   "dispute-resolution":
     "M12 3.6a3.2 3.2 0 110 6.4 3.2 3.2 0 010-6.4zM5.9 5.9a2.6 2.6 0 110 5.2 2.6 2.6 0 010-5.2zM18.1 5.9a2.6 2.6 0 110 5.2 2.6 2.6 0 010-5.2zM12 11.4c3 0 5.4 2 5.4 4.4V20H6.6v-4.2c0-2.4 2.4-4.4 5.4-4.4zM5.4 12.6c.6 0 1.2.1 1.7.3a6.4 6.4 0 00-1.8 3.9V20H1v-2.9c0-2.1 2-4.5 4.4-4.5zM18.6 12.6c2.4 0 4.4 2.4 4.4 4.5V20h-4.3v-3.2a6.4 6.4 0 00-1.8-3.9c.5-.2 1.1-.3 1.7-.3z",
-  // Shield — the compliance perimeter under a digital product.
-  "technology-media-telecom":
-    "M12 2l8.5 3.4v5.3c0 5.3-3.6 9.7-8.5 11.3-4.9-1.6-8.5-6-8.5-11.3V5.4L12 2z",
   // House with a doorway.
   "real-estate-infrastructure": "M12 3L2 11.5h3V21h5v-6h4v6h5v-9.5h3L12 3z",
   // Page with a folded corner and ruled lines.
@@ -27,6 +24,9 @@ const practiceIconPath: Record<string, string> = {
   // Two figures — the employment relationship.
   "labour-employment":
     "M9.2 2.8a3.8 3.8 0 110 7.6 3.8 3.8 0 010-7.6zM9.2 12.1c3.9 0 7 2.4 7 5.3V21H2.2v-3.6c0-2.9 3.1-5.3 7-5.3zM17.4 4.6a3 3 0 110 6 3 3 0 010-6zM17.6 12.2c2.8 0 5.2 1.9 5.2 4.1V21h-4.6v-3.6c0-1.9-.8-3.6-2.2-4.9.5-.2 1-.3 1.6-.3z",
+  // Shield — the consent perimeter a regulator grants and can withdraw.
+  "regulatory-environmental":
+    "M12 2l8.5 3.4v5.3c0 5.3-3.6 9.7-8.5 11.3-4.9-1.6-8.5-6-8.5-11.3V5.4L12 2zm0 4.6a4.4 4.4 0 100 8.8 4.4 4.4 0 000-8.8zm0 2a2.4 2.4 0 110 4.8 2.4 2.4 0 010-4.8z",
   // Filament bulb — an idea, protected.
   "intellectual-property":
     "M12 2a7.2 7.2 0 00-4.3 12.9c.7.5 1.1 1.3 1.1 2.1v.5h6.4V17c0-.8.4-1.6 1.1-2.1A7.2 7.2 0 0012 2zM8.8 19.1h6.4v.6a2.3 2.3 0 01-2.3 2.3h-1.8a2.3 2.3 0 01-2.3-2.3v-.6z",
