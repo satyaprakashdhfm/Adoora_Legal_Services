@@ -1,8 +1,10 @@
+import Image from "next/image";
 import Link from "next/link";
 import type { ReactNode } from "react";
 import type { Faq } from "@/content/types";
 import { peopleBySlugs } from "@/content/people";
 import type { Insight } from "@/content/insights";
+import { InsightArtwork } from "@/components/insight-artwork";
 
 /** Eyebrow + heading + optional lead, used at the top of every section. */
 export function SectionHeading({
@@ -255,27 +257,51 @@ export function TeamGrid({ slugs }: { slugs: string[] }) {
 
 export function InsightCard({ insight }: { insight: Insight }) {
   return (
-    <article className="group flex h-full flex-col rounded-xl border border-line bg-paper p-6 transition hover:border-line-strong hover:shadow-lg hover:shadow-ink/5">
-      <div className="flex items-center gap-3 text-xs">
-        <span className="rounded-full bg-paper-tint px-2.5 py-1 font-medium text-gold-deep">
-          {insight.category}
-        </span>
-        <time dateTime={insight.date} className="text-slate-light">
-          {formatDate(insight.date)}
-        </time>
+    <article className="group relative flex h-full flex-col overflow-hidden rounded-xl border border-line bg-paper transition hover:border-line-strong hover:shadow-lg hover:shadow-ink/5">
+      {/* The frame. A real photograph when the article has one, otherwise the
+          drawn composition for its subject. */}
+      <div className="relative aspect-[16/9] overflow-hidden bg-ink">
+        {insight.image ? (
+          <Image
+            src={insight.image}
+            alt=""
+            fill
+            sizes="(min-width: 1024px) 30vw, (min-width: 640px) 50vw, 100vw"
+            className="object-cover transition duration-500 group-hover:scale-[1.03]"
+          />
+        ) : (
+          <InsightArtwork
+            artwork={insight.artwork}
+            className="h-full w-full transition duration-500 group-hover:scale-[1.03]"
+          />
+        )}
       </div>
 
-      <h3 className="mt-4 font-serif text-lg font-semibold leading-snug tracking-tight text-ink">
-        <Link href={`/insights/${insight.slug}`} className="transition group-hover:text-gold-deep">
-          {insight.title}
-        </Link>
-      </h3>
+      <div className="flex flex-1 flex-col p-6">
+        <div className="flex flex-wrap items-center gap-x-3 gap-y-2 text-xs">
+          <span className="rounded-full bg-paper-tint px-2.5 py-1 font-medium text-gold-deep">
+            {insight.category}
+          </span>
+          <time dateTime={insight.date} className="text-slate-light">
+            {formatDate(insight.date)}
+          </time>
+        </div>
 
-      <p className="mt-3 line-clamp-3 flex-1 text-sm leading-relaxed text-ink-soft">
-        {insight.summary}
-      </p>
+        <h3 className="mt-4 font-serif text-lg font-semibold leading-snug tracking-tight text-ink">
+          <Link href={`/insights/${insight.slug}`} className="transition group-hover:text-gold-deep">
+            {/* Stretches the link over the whole card, so the frame and the
+                summary are clickable too. */}
+            <span aria-hidden="true" className="absolute inset-0" />
+            {insight.title}
+          </Link>
+        </h3>
 
-      <p className="mt-4 text-xs text-slate-light">{insight.readingTime}</p>
+        <p className="mt-3 line-clamp-3 flex-1 text-sm leading-relaxed text-ink-soft">
+          {insight.summary}
+        </p>
+
+        <p className="mt-4 text-xs text-slate-light">{insight.readingTime}</p>
+      </div>
     </article>
   );
 }

@@ -10,6 +10,8 @@
  * file becomes the seed data. Keep the shape stable.
  */
 
+import type { ArtworkKey } from "@/components/insight-artwork";
+
 export type InsightCategory =
   | "Regulatory Update"
   | "Explainer"
@@ -34,6 +36,17 @@ export type Insight = {
   author: string;
   readingTime: string;
   summary: string;
+  /**
+   * Which generated composition heads the card — see `insight-artwork.tsx`.
+   * Drawn rather than photographed because the firm has no photography for
+   * these and stock legal imagery is uniformly bad.
+   */
+  artwork: ArtworkKey;
+  /**
+   * Path in `public/` to a real photograph for this article, once there is
+   * one. Set it and the card uses it in place of the artwork.
+   */
+  image?: string;
   keyTakeaways: string[];
   /** Practice-area slugs. */
   practices: string[];
@@ -51,6 +64,7 @@ export const insights: Insight[] = [
     date: "2026-08-18",
     author: "r-adoora",
     readingTime: "7 min read",
+    artwork: "network",
     summary:
       "Most digital lending arrangements we review were drafted as ordinary service contracts and then patched for the RBI's directions. That order is the problem — the framework changes who may hold the customer, who may collect money, and what must be disclosed before the borrower commits.",
     keyTakeaways: [
@@ -133,6 +147,7 @@ export const insights: Insight[] = [
     date: "2026-07-29",
     author: "m-rao",
     readingTime: "8 min read",
+    artwork: "parcels",
     summary:
       "Buyers often ask for a title report as a formality before completion. It is better understood as the exercise that decides whether there is anything to complete — and the defects it finds in Telangana and Andhra Pradesh follow recognisable patterns.",
     keyTakeaways: [
@@ -215,6 +230,7 @@ export const insights: Insight[] = [
     date: "2026-07-11",
     author: "p-lakshmi",
     readingTime: "6 min read",
+    artwork: "boundary",
     summary:
       "Employers keep asking us to strengthen post-termination non-compete clauses. The more useful conversation is about what Section 27 of the Contract Act permits, and where the protection you actually need can be found instead.",
     keyTakeaways: [
@@ -298,6 +314,7 @@ export const insights: Insight[] = [
     date: "2026-06-24",
     author: "a-krishnan",
     readingTime: "6 min read",
+    artwork: "datamap",
     summary:
       "The instinct when a data protection law arrives is to rewrite the privacy policy. That produces a document describing a business that does not exist. Everything the DPDP Act requires depends on first knowing what you hold and why.",
     keyTakeaways: [
@@ -397,6 +414,7 @@ export const insights: Insight[] = [
     date: "2026-06-02",
     author: "s-venkatesh",
     readingTime: "6 min read",
+    artwork: "interim",
     summary:
       "An arbitration clause does not leave you without a court while the tribunal is being constituted. Section 9 of the Arbitration and Conciliation Act is available before proceedings commence — and its practical value depends almost entirely on how quickly it is used.",
     keyTakeaways: [
@@ -485,6 +503,7 @@ export const insights: Insight[] = [
     date: "2026-05-14",
     author: "r-adoora",
     readingTime: "5 min read",
+    artwork: "threshold",
     summary:
       "The asset and turnover tests never captured acquisitions of businesses with large valuations and little revenue. The deal value threshold does — and it has changed the notification analysis for technology and early-stage transactions in particular.",
     keyTakeaways: [

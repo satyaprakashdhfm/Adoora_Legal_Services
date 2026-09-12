@@ -135,7 +135,7 @@ export default function Home() {
           <div className="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
             <SectionHeading
               eyebrow="Insights"
-              title="Thought leadership"
+              title="Articles &amp; publications"
               lead="Explainers and regulatory updates written for the person who has to act on them."
             />
             <Link
