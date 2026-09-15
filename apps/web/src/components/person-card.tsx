@@ -50,15 +50,15 @@ export function PersonCard({
           "--accent-text": accent.text,
         } as CSSProperties
       }
-      className="group relative flex h-full flex-col items-center overflow-hidden rounded-2xl border border-line bg-[linear-gradient(to_bottom,var(--accent-wash)_0%,var(--color-paper)_55%)] px-5 pb-7 pt-7 text-center shadow-sm shadow-ink/[0.03] transition duration-300 hover:-translate-y-1 hover:shadow-lg hover:shadow-ink/10"
+      className="group relative flex h-full flex-col items-center overflow-hidden rounded-2xl border border-line bg-[linear-gradient(to_bottom,var(--accent-wash)_0%,var(--color-paper)_55%)] px-3 pb-6 pt-5 text-center sm:px-5 sm:pb-7 sm:pt-7 shadow-sm shadow-ink/[0.03] transition duration-300 hover:-translate-y-1 hover:shadow-lg hover:shadow-ink/10"
     >
-      <div className="relative h-24 w-24 shrink-0 overflow-hidden rounded-full bg-[var(--accent-soft)] ring-4 ring-paper transition duration-300 group-hover:scale-105">
+      <div className="relative h-16 w-16 shrink-0 overflow-hidden rounded-full sm:h-24 sm:w-24 bg-[var(--accent-soft)] ring-4 ring-paper transition duration-300 group-hover:scale-105">
         {photo ? (
           <Image
             src={photo}
             alt={person.name}
             fill
-            sizes="96px"
+            sizes="(min-width: 640px) 96px, 64px"
             className="object-cover"
           />
         ) : (
@@ -75,10 +75,10 @@ export function PersonCard({
         )}
       </div>
 
-      <h3 className="mt-5 font-sans text-[0.95rem] font-semibold leading-snug text-ink">
+      <h3 className="mt-3 font-sans text-sm font-semibold leading-snug text-ink sm:mt-5 sm:text-[0.95rem]">
         {person.name}
       </h3>
-      <p className="mt-1 font-sans text-sm font-medium text-[var(--accent-text)]">
+      <p className="mt-1 font-sans text-xs font-medium text-[var(--accent-text)] sm:text-sm">
         {person.designation}
       </p>
       {person.qualification && (

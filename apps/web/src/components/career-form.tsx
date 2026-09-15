@@ -174,7 +174,7 @@ export function CareerForm({ roles }: { roles: string[] }) {
           type="checkbox"
           name="consent"
           required
-          className="mt-0.5 h-4 w-4 shrink-0 accent-[var(--color-gold)]"
+          className="mt-0.5 h-5 w-5 shrink-0 accent-[var(--color-gold)]"
         />
         <span className="text-sm leading-relaxed text-ink-soft">
           I consent to ADOORA Legal Services processing the personal data in

@@ -99,7 +99,7 @@ export function Hero({ images }: { images: (string | null)[] }) {
         <div className="hero-scrim absolute inset-0" />
       </div>
 
-      <div className="container-page relative flex flex-col justify-center py-16 sm:py-20 lg:min-h-[calc(100svh-7.5rem)] lg:py-16">
+      <div className="container-page relative flex flex-col justify-center py-16 sm:py-20 lg:min-h-[min(calc(100svh-7.5rem),46rem)] lg:py-16">
         <div className="max-w-3xl">
           {/* Slides are stacked so the container height does not jump between
               headings of different lengths. */}
@@ -158,7 +158,7 @@ export function Hero({ images }: { images: (string | null)[] }) {
                   onClick={() => setIndex(slideIndex)}
                   aria-label={`Show slide ${slideIndex + 1}: ${slide.eyebrow}`}
                   aria-current={isActive}
-                  className="group py-2"
+                  className="group flex h-11 items-center"
                 >
                   <span
                     aria-hidden="true"

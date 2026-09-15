@@ -63,6 +63,9 @@ export function Tabs({ tabs }: { tabs: TabDefinition[] }) {
 
   function selectTab(id: string) {
     setActive(id);
+    document
+      .getElementById(`tab-${id}`)
+      ?.scrollIntoView({ behavior: "smooth", block: "nearest", inline: "nearest" });
     // replaceState rather than a hash assignment: we do not want the browser
     // to scroll the panel into view on every tab click.
     window.history.replaceState(null, "", `#${id}`);
@@ -93,12 +96,17 @@ export function Tabs({ tabs }: { tabs: TabDefinition[] }) {
     <div>
       {/* Sticky tab strip. Sits below the sticky header. */}
       <div className="sticky top-[4.5rem] z-30 -mx-6 border-b border-line bg-paper/95 px-6 backdrop-blur lg:top-[6.5rem]">
+        {/* More tabs off to the right — a phone-width hint that the strip scrolls. */}
+        <span
+          aria-hidden="true"
+          className="pointer-events-none absolute inset-y-0 right-0 z-10 w-12 bg-gradient-to-l from-paper to-transparent sm:hidden"
+        />
         <div
           ref={tablistRef}
           role="tablist"
           aria-label="Section"
           onKeyDown={onKeyDown}
-          className="mx-auto flex max-w-5xl gap-1 overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+          className="mx-auto flex max-w-5xl snap-x gap-1 overflow-x-auto pr-8 [scrollbar-width:none] sm:pr-0 [&::-webkit-scrollbar]:hidden"
         >
           {tabs.map((tab) => {
             const isActive = tab.id === active;
@@ -113,7 +121,7 @@ export function Tabs({ tabs }: { tabs: TabDefinition[] }) {
                 aria-controls={`panel-${tab.id}`}
                 tabIndex={isActive ? 0 : -1}
                 onClick={() => selectTab(tab.id)}
-                className={`shrink-0 border-b-2 px-4 py-4 text-sm font-medium whitespace-nowrap transition ${
+                className={`shrink-0 snap-start border-b-2 px-4 py-4 text-sm font-medium whitespace-nowrap transition ${
                   isActive
                     ? "border-gold text-gold-deep"
                     : "border-transparent text-slate hover:border-line-strong hover:text-ink"

@@ -46,12 +46,12 @@ export function PracticesIndex() {
             </Link>
           </h3>
 
-          <ul className="mt-4 space-y-2.5">
+          <ul className="mt-3 space-y-0.5">
             {area.services.map((service) => (
               <li key={service.title}>
                 <Link
                   href={serviceHref(area, service)}
-                  className="group flex gap-2.5 text-sm leading-snug text-ink-soft transition hover:text-gold-deep"
+                  className="group flex gap-2.5 py-1 text-sm leading-snug text-ink-soft transition hover:text-gold-deep"
                   /* The dense label reads well in a list, but the full title is
                      what actually describes the work. */
                   title={service.title}

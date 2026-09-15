@@ -116,7 +116,7 @@ export default function ContactPage() {
                     <div className="mt-2.5 flex flex-wrap items-center gap-x-5 gap-y-1 text-sm">
                       <a
                         href={office.phoneHref}
-                        className="text-ink-soft transition hover:text-gold-deep"
+                        className="inline-block py-1 text-ink-soft transition hover:text-gold-deep"
                       >
                         {office.phone}
                       </a>
@@ -126,7 +126,7 @@ export default function ContactPage() {
                         )}`}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="text-xs font-semibold uppercase tracking-[0.14em] text-gold-deep"
+                        className="inline-block py-1.5 text-xs font-semibold uppercase tracking-[0.14em] text-gold-deep"
                       >
                         Open in maps
                       </a>

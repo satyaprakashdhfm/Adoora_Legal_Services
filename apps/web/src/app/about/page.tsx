@@ -147,7 +147,7 @@ export default function AboutPage() {
                 {roster.heading}
               </h3>
 
-              <ul className="mt-6 grid gap-4 sm:grid-cols-2 sm:gap-5 lg:grid-cols-3">
+              <ul className="mt-6 grid grid-cols-2 gap-3 sm:gap-5 lg:grid-cols-3">
                 {roster.members.map((person, index) => (
                   <li key={person.slug} id={person.slug} className="scroll-mt-32">
                     <PersonCard person={person} index={index} />
@@ -305,7 +305,7 @@ export default function AboutPage() {
                   <h3 className="font-serif text-base font-semibold text-ink">
                     {office.city}
                   </h3>
-                  <p className="text-[0.65rem] uppercase tracking-[0.14em] text-gold-deep">
+                  <p className="text-[0.7rem] uppercase tracking-[0.14em] text-gold-deep">
                     {office.label}
                   </p>
                   <address className="mt-2.5 space-y-0.5 text-[0.8rem] not-italic leading-relaxed text-ink-soft">
@@ -315,7 +315,7 @@ export default function AboutPage() {
                   </address>
                   <a
                     href={office.phoneHref}
-                    className="mt-3 inline-block text-[0.8rem] text-ink-soft transition hover:text-gold-deep"
+                    className="mt-2 inline-block py-1 text-[0.8rem] text-ink-soft transition hover:text-gold-deep"
                   >
                     {office.phone}
                   </a>

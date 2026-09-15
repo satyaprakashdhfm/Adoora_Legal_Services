@@ -41,7 +41,7 @@ export function TeamTabs({ groups }: { groups: TeamGroup[] }) {
         role="tablist"
         aria-label="Team"
         onKeyDown={onKeyDown}
-        className="flex gap-2 overflow-x-auto border-b border-line [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+        className="grid grid-cols-2 border-b border-line sm:flex sm:gap-8"
       >
         {groups.map((group) => {
           const isActive = group.id === active;
@@ -56,11 +56,11 @@ export function TeamTabs({ groups }: { groups: TeamGroup[] }) {
               aria-controls={`team-panel-${group.id}`}
               tabIndex={isActive ? 0 : -1}
               onClick={() => setActive(group.id)}
-              className={`-mb-px shrink-0 border-b-2 px-1 pb-3 text-sm font-semibold whitespace-nowrap transition ${
+              className={`-mb-px border-b-2 px-1 pb-3 text-left text-sm font-semibold leading-snug transition sm:shrink-0 sm:whitespace-nowrap ${
                 isActive
                   ? "border-gold text-ink"
                   : "border-transparent text-slate hover:text-ink"
-              } ${group.id === groups[0]?.id ? "" : "ml-6"}`}
+              }`}
             >
               {group.label}
             </button>
@@ -84,13 +84,17 @@ export function TeamTabs({ groups }: { groups: TeamGroup[] }) {
                 <li key={person.slug}>
                   <Link
                     href={`/about#${person.slug}`}
-                    className="group flex items-center gap-4 border-b border-line py-3 transition hover:border-gold/50"
+                    className="group flex items-center gap-3 border-b border-line py-3 transition hover:border-gold/50 sm:gap-4"
                   >
-                    <span className="min-w-0 flex-1 font-serif text-sm font-semibold text-ink transition group-hover:text-gold-deep">
-                      {person.name}
-                    </span>
-                    <span className="shrink-0 text-xs text-gold-deep">
-                      {person.designation}
+                    {/* Designation sits under the name on a phone, beside it
+                        from sm up. */}
+                    <span className="flex min-w-0 flex-1 flex-col sm:flex-row sm:items-center sm:gap-4">
+                      <span className="min-w-0 flex-1 font-serif text-sm font-semibold text-ink transition group-hover:text-gold-deep">
+                        {person.name}
+                      </span>
+                      <span className="text-xs text-gold-deep sm:shrink-0">
+                        {person.designation}
+                      </span>
                     </span>
                     <svg
                       viewBox="0 0 16 16"
