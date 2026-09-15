@@ -95,7 +95,14 @@ export function Tabs({ tabs }: { tabs: TabDefinition[] }) {
   return (
     <div>
       {/* Sticky tab strip. Sits below the sticky header. */}
-      <div className="sticky top-[4.5rem] z-30 -mx-6 border-b border-line bg-paper/95 px-6 backdrop-blur lg:top-[6.5rem]">
+      {/* Pinned flush under the header at whatever height it currently is —
+          full height when the nav row is showing, ribbon-only once it has
+          slid away — via the CSS variable the header keeps live. The
+          fallback matches the header's height before that variable is set. */}
+      <div
+        className="sticky z-30 -mx-6 border-b border-line bg-paper/95 px-6 backdrop-blur"
+        style={{ top: "var(--header-h, 4.5rem)" }}
+      >
         {/* More tabs off to the right — a phone-width hint that the strip scrolls. */}
         <span
           aria-hidden="true"

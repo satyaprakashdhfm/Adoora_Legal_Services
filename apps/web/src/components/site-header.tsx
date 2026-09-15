@@ -39,6 +39,11 @@ export function SiteHeader() {
   /** True while the page is being scrolled; the bar slides out of the way. */
   const [scrolling, setScrolling] = useState(false);
   const navRef = useRef<HTMLElement>(null);
+  const ribbonRef = useRef<HTMLDivElement>(null);
+  const navBarRef = useRef<HTMLDivElement>(null);
+  /* An open menu pins the bar in place — sliding it away would take the menu
+     with it. */
+  const hidden = scrolling && !openMenu && !mobileOpen;
 
   // Close everything on navigation.
   useEffect(() => {
@@ -103,23 +108,43 @@ export function SiteHeader() {
     };
   }, [mobileOpen]);
 
+  /*
+   * Publish the header's actual current height as a CSS variable, so a
+   * sticky element further down the page (the practice-page tab strip) can
+   * pin itself flush underneath — whatever that height is right now, not a
+   * guess baked in at build time.
+   *
+   * The nav row's own box never shrinks — hiding it only translates it, which
+   * does not change layout — so `offsetHeight` reads its true height
+   * regardless of the slide, and the total is ribbon-plus-nav only when the
+   * nav is actually showing.
+   */
+  useEffect(() => {
+    function updateHeaderHeight() {
+      const ribbon = ribbonRef.current?.offsetHeight ?? 0;
+      const nav = navBarRef.current?.offsetHeight ?? 0;
+      const total = hidden ? ribbon : ribbon + nav;
+      document.documentElement.style.setProperty("--header-h", `${total}px`);
+    }
+
+    updateHeaderHeight();
+    window.addEventListener("resize", updateHeaderHeight);
+    return () => window.removeEventListener("resize", updateHeaderHeight);
+  }, [hidden]);
+
   function isActive(href: string) {
     if (href === "/") return pathname === "/";
     return pathname === href || pathname.startsWith(`${href}/`);
   }
 
-  /* An open menu pins the bar in place — sliding it away would take the menu
-     with it. */
-  const hidden = scrolling && !openMenu && !mobileOpen;
-
   return (
     <header className="pointer-events-none sticky top-0 z-40 text-white">
       {/* Utility bar — contact details, not a call to action. */}
-      <div className="pointer-events-auto relative z-10 hidden border-b border-white/10 bg-ink-mid lg:block">
+      <div ref={ribbonRef} className="pointer-events-auto relative z-10 hidden border-b border-white/10 bg-ink-mid lg:block">
         <div className="container-page flex items-center justify-between gap-6 py-2.5 text-xs text-white/70">
           <p className="flex items-center gap-1.5">
             <UtilityIcon path={icons.pin} />
-            {firm.cities}
+            {firm.regions}
           </p>
           <div className="flex items-center gap-6">
             <a
@@ -141,6 +166,7 @@ export function SiteHeader() {
       </div>
 
       <div
+        ref={navBarRef}
         className={`pointer-events-auto border-b border-white/10 bg-ink transition-transform duration-300 ease-out motion-reduce:transition-none ${
           hidden ? "-translate-y-full" : "translate-y-0"
         }`}

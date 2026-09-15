@@ -2,7 +2,6 @@ import Link from "next/link";
 import type { Metadata } from "next";
 import { PageHero, SectionHeading } from "@/components/ui";
 import {
-  firm,
   firmOverview,
   coreValues,
   coverage,
@@ -34,10 +33,11 @@ const profiled = people.filter((person) => person.bio?.length);
 export default function AboutPage() {
   return (
     <>
+      {/* No lead paragraph here — firm.descriptor said the same thing the
+          Overview section says next, one scroll down. */}
       <PageHero
         eyebrow="About us"
         title="A practice organised around the whole of a matter"
-        lead={firm.descriptor}
         trail={[{ label: "Home", href: "/" }, { label: "About Us" }]}
       />
 

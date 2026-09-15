@@ -76,13 +76,6 @@ export default function Home() {
                 Read about our approach
                 <Arrow />
               </Link>
-              <Link
-                href="/about#people"
-                className="inline-flex items-center gap-2 text-sm font-semibold text-ink-soft underline decoration-line-strong underline-offset-[6px] transition hover:text-gold-deep"
-              >
-                Meet the team
-                <Arrow />
-              </Link>
             </div>
           </div>
         </div>
@@ -188,7 +181,8 @@ export default function Home() {
         <div className="container-page py-14 sm:py-16">
           <SectionHeading eyebrow="Why us" title="Why partner with us?" />
 
-          <ul className="mt-10 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
+            {/* Five cards now: 3-and-2 balances better than 4-and-1. */}
+          <ul className="mt-10 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
             {differentiators.map((item, index) => (
               <li
                 key={item.title}

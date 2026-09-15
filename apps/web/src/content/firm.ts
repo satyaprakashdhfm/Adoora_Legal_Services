@@ -208,6 +208,15 @@ export const differentiators = [
       "Transparent, responsive, and committed to protecting your interests.",
   },
   {
+    title: "Connected Client Experience",
+    image: "/client-exp.png",
+    /* The card is portrait and the frame landscape, so `cover` crops the
+       sides — this keeps the subject in shot. */
+    focus: "62% 45%",
+    body:
+      "A secure digital client portal that brings everything together in one place — from case updates and important documents to meeting summaries, notifications, and ongoing communication. Stay informed, organised, and connected throughout every stage of your legal matter.",
+  },
+  {
     title: "Cross-Border & Regulatory Mastery",
     image: "/why-us-cross-border.png",
     /* The card is portrait and the frame landscape, so `cover` crops the
