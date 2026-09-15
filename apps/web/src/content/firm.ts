@@ -172,14 +172,6 @@ export const offices = [
   },
 ] as const;
 
-/** Factual counters for the trust strip. No rankings, no self-praise. */
-export const stats = [
-  { value: "25+", label: "Years of combined practice" },
-  { value: "3", label: "Offices across South India" },
-  { value: "8", label: "Practice areas" },
-  { value: "8", label: "Industry domains" },
-] as const;
-
 /**
  * Why clients work with us.
  *

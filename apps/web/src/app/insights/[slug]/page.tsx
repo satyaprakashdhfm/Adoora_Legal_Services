@@ -124,13 +124,13 @@ export default async function InsightPage(
           { label: insight.category },
         ]}
       >
-        <div className="mt-8 flex flex-wrap items-center gap-x-6 gap-y-2 text-sm text-white/75">
+        <div className="mt-8 flex flex-wrap items-center gap-x-6 gap-y-2 text-sm text-slate">
           {author && (
             <span>
               By{" "}
               <Link
                 href={`/about#${author.slug}`}
-                className="text-white underline decoration-white/30 underline-offset-4 transition hover:text-gold-bright"
+                className="text-ink underline decoration-line-strong underline-offset-4 transition hover:text-gold-deep"
               >
                 {author.name}
               </Link>

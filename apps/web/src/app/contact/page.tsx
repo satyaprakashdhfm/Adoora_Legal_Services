@@ -24,7 +24,6 @@ export default function ContactPage() {
         title="Request information"
         lead="Tell us briefly what the matter concerns and we will point you to the right person in the firm. This form is for information requests; it is not an offer of legal services and sending it does not create a lawyer–client relationship."
         trail={[{ label: "Home", href: "/" }, { label: "Contact Us" }]}
-        tone="light"
       />
 
       <div className="container-page py-12 sm:py-14">
@@ -69,7 +68,7 @@ export default function ContactPage() {
             </div>
           </div>
 
-          <aside className="space-y-5">
+          <aside className="flex flex-col gap-5">
             <div className="rounded-2xl border border-line bg-paper-warm p-7">
               <h2 className="eyebrow text-gold-deep">Direct</h2>
               <div className="mt-4 space-y-4">
@@ -98,9 +97,9 @@ export default function ContactPage() {
               </div>
             </div>
 
-            <div className="rounded-2xl border border-line p-7">
+            <div className="flex-1 rounded-2xl border border-line p-7">
               <h2 className="eyebrow text-gold-deep">Offices</h2>
-              <ul className="mt-5 space-y-6">
+              <ul className="mt-5 space-y-5">
                 {offices.map((office) => (
                   <li key={office.city} className="border-l-2 border-gold/25 pl-5">
                     <h3 className="font-serif text-lg font-semibold text-ink">
@@ -114,45 +113,26 @@ export default function ContactPage() {
                         <p key={line}>{line}</p>
                       ))}
                     </address>
-                    <div className="mt-2.5 flex flex-col gap-0.5 text-sm">
+                    <div className="mt-2.5 flex flex-wrap items-center gap-x-5 gap-y-1 text-sm">
                       <a
                         href={office.phoneHref}
                         className="text-ink-soft transition hover:text-gold-deep"
                       >
                         {office.phone}
                       </a>
+                      <a
+                        href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(
+                          `${office.lines.join(", ")}`,
+                        )}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-xs font-semibold uppercase tracking-[0.14em] text-gold-deep"
+                      >
+                        Open in maps
+                      </a>
                     </div>
-                    <a
-                      href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(
-                        `${office.lines.join(", ")}`,
-                      )}`}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="mt-3 inline-block text-xs font-semibold uppercase tracking-[0.14em] text-gold-deep"
-                    >
-                      Open in maps
-                    </a>
                   </li>
                 ))}
-              </ul>
-            </div>
-
-            <div className="rounded-2xl border border-line bg-paper-warm p-7 text-ink-soft">
-              <h2 className="eyebrow text-gold-deep">Before you write</h2>
-              <ul className="mt-4 space-y-3 text-sm leading-relaxed">
-                <li>
-                  Sending an enquiry does not create a lawyer&ndash;client
-                  relationship, and the information is not privileged until we
-                  confirm an engagement in writing.
-                </li>
-                <li>
-                  Please do not attach or paste confidential case documents at
-                  this stage. Once we can act, we will give you a secure route.
-                </li>
-                <li>
-                  If you are already represented, tell us — it affects the
-                  conflicts position.
-                </li>
               </ul>
             </div>
           </aside>

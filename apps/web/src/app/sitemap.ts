@@ -1,5 +1,5 @@
 import type { MetadataRoute } from "next";
-import { practiceAreas } from "@/content/practice-areas";
+import { practiceAreas, serviceHref } from "@/content/practice-areas";
 import { industries } from "@/content/industries";
 import { insights } from "@/content/insights";
 import { policies } from "@/content/policies";
@@ -26,6 +26,14 @@ export default function sitemap(): MetadataRoute.Sitemap {
       changeFrequency: "monthly" as const,
       priority: 0.9,
     })),
+    ...practiceAreas.flatMap((area) =>
+      area.services.map((service) => ({
+        url: `${siteUrl}${serviceHref(area, service)}`,
+        lastModified: now,
+        changeFrequency: "monthly" as const,
+        priority: 0.7,
+      })),
+    ),
     ...industries.map((industry) => ({
       url: `${siteUrl}/domains/${industry.slug}`,
       lastModified: now,

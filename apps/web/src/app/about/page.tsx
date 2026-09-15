@@ -8,7 +8,6 @@ import {
   coverage,
   industryFocus,
   offices,
-  stats,
 } from "@/content/firm";
 import { people, peopleByGroup } from "@/content/people";
 import { PersonCard } from "@/components/person-card";
@@ -127,62 +126,6 @@ export default function AboutPage() {
               </li>
             ))}
           </ul>
-
-          <div className="mt-10 grid grid-cols-2 gap-y-6 border-t border-line-strong pt-8 lg:grid-cols-4">
-            {stats.map((stat) => (
-              <div key={stat.label}>
-                <p className="font-serif text-3xl font-semibold text-ink">
-                  {stat.value}
-                </p>
-                <p className="mt-1.5 text-xs uppercase tracking-[0.14em] text-slate">
-                  {stat.label}
-                </p>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* Governance & compliance */}
-      <section className="container-page py-12 sm:py-14">
-        <div className="grid gap-8 lg:grid-cols-[0.85fr_1.5fr] lg:gap-12">
-          <SectionHeading
-            eyebrow="Governance & compliance"
-            title="How we operate within the professional rules"
-          />
-          <div className="space-y-5 leading-relaxed text-ink-soft">
-            <p>
-              The firm and its advocates are governed by the Advocates Act, 1961
-              and the Bar Council of India Rules, including the Standards of
-              Professional Conduct and Etiquette. Advocates in India are not
-              permitted to solicit work or advertise, and this website is
-              accordingly informational: it carries no testimonials, no claims
-              to be the best or leading firm in any field, and no representation
-              about the outcome of any matter.
-            </p>
-            <p>
-              We run a conflicts check before accepting any new instruction and
-              will decline promptly where we cannot act. Client information is
-              treated as confidential and privileged, and access within the firm
-              is limited to those working on the matter. Fee arrangements are
-              confirmed in writing at the outset, with an estimate broken down
-              by stage.
-            </p>
-            <p>
-              Personal data submitted through this website is handled in
-              accordance with our{" "}
-              <Link
-                href="/privacy"
-                className="text-gold-deep underline decoration-gold/30 underline-offset-4"
-              >
-                Privacy Policy
-              </Link>{" "}
-              and the Digital Personal Data Protection Act, 2023. Nothing on
-              this website creates a lawyer&ndash;client relationship, and
-              information sent through the enquiry form is not privileged until
-              we have confirmed an engagement.
-            </p>
-          </div>
         </div>
       </section>
 
@@ -190,7 +133,7 @@ export default function AboutPage() {
       {/* The brochure supplies names and designations only, so this renders as
           a roster. Anyone given a `bio` in people.ts is promoted to the
           long-form profile card beneath it. */}
-      <section id="people" className="border-y border-line bg-paper-warm">
+      <section id="people">
         <div className="container-page py-12 sm:py-14">
           <SectionHeading
             eyebrow="Our people"
@@ -344,8 +287,8 @@ export default function AboutPage() {
 
       {/* Geographical coverage and industry focus, the brochure's framing of
           the offices — the addresses were already here under a bare heading. */}
-      <section className="container-page py-12 sm:py-14">
-        <div className="grid gap-9 lg:grid-cols-[1.6fr_1fr] lg:gap-14">
+      <section className="border-t border-line bg-paper-warm">
+        <div className="container-page grid gap-9 py-12 sm:py-14 lg:grid-cols-[1.6fr_1fr] lg:gap-14">
           <div>
             <SectionHeading
               eyebrow="Geographical coverage"
@@ -357,7 +300,7 @@ export default function AboutPage() {
               {offices.map((office) => (
                 <li
                   key={office.city}
-                  className="rounded-xl border border-line bg-paper-warm p-5"
+                  className="rounded-xl border border-line bg-paper p-5"
                 >
                   <h3 className="font-serif text-base font-semibold text-ink">
                     {office.city}

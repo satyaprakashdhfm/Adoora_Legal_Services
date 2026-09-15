@@ -59,43 +59,25 @@ export function SectionHeading({
 
 export function Breadcrumbs({
   trail,
-  tone = "dark",
 }: {
   trail: { label: string; href?: string }[];
-  tone?: "light" | "dark";
 }) {
-  const isDark = tone === "dark";
-
   return (
     <nav aria-label="Breadcrumb">
-      <ol
-        className={`flex flex-wrap items-center gap-x-2 gap-y-1 text-xs ${
-          isDark ? "text-white/55" : "text-slate"
-        }`}
-      >
+      <ol className="flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-slate">
         {trail.map((crumb, index) => (
           <li key={crumb.label} className="flex items-center gap-2">
             {index > 0 && (
-              <span
-                aria-hidden="true"
-                className={isDark ? "text-white/30" : "text-line-strong"}
-              >
+              <span aria-hidden="true" className="text-line-strong">
                 /
               </span>
             )}
             {crumb.href ? (
-              <Link
-                href={crumb.href}
-                className={`transition ${
-                  isDark ? "hover:text-gold-bright" : "hover:text-gold-deep"
-                }`}
-              >
+              <Link href={crumb.href} className="transition hover:text-gold-deep">
                 {crumb.label}
               </Link>
             ) : (
-              <span className={isDark ? "text-white/80" : "text-ink"}>
-                {crumb.label}
-              </span>
+              <span className="text-ink">{crumb.label}</span>
             )}
           </li>
         ))}
@@ -131,33 +113,66 @@ export function ProseBlock({
 /** Numbered list of service sub-categories (the ELP "Services" tab). */
 export function ServiceList({
   items,
+  basePath,
 }: {
   items: { title: string; body: string }[];
+  /**
+   * When set, each item links to `${basePath}/${anchor}` — its own page. Left
+   * unset on the industry pages, whose matter types have no page of their own.
+   */
+  basePath?: string;
 }) {
   return (
     <ol className="space-y-8">
-      {items.map((item, index) => (
-        <li
-          key={item.title}
-          id={anchorFor(item.title)}
-          /* Clears the sticky header and the sticky tab strip under it when
-             the practices index deep-links to this item. */
-          className="grid scroll-mt-44 gap-4 border-t border-line pt-8 first:border-0 first:pt-0 sm:grid-cols-[3rem_1fr] lg:scroll-mt-56"
-        >
-          <span
-            aria-hidden="true"
-            className="font-serif text-2xl font-semibold text-gold/40"
+      {items.map((item, index) => {
+        const href = basePath ? `${basePath}/${anchorFor(item.title)}` : null;
+
+        return (
+          <li
+            key={item.title}
+            id={anchorFor(item.title)}
+            /* Clears the sticky header and the sticky tab strip under it. */
+            className="grid scroll-mt-44 gap-4 border-t border-line pt-8 first:border-0 first:pt-0 sm:grid-cols-[3rem_1fr] lg:scroll-mt-56"
           >
-            {String(index + 1).padStart(2, "0")}
-          </span>
-          <div>
-            <h3 className="font-serif text-xl font-semibold tracking-tight text-ink">
-              {item.title}
-            </h3>
-            <p className="mt-2.5 leading-relaxed text-ink-soft">{item.body}</p>
-          </div>
-        </li>
-      ))}
+            <span
+              aria-hidden="true"
+              className="font-serif text-2xl font-semibold text-gold/40"
+            >
+              {String(index + 1).padStart(2, "0")}
+            </span>
+            <div>
+              <h3 className="font-serif text-xl font-semibold tracking-tight text-ink">
+                {href ? (
+                  <Link href={href} className="transition hover:text-gold-deep">
+                    {item.title}
+                  </Link>
+                ) : (
+                  item.title
+                )}
+              </h3>
+              <p className="mt-2.5 leading-relaxed text-ink-soft">{item.body}</p>
+              {href && (
+                <Link
+                  href={href}
+                  className="mt-3 inline-flex items-center gap-2 text-sm font-semibold text-gold-deep transition hover:text-ink"
+                >
+                  Read more
+                  <svg viewBox="0 0 16 16" aria-hidden="true" className="h-3.5 w-3.5">
+                    <path
+                      d="M2 8h11M9 4l4 4-4 4"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth={1.6}
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    />
+                  </svg>
+                </Link>
+              )}
+            </div>
+          </li>
+        );
+      })}
     </ol>
   );
 }
@@ -329,50 +344,31 @@ export function InsightCard({ insight }: { insight: Insight }) {
 }
 
 /**
- * Page header used by every inner page. Dark by default, on the same navy as
- * the utility ribbon; `tone="light"` sets it on the paper ground instead, for a
- * page whose first band is already doing the visual work.
+ * Page header used by every inner page, on the warm paper ground. The home
+ * page has its own photographic hero; every other page opens here, and the
+ * band that follows is plain paper, so the rule underneath is what separates
+ * them.
  */
 export function PageHero({
   eyebrow,
   title,
   lead,
   trail,
-  tone = "dark",
   children,
 }: {
   eyebrow?: string;
   title: string;
   lead?: string;
   trail?: { label: string; href?: string }[];
-  tone?: "light" | "dark";
   children?: ReactNode;
 }) {
-  const isDark = tone === "dark";
-
   return (
-    <section
-      className={`relative overflow-hidden ${
-        isDark ? "bg-ink-mid text-white" : "border-b border-line text-ink"
-      }`}
-    >
-      {isDark && (
-        <div
-          aria-hidden="true"
-          className="pointer-events-none absolute -left-32 top-[-14rem] h-[28rem] w-[28rem] rounded-full bg-gold-bright/10 blur-[120px]"
-        />
-      )}
-      <div className="container-page relative py-14 sm:py-16">
-        {trail && <Breadcrumbs trail={trail} tone={tone} />}
+    <section className="border-b border-line bg-paper-warm text-ink">
+      <div className="container-page py-12 sm:py-14">
+        {trail && <Breadcrumbs trail={trail} />}
         {eyebrow && (
-          <p
-            className={`eyebrow mt-6 inline-flex items-center gap-2.5 ${
-              isDark ? "text-gold-bright" : "text-gold-deep"
-            }`}
-          >
-            <span
-              className={`h-px w-8 ${isDark ? "bg-gold-bright/60" : "bg-gold/50"}`}
-            />
+          <p className="eyebrow mt-6 inline-flex items-center gap-2.5 text-gold-deep">
+            <span className="h-px w-8 bg-gold/50" />
             {eyebrow}
           </p>
         )}
@@ -380,11 +376,7 @@ export function PageHero({
           {title}
         </h1>
         {lead && (
-          <p
-            className={`mt-5 max-w-3xl text-base leading-relaxed sm:text-lg ${
-              isDark ? "text-white/85" : "text-ink-soft"
-            }`}
-          >
+          <p className="mt-5 max-w-3xl text-base leading-relaxed text-ink-soft sm:text-lg">
             {lead}
           </p>
         )}

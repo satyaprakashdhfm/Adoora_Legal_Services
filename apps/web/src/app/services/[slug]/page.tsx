@@ -14,7 +14,6 @@ import {
 } from "@/components/ui";
 import { peopleBySlugs } from "@/content/people";
 import { practiceAreas, practiceAreaBySlug } from "@/content/practice-areas";
-import { industryBySlug } from "@/content/industries";
 import { insightsForPractice } from "@/content/insights";
 import { firm } from "@/content/firm";
 
@@ -52,11 +51,6 @@ export default async function PracticeAreaPage(
   if (!area) notFound();
 
   const relatedInsights = insightsForPractice(area.slug, 3);
-  const relatedIndustries = area.relatedIndustries
-    .map((industrySlug) => industryBySlug.get(industrySlug))
-    .filter((industry): industry is NonNullable<typeof industry> =>
-      Boolean(industry),
-    );
 
   const tabs: TabDefinition[] = [
     {
@@ -71,17 +65,28 @@ export default async function PracticeAreaPage(
               body={block.body}
             />
           ))}
+
+          {/* What we handle — each item opens its own page. `id="services"`
+              keeps old `#services` links landing here. */}
+          <section
+            id="services"
+            className="scroll-mt-44 border-t border-line pt-10 lg:scroll-mt-56"
+          >
+            <h2 className="font-serif text-2xl font-semibold tracking-tight text-ink">
+              What we handle
+            </h2>
+            <p className="mt-3 max-w-2xl leading-relaxed text-ink-soft">
+              The work inside this practice. Each has its own page setting out
+              what it covers, how it is sequenced and where it is heard.
+            </p>
+            <div className="mt-8">
+              <ServiceList
+                items={area.services}
+                basePath={`/services/${area.slug}`}
+              />
+            </div>
+          </section>
         </div>
-      ),
-    },
-    {
-      id: "services",
-      label: "What we handle",
-      panel: (
-        <>
-          <h2 className="sr-only">What we handle</h2>
-          <ServiceList items={area.services} />
-        </>
       ),
     },
     {
@@ -115,25 +120,6 @@ export default async function PracticeAreaPage(
             </div>
           </section>
         </div>
-      ),
-    },
-    {
-      id: "matters",
-      label: "Representative matters",
-      panel: (
-        <section>
-          <h2 className="font-serif text-2xl font-semibold tracking-tight text-ink">
-            Representative matters
-          </h2>
-          <p className="mt-3 max-w-2xl leading-relaxed text-ink-soft">
-            Descriptions of the kind of work the team handles. Client names and
-            identifying details are omitted, and nothing here should be read as
-            a representation about the outcome of any matter.
-          </p>
-          <div className="mt-8">
-            <FactList items={area.matters} />
-          </div>
-        </section>
       ),
     },
     {
@@ -222,35 +208,6 @@ export default async function PracticeAreaPage(
       <div className="container-page">
         <Tabs tabs={tabs} />
       </div>
-
-      {/* Cross-links to the industry pages this practice most often serves. */}
-      {relatedIndustries.length > 0 && (
-        <section className="border-t border-line bg-paper-warm">
-          <div className="container-page py-16">
-            <h2 className="eyebrow text-gold-deep">Related domains</h2>
-            <p className="mt-3 max-w-2xl font-serif text-2xl font-semibold tracking-tight text-ink">
-              Industries where this practice is most active
-            </p>
-            <ul className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-              {relatedIndustries.map((industry) => (
-                <li key={industry.slug}>
-                  <Link
-                    href={`/domains/${industry.slug}`}
-                    className="group block h-full rounded-xl border border-line bg-paper p-5 transition hover:border-gold/40"
-                  >
-                    <h3 className="font-semibold text-ink transition group-hover:text-gold-deep">
-                      {industry.name}
-                    </h3>
-                    <p className="mt-2 text-sm leading-relaxed text-ink-soft">
-                      {industry.tagline}
-                    </p>
-                  </Link>
-                </li>
-              ))}
-            </ul>
-          </div>
-        </section>
-      )}
 
       {/* FAQPage structured data, for search and AI-overview citation. */}
       <script

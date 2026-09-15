@@ -29,7 +29,7 @@ export default function InsightsPage() {
           {activeCategories.map((category) => (
             <li
               key={category}
-              className="rounded-full border border-white/20 px-3.5 py-1.5 text-xs text-white/85"
+              className="rounded-full border border-line-strong bg-paper px-3.5 py-1.5 text-xs text-ink-soft"
             >
               {category}
             </li>

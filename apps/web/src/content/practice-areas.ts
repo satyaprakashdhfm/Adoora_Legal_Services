@@ -1,4 +1,5 @@
-import type { PracticeArea } from "./types";
+import type { PracticeArea, ServiceItem } from "./types";
+import { anchorFor } from "@/lib/anchor";
 
 /**
  * One entry per practice area. Each gets its own URL at `/services/[slug]`
@@ -1222,6 +1223,27 @@ export const practiceAreas: PracticeArea[] = [
 export const practiceAreaBySlug = new Map(
   practiceAreas.map((area) => [area.slug, area]),
 );
+
+/**
+ * URL segment for one service within its practice —
+ * `/services/banking-finance/enforcement-and-recovery`. Derived from the
+ * title, so renaming a service moves its page.
+ */
+export function serviceSlug(service: ServiceItem): string {
+  return anchorFor(service.title);
+}
+
+/** The path to a service's own page. */
+export function serviceHref(area: PracticeArea, service: ServiceItem): string {
+  return `/services/${area.slug}/${serviceSlug(service)}`;
+}
+
+export function findService(
+  area: PracticeArea,
+  slug: string,
+): ServiceItem | undefined {
+  return area.services.find((service) => serviceSlug(service) === slug);
+}
 
 /** Column order for the grouped practice list on the home page. */
 export const practiceGroups = ["Corporate", "Finance", "Disputes", "Regulatory"] as const;
