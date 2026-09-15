@@ -84,8 +84,8 @@ fields sit on it directly. Missing, the panel shows the warm ground.
 ## Portraits
 
 `photo` on a person in `src/content/people.ts` names their portrait here. Cards
-are square and crop from the top, so keep the head in the upper third. Until a
-portrait is set the card shows a silhouette and the person's initials.
+fill a circle, so square crops with the face centred work best. Until a
+portrait is set the card shows a silhouette on its accent colour.
 
 ## Composites
 

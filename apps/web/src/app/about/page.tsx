@@ -147,10 +147,10 @@ export default function AboutPage() {
                 {roster.heading}
               </h3>
 
-              <ul className="mt-6 grid grid-cols-2 gap-4 sm:gap-5 lg:grid-cols-4">
-                {roster.members.map((person) => (
+              <ul className="mt-6 grid gap-4 sm:grid-cols-2 sm:gap-5 lg:grid-cols-3">
+                {roster.members.map((person, index) => (
                   <li key={person.slug} id={person.slug} className="scroll-mt-32">
-                    <PersonCard person={person} />
+                    <PersonCard person={person} index={index} />
                   </li>
                 ))}
               </ul>
