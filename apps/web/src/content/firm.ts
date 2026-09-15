@@ -214,7 +214,7 @@ export const differentiators = [
        sides — this keeps the subject in shot. */
     focus: "62% 45%",
     body:
-      "A secure digital client portal that brings everything together in one place — from case updates and important documents to meeting summaries, notifications, and ongoing communication. Stay informed, organised, and connected throughout every stage of your legal matter.",
+      "A secure client portal bringing case updates, documents and communication into one place.",
   },
   {
     title: "Cross-Border & Regulatory Mastery",

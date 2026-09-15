@@ -145,7 +145,7 @@ export function SiteHeader() {
     <header className="pointer-events-none sticky top-0 z-40 text-white">
       {/* Utility bar — contact details, not a call to action. */}
       <div ref={ribbonRef} className="pointer-events-auto relative z-10 hidden border-b border-white/10 bg-ink-mid lg:block">
-        <div className="container-page flex items-center justify-between gap-6 py-2.5 text-xs text-white/70">
+        <div className="container-page flex items-center justify-between gap-6 py-2.5 text-xs font-medium text-white">
           <p className="flex items-center gap-1.5">
             <UtilityIcon path={icons.pin} />
             {firm.regions}

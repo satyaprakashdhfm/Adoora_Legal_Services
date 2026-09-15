@@ -57,9 +57,13 @@ export function Hero({ images }: { images: (string | null)[] }) {
 
   /*
    * Drag/swipe, mouse or touch, via the Pointer Events API — one code path
-   * for both rather than separate mouse and touch handlers. A short drag
-   * (under the threshold) is left alone, so a click on a button or link
-   * inside the slide still works; only a real swipe changes the slide.
+   * for both rather than separate mouse and touch handlers. A real swipe
+   * (past the threshold) moves in the dragged direction; a plain click or
+   * tap that never crossed it instead falls back to a left/right zone —
+   * the classic carousel tap targets — so clicking either side of the
+   * photograph, not just dragging it, moves the slide. Either way a click
+   * that landed on a link or button (the CTAs, the position dots) is left
+   * alone for that element's own handler.
    */
   const SWIPE_THRESHOLD = 50;
 
@@ -84,10 +88,28 @@ export function Hero({ images }: { images: (string | null)[] }) {
     if (!drag) return;
 
     const delta = event.clientX - drag.startX;
-    if (Math.abs(delta) < SWIPE_THRESHOLD) return;
+
+    if (Math.abs(delta) >= SWIPE_THRESHOLD) {
+      setIndex((current) =>
+        delta < 0
+          ? (current + 1) % heroSlides.length
+          : (current - 1 + heroSlides.length) % heroSlides.length,
+      );
+      return;
+    }
+
+    // Not a swipe. A link or button under the pointer handles its own
+    // click — the "Corporate & M&A" CTA, "Request information", a position
+    // dot — so leave the slide alone rather than also advancing under it.
+    if ((event.target as HTMLElement).closest("a, button")) return;
+
+    // A plain click or tap on the photograph itself: which half of the
+    // section decides the direction.
+    const rect = event.currentTarget.getBoundingClientRect();
+    const clickedRightHalf = event.clientX - rect.left > rect.width / 2;
 
     setIndex((current) =>
-      delta < 0
+      clickedRightHalf
         ? (current + 1) % heroSlides.length
         : (current - 1 + heroSlides.length) % heroSlides.length,
     );
