@@ -65,7 +65,7 @@ export function CareerForm({ roles }: { roles: string[] }) {
 
   if (status === "sent") {
     return (
-      <div className="rounded-2xl border border-line bg-paper-warm p-8">
+      <div className="rounded-2xl border border-line bg-paper/90 p-8">
         <h3 className="font-serif text-xl font-semibold text-ink">
           Application received
         </h3>
@@ -93,7 +93,7 @@ export function CareerForm({ roles }: { roles: string[] }) {
   }
 
   return (
-    <form onSubmit={onSubmit} className="rounded-2xl border border-line p-7 sm:p-8">
+    <form onSubmit={onSubmit}>
       <div className="grid gap-5 sm:grid-cols-2">
         <Input label="Full name" name="name" required autoComplete="name" />
         <Input

@@ -6,6 +6,7 @@ import { peopleBySlugs } from "@/content/people";
 import type { Insight } from "@/content/insights";
 import { InsightArtwork } from "@/components/insight-artwork";
 import { anchorFor } from "@/lib/anchor";
+import { publicImage } from "@/lib/public-image";
 
 /** Eyebrow + heading + optional lead, used at the top of every section. */
 export function SectionHeading({
@@ -293,14 +294,18 @@ export function TeamGrid({ slugs }: { slugs: string[] }) {
 }
 
 export function InsightCard({ insight }: { insight: Insight }) {
+  /* Resolved on the server at build time. Nothing client-side imports this
+     file; if that changes, resolve the image in the page and pass it down. */
+  const image = insight.imageBase ? publicImage(insight.imageBase) : null;
+
   return (
     <article className="group relative flex h-full flex-col overflow-hidden rounded-xl border border-line bg-paper transition hover:border-line-strong hover:shadow-lg hover:shadow-ink/5">
       {/* The frame. A real photograph when the article has one, otherwise the
           drawn composition for its subject. */}
       <div className="relative aspect-[16/9] overflow-hidden bg-ink">
-        {insight.image ? (
+        {image ? (
           <Image
-            src={insight.image}
+            src={image}
             alt=""
             fill
             sizes="(min-width: 1024px) 30vw, (min-width: 640px) 50vw, 100vw"

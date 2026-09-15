@@ -37,7 +37,12 @@ export type Person = {
   publications?: string[];
   memberships?: string[];
   email?: string;
-  /** Initials used by the avatar placeholder until photography is supplied. */
+  /**
+   * Base name in `public/` of the person's portrait, without an extension.
+   * Until it is set (and the file exists) the card shows a silhouette.
+   */
+  photo?: string;
+  /** Initials used by the portrait placeholder until photography is supplied. */
   initials: string;
 };
 

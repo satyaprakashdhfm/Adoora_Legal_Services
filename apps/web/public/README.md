@@ -61,11 +61,41 @@ half so the photograph still reads.
 
 ## Insight photography
 
-One frame per article, named by `image` on that article in
-`src/content/insights.ts`: `insight-digital-lending.png`,
-`insight-title-report.png`, `insight-non-compete.png`. An article without an
-`image` falls back to the drawn composition in `insight-artwork.tsx` — nothing
-breaks, so add them as they arrive. Cards are 16:9 and crop to the centre.
+One frame per article, named by `imageBase` on that article in
+`src/content/insights.ts`. The card uses the file when it exists and the drawn
+composition from `insight-artwork.tsx` when it does not, so a name can be set
+before the photograph arrives. Cards are 16:9 and crop to the centre.
+
+| File | Article |
+| --- | --- |
+| `insight-digital-lending` | The RBI's digital lending framework |
+| `insight-title-report` | Title investigation in the Telugu states |
+| `insight-non-compete` | Non-compete clauses in employment contracts |
+| `insight-dpdp` | DPDP compliance: start with the data map |
+| `insight-section-9` | Interim relief under Section 9 |
+| `insight-cci` | The deal value threshold for CCI approval |
+
+## Careers form background
+
+`careers-form-bg` — the illustration behind the application form on the
+careers page. It is not washed over, so it has to keep its centre pale: the
+fields sit on it directly. Missing, the panel shows the warm ground.
+
+## Portraits
+
+`photo` on a person in `src/content/people.ts` names their portrait here. Cards
+are square and crop from the top, so keep the head in the upper third. Until a
+portrait is set the card shows a silhouette and the person's initials.
+
+## Composites
+
+Several photographs delivered as one image — a strip or a grid with white
+dividers — are sliced rather than offset behind a card:
+
+    python scripts/slice-strip.py <composite> <cols> <rows> <name> [<name> ...]
+
+It cuts on the dividers and writes each frame here under its name. Keep the
+composite itself in `resources/`, not here, so it is not deployed.
 
 ## App icons
 

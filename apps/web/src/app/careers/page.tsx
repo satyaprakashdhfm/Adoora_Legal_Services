@@ -1,4 +1,6 @@
+import Image from "next/image";
 import type { Metadata } from "next";
+import { publicImage } from "@/lib/public-image";
 import { PageHero, SectionHeading } from "@/components/ui";
 import { CareerForm } from "@/components/career-form";
 
@@ -39,44 +41,12 @@ const roles = [
       "Working knowledge of the Arbitration and Conciliation Act, 1996",
     ],
   },
-  {
-    title: "Associate — Real Estate",
-    office: "Guntur",
-    experience: "1–3 years PQE",
-    detail:
-      "Title investigation, development documentation and RERA compliance. You will trace chains of title, prepare title reports, and draft acquisition and development documents.",
-    eligibility: [
-      "Enrolled with a State Bar Council",
-      "Reading knowledge of Telugu is a significant advantage for revenue records",
-      "Familiarity with registration and stamp duty practice",
-    ],
-  },
-  {
-    title: "Associate — Technology & Data Protection",
-    office: "Bengaluru",
-    experience: "1–4 years PQE",
-    detail:
-      "Technology contracting and data protection advisory. SaaS and cloud agreements, DPDP readiness work, and platform regulation questions.",
-    eligibility: [
-      "Enrolled with a State Bar Council",
-      "Experience of technology contracting or privacy compliance",
-      "Ability to work directly with product and engineering teams",
-    ],
-  },
-  {
-    title: "Legal Intern",
-    office: "Hyderabad, Bengaluru or Guntur",
-    experience: "3rd, 4th or 5th year students",
-    detail:
-      "Six to eight week internships across practices. Research, drafting support and hearing attendance, with a written assessment at the end.",
-    eligibility: [
-      "Enrolled in a three or five year LL.B. programme",
-      "Applications at least two months before the intended start date",
-    ],
-  },
 ];
 
 export default function CareersPage() {
+  /* Missing, the panel falls back to the warm ground it sits on. */
+  const formImage = publicImage("careers-form-bg");
+
   return (
     <>
       <PageHero
@@ -171,15 +141,28 @@ export default function CareersPage() {
         </div>
       </section>
 
-      {/* Application */}
-      <section className="mx-auto max-w-3xl px-6 py-20">
-        <SectionHeading
-          eyebrow="Apply"
-          title="Submit an application"
-          lead="Complete the form and email your CV to careers@adooralegalservices.com quoting the role."
-        />
-        <div className="mt-10">
-          <CareerForm roles={roles.map((role) => role.title)} />
+      {/* Application — the form sits on its own illustrated panel. The
+          artwork carries its colour at the edges and leaves the centre pale,
+          so the fields stay legible without a wash over it. */}
+      <section className="container-page py-12 sm:py-14">
+        <div className="relative isolate mx-auto max-w-4xl overflow-hidden rounded-2xl border border-line bg-paper-warm px-6 py-10 sm:px-14 sm:py-14">
+          {formImage && (
+            <Image
+              src={formImage}
+              alt=""
+              fill
+              sizes="(min-width: 1024px) 56rem, 100vw"
+              className="-z-10 object-cover"
+            />
+          )}
+          <SectionHeading
+            eyebrow="Apply"
+            title="Submit an application"
+            lead="Complete the form and email your CV to careers@adooralegalservices.com quoting the role."
+          />
+          <div className="mt-10">
+            <CareerForm roles={roles.map((role) => role.title)} />
+          </div>
         </div>
       </section>
     </>
