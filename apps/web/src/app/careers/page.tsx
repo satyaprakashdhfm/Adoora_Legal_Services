@@ -143,15 +143,18 @@ export default function CareersPage() {
 
       {/* Application — the form sits on its own illustrated panel. The
           artwork carries its colour at the edges and leaves the centre pale,
-          so the fields stay legible without a wash over it. */}
+          so the fields stay legible without a wash over it. The artwork is
+          2:3 portrait: the panel is held narrow so it is about that shape and
+          `cover` crops almost nothing, and the side padding keeps the fields
+          inside the pale centre, clear of the leaves and dot grids. */}
       <section className="container-page py-12 sm:py-14">
-        <div className="relative isolate mx-auto max-w-4xl overflow-hidden rounded-2xl border border-line bg-paper-warm px-6 py-10 sm:px-14 sm:py-14">
+        <div className="relative isolate mx-auto max-w-2xl overflow-hidden rounded-2xl border border-line bg-paper-warm px-6 py-12 sm:px-20 sm:py-16">
           {formImage && (
             <Image
               src={formImage}
               alt=""
               fill
-              sizes="(min-width: 1024px) 56rem, 100vw"
+              sizes="(min-width: 768px) 42rem, 100vw"
               className="-z-10 object-cover"
             />
           )}

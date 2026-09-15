@@ -48,6 +48,12 @@ export type Insight = {
    * it is not — so a name can be set ahead of the file arriving.
    */
   imageBase?: string;
+  /**
+   * CSS `object-position` for the photograph. Cards are 16:9 and most frames
+   * are taller, so `cover` keeps only the middle band; set this when the
+   * subject sits above or below it.
+   */
+  imageFocus?: string;
   keyTakeaways: string[];
   /** Practice-area slugs. */
   practices: string[];
@@ -320,6 +326,7 @@ export const insights: Insight[] = [
     readingTime: "6 min read",
     artwork: "datamap",
     imageBase: "insight-dpdp",
+    imageFocus: "50% 28%",
     summary:
       "The instinct when a data protection law arrives is to rewrite the privacy policy. That produces a document describing a business that does not exist. Everything the DPDP Act requires depends on first knowing what you hold and why.",
     keyTakeaways: [
@@ -511,6 +518,7 @@ export const insights: Insight[] = [
     readingTime: "5 min read",
     artwork: "threshold",
     imageBase: "insight-cci",
+    imageFocus: "50% 68%",
     summary:
       "The asset and turnover tests never captured acquisitions of businesses with large valuations and little revenue. The deal value threshold does — and it has changed the notification analysis for technology and early-stage transactions in particular.",
     keyTakeaways: [

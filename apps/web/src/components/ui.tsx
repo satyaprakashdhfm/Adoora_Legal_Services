@@ -309,6 +309,7 @@ export function InsightCard({ insight }: { insight: Insight }) {
             alt=""
             fill
             sizes="(min-width: 1024px) 30vw, (min-width: 640px) 50vw, 100vw"
+            style={insight.imageFocus ? { objectPosition: insight.imageFocus } : undefined}
             className="object-cover transition duration-500 group-hover:scale-[1.03]"
           />
         ) : (

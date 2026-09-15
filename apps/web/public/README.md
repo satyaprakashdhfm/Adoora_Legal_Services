@@ -64,7 +64,9 @@ half so the photograph still reads.
 One frame per article, named by `imageBase` on that article in
 `src/content/insights.ts`. The card uses the file when it exists and the drawn
 composition from `insight-artwork.tsx` when it does not, so a name can be set
-before the photograph arrives. Cards are 16:9 and crop to the centre.
+before the photograph arrives. Cards are 16:9 and crop to the centre; where a frame's subject sits above or
+below the middle band, set `imageFocus` (a CSS `object-position`) on the
+article rather than re-cropping the file.
 
 | File | Article |
 | --- | --- |
