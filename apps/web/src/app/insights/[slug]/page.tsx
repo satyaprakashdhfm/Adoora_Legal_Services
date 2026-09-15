@@ -2,6 +2,7 @@ import Link from "next/link";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { InsightCard, PageHero, formatDate } from "@/components/ui";
+import { anchorFor } from "@/lib/anchor";
 import {
   insights,
   insightBySlug,
@@ -46,7 +47,15 @@ function BlockRenderer({ blocks }: { blocks: Block[] }) {
       {blocks.map((block, index) => {
         switch (block.type) {
           case "h2":
-            return <h2 key={index}>{block.text}</h2>;
+            return (
+              <h2
+                key={index}
+                id={anchorFor(block.text)}
+                style={{ scrollMarginTop: "var(--header-h, 4.5rem)" }}
+              >
+                {block.text}
+              </h2>
+            );
           case "p":
             return <p key={index}>{block.text}</p>;
           case "ul":
@@ -104,6 +113,12 @@ export default async function InsightPage(
     }),
   ].filter((tag): tag is { label: string; href: string } => Boolean(tag));
 
+  /* The left rail's table of contents — the article's own h2 subheadings,
+     in order, each pointing at the id BlockRenderer gives that heading. */
+  const toc = insight.body
+    .filter((block): block is Extract<Block, { type: "h2" }> => block.type === "h2")
+    .map((block) => ({ text: block.text, id: anchorFor(block.text) }));
+
   const related = insightsByDate
     .filter((other) => other.slug !== insight.slug)
     .filter(
@@ -143,8 +158,14 @@ export default async function InsightPage(
       </PageHero>
 
       <div className="container-page py-14 sm:py-16">
-        <div className="grid gap-12 lg:grid-cols-[1fr_19rem] lg:gap-16">
-          <article>
+        {/* Rail on the left, article on the right — a reader can see the
+            article's shape (and the author) before committing to reading it,
+            rather than a Key Takeaways box that duplicated the summary above
+            the fold. DOM order keeps the article first, so it reads before
+            the rail on a phone; `lg:order-first` moves the rail to the left
+            only once there is a second column to put it in. */}
+        <div className="grid gap-12 lg:grid-cols-[15rem_1fr] lg:gap-14">
+          <article className="min-w-0">
             <p className="border-l-2 border-gold pl-6 text-lg leading-relaxed text-ink">
               {insight.summary}
             </p>
@@ -185,32 +206,35 @@ export default async function InsightPage(
             )}
           </article>
 
-          {/* Sticky takeaways + author rail */}
-          <aside className="lg:sticky lg:top-32 lg:self-start">
-            <div className="rounded-xl border border-line bg-paper-warm p-6">
-              <h2 className="eyebrow text-gold-deep">Key takeaways</h2>
-              <ul className="mt-4 space-y-3">
-                {insight.keyTakeaways.map((takeaway) => (
-                  <li key={takeaway} className="flex gap-3">
-                    <span
-                      aria-hidden="true"
-                      className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-gold"
-                    />
-                    <span className="text-sm leading-relaxed text-ink-soft">
-                      {takeaway}
-                    </span>
-                  </li>
-                ))}
-              </ul>
-            </div>
+          {/* On-this-page rail: the article's own h2 subheadings, then the
+              author. Sticky and clear of the header at whatever height it
+              currently is. */}
+          <aside className="lg:sticky lg:top-[calc(var(--header-h,4.5rem)+1.5rem)] lg:order-first lg:self-start">
+            {toc.length > 0 && (
+              <nav aria-label="On this page">
+                <h2 className="eyebrow text-gold-deep">On this page</h2>
+                <ul className="mt-4 space-y-2.5 border-l border-line text-sm">
+                  {toc.map((item) => (
+                    <li key={item.id}>
+                      <a
+                        href={`#${item.id}`}
+                        className="-ml-px block border-l-2 border-transparent py-0.5 pl-4 leading-snug text-ink-soft transition hover:border-gold/50 hover:text-gold-deep"
+                      >
+                        {item.text}
+                      </a>
+                    </li>
+                  ))}
+                </ul>
+              </nav>
+            )}
 
             {author && (
-              <div className="mt-5 rounded-xl border border-line p-6">
+              <div className={toc.length > 0 ? "mt-8 border-t border-line pt-6" : undefined}>
                 <h2 className="eyebrow text-slate-light">Author</h2>
                 <div className="mt-4 flex items-center gap-3">
                   <span
                     aria-hidden="true"
-                    className="flex h-11 w-11 items-center justify-center rounded-full border border-line-strong bg-paper-warm font-serif text-sm font-semibold text-gold-deep"
+                    className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-line-strong bg-paper-warm font-serif text-sm font-semibold text-gold-deep"
                   >
                     {author.initials}
                   </span>

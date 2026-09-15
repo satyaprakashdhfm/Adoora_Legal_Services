@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, type PointerEvent as ReactPointerEvent } from "react";
 import { heroSlides } from "@/content/hero-slides";
 import { firm } from "@/content/firm";
 
@@ -33,6 +33,9 @@ export function Hero({ images }: { images: (string | null)[] }) {
   const [index, setIndex] = useState(0);
   const [paused, setPaused] = useState(false);
   const reducedMotion = useRef(false);
+  /* Drag tracking for the swipe gesture. `startX` is null when no drag is in
+     progress, which also doubles as "ignore this pointer's move/up events". */
+  const dragRef = useRef<{ startX: number; moved: boolean } | null>(null);
 
   useEffect(() => {
     reducedMotion.current = window.matchMedia(
@@ -52,13 +55,58 @@ export function Hero({ images }: { images: (string | null)[] }) {
 
   const active = heroSlides[index];
 
+  /*
+   * Drag/swipe, mouse or touch, via the Pointer Events API — one code path
+   * for both rather than separate mouse and touch handlers. A short drag
+   * (under the threshold) is left alone, so a click on a button or link
+   * inside the slide still works; only a real swipe changes the slide.
+   */
+  const SWIPE_THRESHOLD = 50;
+
+  function onPointerDown(event: ReactPointerEvent<HTMLElement>) {
+    // A right-click, or a second finger while one is already dragging.
+    if (event.button !== 0 && event.pointerType === "mouse") return;
+    dragRef.current = { startX: event.clientX, moved: false };
+    setPaused(true);
+  }
+
+  function onPointerMove(event: ReactPointerEvent<HTMLElement>) {
+    if (!dragRef.current) return;
+    if (Math.abs(event.clientX - dragRef.current.startX) > 4) {
+      dragRef.current.moved = true;
+    }
+  }
+
+  function onPointerUp(event: ReactPointerEvent<HTMLElement>) {
+    const drag = dragRef.current;
+    dragRef.current = null;
+    setPaused(false);
+    if (!drag) return;
+
+    const delta = event.clientX - drag.startX;
+    if (Math.abs(delta) < SWIPE_THRESHOLD) return;
+
+    setIndex((current) =>
+      delta < 0
+        ? (current + 1) % heroSlides.length
+        : (current - 1 + heroSlides.length) % heroSlides.length,
+    );
+  }
+
   return (
     <section
-      className="relative isolate overflow-hidden bg-ink-mid text-white"
+      className="relative isolate touch-pan-y overflow-hidden bg-ink-mid text-white select-none"
       onMouseEnter={() => setPaused(true)}
       onMouseLeave={() => setPaused(false)}
       onFocusCapture={() => setPaused(true)}
       onBlurCapture={() => setPaused(false)}
+      onPointerDown={onPointerDown}
+      onPointerMove={onPointerMove}
+      onPointerUp={onPointerUp}
+      onPointerCancel={() => {
+        dragRef.current = null;
+        setPaused(false);
+      }}
       aria-roledescription="carousel"
       aria-label="Firm practice highlights"
     >

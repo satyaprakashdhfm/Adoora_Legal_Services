@@ -181,12 +181,14 @@ export default function Home() {
         <div className="container-page py-14 sm:py-16">
           <SectionHeading eyebrow="Why us" title="Why partner with us?" />
 
-            {/* Five cards now: 3-and-2 balances better than 4-and-1. */}
-          <ul className="mt-10 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+            {/* Five cards: 3-and-2 on a laptop, all five in one row from xl up —
+              the extra column keeps each card close to its original size on
+              a normal desktop instead of stretching wider to fill the row. */}
+          <ul className="mt-10 grid gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
             {differentiators.map((item, index) => (
               <li
                 key={item.title}
-                className="relative isolate flex min-h-[18rem] flex-col justify-end overflow-hidden rounded-xl bg-ink p-6 text-white"
+                className="relative isolate flex min-h-[15rem] flex-col justify-end overflow-hidden rounded-xl bg-ink p-5 text-white"
               >
                 <Image
                   src={item.image}

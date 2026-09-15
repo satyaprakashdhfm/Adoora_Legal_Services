@@ -161,7 +161,7 @@ export default function CareersPage() {
           <SectionHeading
             eyebrow="Apply"
             title="Submit an application"
-            lead="Complete the form and email your CV to careers@adooralegalservices.com quoting the role."
+            lead="Complete the form and email your CV to info@adooralegalservices.com quoting the role."
           />
           <div className="mt-10">
             <CareerForm roles={roles.map((role) => role.title)} />

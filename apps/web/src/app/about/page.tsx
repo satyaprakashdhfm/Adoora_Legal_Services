@@ -37,7 +37,7 @@ export default function AboutPage() {
           Overview section says next, one scroll down. */}
       <PageHero
         eyebrow="About us"
-        title="A practice organised around the whole of a matter"
+        title="About ADOORA Legal Services"
         trail={[{ label: "Home", href: "/" }, { label: "About Us" }]}
       />
 

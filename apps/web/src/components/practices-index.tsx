@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { practiceAreas, serviceHref } from "@/content/practice-areas";
+import { PracticeIcon } from "@/components/practice-icon";
 
 /**
  * The practices index — one block per practice area, listing the case types
@@ -37,7 +38,11 @@ export function PracticesIndex() {
         <section key={area.slug}>
           <span aria-hidden="true" className="block h-0.5 w-8 bg-gold" />
 
-          <h3 className="mt-4 font-serif text-lg leading-snug font-semibold tracking-tight text-ink">
+          <h3 className="mt-4 flex items-center gap-2.5 font-serif text-lg leading-snug font-semibold tracking-tight text-ink">
+            <PracticeIcon
+              slug={area.slug}
+              className="h-7 w-7 shrink-0 text-gold"
+            />
             <Link
               href={`/services/${area.slug}`}
               className="transition hover:text-gold-deep"

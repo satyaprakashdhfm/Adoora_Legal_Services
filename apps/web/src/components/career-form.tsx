@@ -72,10 +72,10 @@ export function CareerForm({ roles }: { roles: string[] }) {
         <p className="mt-3 text-sm leading-relaxed text-ink-soft">
           Thank you. Please email your CV and a short covering note to{" "}
           <a
-            href="mailto:careers@adooralegalservices.com"
+            href="mailto:info@adooralegalservices.com"
             className="text-gold-deep underline underline-offset-2"
           >
-            careers@adooralegalservices.com
+            info@adooralegalservices.com
           </a>{" "}
           quoting the role, so we can consider it alongside this form. We
           respond to applications we are taking forward; we are not always able
@@ -191,7 +191,7 @@ export function CareerForm({ roles }: { roles: string[] }) {
           role="alert"
           className="mt-5 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800"
         >
-          {error} You can also email careers@adooralegalservices.com directly.
+          {error} You can also email info@adooralegalservices.com directly.
         </p>
       )}
 

@@ -350,10 +350,10 @@ export function InsightCard({ insight }: { insight: Insight }) {
 }
 
 /**
- * Page header used by every inner page, on the warm paper ground. The home
- * page has its own photographic hero; every other page opens here, and the
- * band that follows is plain paper, so the rule underneath is what separates
- * them.
+ * Page header used by every inner page, one step down the warm-paper scale
+ * from the plain bands (`paper-tint`, not `paper-warm`) so it reads as a
+ * distinct band rather than blending into the page. The home page has its
+ * own photographic hero; every other page opens here.
  */
 export function PageHero({
   eyebrow,
@@ -369,7 +369,7 @@ export function PageHero({
   children?: ReactNode;
 }) {
   return (
-    <section className="border-b border-line bg-paper-warm text-ink">
+    <section className="border-b border-line-strong bg-paper-tint text-ink">
       <div className="container-page py-12 sm:py-14">
         {trail && <Breadcrumbs trail={trail} />}
         {eyebrow && (

@@ -36,7 +36,8 @@ export function SiteHeader() {
   const [openMenu, setOpenMenu] = useState<string | null>(null);
   const [mobileOpen, setMobileOpen] = useState(false);
   const [mobileSection, setMobileSection] = useState<string | null>(null);
-  /** True while the page is being scrolled; the bar slides out of the way. */
+  /** True once the page has scrolled down past the threshold; the bar
+      slides away and stays away until the page scrolls up again. */
   const [scrolling, setScrolling] = useState(false);
   const navRef = useRef<HTMLElement>(null);
   const ribbonRef = useRef<HTMLDivElement>(null);
@@ -75,29 +76,32 @@ export function SiteHeader() {
   }, []);
 
   /*
-   * Hide the bar while the page is moving and bring it back when it settles.
-   * The idle delay is the whole feature: too short and the bar flickers
-   * between wheel events, too long and it feels stuck. 200ms clears a trackpad
-   * flick without being noticeable once you stop.
+   * Hide the bar on the way down — while scrolling down, and while sitting
+   * still having just scrolled down — and bring it straight back the moment
+   * the page moves up, even by a pixel. That is the standard mobile-browser
+   * pattern: down reads as "keep going", any upward movement reads as
+   * "orient me", so the header answers immediately rather than waiting for
+   * scrolling to stop.
    *
    * Never hides at the very top of the page — there is nothing to get out of
    * the way of there — and never while a menu is open, which would take the
    * open menu with it.
    */
   useEffect(() => {
-    let idle: number;
+    let lastY = window.scrollY;
 
     function onScroll() {
-      window.clearTimeout(idle);
-      setScrolling(window.scrollY > 80);
-      idle = window.setTimeout(() => setScrolling(false), 200);
+      const y = window.scrollY;
+      const goingDown = y > lastY;
+      lastY = y;
+
+      // No new event fires once the page stops, so whichever direction the
+      // last one carried is exactly the state that persists at rest.
+      setScrolling(y > 80 && goingDown);
     }
 
     window.addEventListener("scroll", onScroll, { passive: true });
-    return () => {
-      window.removeEventListener("scroll", onScroll);
-      window.clearTimeout(idle);
-    };
+    return () => window.removeEventListener("scroll", onScroll);
   }, []);
 
   // Lock body scroll behind the mobile drawer.
