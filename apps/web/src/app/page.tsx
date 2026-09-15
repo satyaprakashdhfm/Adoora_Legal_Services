@@ -90,7 +90,7 @@ export default function Home() {
 
       {/* The team, below the about band. Names in two columns rather than a
           card each — sixteen cards cost most of a screen for the same list. */}
-      <section className="border-t border-line">
+      <section className="border-y border-line bg-paper-warm">
         <div className="container-page py-14 sm:py-16">
           <div className="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
             <SectionHeading
@@ -130,7 +130,7 @@ export default function Home() {
           cards described the practice in a line and hid the work, and a
           visitor arrives looking for "insolvency" or "RERA". Sector pages are
           reached from each practice page and the footer. */}
-      <section className="border-y border-line bg-paper-warm">
+      <section>
         <div className="container-page py-14 sm:py-16">
           <div className="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
             <SectionHeading
@@ -153,9 +153,9 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Insights. Plain paper — the practices band above it is warm, and two
-          warm bands in a row read as one section. */}
-      <section>
+      {/* Insights. Warm, between the paper practices and why-us bands — the
+          home page alternates its grounds so no two neighbours read as one. */}
+      <section className="border-y border-line bg-paper-warm">
         <div className="container-page py-14 sm:py-16">
           <div className="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
             <SectionHeading
@@ -184,7 +184,7 @@ export default function Home() {
 
       {/* Why partner with us. Copy supplied by the firm — see the note on
           `differentiators` in firm.ts about the BCI advertising rules. */}
-      <section className="border-y border-line bg-paper-warm">
+      <section>
         <div className="container-page py-14 sm:py-16">
           <SectionHeading eyebrow="Why us" title="Why partner with us?" />
 
@@ -230,7 +230,7 @@ export default function Home() {
 
       {/* Locations and the careers teaser share one row — offices on the
           left, careers on the right. */}
-      <section className="border-t border-line">
+      <section className="border-t border-line bg-paper-warm">
         <div className="container-page grid items-stretch gap-10 py-14 sm:py-16 lg:grid-cols-[1.35fr_1fr] lg:gap-12">
           {/* The three offices, each card led by its city's landmark. */}
           <div>
@@ -244,7 +244,7 @@ export default function Home() {
               {offices.map((office) => (
                 <div
                   key={office.city}
-                  className="rounded-xl border border-line bg-paper-warm p-5"
+                  className="rounded-xl border border-line bg-paper p-5"
                 >
                   <CityIcon city={office.city} className="h-9 w-9 text-gold" />
                   <h3 className="mt-4 font-serif text-lg font-semibold text-ink">

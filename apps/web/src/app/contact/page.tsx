@@ -1,5 +1,7 @@
+import Image from "next/image";
 import type { Metadata } from "next";
 import { PageHero } from "@/components/ui";
+import { publicImage } from "@/lib/public-image";
 import { EnquiryForm } from "@/components/enquiry-form";
 import { firm, offices } from "@/content/firm";
 
@@ -11,6 +13,10 @@ export const metadata: Metadata = {
 };
 
 export default function ContactPage() {
+  /* The same photograph and wash as the careers panel on the home page, so the
+     two calls to action read as one family. */
+  const cardImage = publicImage("careers-office");
+
   return (
     <>
       <PageHero
@@ -18,15 +24,43 @@ export default function ContactPage() {
         title="Request information"
         lead="Tell us briefly what the matter concerns and we will point you to the right person in the firm. This form is for information requests; it is not an offer of legal services and sending it does not create a lawyer–client relationship."
         trail={[{ label: "Home", href: "/" }, { label: "Contact Us" }]}
+        tone="light"
       />
 
-      <div className="container-page py-16 sm:py-20">
-        <div className="grid gap-12 lg:grid-cols-[1.3fr_1fr] lg:gap-16">
-          <div>
-            <h2 className="font-serif text-2xl font-semibold tracking-tight text-ink">
+      <div className="container-page py-12 sm:py-14">
+        <div className="grid gap-10 lg:grid-cols-[1.35fr_1fr] lg:gap-12">
+          <div className="relative isolate overflow-hidden rounded-2xl bg-ink p-7 text-white sm:p-10">
+            {cardImage ? (
+              <>
+                <Image
+                  src={cardImage}
+                  alt=""
+                  fill
+                  sizes="(min-width: 1024px) 55vw, 100vw"
+                  className="-z-20 object-cover object-right"
+                />
+                {/* Heavier than the careers panel's wash: fields run the full
+                    width here, so the photograph can only show at the edge. */}
+                <div
+                  aria-hidden="true"
+                  className="absolute inset-0 -z-10 bg-[linear-gradient(to_right,var(--color-ink)_0%,color-mix(in_oklab,var(--color-ink)_94%,transparent)_55%,color-mix(in_oklab,var(--color-ink)_72%,transparent)_100%)]"
+                />
+              </>
+            ) : (
+              <div
+                aria-hidden="true"
+                className="absolute inset-0 -z-10 bg-[linear-gradient(135deg,var(--color-ink-mid),var(--color-ink-deep))]"
+              />
+            )}
+
+            <p className="eyebrow inline-flex items-center gap-2.5 text-gold-bright">
+              <span aria-hidden="true" className="h-px w-8 bg-gold-bright/60" />
+              Enquiry
+            </p>
+            <h2 className="mt-4 font-serif text-3xl font-semibold tracking-tight text-white">
               Send an enquiry
             </h2>
-            <p className="mt-3 max-w-xl leading-relaxed text-ink-soft">
+            <p className="mt-3 max-w-xl leading-relaxed text-white/80">
               {firm.responseTime} We run a conflicts check before responding
               substantively, and will tell you promptly if we are unable to act.
             </p>
@@ -103,8 +137,8 @@ export default function ContactPage() {
               </ul>
             </div>
 
-            <div className="rounded-2xl border border-line bg-ink p-7 text-white/85">
-              <h2 className="eyebrow text-gold-bright">Before you write</h2>
+            <div className="rounded-2xl border border-line bg-paper-warm p-7 text-ink-soft">
+              <h2 className="eyebrow text-gold-deep">Before you write</h2>
               <ul className="mt-4 space-y-3 text-sm leading-relaxed">
                 <li>
                   Sending an enquiry does not create a lawyer&ndash;client

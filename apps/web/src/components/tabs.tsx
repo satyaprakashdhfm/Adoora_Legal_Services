@@ -26,9 +26,33 @@ export function Tabs({ tabs }: { tabs: TabDefinition[] }) {
   // Honour an incoming hash on mount and on back/forward navigation.
   useEffect(() => {
     function syncFromHash() {
-      const hash = window.location.hash.replace("#", "");
-      if (hash && tabs.some((tab) => tab.id === hash)) {
+      const hash = decodeURIComponent(window.location.hash.replace("#", ""));
+      if (!hash) return;
+
+      if (tabs.some((tab) => tab.id === hash)) {
         setActive(hash);
+        return;
+      }
+
+      /*
+       * A hash naming something *inside* a panel — one service on a practice
+       * page, linked from the practices index. Inactive panels are
+       * `display: none`, so the browser cannot scroll to it on its own: open
+       * the panel that holds it, then scroll once that panel has painted. Two
+       * frames, because the first runs before React has committed the change.
+       */
+      const target = document.getElementById(hash);
+      const tabId = target
+        ?.closest<HTMLElement>('[role="tabpanel"]')
+        ?.id.replace(/^panel-/, "");
+
+      if (target && tabId && tabs.some((tab) => tab.id === tabId)) {
+        setActive(tabId);
+        requestAnimationFrame(() =>
+          requestAnimationFrame(() =>
+            target.scrollIntoView({ behavior: "smooth", block: "start" }),
+          ),
+        );
       }
     }
 

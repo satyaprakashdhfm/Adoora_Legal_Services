@@ -54,7 +54,7 @@ export function Hero({ images }: { images: (string | null)[] }) {
 
   return (
     <section
-      className="relative isolate overflow-hidden bg-ink text-white"
+      className="relative isolate overflow-hidden bg-ink-mid text-white"
       onMouseEnter={() => setPaused(true)}
       onMouseLeave={() => setPaused(false)}
       onFocusCapture={() => setPaused(true)}

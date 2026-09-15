@@ -5,6 +5,7 @@ import type { Faq } from "@/content/types";
 import { peopleBySlugs } from "@/content/people";
 import type { Insight } from "@/content/insights";
 import { InsightArtwork } from "@/components/insight-artwork";
+import { anchorFor } from "@/lib/anchor";
 
 /** Eyebrow + heading + optional lead, used at the top of every section. */
 export function SectionHeading({
@@ -58,25 +59,43 @@ export function SectionHeading({
 
 export function Breadcrumbs({
   trail,
+  tone = "dark",
 }: {
   trail: { label: string; href?: string }[];
+  tone?: "light" | "dark";
 }) {
+  const isDark = tone === "dark";
+
   return (
     <nav aria-label="Breadcrumb">
-      <ol className="flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-white/55">
+      <ol
+        className={`flex flex-wrap items-center gap-x-2 gap-y-1 text-xs ${
+          isDark ? "text-white/55" : "text-slate"
+        }`}
+      >
         {trail.map((crumb, index) => (
           <li key={crumb.label} className="flex items-center gap-2">
             {index > 0 && (
-              <span aria-hidden="true" className="text-white/30">
+              <span
+                aria-hidden="true"
+                className={isDark ? "text-white/30" : "text-line-strong"}
+              >
                 /
               </span>
             )}
             {crumb.href ? (
-              <Link href={crumb.href} className="transition hover:text-gold-bright">
+              <Link
+                href={crumb.href}
+                className={`transition ${
+                  isDark ? "hover:text-gold-bright" : "hover:text-gold-deep"
+                }`}
+              >
                 {crumb.label}
               </Link>
             ) : (
-              <span className="text-white/80">{crumb.label}</span>
+              <span className={isDark ? "text-white/80" : "text-ink"}>
+                {crumb.label}
+              </span>
             )}
           </li>
         ))}
@@ -120,7 +139,10 @@ export function ServiceList({
       {items.map((item, index) => (
         <li
           key={item.title}
-          className="grid gap-4 border-t border-line pt-8 first:border-0 first:pt-0 sm:grid-cols-[3rem_1fr]"
+          id={anchorFor(item.title)}
+          /* Clears the sticky header and the sticky tab strip under it when
+             the practices index deep-links to this item. */
+          className="grid scroll-mt-44 gap-4 border-t border-line pt-8 first:border-0 first:pt-0 sm:grid-cols-[3rem_1fr] lg:scroll-mt-56"
         >
           <span
             aria-hidden="true"
@@ -306,31 +328,51 @@ export function InsightCard({ insight }: { insight: Insight }) {
   );
 }
 
-/** Dark page header used by every inner page. */
+/**
+ * Page header used by every inner page. Dark by default, on the same navy as
+ * the utility ribbon; `tone="light"` sets it on the paper ground instead, for a
+ * page whose first band is already doing the visual work.
+ */
 export function PageHero({
   eyebrow,
   title,
   lead,
   trail,
+  tone = "dark",
   children,
 }: {
   eyebrow?: string;
   title: string;
   lead?: string;
   trail?: { label: string; href?: string }[];
+  tone?: "light" | "dark";
   children?: ReactNode;
 }) {
+  const isDark = tone === "dark";
+
   return (
-    <section className="relative overflow-hidden bg-ink text-white">
-      <div
-        aria-hidden="true"
-        className="pointer-events-none absolute -left-32 top-[-14rem] h-[28rem] w-[28rem] rounded-full bg-gold-bright/10 blur-[120px]"
-      />
+    <section
+      className={`relative overflow-hidden ${
+        isDark ? "bg-ink-mid text-white" : "border-b border-line text-ink"
+      }`}
+    >
+      {isDark && (
+        <div
+          aria-hidden="true"
+          className="pointer-events-none absolute -left-32 top-[-14rem] h-[28rem] w-[28rem] rounded-full bg-gold-bright/10 blur-[120px]"
+        />
+      )}
       <div className="container-page relative py-14 sm:py-16">
-        {trail && <Breadcrumbs trail={trail} />}
+        {trail && <Breadcrumbs trail={trail} tone={tone} />}
         {eyebrow && (
-          <p className="eyebrow mt-6 inline-flex items-center gap-2.5 text-gold-bright">
-            <span className="h-px w-8 bg-gold-bright/60" />
+          <p
+            className={`eyebrow mt-6 inline-flex items-center gap-2.5 ${
+              isDark ? "text-gold-bright" : "text-gold-deep"
+            }`}
+          >
+            <span
+              className={`h-px w-8 ${isDark ? "bg-gold-bright/60" : "bg-gold/50"}`}
+            />
             {eyebrow}
           </p>
         )}
@@ -338,7 +380,11 @@ export function PageHero({
           {title}
         </h1>
         {lead && (
-          <p className="mt-5 max-w-3xl text-base leading-relaxed text-white/85 sm:text-lg">
+          <p
+            className={`mt-5 max-w-3xl text-base leading-relaxed sm:text-lg ${
+              isDark ? "text-white/85" : "text-ink-soft"
+            }`}
+          >
             {lead}
           </p>
         )}

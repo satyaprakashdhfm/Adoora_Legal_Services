@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { practiceAreas } from "@/content/practice-areas";
+import { anchorFor } from "@/lib/anchor";
 
 /**
  * The practices index — one block per practice area, listing the case types
@@ -50,7 +51,7 @@ export function PracticesIndex() {
             {area.services.map((service) => (
               <li key={service.title}>
                 <Link
-                  href={`/services/${area.slug}#services`}
+                  href={`/services/${area.slug}#${anchorFor(service.title)}`}
                   className="group flex gap-2.5 text-sm leading-snug text-ink-soft transition hover:text-gold-deep"
                   /* The dense label reads well in a list, but the full title is
                      what actually describes the work. */
