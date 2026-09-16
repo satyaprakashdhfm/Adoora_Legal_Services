@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { useEffect, useRef, useState, type PointerEvent as ReactPointerEvent } from "react";
+import { useEffect, useRef, useState, type MouseEvent as ReactMouseEvent, type PointerEvent as ReactPointerEvent } from "react";
 import { heroSlides } from "@/content/hero-slides";
 import { firm } from "@/content/firm";
 
@@ -36,6 +36,29 @@ export function Hero({ images }: { images: (string | null)[] }) {
   /* Drag tracking for the swipe gesture. `startX` is null when no drag is in
      progress, which also doubles as "ignore this pointer's move/up events". */
   const dragRef = useRef<{ startX: number; moved: boolean } | null>(null);
+
+  /*
+   * The cursor-following prev/next hint: a floating arrow that tracks the
+   * mouse and points the direction a click there will move the slideshow —
+   * left half steps back, right half steps forward, matching the click zones
+   * `onPointerUp` already acts on. Mouse only (a touch does not "hover"), and
+   * hidden over a link or button so it never sits on top of the real controls.
+   */
+  const [hint, setHint] = useState<{ x: number; y: number; side: "prev" | "next" } | null>(null);
+
+  function onMouseMove(event: ReactMouseEvent<HTMLElement>) {
+    if ((event.target as HTMLElement).closest("a, button")) {
+      setHint(null);
+      return;
+    }
+    const rect = event.currentTarget.getBoundingClientRect();
+    const x = event.clientX - rect.left;
+    setHint({
+      x,
+      y: event.clientY - rect.top,
+      side: x < rect.width / 2 ? "prev" : "next",
+    });
+  }
 
   useEffect(() => {
     reducedMotion.current = window.matchMedia(
@@ -119,7 +142,11 @@ export function Hero({ images }: { images: (string | null)[] }) {
     <section
       className="relative isolate touch-pan-y overflow-hidden bg-ink-mid text-white select-none"
       onMouseEnter={() => setPaused(true)}
-      onMouseLeave={() => setPaused(false)}
+      onMouseLeave={() => {
+        setPaused(false);
+        setHint(null);
+      }}
+      onMouseMove={onMouseMove}
       onFocusCapture={() => setPaused(true)}
       onBlurCapture={() => setPaused(false)}
       onPointerDown={onPointerDown}
@@ -251,6 +278,29 @@ export function Hero({ images }: { images: (string | null)[] }) {
         <p className="mt-12 max-w-[13rem] font-serif text-sm italic leading-relaxed text-white/75 lg:absolute lg:bottom-10 lg:right-10 lg:mt-0 lg:text-right 2xl:right-16">
           &ldquo;{firm.heroQuote}&rdquo;
         </p>
+      </div>
+
+      {/* Cursor-following prev/next hint. A direct child of the section, so
+          it shares the same coordinate space `onMouseMove` measures against —
+          nesting it inside `container-page` would offset it by that div's
+          padding and, on very wide screens, its centring margin. The
+          transform (not top/left) keeps it pinned to the pointer without
+          layout thrash. `hidden md:block` because this is a hover affordance;
+          small screens use the swipe gesture instead. */}
+      <div
+        aria-hidden="true"
+        className={`pointer-events-none absolute inset-0 z-20 hidden md:block ${
+          hint ? "opacity-100" : "opacity-0"
+        } transition-opacity duration-150`}
+      >
+        <div
+          className="absolute flex h-14 w-14 items-center justify-center rounded-full border border-white/25 bg-ink-mid/60 text-white backdrop-blur-sm transition-transform duration-150"
+          style={{
+            transform: `translate(${(hint?.x ?? 0) - 28}px, ${(hint?.y ?? 0) - 28}px)`,
+          }}
+        >
+          <Arrow className={hint?.side === "prev" ? "-scale-x-100" : ""} />
+        </div>
       </div>
     </section>
   );

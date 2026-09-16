@@ -213,8 +213,7 @@ export const differentiators = [
     /* The card is portrait and the frame landscape, so `cover` crops the
        sides — this keeps the subject in shot. */
     focus: "62% 45%",
-    body:
-      "A secure client portal bringing case updates, documents and communication into one place.",
+    body: "Case updates, documents and communication in one place.",
   },
   {
     title: "Cross-Border & Regulatory Mastery",
