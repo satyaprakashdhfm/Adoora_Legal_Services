@@ -141,26 +141,37 @@ export default function CareersPage() {
         </div>
       </section>
 
-      {/* Application — the form sits on its own illustrated panel. The
-          artwork carries its colour at the edges and leaves the centre pale,
-          so the fields stay legible without a wash over it. The artwork is
-          2:3 portrait: the panel is held narrow so it is about that shape and
-          `cover` crops almost nothing, and the side padding keeps the fields
-          inside the pale centre, clear of the leaves and dot grids. */}
+      {/* Application — the form sits on a photograph, same treatment as the
+          enquiry card on /contact: a flat navy wash over the whole image
+          rather than a directional one, because this panel does not reserve
+          one side for copy — the fields run its full width, so every part of
+          the photo needs to hold contrast, not just one edge of it. */}
       <section className="container-page py-12 sm:py-14">
-        <div className="relative isolate mx-auto max-w-2xl overflow-hidden rounded-2xl border border-line bg-paper-warm px-6 py-12 sm:px-20 sm:py-16">
-          {formImage && (
-            <Image
-              src={formImage}
-              alt=""
-              fill
-              sizes="(min-width: 768px) 42rem, 100vw"
-              className="-z-10 object-cover"
+        <div className="relative isolate mx-auto max-w-3xl overflow-hidden rounded-2xl bg-ink px-6 py-10 text-white sm:px-12 sm:py-14">
+          {formImage ? (
+            <>
+              <Image
+                src={formImage}
+                alt=""
+                fill
+                sizes="(min-width: 1024px) 48rem, 100vw"
+                className="-z-20 object-cover"
+              />
+              <div
+                aria-hidden="true"
+                className="absolute inset-0 -z-10 bg-[color-mix(in_oklab,var(--color-ink)_82%,transparent)]"
+              />
+            </>
+          ) : (
+            <div
+              aria-hidden="true"
+              className="absolute inset-0 -z-10 bg-[linear-gradient(135deg,var(--color-ink-mid),var(--color-ink-deep))]"
             />
           )}
           <SectionHeading
             eyebrow="Apply"
             title="Submit an application"
+            tone="dark"
             lead="Complete the form and email your CV to info@adooralegalservices.com quoting the role."
           />
           <div className="mt-10">

@@ -65,15 +65,15 @@ export function CareerForm({ roles }: { roles: string[] }) {
 
   if (status === "sent") {
     return (
-      <div className="rounded-2xl border border-line bg-paper/90 p-8">
-        <h3 className="font-serif text-xl font-semibold text-ink">
+      <div className="rounded-2xl border border-white/15 bg-white/5 p-8">
+        <h3 className="font-serif text-xl font-semibold text-white">
           Application received
         </h3>
-        <p className="mt-3 text-sm leading-relaxed text-ink-soft">
+        <p className="mt-3 text-sm leading-relaxed text-white/80">
           Thank you. Please email your CV and a short covering note to{" "}
           <a
             href="mailto:info@adooralegalservices.com"
-            className="text-gold-deep underline underline-offset-2"
+            className="text-gold-bright underline underline-offset-2"
           >
             info@adooralegalservices.com
           </a>{" "}
@@ -84,7 +84,7 @@ export function CareerForm({ roles }: { roles: string[] }) {
         <button
           type="button"
           onClick={() => setStatus("idle")}
-          className="mt-6 text-sm font-semibold text-gold-deep underline decoration-gold/30 underline-offset-4"
+          className="mt-6 text-sm font-semibold text-gold-bright underline decoration-gold-bright/40 underline-offset-4"
         >
           Submit another application
         </button>
@@ -106,15 +106,15 @@ export function CareerForm({ roles }: { roles: string[] }) {
         <Input label="Telephone" name="phone" type="tel" required autoComplete="tel" />
 
         <div>
-          <label htmlFor="role" className="block text-sm font-medium text-ink">
-            Role <span className="text-gold-deep">*</span>
+          <label htmlFor="role" className="block text-sm font-medium text-white">
+            Role <span className="text-gold-bright">*</span>
           </label>
           <select
             id="role"
             name="role"
             required
             defaultValue=""
-            className="mt-2 w-full rounded-lg border border-line-strong bg-paper px-3.5 py-2.5 text-sm text-ink transition focus:border-gold"
+            className="mt-2 w-full rounded-lg border border-transparent bg-paper px-3.5 py-2.5 text-sm text-ink transition focus:border-gold"
           >
             <option value="" disabled>
               Select a role
@@ -144,8 +144,8 @@ export function CareerForm({ roles }: { roles: string[] }) {
       </div>
 
       <div className="mt-5">
-        <label htmlFor="message" className="block text-sm font-medium text-ink">
-          Why this role <span className="text-gold-deep">*</span>
+        <label htmlFor="message" className="block text-sm font-medium text-white">
+          Why this role <span className="text-gold-bright">*</span>
         </label>
         <textarea
           id="message"
@@ -154,7 +154,7 @@ export function CareerForm({ roles }: { roles: string[] }) {
           rows={4}
           maxLength={1500}
           placeholder="A few lines on the work you want to do and the experience you would bring to it."
-          className="mt-2 w-full resize-y rounded-lg border border-line-strong bg-paper px-3.5 py-2.5 text-sm text-ink transition placeholder:text-slate-light focus:border-gold"
+          className="mt-2 w-full resize-y rounded-lg border border-transparent bg-paper px-3.5 py-2.5 text-sm text-ink transition placeholder:text-slate-light focus:border-gold"
         />
       </div>
 
@@ -176,10 +176,10 @@ export function CareerForm({ roles }: { roles: string[] }) {
           required
           className="mt-0.5 h-5 w-5 shrink-0 accent-[var(--color-gold)]"
         />
-        <span className="text-sm leading-relaxed text-ink-soft">
+        <span className="text-sm leading-relaxed text-white/80">
           I consent to ADOORA Legal Services processing the personal data in
           this form to assess my application, as described in the{" "}
-          <Link href="/privacy" className="text-gold-deep underline underline-offset-2">
+          <Link href="/privacy" className="text-gold-bright underline underline-offset-2">
             Privacy Policy
           </Link>
           .
@@ -198,7 +198,7 @@ export function CareerForm({ roles }: { roles: string[] }) {
       <button
         type="submit"
         disabled={status === "submitting"}
-        className="mt-7 w-full rounded-full bg-ink px-8 py-3.5 text-sm font-semibold text-white transition hover:bg-ink-mid disabled:cursor-not-allowed disabled:opacity-60 sm:w-auto"
+        className="mt-7 inline-flex w-full items-center justify-center rounded-md bg-gold px-8 py-3.5 text-sm font-semibold text-ink-deep transition hover:bg-gold-bright disabled:cursor-not-allowed disabled:opacity-60 sm:w-auto"
       >
         {status === "submitting" ? "Submitting…" : "Submit application"}
       </button>
@@ -223,8 +223,8 @@ function Input({
 }) {
   return (
     <div>
-      <label htmlFor={name} className="block text-sm font-medium text-ink">
-        {label} {required && <span className="text-gold-deep">*</span>}
+      <label htmlFor={name} className="block text-sm font-medium text-white">
+        {label} {required && <span className="text-gold-bright">*</span>}
       </label>
       <input
         id={name}
@@ -232,9 +232,9 @@ function Input({
         type={type}
         required={required}
         autoComplete={autoComplete}
-        className="mt-2 w-full rounded-lg border border-line-strong bg-paper px-3.5 py-2.5 text-sm text-ink transition placeholder:text-slate-light focus:border-gold"
+        className="mt-2 w-full rounded-lg border border-transparent bg-paper px-3.5 py-2.5 text-sm text-ink transition placeholder:text-slate-light focus:border-gold"
       />
-      {hint && <p className="mt-1.5 text-xs text-slate-light">{hint}</p>}
+      {hint && <p className="mt-1.5 text-xs text-white/60">{hint}</p>}
     </div>
   );
 }

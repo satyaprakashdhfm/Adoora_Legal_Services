@@ -2,7 +2,13 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { useEffect, useRef, useState, type MouseEvent as ReactMouseEvent, type PointerEvent as ReactPointerEvent } from "react";
+import {
+  useEffect,
+  useRef,
+  useState,
+  type MouseEvent as ReactMouseEvent,
+  type PointerEvent as ReactPointerEvent,
+} from "react";
 import { heroSlides } from "@/content/hero-slides";
 import { firm } from "@/content/firm";
 
@@ -38,26 +44,66 @@ export function Hero({ images }: { images: (string | null)[] }) {
   const dragRef = useRef<{ startX: number; moved: boolean } | null>(null);
 
   /*
-   * The cursor-following prev/next hint: a floating arrow that tracks the
-   * mouse and points the direction a click there will move the slideshow —
-   * left half steps back, right half steps forward, matching the click zones
-   * `onPointerUp` already acts on. Mouse only (a touch does not "hover"), and
-   * hidden over a link or button so it never sits on top of the real controls.
+   * Cursor-driven navigation, no click needed: moving the mouse right-to-left
+   * across the hero steps to the next slide, left-to-right steps back — the
+   * same mapping the swipe gesture below uses for an actual drag, applied
+   * here to ordinary hover movement instead. There is no visible arrow for
+   * this; it is a plain hover gesture.
+   *
+   * `lastX` is the pointer's previous position; `accumulated` is the signed
+   * run of travel in the current direction, reset to the latest delta
+   * whenever direction reverses so a wobble cannot slowly cancel out an
+   * intentional sweep. Once `accumulated` clears the threshold the slide
+   * advances, the run resets, and `firedAt` enforces a cooldown — without it,
+   * one long sweep would fire a change every few pixels and spin through
+   * every slide at once.
    */
-  const [hint, setHint] = useState<{ x: number; y: number; side: "prev" | "next" } | null>(null);
+  const GESTURE_THRESHOLD = 90;
+  const GESTURE_COOLDOWN_MS = 550;
+  const gestureRef = useRef<{ lastX: number; accumulated: number; firedAt: number } | null>(null);
 
-  function onMouseMove(event: ReactMouseEvent<HTMLElement>) {
-    if ((event.target as HTMLElement).closest("a, button")) {
-      setHint(null);
+  function onHoverMove(event: ReactMouseEvent<HTMLElement>) {
+    // A drag in progress owns the gesture — its own pointer handlers decide,
+    // rather than this also reacting to the same movement.
+    if (dragRef.current) return;
+    // Moving toward a link or button (a CTA, a position dot): don't read
+    // that approach as a swipe past it.
+    if ((event.target as HTMLElement).closest("a, button")) return;
+
+    const x = event.clientX;
+    const gesture = gestureRef.current;
+
+    if (!gesture) {
+      gestureRef.current = { lastX: x, accumulated: 0, firedAt: 0 };
       return;
     }
-    const rect = event.currentTarget.getBoundingClientRect();
-    const x = event.clientX - rect.left;
-    setHint({
-      x,
-      y: event.clientY - rect.top,
-      side: x < rect.width / 2 ? "prev" : "next",
-    });
+
+    const delta = x - gesture.lastX;
+    gesture.lastX = x;
+    if (delta === 0) return;
+
+    gesture.accumulated =
+      Math.sign(delta) === Math.sign(gesture.accumulated || delta)
+        ? gesture.accumulated + delta
+        : delta;
+
+    const now = performance.now();
+    if (
+      Math.abs(gesture.accumulated) < GESTURE_THRESHOLD ||
+      now - gesture.firedAt < GESTURE_COOLDOWN_MS
+    ) {
+      return;
+    }
+
+    const movingLeft = gesture.accumulated < 0;
+    gesture.accumulated = 0;
+    gesture.firedAt = now;
+
+    setIndex((current) =>
+      movingLeft
+        ? (current + 1) % heroSlides.length
+        : (current - 1 + heroSlides.length) % heroSlides.length,
+    );
   }
 
   useEffect(() => {
@@ -144,9 +190,9 @@ export function Hero({ images }: { images: (string | null)[] }) {
       onMouseEnter={() => setPaused(true)}
       onMouseLeave={() => {
         setPaused(false);
-        setHint(null);
+        gestureRef.current = null;
       }}
-      onMouseMove={onMouseMove}
+      onMouseMove={onHoverMove}
       onFocusCapture={() => setPaused(true)}
       onBlurCapture={() => setPaused(false)}
       onPointerDown={onPointerDown}
@@ -278,29 +324,6 @@ export function Hero({ images }: { images: (string | null)[] }) {
         <p className="mt-12 max-w-[13rem] font-serif text-sm italic leading-relaxed text-white/75 lg:absolute lg:bottom-10 lg:right-10 lg:mt-0 lg:text-right 2xl:right-16">
           &ldquo;{firm.heroQuote}&rdquo;
         </p>
-      </div>
-
-      {/* Cursor-following prev/next hint. A direct child of the section, so
-          it shares the same coordinate space `onMouseMove` measures against —
-          nesting it inside `container-page` would offset it by that div's
-          padding and, on very wide screens, its centring margin. The
-          transform (not top/left) keeps it pinned to the pointer without
-          layout thrash. `hidden md:block` because this is a hover affordance;
-          small screens use the swipe gesture instead. */}
-      <div
-        aria-hidden="true"
-        className={`pointer-events-none absolute inset-0 z-20 hidden md:block ${
-          hint ? "opacity-100" : "opacity-0"
-        } transition-opacity duration-150`}
-      >
-        <div
-          className="absolute flex h-14 w-14 items-center justify-center rounded-full border border-white/25 bg-ink-mid/60 text-white backdrop-blur-sm transition-transform duration-150"
-          style={{
-            transform: `translate(${(hint?.x ?? 0) - 28}px, ${(hint?.y ?? 0) - 28}px)`,
-          }}
-        >
-          <Arrow className={hint?.side === "prev" ? "-scale-x-100" : ""} />
-        </div>
       </div>
     </section>
   );
