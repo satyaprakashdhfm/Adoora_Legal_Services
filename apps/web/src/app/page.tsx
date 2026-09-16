@@ -165,9 +165,17 @@ export default function Home() {
             </Link>
           </div>
 
-          <ul className="mt-10 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+          {/* A vertical stack of three full-width cards was most of a mobile
+              screen's scroll. Below sm it is a snapping horizontal strip
+              instead — each card most of the viewport with the next peeking
+              in, so the section takes one screen's height rather than three;
+              sm and up it is the grid it always was. */}
+          <ul className="-mx-6 mt-10 flex snap-x snap-mandatory gap-5 overflow-x-auto px-6 pb-2 [scrollbar-width:none] sm:mx-0 sm:grid sm:snap-none sm:gap-5 sm:overflow-visible sm:px-0 sm:pb-0 sm:grid-cols-2 lg:grid-cols-3 [&::-webkit-scrollbar]:hidden">
             {latestInsights.map((insight) => (
-              <li key={insight.slug}>
+              <li
+                key={insight.slug}
+                className="w-[82%] shrink-0 snap-center sm:w-auto sm:shrink"
+              >
                 <InsightCard insight={insight} />
               </li>
             ))}
@@ -181,14 +189,16 @@ export default function Home() {
         <div className="container-page py-14 sm:py-16">
           <SectionHeading eyebrow="Why us" title="Why partner with us?" />
 
-            {/* Five cards: 3-and-2 on a laptop, all five in one row from xl up —
-              the extra column keeps each card close to its original size on
-              a normal desktop instead of stretching wider to fill the row. */}
-          <ul className="mt-10 grid gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
+            {/* Five cards: a horizontal strip below sm for the same reason the
+              insights get one — five full-width cards was most of a mobile
+              screen. From sm it is 3-and-2 on a laptop, all five in one row
+              from xl up, the extra column keeping each card close to its
+              original size rather than stretching to fill the row. */}
+          <ul className="-mx-6 mt-10 flex snap-x snap-mandatory gap-5 overflow-x-auto px-6 pb-2 [scrollbar-width:none] sm:mx-0 sm:grid sm:snap-none sm:gap-5 sm:overflow-visible sm:px-0 sm:pb-0 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 [&::-webkit-scrollbar]:hidden">
             {differentiators.map((item, index) => (
               <li
                 key={item.title}
-                className="relative isolate flex min-h-[15rem] flex-col justify-end overflow-hidden rounded-xl bg-ink p-5 text-white"
+                className="relative isolate flex min-h-[15rem] w-[78%] shrink-0 snap-center flex-col justify-end overflow-hidden rounded-xl bg-ink p-5 text-white sm:w-auto sm:shrink"
               >
                 <Image
                   src={item.image}

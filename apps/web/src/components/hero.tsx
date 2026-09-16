@@ -2,19 +2,14 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import {
-  useEffect,
-  useRef,
-  useState,
-  type MouseEvent as ReactMouseEvent,
-  type PointerEvent as ReactPointerEvent,
-} from "react";
+import { useEffect, useRef, useState, type PointerEvent as ReactPointerEvent } from "react";
 import { heroSlides } from "@/content/hero-slides";
 import { firm } from "@/content/firm";
 
 const ROTATE_MS = 7000;
 
-/** Right-pointing arrow used on the primary calls to action. */
+/** Right-pointing arrow used on the primary calls to action, and on the
+    prev/next controls (flipped for prev). */
 function Arrow({ className = "" }: { className?: string }) {
   return (
     <svg viewBox="0 0 16 16" aria-hidden="true" className={`h-3.5 w-3.5 ${className}`}>
@@ -43,69 +38,6 @@ export function Hero({ images }: { images: (string | null)[] }) {
      progress, which also doubles as "ignore this pointer's move/up events". */
   const dragRef = useRef<{ startX: number; moved: boolean } | null>(null);
 
-  /*
-   * Cursor-driven navigation, no click needed: moving the mouse right-to-left
-   * across the hero steps to the next slide, left-to-right steps back — the
-   * same mapping the swipe gesture below uses for an actual drag, applied
-   * here to ordinary hover movement instead. There is no visible arrow for
-   * this; it is a plain hover gesture.
-   *
-   * `lastX` is the pointer's previous position; `accumulated` is the signed
-   * run of travel in the current direction, reset to the latest delta
-   * whenever direction reverses so a wobble cannot slowly cancel out an
-   * intentional sweep. Once `accumulated` clears the threshold the slide
-   * advances, the run resets, and `firedAt` enforces a cooldown — without it,
-   * one long sweep would fire a change every few pixels and spin through
-   * every slide at once.
-   */
-  const GESTURE_THRESHOLD = 90;
-  const GESTURE_COOLDOWN_MS = 550;
-  const gestureRef = useRef<{ lastX: number; accumulated: number; firedAt: number } | null>(null);
-
-  function onHoverMove(event: ReactMouseEvent<HTMLElement>) {
-    // A drag in progress owns the gesture — its own pointer handlers decide,
-    // rather than this also reacting to the same movement.
-    if (dragRef.current) return;
-    // Moving toward a link or button (a CTA, a position dot): don't read
-    // that approach as a swipe past it.
-    if ((event.target as HTMLElement).closest("a, button")) return;
-
-    const x = event.clientX;
-    const gesture = gestureRef.current;
-
-    if (!gesture) {
-      gestureRef.current = { lastX: x, accumulated: 0, firedAt: 0 };
-      return;
-    }
-
-    const delta = x - gesture.lastX;
-    gesture.lastX = x;
-    if (delta === 0) return;
-
-    gesture.accumulated =
-      Math.sign(delta) === Math.sign(gesture.accumulated || delta)
-        ? gesture.accumulated + delta
-        : delta;
-
-    const now = performance.now();
-    if (
-      Math.abs(gesture.accumulated) < GESTURE_THRESHOLD ||
-      now - gesture.firedAt < GESTURE_COOLDOWN_MS
-    ) {
-      return;
-    }
-
-    const movingLeft = gesture.accumulated < 0;
-    gesture.accumulated = 0;
-    gesture.firedAt = now;
-
-    setIndex((current) =>
-      movingLeft
-        ? (current + 1) % heroSlides.length
-        : (current - 1 + heroSlides.length) % heroSlides.length,
-    );
-  }
-
   useEffect(() => {
     reducedMotion.current = window.matchMedia(
       "(prefers-reduced-motion: reduce)",
@@ -124,15 +56,21 @@ export function Hero({ images }: { images: (string | null)[] }) {
 
   const active = heroSlides[index];
 
+  function goNext() {
+    setIndex((current) => (current + 1) % heroSlides.length);
+  }
+
+  function goPrev() {
+    setIndex((current) => (current - 1 + heroSlides.length) % heroSlides.length);
+  }
+
   /*
-   * Drag/swipe, mouse or touch, via the Pointer Events API — one code path
-   * for both rather than separate mouse and touch handlers. A real swipe
-   * (past the threshold) moves in the dragged direction; a plain click or
-   * tap that never crossed it instead falls back to a left/right zone —
-   * the classic carousel tap targets — so clicking either side of the
-   * photograph, not just dragging it, moves the slide. Either way a click
-   * that landed on a link or button (the CTAs, the position dots) is left
-   * alone for that element's own handler.
+   * A real drag/swipe past the threshold, mouse or touch, moves in the
+   * dragged direction — via the Pointer Events API, one code path for both.
+   * A plain click or tap that never crossed the threshold does nothing here:
+   * the prev/next buttons below are the explicit control, so the photograph
+   * itself no longer doubles as a tap target and the cursor moving over it
+   * no longer changes the slide on its own.
    */
   const SWIPE_THRESHOLD = 50;
 
@@ -157,42 +95,17 @@ export function Hero({ images }: { images: (string | null)[] }) {
     if (!drag) return;
 
     const delta = event.clientX - drag.startX;
-
     if (Math.abs(delta) >= SWIPE_THRESHOLD) {
-      setIndex((current) =>
-        delta < 0
-          ? (current + 1) % heroSlides.length
-          : (current - 1 + heroSlides.length) % heroSlides.length,
-      );
-      return;
+      if (delta < 0) goNext();
+      else goPrev();
     }
-
-    // Not a swipe. A link or button under the pointer handles its own
-    // click — the "Corporate & M&A" CTA, "Request information", a position
-    // dot — so leave the slide alone rather than also advancing under it.
-    if ((event.target as HTMLElement).closest("a, button")) return;
-
-    // A plain click or tap on the photograph itself: which half of the
-    // section decides the direction.
-    const rect = event.currentTarget.getBoundingClientRect();
-    const clickedRightHalf = event.clientX - rect.left > rect.width / 2;
-
-    setIndex((current) =>
-      clickedRightHalf
-        ? (current + 1) % heroSlides.length
-        : (current - 1 + heroSlides.length) % heroSlides.length,
-    );
   }
 
   return (
     <section
       className="relative isolate touch-pan-y overflow-hidden bg-ink-mid text-white select-none"
       onMouseEnter={() => setPaused(true)}
-      onMouseLeave={() => {
-        setPaused(false);
-        gestureRef.current = null;
-      }}
-      onMouseMove={onHoverMove}
+      onMouseLeave={() => setPaused(false)}
       onFocusCapture={() => setPaused(true)}
       onBlurCapture={() => setPaused(false)}
       onPointerDown={onPointerDown}
@@ -325,6 +238,35 @@ export function Hero({ images }: { images: (string | null)[] }) {
           &ldquo;{firm.heroQuote}&rdquo;
         </p>
       </div>
+
+      {/* Prev/next controls — the explicit way to move the slideshow now that
+          neither tapping the photograph nor moving the cursor over it does.
+          Direct children of the section so they sit above the photograph and
+          the copy alike. Anchored to a fixed distance from the bottom rather
+          than vertically centred: centring on the whole hero put the button
+          over the paragraph text on wide screens, since the copy runs to
+          roughly mid-height there. Below the position dots there is nothing
+          but photograph on both sides. */}
+      {heroSlides.length > 1 && (
+        <>
+          <button
+            type="button"
+            onClick={goPrev}
+            aria-label="Previous slide"
+            className="absolute bottom-28 left-2 top-auto z-20 flex h-10 w-10 items-center justify-center rounded-full border border-white/25 bg-ink/40 text-white backdrop-blur-sm transition hover:border-gold hover:bg-gold hover:text-ink-deep sm:left-4 sm:h-12 sm:w-12 lg:left-6"
+          >
+            <Arrow className="-scale-x-100" />
+          </button>
+          <button
+            type="button"
+            onClick={goNext}
+            aria-label="Next slide"
+            className="absolute bottom-28 right-2 top-auto z-20 flex h-10 w-10 items-center justify-center rounded-full border border-white/25 bg-ink/40 text-white backdrop-blur-sm transition hover:border-gold hover:bg-gold hover:text-ink-deep sm:right-4 sm:h-12 sm:w-12 lg:right-6"
+          >
+            <Arrow />
+          </button>
+        </>
+      )}
     </section>
   );
 }
