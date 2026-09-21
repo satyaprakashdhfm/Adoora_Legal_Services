@@ -3,7 +3,7 @@ import Link from "next/link";
 import type { Metadata } from "next";
 import { Hero } from "@/components/hero";
 import { InsightCard, SectionHeading } from "@/components/ui";
-import { PracticesSplit } from "@/components/practices-split";
+import { PracticesCarousel } from "@/components/practices-carousel";
 import { CityIcon } from "@/components/city-icon";
 import { WhyUsWheel } from "@/components/why-us-wheel";
 import { firm, firmOverview, differentiators, offices } from "@/content/firm";
@@ -37,9 +37,9 @@ function Arrow({ className = "" }: { className?: string }) {
   );
 }
 
-/** Display order for the home page's practice list — banking, litigation
+/** Display order for the home page's practice carousel — banking, litigation
  *  and ADR lead, then the rest in their declared order. */
-const practiceSplitOrder = [
+const practiceCarouselOrder = [
   "banking-finance",
   "litigation",
   "dispute-resolution",
@@ -53,7 +53,7 @@ const practiceSplitOrder = [
 
 export default function Home() {
   const latestInsights = insightsByDate.slice(0, 3);
-  const practiceSplitItems = practiceSplitOrder
+  const practiceCarouselItems = practiceCarouselOrder
     .map((slug) => practiceAreas.find((area) => area.slug === slug))
     .filter((area): area is (typeof practiceAreas)[number] => Boolean(area));
   /* Resolved at build time; a missing file falls back to the navy gradient,
@@ -135,29 +135,31 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Practices — a numbered list with the selected practice's detail
-          beside it. The dense, bulleted index a visitor wants once they
-          already know which practice they need lives at /services; this is
-          the lighter teaser that gets them there. */}
+      {/* Practices — a horizontally scrolling row of cards in a framed
+          panel. The dense, bulleted index a visitor wants once they already
+          know which practice they need lives at /services; this is the
+          lighter teaser that gets them there. */}
       <section>
         <div className="container-page py-14 sm:py-16">
-          <div className="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
-            <SectionHeading
-              eyebrow="Practices"
-              title="Our practices"
-              lead="An integrated approach to the legal matters that shape businesses, industries and communities."
-            />
-            <Link
-              href="/services"
-              className="inline-flex shrink-0 items-center gap-2 self-start rounded-full border border-line-strong px-6 py-3 text-sm font-semibold text-ink transition hover:border-gold hover:text-gold-deep lg:self-auto"
-            >
-              View all practices
-              <Arrow />
-            </Link>
-          </div>
+          <div className="rounded-[2rem] border border-line bg-[linear-gradient(135deg,var(--color-paper-warm),var(--color-paper)_60%)] p-6 sm:p-10">
+            <div className="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
+              <SectionHeading
+                eyebrow="Practices"
+                title="Our practice areas"
+                lead="An integrated approach to the legal matters that shape businesses, industries and communities."
+              />
+              <Link
+                href="/services"
+                className="inline-flex shrink-0 items-center gap-2 self-start rounded-full border border-line-strong bg-paper px-6 py-3 text-sm font-semibold text-ink transition hover:border-gold hover:text-gold-deep lg:self-auto"
+              >
+                View all practices
+                <Arrow />
+              </Link>
+            </div>
 
-          <div className="mt-12">
-            <PracticesSplit items={practiceSplitItems} />
+            <div className="mt-10">
+              <PracticesCarousel items={practiceCarouselItems} />
+            </div>
           </div>
         </div>
       </section>
@@ -205,7 +207,7 @@ export default function Home() {
           the cards weren't visually distinctive. */}
       <section>
         <div className="container-page py-14 sm:py-16">
-          <SectionHeading eyebrow="Why us" title="Reasons to partner with us" lead="Five strengths. One committed partnership." />
+          <SectionHeading eyebrow="Why us" title="Our approach" lead="Five strengths. One committed partnership." />
 
           <div className="mt-12">
             <WhyUsWheel items={differentiators} />
@@ -221,7 +223,7 @@ export default function Home() {
           <div>
             <SectionHeading
               eyebrow="Locations"
-              title="Where we are"
+              title="Our legal presence"
               lead="Our offices across South India keep us close to our clients, their communities and the matters that move them forward."
             />
 
