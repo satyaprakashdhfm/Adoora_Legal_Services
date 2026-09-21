@@ -3,7 +3,7 @@ import Link from "next/link";
 import type { Metadata } from "next";
 import { Hero } from "@/components/hero";
 import { InsightCard, SectionHeading } from "@/components/ui";
-import { PracticesIndex } from "@/components/practices-index";
+import { PracticesWheel } from "@/components/practices-wheel";
 import { CityIcon } from "@/components/city-icon";
 import { WhyUsWheel } from "@/components/why-us-wheel";
 import { firm, firmOverview, differentiators, offices } from "@/content/firm";
@@ -37,8 +37,24 @@ function Arrow({ className = "" }: { className?: string }) {
   );
 }
 
+/** The order practices appear around the ring — flagship practices first. */
+const practiceWheelOrder = [
+  "corporate-ma",
+  "litigation",
+  "dispute-resolution",
+  "real-estate-infrastructure",
+  "regulatory-environmental",
+  "labour-employment",
+  "banking-finance",
+  "taxation",
+  "intellectual-property",
+];
+
 export default function Home() {
   const latestInsights = insightsByDate.slice(0, 3);
+  const practiceWheelItems = practiceWheelOrder
+    .map((slug) => practiceAreas.find((area) => area.slug === slug))
+    .filter((area): area is (typeof practiceAreas)[number] => Boolean(area));
   /* Resolved at build time; a missing file falls back to the navy gradient,
      exactly as the hero frames do. */
   const careersImage = publicImage("careers-office");
@@ -118,30 +134,30 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Practices — a numbered row per practice, listing its case types.
-          This replaced two card grids (practices and industry domains): the
-          cards described the practice in a line and hid the work, and a
-          visitor arrives looking for "insolvency" or "RERA". Sector pages are
-          reached from each practice page and the footer. */}
+      {/* Practices — a ring of photographs around a line of standing copy.
+          The dense, bulleted index a visitor wants once they already know
+          which practice they need lives at /services; this is the lighter
+          teaser that gets them there. */}
       <section>
         <div className="container-page py-14 sm:py-16">
-          <div className="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
+          <div className="flex flex-col gap-6 text-center lg:items-center">
             <SectionHeading
               eyebrow="Practices"
               title="Our practices"
-              lead="The matters we handle, grouped by practice. Each practice has its own page setting out the process and timelines, the forums we appear before, and answers to the questions clients ask most."
+              lead="An integrated approach to the legal matters that shape businesses, industries and communities."
+              align="center"
             />
             <Link
               href="/services"
-              className="inline-flex shrink-0 items-center gap-2 self-start rounded-full border border-line-strong px-6 py-3 text-sm font-semibold text-ink transition hover:border-gold hover:text-gold-deep lg:self-auto"
+              className="inline-flex shrink-0 items-center gap-2 self-center rounded-full border border-line-strong px-6 py-3 text-sm font-semibold text-ink transition hover:border-gold hover:text-gold-deep"
             >
               View all practices
               <Arrow />
             </Link>
           </div>
 
-          <div className="mt-12">
-            <PracticesIndex />
+          <div className="mt-16">
+            <PracticesWheel items={practiceWheelItems} />
           </div>
         </div>
       </section>

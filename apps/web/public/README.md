@@ -43,21 +43,45 @@ roughly a third of the row and as tall as the locations beside it.
 
 ## Why-us photography
 
-Four frames behind the cards in the "Why partner with us?" band, one per entry
-in `differentiators` (`src/content/firm.ts`), which names its own file:
+Five frames behind the "Why partner with us?" band's numbered photo nodes, one
+per entry in `differentiators` (`src/content/firm.ts`), which names its own
+file:
 
-| File | Card |
+| File | Entry |
 | --- | --- |
 | `why-us-expertise.png` | Proven Legal Expertise |
 | `why-us-client-first.png` | Client-First Approach |
+| `client-exp.png` | Connected Client Experience |
 | `why-us-cross-border.png` | Cross-Border & Regulatory Mastery |
 | `why-us-solutions.png` | Strategic Legal Solutions |
 
-The cards are portrait and the frames landscape, so `cover` crops the sides.
+Each node is a circle and the frames landscape, so `cover` crops the sides.
 Each entry carries a `focus` value — a CSS `object-position` — to keep the
-subject in shot; adjust that rather than re-cropping the file. A navy gradient
-runs up from the bottom of the card behind the text, held back to the lower
-half so the photograph still reads.
+subject in shot; adjust that rather than re-cropping the file.
+
+## Practice photography
+
+One circular frame per practice, behind the home page's practices ring
+(`practices-wheel.tsx`) and its mobile fallback grid. Resolved by
+`publicImage("practice-<slug>")`, so a missing frame just omits the photo
+rather than breaking the layout.
+
+| File | Practice |
+| --- | --- |
+| `practice-corporate-ma.png` | Corporate & M&A |
+| `practice-banking-finance.png` | Banking & Finance |
+| `practice-litigation.png` | Litigation |
+| `practice-dispute-resolution.png` | Alternative Dispute Resolution |
+| `practice-real-estate-infrastructure.png` | Real Estate & Infrastructure |
+| `practice-taxation.png` | Taxation |
+| `practice-labour-employment.png` | Labour & Employment |
+| `practice-intellectual-property.png` | Intellectual Property |
+| `practice-regulatory-environmental.png` | Regulatory & Environmental |
+
+Already cropped square and centred — `object-cover` inside a circle is enough,
+no `focus` value needed. These were cut from a single 3×3 composite the firm
+supplied; the composite itself is not kept here once sliced (see Composites,
+below).
 
 ## Insight photography
 
