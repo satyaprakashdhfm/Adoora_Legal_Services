@@ -13,6 +13,9 @@ const practiceIconPath: Record<string, string> = {
     "M6 2h12v20h-4.5v-4h-3v4H6V2zm2.5 3v2.5h2.5V5H8.5zm4.5 0v2.5h2.5V5H13zm-4.5 4.5V12h2.5V9.5H8.5zm4.5 0V12h2.5V9.5H13zm-4.5 4.5v2.5h2.5V14H8.5zm4.5 0v2.5h2.5V14H13z",
   // Ascending bar chart.
   "banking-finance": "M4 13.5h4V21H4v-7.5zM10 8.5h4V21h-4V8.5zM16 3.5h4V21h-4V3.5z",
+  // Courthouse — pediment, entablature and columns.
+  litigation:
+    "M12 2.5l9.5 5.3H2.5L12 2.5zM3 9h18v1.4H3zM4.7 11.4h2.2v7.2H4.7zM9.4 11.4h2.2v7.2H9.4zM14.4 11.4h2.2v7.2h-2.2zM17.1 11.4h2.2v7.2h-2.2zM2 19.8h20v1.7H2z",
   // Three figures — the parties to a dispute.
   "dispute-resolution":
     "M12 3.6a3.2 3.2 0 110 6.4 3.2 3.2 0 010-6.4zM5.9 5.9a2.6 2.6 0 110 5.2 2.6 2.6 0 010-5.2zM18.1 5.9a2.6 2.6 0 110 5.2 2.6 2.6 0 010-5.2zM12 11.4c3 0 5.4 2 5.4 4.4V20H6.6v-4.2c0-2.4 2.4-4.4 5.4-4.4zM5.4 12.6c.6 0 1.2.1 1.7.3a6.4 6.4 0 00-1.8 3.9V20H1v-2.9c0-2.1 2-4.5 4.4-4.5zM18.6 12.6c2.4 0 4.4 2.4 4.4 4.5V20h-4.3v-3.2a6.4 6.4 0 00-1.8-3.9c.5-.2 1.1-.3 1.7-.3z",

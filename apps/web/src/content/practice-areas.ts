@@ -318,26 +318,26 @@ export const practiceAreas: PracticeArea[] = [
     ],
   },
   {
-    slug: "dispute-resolution",
-    name: "Dispute Resolution & Arbitration",
-    shortName: "Dispute Resolution",
+    slug: "litigation",
+    name: "Litigation",
+    shortName: "Litigation",
     group: "Disputes",
     tagline:
-      "Commercial litigation, domestic and international arbitration, and the interim relief that often decides the matter.",
+      "Civil and commercial litigation, company and insolvency proceedings, writs and appeals, before the courts and tribunals of South India.",
     overview: [
       {
-        heading: "The dispute landscape",
+        heading: "The litigation landscape",
         body: [
-          "Commercial disputes in India are resolved across a wider range of forums than the phrase \"going to court\" suggests. The Commercial Courts Act, 2015 introduced case management timelines and pre-institution mediation for suits without urgent relief. The Arbitration and Conciliation Act, 1996, as amended, has narrowed the grounds on which awards can be challenged and limited judicial interference at the referral stage.",
-          "Sector regulators and specialist tribunals now decide much of what used to be civil litigation — the NCLT for company and insolvency matters, RERA authorities for real estate, consumer commissions, and the writ jurisdiction of the High Courts for regulatory action. Choosing the wrong forum costs more time than losing an interlocutory application.",
-          "In practice the early weeks matter disproportionately. Interim protection — an injunction, an attachment before judgment, a Section 9 application under the Arbitration Act — frequently shapes the settlement range long before any final hearing.",
+          "Commercial disputes in India are increasingly triaged by forum before they are triaged by merit. The Commercial Courts Act, 2015 introduced case management timelines for commercial suits above the specified value, while ordinary civil suits proceed under the Code of Civil Procedure, 1908 in the district judiciary. Specialist tribunals now decide much of what used to be general civil litigation — the NCLT for company and insolvency matters, RERA authorities for real estate, consumer commissions for consumer claims, and the writ jurisdiction of the High Courts for regulatory and administrative action.",
+          "Choosing the wrong forum, or missing the procedural step that keeps a claim alive, costs more time than losing an interlocutory application. Limitation, jurisdiction and the correct cause of action are questions we resolve before drafting starts, not after a defendant raises them.",
+          "In practice the early weeks of a matter matter disproportionately. Interim protection — an injunction, an attachment before judgment, the appointment of a receiver — frequently shapes the settlement range long before any final hearing, and a case built on a thin factual record rarely recovers later.",
         ],
       },
       {
         heading: "How we support you",
         body: [
           "We advise on strategy before we advise on pleadings: whether the claim is worth bringing, which forum gives the best route to the relief you actually need, what interim protection is available, and what the realistic cost and timeline look like. Where a commercial settlement is the better outcome, we say so early.",
-          "The team handles the full course of contentious work — pre-action notices and replies, interim applications, pleadings and evidence, cross-examination, arbitration from constitution of the tribunal through to award, and enforcement or challenge afterwards. We also act on the defence side, including in matters filed against clients without notice.",
+          "The team handles the full course of contentious work — pre-action notices and replies, interim applications, pleadings and evidence, cross-examination, execution of decrees, and appeals. We act on both sides, including in matters filed against clients without notice, and we run the litigation, insolvency and regulatory angles of a dispute as one brief rather than several.",
         ],
       },
       {
@@ -349,34 +349,22 @@ export const practiceAreas: PracticeArea[] = [
     ],
     services: [
       {
-        short: "commercial litigation",
-        title: "Commercial litigation",
+        short: "civil & commercial litigation",
+        title: "Civil and commercial litigation",
         body:
-          "Contractual claims, recovery suits, specific performance, shareholder and joint venture disputes, guarantee and indemnity claims, and appeals. We handle proceedings before the commercial divisions, the district judiciary, the High Courts and — where the matter warrants it — the Supreme Court of India.",
+          "Contractual claims, recovery suits, specific performance, property and title suits, guarantee and indemnity claims, and shareholder and joint venture disputes. We handle proceedings before the commercial divisions, the district judiciary, the High Courts and — where the matter warrants it — the Supreme Court of India.",
       },
       {
-        short: "arbitration",
-        title: "Domestic and international arbitration",
+        short: "interim & injunctive relief",
+        title: "Interim and injunctive relief",
         body:
-          "Drafting and reviewing arbitration clauses, Section 11 applications for appointment of arbitrators, ad hoc and institutional references, claims and counterclaims, and hearings. We act in construction and infrastructure arbitrations, shareholder disputes, and supply and distribution claims.",
+          "Injunctions and ex parte applications, attachment before judgment, appointment of receivers, and Order XXXIX applications under the Code of Civil Procedure, 1908 — together with the undertakings and security a court will usually require in return.",
       },
       {
-        short: "interim & urgent relief",
-        title: "Interim and urgent relief",
+        short: "company & insolvency litigation",
+        title: "Company and insolvency litigation",
         body:
-          "Injunctions and ex parte applications, Section 9 and Section 17 relief under the Arbitration and Conciliation Act, attachment before judgment, appointment of receivers, and Order XXXIX applications — together with the undertakings and security a court will usually require in return.",
-      },
-      {
-        short: "enforcement of awards",
-        title: "Enforcement of awards and decrees",
-        body:
-          "Execution of domestic awards and decrees, enforcement of foreign awards under Part II of the Arbitration Act, resisting enforcement on public policy and other permitted grounds, and Section 34 challenges and appeals under Section 37.",
-      },
-      {
-        short: "insolvency & company litigation",
-        title: "Insolvency and company litigation",
-        body:
-          "Proceedings before the NCLT and NCLAT — insolvency applications and objections, oppression and mismanagement petitions under Sections 241 and 242 of the Companies Act, 2013, and scheme objections.",
+          "Proceedings before the NCLT and NCLAT — insolvency applications and objections under the Insolvency and Bankruptcy Code, 2016, oppression and mismanagement petitions under Sections 241 and 242 of the Companies Act, 2013, and scheme objections.",
       },
       {
         short: "writ & regulatory litigation",
@@ -385,19 +373,31 @@ export const practiceAreas: PracticeArea[] = [
           "Writ petitions before the High Courts challenging regulatory action, licensing decisions, tender and procurement outcomes, and tax and levy demands, together with statutory appeals before sectoral appellate tribunals.",
       },
       {
-        short: "mediation & settlement",
-        title: "Mediation and negotiated settlement",
+        short: "execution & enforcement",
+        title: "Execution and enforcement of decrees",
         body:
-          "Pre-institution mediation under the Commercial Courts Act, private mediation, settlement structuring, and consent terms drafted so that they are enforceable rather than merely agreed.",
+          "Execution proceedings under Order XXI of the Code of Civil Procedure, attachment and sale of judgment debtor assets, and coordination of parallel civil, criminal and regulatory tracks where a recovery has more than one available route.",
+      },
+      {
+        short: "appellate litigation",
+        title: "Appellate litigation",
+        body:
+          "First and second appeals, revision petitions, and appeals to the Supreme Court of India on special leave — with a view on the merits of an appeal given separately from the outcome below, because the two questions are not the same.",
+      },
+      {
+        short: "consumer & real estate litigation",
+        title: "Consumer and real estate litigation",
+        body:
+          "Allottee and consumer commission claims, proceedings before the Real Estate Regulatory Authorities and their appellate tribunals, and civil suits arising out of construction delay and possession disputes.",
       },
     ],
     matters: [
-      "Represented a contractor in a domestic arbitration arising out of delay and variation claims on a road project, from constitution of the tribunal to final award.",
-      "Acted for a lender in Section 9 proceedings under the Arbitration and Conciliation Act to secure the subject matter of a claim pending arbitration.",
+      "Represented a financial creditor in corporate insolvency resolution proceedings before the NCLT, from Section 7 admission through committee of creditors deliberations on competing resolution plans.",
       "Advised a minority shareholder group on an oppression and mismanagement petition before the NCLT, including the interim relief application.",
-      "Represented an Indian distributor resisting enforcement of a foreign arbitral award, on grounds available under Part II of the Arbitration Act.",
       "Acted for a manufacturer in a High Court writ petition challenging a state levy on captive power consumption.",
-      "Advised a real estate developer on consumer commission and RERA proceedings brought by allottees over delivery timelines.",
+      "Represented a developer in RERA and consumer commission proceedings concerning project delivery timelines.",
+      "Acted for a lender in execution proceedings to attach and sell a judgment debtor's assets following an unsatisfied decree.",
+      "Represented a plaintiff in a specific performance suit over a commercial property sale agreement, including the interim injunction application.",
     ],
     forums: [
       "Supreme Court of India",
@@ -406,7 +406,6 @@ export const practiceAreas: PracticeArea[] = [
       "National Company Law Tribunal and National Company Law Appellate Tribunal",
       "Debts Recovery Tribunals; Consumer Disputes Redressal Commissions",
       "Real Estate Regulatory Authorities and Appellate Tribunals",
-      "Ad hoc arbitral tribunals and institutional arbitration under IAMC Hyderabad, ICA, MCIA and SIAC rules",
     ],
     process: [
       {
@@ -417,22 +416,22 @@ export const practiceAreas: PracticeArea[] = [
       {
         stage: "Pre-action steps",
         detail:
-          "Notice and reply, evidence preservation, and pre-institution mediation where the Commercial Courts Act requires it. Also where interim relief is needed, moving without delay — laches is a real defence.",
+          "Notice and reply, evidence preservation, and pre-institution mediation where the Commercial Courts Act requires it. Where interim relief is needed, moving without delay — laches is a real defence.",
       },
       {
         stage: "Institution and interim relief",
         detail:
-          "Pleadings, documents and the interim application together, since the first hearing is often where practical protection is won or lost.",
+          "Pleadings, documents and the interim application filed together, since the first hearing is often where practical protection is won or lost.",
       },
       {
         stage: "Evidence and hearing",
         detail:
-          "Witness statements and affidavits, expert evidence where quantum is contested, discovery and interrogatories, and cross-examination. Case management timelines are tracked against the statutory schedule.",
+          "Witness statements and affidavits, expert evidence where quantum is contested, discovery and interrogatories, and cross-examination, tracked against the applicable case management timeline.",
       },
       {
-        stage: "Award, judgment and after",
+        stage: "Judgment and after",
         detail:
-          "Execution or enforcement, or challenge and appeal. We advise on the cost-benefit of appeal separately from the outcome below, because the two questions are not the same.",
+          "Execution of the decree, or appeal. We advise on the cost-benefit of appeal separately from the outcome below, because the two questions are not the same.",
       },
     ],
     team: [],
@@ -444,28 +443,172 @@ export const practiceAreas: PracticeArea[] = [
     ],
     faqs: [
       {
-        q: "How long does a commercial dispute take in India?",
-        a: "It varies widely by forum. A commercial suit at first instance commonly runs two to four years, though the Commercial Courts Act timelines have compressed some stages. Arbitration is generally faster — the Act contemplates an award within twelve months of completion of pleadings, extendable by six months by consent. Enforcement and appeals add to both.",
+        q: "How long does a civil or commercial dispute take in India?",
+        a: "It varies widely by forum. A commercial suit at first instance commonly runs two to four years, though the Commercial Courts Act timelines have compressed some stages. An ordinary civil suit in the district judiciary can take longer. Appeals and execution add further time.",
       },
       {
-        q: "Is arbitration always faster and cheaper than litigation?",
-        a: "Faster, often. Cheaper, not necessarily — you pay the tribunal's fees, the institution's fees and the venue, none of which arise in court. Arbitration is usually the better choice for confidentiality, for technical disputes where you want a specialist tribunal, and for cross-border enforceability. It is a poor choice if you need relief against a non-signatory.",
+        q: "What is the difference between an interim injunction and an attachment before judgment?",
+        a: "An injunction restrains a party from doing something — disposing of an asset, continuing a disputed act — while an attachment before judgment freezes a specific asset so it remains available to satisfy a future decree. Courts grant either only on a real showing of urgency and risk, not as a matter of course.",
       },
       {
-        q: "Our contract has no arbitration clause. What are our options?",
-        a: "Civil or commercial court proceedings, depending on the subject matter and value, or a specialist forum if one has jurisdiction. Parties can also agree to arbitrate after a dispute arises through a separate written agreement, which is sometimes worth proposing.",
+        q: "We have an unsatisfied decree. What can we actually recover?",
+        a: "Execution proceedings can attach and sell the judgment debtor's assets and garnish debts owed to them. The practical constraint is usually locating assets rather than the law — we typically start with an asset search before filing.",
       },
       {
         q: "Can we get an injunction quickly?",
         a: "Urgent interim relief can be sought at the time of filing, and courts do hear genuinely urgent applications at short notice. But the threshold is real: a prima facie case, irreparable harm, balance of convenience, and clean conduct. Courts commonly require an undertaking as to damages or security as a condition.",
       },
       {
-        q: "How do you charge for contentious work?",
+        q: "How do you charge for litigation work?",
         a: "Usually a combination of a retainer for the matter and appearance fees, or hourly rates for advisory and drafting stages. We give a written estimate at the outset broken down by stage, and flag when a development is likely to move the estimate.",
+      },
+      {
+        q: "Do you act on the defence side as well?",
+        a: "Yes. We regularly act for parties who have been sued or served with a petition, including on short notice. The same team runs both claimant and defence work, and we run a conflicts check before taking on any new instruction.",
+      },
+    ],
+  },
+  {
+    slug: "dispute-resolution",
+    name: "Alternative Dispute Resolution",
+    shortName: "ADR",
+    group: "Disputes",
+    tagline:
+      "Arbitration, mediation and conciliation, and the interim relief that often shapes settlement long before a hearing.",
+    overview: [
+      {
+        heading: "The arbitration and mediation landscape",
+        body: [
+          "The Arbitration and Conciliation Act, 1996, as amended, is the primary statute, and recent amendments have narrowed the grounds on which awards can be challenged and limited judicial interference at the referral stage. Institutional arbitration has grown alongside ad hoc references, with the Indian Arbitration Council Hyderabad, the Mumbai Centre for International Arbitration and international institutions all seeing more work from Indian parties.",
+          "The Commercial Courts Act, 2015 requires pre-institution mediation for commercial suits that do not seek urgent interim relief, which has made mediation a mandatory first step rather than an optional one for a wide band of disputes. Conciliation under the Arbitration and Conciliation Act, and private mediation, both remain available where parties would rather negotiate a settlement than litigate one out.",
+          "Interim protection matters disproportionately in arbitration too. A Section 9 application, made before or during the reference, frequently secures the subject matter of the dispute — or the applicant's position — long before the tribunal is even constituted.",
+        ],
+      },
+      {
+        heading: "How we support you",
+        body: [
+          "We advise on strategy before pleadings: whether arbitration or mediation is the better route for the relief you need, what interim protection is available, and what a realistic timeline and cost look like. Where a negotiated settlement serves the client better than an award, we say so early.",
+          "The team drafts and reviews arbitration clauses, acts on Section 11 applications for appointment of arbitrators, and handles ad hoc and institutional references from constitution of the tribunal through award, enforcement and challenge. We also act in mediation and conciliation, and draft settlement terms built to be enforceable rather than merely agreed.",
+        ],
+      },
+      {
+        heading: "Who we act for",
+        body: [
+          "Indian and international companies, banks and financial institutions, construction and infrastructure parties in arbitrations over delay and variation, shareholders and joint venture partners, and individuals with a commercial dispute better resolved through negotiation than litigation.",
+        ],
+      },
+    ],
+    services: [
+      {
+        short: "arbitration clauses & appointment",
+        title: "Arbitration clauses and appointment of arbitrators",
+        body:
+          "Drafting and reviewing arbitration clauses at the contract stage, Section 11 applications for appointment where parties cannot agree, and advice on seat, venue, institutional rules and governing law choices that determine how a dispute will actually be resolved.",
+      },
+      {
+        short: "domestic & international arbitration",
+        title: "Domestic and international arbitration",
+        body:
+          "Ad hoc and institutional references, claims and counterclaims, document and witness evidence, and hearings. We act in construction and infrastructure arbitrations, shareholder and joint venture disputes, and supply and distribution claims, under institutional rules including those of IAMC Hyderabad, the ICA, the MCIA and SIAC.",
+      },
+      {
+        short: "interim relief in arbitration",
+        title: "Interim relief in aid of arbitration",
+        body:
+          "Section 9 applications before or during a reference, Section 17 applications before the tribunal once constituted, and the undertakings and security a court or tribunal will usually require in return. Timing is often decisive — we move before the position the applicant needs to protect has already shifted.",
+      },
+      {
+        short: "enforcement & challenge of awards",
+        title: "Enforcement and challenge of awards",
+        body:
+          "Execution of domestic awards, enforcement of foreign awards under Part II of the Arbitration Act, resisting enforcement on public policy and other permitted grounds, and Section 34 challenges and Section 37 appeals.",
+      },
+      {
+        short: "mediation & conciliation",
+        title: "Mediation and conciliation",
+        body:
+          "Pre-institution mediation under the Commercial Courts Act, conciliation under the Arbitration and Conciliation Act, private and institutional mediation, and settlement structuring — with consent terms drafted so that they hold up if a party later has second thoughts.",
+      },
+      {
+        short: "dispute strategy & forum selection",
+        title: "Dispute strategy and forum selection",
+        body:
+          "An early, candid assessment of whether arbitration, mediation or negotiation gives the best route to the outcome you need, before any process begins — the forum chosen at the outset is difficult and expensive to change later.",
+      },
+    ],
+    matters: [
+      "Represented a contractor in a domestic arbitration arising out of delay and variation claims on a road project, from constitution of the tribunal to final award.",
+      "Acted for a lender in Section 9 proceedings under the Arbitration and Conciliation Act to secure the subject matter of a claim pending arbitration.",
+      "Advised on the drafting and negotiation of arbitration clauses for a series of cross-border supply agreements, including seat and institutional rule selection.",
+      "Represented an Indian distributor resisting enforcement of a foreign arbitral award, on grounds available under Part II of the Arbitration Act.",
+      "Acted for a joint venture partner in a mediated settlement of a shareholder dispute, including drafting the consent terms.",
+      "Advised a manufacturer on a Section 34 challenge to a domestic award, including the limitation and procedural grounds available.",
+    ],
+    forums: [
+      "Ad hoc arbitral tribunals and institutional arbitration under IAMC Hyderabad, ICA, MCIA and SIAC rules",
+      "High Court of Telangana; High Court of Andhra Pradesh; High Court of Karnataka — arbitration jurisdiction",
+      "Supreme Court of India",
+      "Commercial Courts — pre-institution mediation and Section 9, 34 and 37 proceedings",
+      "Private and institutional mediation and conciliation centres",
+    ],
+    process: [
+      {
+        stage: "Dispute strategy",
+        detail:
+          "Merits, the arbitration clause where one exists, and the realistic value of the claim reviewed together, with a candid view on whether arbitration, mediation or negotiation gives the best route to what you actually need.",
+      },
+      {
+        stage: "Constitution or referral",
+        detail:
+          "Appointment of the tribunal — by agreement, institutional rules or a Section 11 application — or referral to mediation or conciliation, chosen for the forum that fits the dispute rather than the default.",
+      },
+      {
+        stage: "Interim relief",
+        detail:
+          "Section 9 or Section 17 applications moved without delay where the subject matter of the dispute needs protecting before the merits are heard.",
+      },
+      {
+        stage: "Pleadings and hearing",
+        detail:
+          "Statements of claim and defence, document production, witness and expert evidence, and the hearing itself, run to the tribunal's procedural timetable.",
+      },
+      {
+        stage: "Award, settlement and after",
+        detail:
+          "Enforcement, or a Section 34 challenge and Section 37 appeal where the award is genuinely open to one; for a mediated outcome, consent terms drafted to be enforceable on their own.",
+      },
+    ],
+    team: [],
+    relatedIndustries: [
+      "infrastructure-energy",
+      "real-estate-construction",
+      "financial-services",
+      "public-sector",
+    ],
+    faqs: [
+      {
+        q: "Is arbitration always faster and cheaper than litigation?",
+        a: "Faster, often. Cheaper, not necessarily — you pay the tribunal's fees, the institution's fees and the venue, none of which arise in court. Arbitration is usually the better choice for confidentiality, for technical disputes where you want a specialist tribunal, and for cross-border enforceability. It is a poor choice if you need relief against a non-signatory.",
+      },
+      {
+        q: "Our contract has no arbitration clause. What are our options?",
+        a: "You can agree to arbitrate after a dispute arises through a separate written agreement, which is sometimes worth proposing, or proceed in the civil or commercial courts instead. We advise on which route better fits the relief you need.",
+      },
+      {
+        q: "Can we get interim protection quickly in arbitration?",
+        a: "Yes — a Section 9 application can be made even before the tribunal is constituted, and courts do hear genuinely urgent applications at short notice. The threshold is real: a prima facie case, irreparable harm, balance of convenience, and clean conduct, and an undertaking as to damages or security is commonly required.",
+      },
+      {
+        q: "Is pre-institution mediation compulsory?",
+        a: "For commercial suits under the Commercial Courts Act that do not contemplate urgent interim relief, yes — it is a precondition to filing. We assess at the outset whether your claim qualifies for the urgent-relief exception.",
       },
       {
         q: "Can a foreign award be enforced in India?",
         a: "Yes, where the award is made in a reciprocating territory notified under the Act. Enforcement is by application to the appropriate High Court, and the grounds for resisting it are narrow and do not include a rehearing on the merits. Practical timelines depend on the court and on whether enforcement is contested.",
+      },
+      {
+        q: "How do you charge for arbitration and mediation work?",
+        a: "Usually a retainer for the matter combined with hearing fees, or hourly rates for drafting and advisory stages. We give a written estimate broken down by stage at the outset — separate from the tribunal's and institution's own fees, which are not ours to quote.",
       },
     ],
   },

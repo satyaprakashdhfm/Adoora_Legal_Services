@@ -78,7 +78,7 @@ export const industries: Industry[] = [
       "Financial Intelligence Unit – India (anti-money laundering reporting)",
     ],
     team: [],
-    relatedPractices: ["banking-finance", "corporate-ma", "dispute-resolution", "taxation"],
+    relatedPractices: ["banking-finance", "corporate-ma", "litigation", "dispute-resolution", "taxation"],
     faqs: [
       {
         q: "We are launching a lending product with a bank partner. What governs the arrangement?",
@@ -172,6 +172,7 @@ export const industries: Industry[] = [
     relatedPractices: [
       "real-estate-infrastructure",
       "banking-finance",
+      "litigation",
       "dispute-resolution",
       "corporate-ma",
     ],
@@ -270,6 +271,7 @@ export const industries: Industry[] = [
       "labour-employment",
       "real-estate-infrastructure",
       "taxation",
+      "litigation",
       "dispute-resolution",
     ],
     faqs: [
@@ -460,6 +462,7 @@ export const industries: Industry[] = [
     relatedPractices: [
       "real-estate-infrastructure",
       "banking-finance",
+      "litigation",
       "dispute-resolution",
       "taxation",
     ],
@@ -557,6 +560,7 @@ export const industries: Industry[] = [
       "corporate-ma",
       "labour-employment",
       "intellectual-property",
+      "litigation",
       "dispute-resolution",
     ],
     faqs: [
@@ -745,6 +749,7 @@ export const industries: Industry[] = [
     ],
     team: [],
     relatedPractices: [
+      "litigation",
       "dispute-resolution",
       "real-estate-infrastructure",
       "banking-finance",

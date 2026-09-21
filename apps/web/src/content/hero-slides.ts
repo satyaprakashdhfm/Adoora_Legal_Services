@@ -42,12 +42,12 @@ export const heroSlides: HeroSlide[] = [
     bright: true,
   },
   {
-    eyebrow: "Dispute Resolution",
+    eyebrow: "Litigation",
     heading: "Strategy before pleadings, in the forum that",
     accent: "fits the relief",
-    body: "Commercial litigation and arbitration across the High Courts, tribunals and arbitral forums of Telangana, Andhra Pradesh and Karnataka — with a candid view on what a claim is worth after cost and time.",
-    href: "/services/dispute-resolution",
-    cta: "Dispute Resolution",
+    body: "Civil and commercial litigation across the High Courts, tribunals and district judiciary of Telangana, Andhra Pradesh and Karnataka — with a candid view on what a claim is worth after cost and time.",
+    href: "/services/litigation",
+    cta: "Litigation",
     imageBase: "hero-law-justice",
     imageNote:
       "Brass scales of justice resting on bound LAW and JUSTICE volumes, chambers window behind.",

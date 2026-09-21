@@ -19,6 +19,7 @@ import { PracticeIcon } from "@/components/practice-icon";
 const displayOrder = [
   "corporate-ma",
   "banking-finance",
+  "litigation",
   "dispute-resolution",
   "real-estate-infrastructure",
   "taxation",
