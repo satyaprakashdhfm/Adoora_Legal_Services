@@ -167,8 +167,8 @@ export const practiceAreas: PracticeArea[] = [
   },
   {
     slug: "corporate-ma",
-    name: "Corporate & Mergers and Acquisitions",
-    shortName: "Corporate & M&A",
+    name: "Corporate Advisory",
+    shortName: "Corporate Advisory",
     group: "Corporate",
     tagline:
       "Acquisitions, investments, joint ventures and reorganisations — structured for the regulatory reality they have to survive.",

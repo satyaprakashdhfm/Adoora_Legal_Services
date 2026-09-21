@@ -3,7 +3,7 @@ import Link from "next/link";
 import type { Metadata } from "next";
 import { Hero } from "@/components/hero";
 import { InsightCard, SectionHeading } from "@/components/ui";
-import { PracticesWheel } from "@/components/practices-wheel";
+import { PracticesSplit } from "@/components/practices-split";
 import { CityIcon } from "@/components/city-icon";
 import { WhyUsWheel } from "@/components/why-us-wheel";
 import { firm, firmOverview, differentiators, offices } from "@/content/firm";
@@ -37,22 +37,23 @@ function Arrow({ className = "" }: { className?: string }) {
   );
 }
 
-/** The order practices appear around the ring — flagship practices first. */
-const practiceWheelOrder = [
-  "corporate-ma",
+/** Display order for the home page's practice list — banking, litigation
+ *  and ADR lead, then the rest in their declared order. */
+const practiceSplitOrder = [
+  "banking-finance",
   "litigation",
   "dispute-resolution",
+  "corporate-ma",
   "real-estate-infrastructure",
-  "regulatory-environmental",
-  "labour-employment",
-  "banking-finance",
   "taxation",
+  "labour-employment",
   "intellectual-property",
+  "regulatory-environmental",
 ];
 
 export default function Home() {
   const latestInsights = insightsByDate.slice(0, 3);
-  const practiceWheelItems = practiceWheelOrder
+  const practiceSplitItems = practiceSplitOrder
     .map((slug) => practiceAreas.find((area) => area.slug === slug))
     .filter((area): area is (typeof practiceAreas)[number] => Boolean(area));
   /* Resolved at build time; a missing file falls back to the navy gradient,
@@ -134,30 +135,29 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Practices — a ring of photographs around a line of standing copy.
-          The dense, bulleted index a visitor wants once they already know
-          which practice they need lives at /services; this is the lighter
-          teaser that gets them there. */}
+      {/* Practices — a numbered list with the selected practice's detail
+          beside it. The dense, bulleted index a visitor wants once they
+          already know which practice they need lives at /services; this is
+          the lighter teaser that gets them there. */}
       <section>
         <div className="container-page py-14 sm:py-16">
-          <div className="flex flex-col gap-6 text-center lg:items-center">
+          <div className="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
             <SectionHeading
               eyebrow="Practices"
               title="Our practices"
               lead="An integrated approach to the legal matters that shape businesses, industries and communities."
-              align="center"
             />
             <Link
               href="/services"
-              className="inline-flex shrink-0 items-center gap-2 self-center rounded-full border border-line-strong px-6 py-3 text-sm font-semibold text-ink transition hover:border-gold hover:text-gold-deep"
+              className="inline-flex shrink-0 items-center gap-2 self-start rounded-full border border-line-strong px-6 py-3 text-sm font-semibold text-ink transition hover:border-gold hover:text-gold-deep lg:self-auto"
             >
               View all practices
               <Arrow />
             </Link>
           </div>
 
-          <div className="mt-16">
-            <PracticesWheel items={practiceWheelItems} />
+          <div className="mt-12">
+            <PracticesSplit items={practiceSplitItems} />
           </div>
         </div>
       </section>
@@ -205,7 +205,7 @@ export default function Home() {
           the cards weren't visually distinctive. */}
       <section>
         <div className="container-page py-14 sm:py-16">
-          <SectionHeading eyebrow="Why us" title="Why partner with us?" lead="Five strengths. One committed partnership." />
+          <SectionHeading eyebrow="Why us" title="Reasons to partner with us" lead="Five strengths. One committed partnership." />
 
           <div className="mt-12">
             <WhyUsWheel items={differentiators} />

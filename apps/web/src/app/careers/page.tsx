@@ -18,7 +18,7 @@ export const metadata: Metadata = {
  */
 const roles = [
   {
-    title: "Associate — Corporate & M&A",
+    title: "Associate — Corporate Advisory",
     office: "Hyderabad",
     experience: "2–4 years PQE",
     detail:

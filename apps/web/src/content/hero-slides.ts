@@ -30,12 +30,12 @@ export type HeroSlide = {
 
 export const heroSlides: HeroSlide[] = [
   {
-    eyebrow: "Corporate & M&A",
+    eyebrow: "Corporate Advisory",
     heading: "Transactions structured for the rules they have",
     accent: "to survive",
     body: "Acquisitions, investments and joint ventures where the structuring question and the regulatory question cannot be separated — foreign investment routes, competition clearance and completion mechanics handled as one problem.",
     href: "/services/corporate-ma",
-    cta: "Corporate & M&A",
+    cta: "Corporate Advisory",
     imageBase: "hero-office-desk",
     imageNote:
       "Office desk with laptop and contract folder, city skyline beyond, PEOPLE / PRINCIPLES / POSSIBILITIES on the wall.",

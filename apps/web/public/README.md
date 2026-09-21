@@ -14,8 +14,8 @@ file names live in `src/content/hero-slides.ts`.
 
 | Base name | Slide | The photograph |
 | --- | --- | --- |
-| `hero-office-desk` | Corporate & M&A | Office desk with laptop and contract folder, city skyline beyond, PEOPLE / PRINCIPLES / POSSIBILITIES on the wall. |
-| `hero-law-justice` | Dispute Resolution | Brass scales of justice on bound LAW and JUSTICE volumes. |
+| `hero-office-desk` | Corporate Advisory | Office desk with laptop and contract folder, city skyline beyond, PEOPLE / PRINCIPLES / POSSIBILITIES on the wall. |
+| `hero-law-justice` | Litigation | Brass scales of justice on bound LAW and JUSTICE volumes. |
 | `hero-shield-compliance` | Banking & Finance | Brass shield and padlock against a Lady Justice figure, beside REGULATORY COMPLIANCE / ASSET PROTECTION / RISK MANAGEMENT volumes. |
 
 **The extension does not matter.** `src/lib/public-image.ts` resolves the base
@@ -68,7 +68,7 @@ rather than breaking the layout.
 
 | File | Practice |
 | --- | --- |
-| `practice-corporate-ma.png` | Corporate & M&A |
+| `practice-corporate-ma.png` | Corporate Advisory |
 | `practice-banking-finance.png` | Banking & Finance |
 | `practice-litigation.png` | Litigation |
 | `practice-dispute-resolution.png` | Alternative Dispute Resolution |
