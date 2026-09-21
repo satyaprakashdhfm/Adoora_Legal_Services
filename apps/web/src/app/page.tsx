@@ -5,8 +5,9 @@ import { Hero } from "@/components/hero";
 import { InsightCard, SectionHeading } from "@/components/ui";
 import { PracticesIndex } from "@/components/practices-index";
 import { CityIcon } from "@/components/city-icon";
+import { WhyUsWheel } from "@/components/why-us-wheel";
 import { firm, firmOverview, differentiators, offices } from "@/content/firm";
-import { peopleByGroup } from "@/content/people";
+import { peopleBySlugs } from "@/content/people";
 import { TeamTabs } from "@/components/team-tabs";
 import { practiceAreas } from "@/content/practice-areas";
 import { insightsByDate } from "@/content/insights";
@@ -105,12 +106,11 @@ export default function Home() {
                 {
                   id: "advocates",
                   label: "Leadership & Advocates",
-                  members: peopleByGroup("legal"),
-                },
-                {
-                  id: "business",
-                  label: "Operations & Business Services",
-                  members: peopleByGroup("business"),
+                  members: peopleBySlugs([
+                    "ganesh-raghavendra",
+                    "vidya-sagar",
+                    "kondal-rao",
+                  ]),
                 },
               ]}
             />
@@ -184,53 +184,16 @@ export default function Home() {
       </section>
 
       {/* Why partner with us. Copy supplied by the firm — see the note on
-          `differentiators` in firm.ts about the BCI advertising rules. */}
+          `differentiators` in firm.ts about the BCI advertising rules. Drawn
+          as a hub-and-spoke diagram rather than photo cards: the client felt
+          the cards weren't visually distinctive. */}
       <section>
         <div className="container-page py-14 sm:py-16">
-          <SectionHeading eyebrow="Why us" title="Why partner with us?" />
+          <SectionHeading eyebrow="Why us" title="Why partner with us?" lead="Five strengths. One committed partnership." />
 
-            {/* Five cards: a horizontal strip below sm for the same reason the
-              insights get one — five full-width cards was most of a mobile
-              screen. From sm it is 3-and-2 on a laptop, all five in one row
-              from xl up, the extra column keeping each card close to its
-              original size rather than stretching to fill the row. */}
-          <ul className="-mx-6 mt-10 flex snap-x snap-mandatory gap-5 overflow-x-auto px-6 pb-2 [scrollbar-width:none] sm:mx-0 sm:grid sm:snap-none sm:gap-5 sm:overflow-visible sm:px-0 sm:pb-0 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 [&::-webkit-scrollbar]:hidden">
-            {differentiators.map((item, index) => (
-              <li
-                key={item.title}
-                className="relative isolate flex min-h-[15rem] w-[78%] shrink-0 snap-center flex-col justify-end overflow-hidden rounded-xl bg-ink p-5 text-white sm:w-auto sm:shrink"
-              >
-                <Image
-                  src={item.image}
-                  alt=""
-                  fill
-                  sizes="(min-width: 1024px) 25vw, (min-width: 640px) 50vw, 100vw"
-                  style={{ objectPosition: item.focus }}
-                  className="-z-20 object-cover"
-                />
-
-                {/* Held back to the lower half so the photograph still reads.
-                    Solid enough under the text to clear 4.5:1 on white. */}
-                <div
-                  aria-hidden="true"
-                  className="absolute inset-0 -z-10 bg-[linear-gradient(to_top,var(--color-ink)_0%,color-mix(in_oklab,var(--color-ink)_86%,transparent)_38%,color-mix(in_oklab,var(--color-ink)_34%,transparent)_72%,color-mix(in_oklab,var(--color-ink)_12%,transparent)_100%)]"
-                />
-
-                <span
-                  aria-hidden="true"
-                  className="font-serif text-2xl font-semibold text-gold-bright/70"
-                >
-                  {String(index + 1).padStart(2, "0")}
-                </span>
-                <h3 className="mt-2 font-serif text-lg font-semibold leading-snug tracking-tight text-white">
-                  {item.title}
-                </h3>
-                <p className="mt-2.5 text-sm leading-relaxed text-white/80">
-                  {item.body}
-                </p>
-              </li>
-            ))}
-          </ul>
+          <div className="mt-12">
+            <WhyUsWheel items={differentiators} />
+          </div>
         </div>
       </section>
 

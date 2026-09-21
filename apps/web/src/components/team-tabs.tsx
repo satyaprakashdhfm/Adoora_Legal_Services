@@ -37,36 +37,40 @@ export function TeamTabs({ groups }: { groups: TeamGroup[] }) {
 
   return (
     <div>
-      <div
-        role="tablist"
-        aria-label="Team"
-        onKeyDown={onKeyDown}
-        className="grid grid-cols-2 border-b border-line sm:flex sm:gap-8"
-      >
-        {groups.map((group) => {
-          const isActive = group.id === active;
+      {/* A single group has nothing to switch between — the tablist would be
+          one permanently-active button. */}
+      {groups.length > 1 && (
+        <div
+          role="tablist"
+          aria-label="Team"
+          onKeyDown={onKeyDown}
+          className="grid grid-cols-2 border-b border-line sm:flex sm:gap-8"
+        >
+          {groups.map((group) => {
+            const isActive = group.id === active;
 
-          return (
-            <button
-              key={group.id}
-              id={`team-tab-${group.id}`}
-              type="button"
-              role="tab"
-              aria-selected={isActive}
-              aria-controls={`team-panel-${group.id}`}
-              tabIndex={isActive ? 0 : -1}
-              onClick={() => setActive(group.id)}
-              className={`-mb-px border-b-2 px-1 pb-3 text-left text-sm font-semibold leading-snug transition sm:shrink-0 sm:whitespace-nowrap ${
-                isActive
-                  ? "border-gold text-ink"
-                  : "border-transparent text-slate hover:text-ink"
-              }`}
-            >
-              {group.label}
-            </button>
-          );
-        })}
-      </div>
+            return (
+              <button
+                key={group.id}
+                id={`team-tab-${group.id}`}
+                type="button"
+                role="tab"
+                aria-selected={isActive}
+                aria-controls={`team-panel-${group.id}`}
+                tabIndex={isActive ? 0 : -1}
+                onClick={() => setActive(group.id)}
+                className={`-mb-px border-b-2 px-1 pb-3 text-left text-sm font-semibold leading-snug transition sm:shrink-0 sm:whitespace-nowrap ${
+                  isActive
+                    ? "border-gold text-ink"
+                    : "border-transparent text-slate hover:text-ink"
+                }`}
+              >
+                {group.label}
+              </button>
+            );
+          })}
+        </div>
+      )}
 
       {groups.map((group) => {
         const isActive = group.id === active;
