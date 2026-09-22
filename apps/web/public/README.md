@@ -15,7 +15,7 @@ file names live in `src/content/hero-slides.ts`.
 | Base name | Slide | The photograph |
 | --- | --- | --- |
 | `hero-office-desk` | Corporate Advisory | Office desk with laptop and contract folder, city skyline beyond, PEOPLE / PRINCIPLES / POSSIBILITIES on the wall. |
-| `hero-law-justice` | Litigation | Brass scales of justice on bound LAW and JUSTICE volumes. |
+| `hero-law-justice` | Litigation | Brass scales of justice on bound LAW and JUSTICE volumes. Doubles as the photograph behind "Our approach" on the home page — see below. |
 | `hero-shield-compliance` | Banking & Finance | Brass shield and padlock against a Lady Justice figure, beside REGULATORY COMPLIANCE / ASSET PROTECTION / RISK MANAGEMENT volumes. |
 
 **The extension does not matter.** `src/lib/public-image.ts` resolves the base
@@ -41,23 +41,20 @@ runs solid down the left of the panel, where the heading, buttons and the
 PEOPLE / IDEAS / IMPACT triad sit. Portrait or square crops best — the panel is
 roughly a third of the row and as tall as the locations beside it.
 
-## Why-us photography
+## "Our approach" photography (unused)
 
-Five frames behind the "Why partner with us?" band's numbered photo nodes, one
-per entry in `differentiators` (`src/content/firm.ts`), which names its own
-file:
+`why-us-expertise.png`, `why-us-client-first.png`, `client-exp.png`,
+`why-us-cross-border.png` and `why-us-solutions.png` — one frame per entry in
+`differentiators` (`src/content/firm.ts`) from an earlier version of the "Our
+approach" home page band, which showed all five as numbered photo nodes on a
+spine. The current version (`our-approach.tsx`) is a tabbed list with a single
+photograph behind the selected entry's copy — `hero-law-justice`, see above —
+so these five are no longer referenced. Left in place rather than deleted in
+case a future version wants a photograph per entry again; `differentiators`
+still carries the `image`/`focus` fields that named them.
 
-| File | Entry |
-| --- | --- |
-| `why-us-expertise.png` | Proven Legal Expertise |
-| `why-us-client-first.png` | Client-First Approach |
-| `client-exp.png` | Connected Client Experience |
-| `why-us-cross-border.png` | Cross-Border & Regulatory Mastery |
-| `why-us-solutions.png` | Strategic Legal Solutions |
-
-Each node is a circle and the frames landscape, so `cover` crops the sides.
-Each entry carries a `focus` value — a CSS `object-position` — to keep the
-subject in shot; adjust that rather than re-cropping the file.
+`approach.png` — the single photograph the tabbed version used before it was
+pointed at `hero-law-justice` instead. Also unused; also left in place.
 
 ## Practice photography
 
@@ -101,11 +98,13 @@ article rather than re-cropping the file.
 | `insight-section-9` | Interim relief under Section 9 |
 | `insight-cci` | The deal value threshold for CCI approval |
 
-## Careers form background
+## Careers form background (unused)
 
-`careers-form-bg` — the illustration behind the application form on the
-careers page. It is not washed over, so it has to keep its centre pale: the
-fields sit on it directly. Missing, the panel shows the warm ground.
+`careers-form-bg` — was the photograph behind the application form on the
+careers page. The form moved to its own page per role
+(`/careers/apply/[role]`), plain and image-free by request, so this file is
+no longer referenced. Left in place rather than deleted in case a future
+version of that page wants it back.
 
 ## Portraits
 

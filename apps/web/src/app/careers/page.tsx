@@ -1,8 +1,7 @@
-import Image from "next/image";
+import Link from "next/link";
 import type { Metadata } from "next";
-import { publicImage } from "@/lib/public-image";
 import { PageHero, SectionHeading } from "@/components/ui";
-import { CareerForm } from "@/components/career-form";
+import { roles } from "@/content/careers";
 
 export const metadata: Metadata = {
   title: "Careers",
@@ -11,42 +10,22 @@ export const metadata: Metadata = {
   alternates: { canonical: "/careers" },
 };
 
-/**
- * Open roles. Replace with the firm's actual vacancies — these describe the
- * shape of the practice rather than confirmed openings, and the firm should
- * confirm each before publication.
- */
-const roles = [
-  {
-    title: "Associate — Corporate Advisory",
-    office: "Hyderabad",
-    experience: "2–4 years PQE",
-    detail:
-      "Transaction work across acquisitions, private equity investments and joint ventures. You will run legal due diligence workstreams, draft transaction documents under supervision, and manage regulatory filings.",
-    eligibility: [
-      "Enrolled with a State Bar Council",
-      "Two to four years in a corporate practice, in-house or private practice",
-      "Experience of legal due diligence and drafting transaction documents",
-    ],
-  },
-  {
-    title: "Associate — Dispute Resolution",
-    office: "Hyderabad",
-    experience: "2–5 years PQE",
-    detail:
-      "Commercial litigation and arbitration. Drafting pleadings and interim applications, briefing and appearing in the district judiciary and tribunals, and assisting on High Court matters.",
-    eligibility: [
-      "Enrolled with a State Bar Council",
-      "Independent drafting experience and comfort appearing before a court or tribunal",
-      "Working knowledge of the Arbitration and Conciliation Act, 1996",
-    ],
-  },
-];
+function ArrowIcon({ className = "" }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 16 16" aria-hidden="true" className={`h-3.5 w-3.5 ${className}`}>
+      <path
+        d="M2 8h11M9 4l4 4-4 4"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth={1.6}
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+}
 
 export default function CareersPage() {
-  /* Missing, the panel falls back to the warm ground it sits on. */
-  const formImage = publicImage("careers-form-bg");
-
   return (
     <>
       <PageHero
@@ -87,96 +66,52 @@ export default function CareersPage() {
         </div>
       </section>
 
-      {/* Roles */}
+      {/* Roles — title, a short description, and an Apply button that leads
+          to that role's own application page. */}
       <section className="border-y border-line bg-paper-warm">
         <div className="container-page py-12 sm:py-14">
           <SectionHeading
             eyebrow="Open roles"
             title="Current vacancies"
-            lead="If none of these fit but you think the firm is right for you, send a speculative application."
           />
 
-          <ul className="mt-12 space-y-5">
+          <ul className="mt-12 space-y-4">
             {roles.map((role) => (
               <li
-                key={role.title}
-                className="rounded-2xl border border-line bg-paper p-7 sm:p-8"
+                key={role.slug}
+                className="flex flex-col gap-5 rounded-2xl border border-line bg-paper p-6 sm:flex-row sm:items-center sm:justify-between sm:gap-8 sm:p-7"
               >
-                <div className="grid gap-6 lg:grid-cols-[1.4fr_1fr] lg:gap-10">
-                  <div>
-                    <h3 className="font-serif text-xl font-semibold tracking-tight text-ink">
-                      {role.title}
-                    </h3>
-                    <div className="mt-2.5 flex flex-wrap gap-x-4 gap-y-1 text-xs uppercase tracking-[0.14em] text-gold-deep">
-                      <span>{role.office}</span>
-                      <span className="text-slate-light">
-                        {role.experience}
-                      </span>
-                    </div>
-                    <p className="mt-4 leading-relaxed text-ink-soft">
-                      {role.detail}
-                    </p>
-                  </div>
-
-                  <div className="border-t border-line pt-5 lg:border-l lg:border-t-0 lg:pl-8 lg:pt-0">
-                    <h4 className="eyebrow text-slate-light">Eligibility</h4>
-                    <ul className="mt-3 space-y-2.5">
-                      {role.eligibility.map((item) => (
-                        <li key={item} className="flex gap-3">
-                          <span
-                            aria-hidden="true"
-                            className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-gold"
-                          />
-                          <span className="text-sm leading-relaxed text-ink-soft">
-                            {item}
-                          </span>
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
+                <div>
+                  <h3 className="font-serif text-lg font-semibold tracking-tight text-ink sm:text-xl">
+                    {role.title}
+                  </h3>
+                  <p className="mt-2 max-w-2xl text-sm leading-relaxed text-ink-soft">
+                    {role.detail}
+                  </p>
                 </div>
+
+                <Link
+                  href={`/careers/apply/${role.slug}`}
+                  className="inline-flex shrink-0 items-center gap-2 self-start rounded-full bg-ink px-6 py-3 text-sm font-semibold text-white transition hover:bg-ink-mid sm:self-auto"
+                >
+                  Apply
+                  <ArrowIcon className="text-gold-bright" />
+                </Link>
               </li>
             ))}
           </ul>
-        </div>
-      </section>
 
-      {/* Application — the form sits on a photograph, same treatment as the
-          enquiry card on /contact: a flat navy wash over the whole image
-          rather than a directional one, because this panel does not reserve
-          one side for copy — the fields run its full width, so every part of
-          the photo needs to hold contrast, not just one edge of it. */}
-      <section className="container-page py-12 sm:py-14">
-        <div className="relative isolate mx-auto max-w-3xl overflow-hidden rounded-2xl bg-ink px-6 py-10 text-white sm:px-12 sm:py-14">
-          {formImage ? (
-            <>
-              <Image
-                src={formImage}
-                alt=""
-                fill
-                sizes="(min-width: 1024px) 48rem, 100vw"
-                className="-z-20 object-cover"
-              />
-              <div
-                aria-hidden="true"
-                className="absolute inset-0 -z-10 bg-[color-mix(in_oklab,var(--color-ink)_82%,transparent)]"
-              />
-            </>
-          ) : (
-            <div
-              aria-hidden="true"
-              className="absolute inset-0 -z-10 bg-[linear-gradient(135deg,var(--color-ink-mid),var(--color-ink-deep))]"
-            />
-          )}
-          <SectionHeading
-            eyebrow="Apply"
-            title="Submit an application"
-            tone="dark"
-            lead="Complete the form and email your CV to info@adooralegalservices.com quoting the role."
-          />
-          <div className="mt-10">
-            <CareerForm roles={roles.map((role) => role.title)} />
-          </div>
+          <p className="mt-8 text-sm text-ink-soft">
+            If none of these fit but you think the firm is right for you, send
+            a{" "}
+            <Link
+              href="/careers/apply/speculative-application"
+              className="font-semibold text-gold-deep underline decoration-gold/40 underline-offset-4 transition hover:decoration-gold"
+            >
+              speculative application
+            </Link>
+            .
+          </p>
         </div>
       </section>
     </>
