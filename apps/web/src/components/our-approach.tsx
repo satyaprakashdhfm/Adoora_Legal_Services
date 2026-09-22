@@ -84,8 +84,8 @@ export function OurApproach({
   const active = items[activeIndex];
 
   return (
-    <div className="grid gap-8 lg:grid-cols-[22rem_1fr] lg:gap-10">
-      <ul className="overflow-hidden rounded-2xl border border-line">
+    <div className="grid gap-3 lg:grid-cols-[1fr_2fr]">
+      <ul className="overflow-hidden rounded-2xl border border-line shadow-sm shadow-ink/[0.04]">
         {items.map((item, index) => {
           const Icon = icons[index % icons.length];
           const isActive = index === activeIndex;
@@ -117,13 +117,13 @@ export function OurApproach({
         })}
       </ul>
 
-      <div className="relative min-h-[22rem] overflow-hidden rounded-2xl border border-line lg:min-h-0">
+      <div className="relative min-h-[22rem] overflow-hidden rounded-2xl border border-line shadow-sm shadow-ink/[0.04] lg:min-h-0">
         {photo && (
           <Image
             src={photo}
             alt=""
             fill
-            sizes="(min-width: 1024px) 60vw, 100vw"
+            sizes="(min-width: 1024px) 66vw, 100vw"
             className="object-cover"
           />
         )}
@@ -144,26 +144,6 @@ export function OurApproach({
             {active.body}
           </p>
         </div>
-
-        {/* Positioned clear of the corner cutout below rather than over it —
-            its bite is confined to the outer 40px of the corner. White text:
-            `approach.png` runs dark across its right side (bookshelf, desk). */}
-        <div
-          aria-hidden="true"
-          className="absolute bottom-8 right-16 hidden items-center gap-3 sm:flex"
-        >
-          <span className="h-10 w-px bg-gold-bright" />
-          <span className="flex flex-col gap-1 text-[0.65rem] font-semibold uppercase tracking-[0.2em] text-white">
-            <span>People</span>
-            <span>Perspective</span>
-            <span>Progress</span>
-          </span>
-        </div>
-
-        <div
-          aria-hidden="true"
-          className="absolute -bottom-10 -right-10 h-20 w-20 rounded-full bg-paper"
-        />
       </div>
     </div>
   );
