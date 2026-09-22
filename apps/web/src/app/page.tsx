@@ -8,7 +8,7 @@ import { CityIcon } from "@/components/city-icon";
 import { WhyUsWheel } from "@/components/why-us-wheel";
 import { firm, firmOverview, differentiators, offices } from "@/content/firm";
 import { peopleBySlugs } from "@/content/people";
-import { TeamTabs } from "@/components/team-tabs";
+import { PeopleCards } from "@/components/people-cards";
 import { practiceAreas } from "@/content/practice-areas";
 import { insightsByDate } from "@/content/insights";
 import { heroSlides } from "@/content/hero-slides";
@@ -99,8 +99,8 @@ export default function Home() {
         </div>
       </section>
 
-      {/* The team, below the about band. Names in two columns rather than a
-          card each — sixteen cards cost most of a screen for the same list. */}
+      {/* The team, below the about band — the founder and the two senior
+          associates, each a full-bleed portrait card. */}
       <section className="border-y border-line bg-paper-warm">
         <div className="container-page py-14 sm:py-16">
           <div className="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
@@ -118,18 +118,12 @@ export default function Home() {
           </div>
 
           <div className="mt-10">
-            <TeamTabs
-              groups={[
-                {
-                  id: "advocates",
-                  label: "Leadership & Advocates",
-                  members: peopleBySlugs([
-                    "ganesh-raghavendra",
-                    "vidya-sagar",
-                    "kondal-rao",
-                  ]),
-                },
-              ]}
+            <PeopleCards
+              people={peopleBySlugs([
+                "ganesh-raghavendra",
+                "vidya-sagar",
+                "kondal-rao",
+              ])}
             />
           </div>
         </div>
