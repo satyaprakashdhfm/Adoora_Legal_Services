@@ -136,7 +136,7 @@ export const keyStrengths = [
 export const offices = [
   {
     city: "Hyderabad",
-    label: "Principal office",
+    label: "High Court of Telangana",
     lines: [
       "SRT 1032, 5th Floor, CZECH Colony",
       "Street No. 5, Sanath Nagar",
@@ -148,7 +148,7 @@ export const offices = [
   },
   {
     city: "Bengaluru",
-    label: "Karnataka",
+    label: "High Court of Karnataka",
     lines: [
       "2nd Floor, Juice Junction Building",
       "2nd Block, 9th Main Road, Jayanagar East",
@@ -160,7 +160,7 @@ export const offices = [
   },
   {
     city: "Guntur",
-    label: "Andhra Pradesh",
+    label: "High Court of Andhra Pradesh",
     lines: [
       "D. No. 4-5-62, Sai Baba Road",
       "Chandramouli Nagar",

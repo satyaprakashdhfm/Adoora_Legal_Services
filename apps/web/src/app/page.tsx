@@ -228,12 +228,12 @@ export default function Home() {
                   className="rounded-xl border border-line bg-paper p-5"
                 >
                   <CityIcon city={office.city} className="h-9 w-9 text-gold" />
-                  <h3 className="mt-4 font-serif text-lg font-semibold text-ink">
-                    {office.city}
-                  </h3>
-                  <p className="mt-1 text-[0.7rem] uppercase tracking-[0.14em] text-gold-deep">
+                  <p className="mt-4 text-[0.7rem] uppercase tracking-[0.14em] text-gold-deep">
                     {office.label}
                   </p>
+                  <h3 className="mt-1 font-serif text-lg font-semibold text-ink">
+                    {office.city}
+                  </h3>
                   <address className="mt-3 space-y-0.5 text-[0.8rem] not-italic leading-relaxed text-ink-soft">
                     {office.lines.map((line) => (
                       <p key={line}>{line}</p>
