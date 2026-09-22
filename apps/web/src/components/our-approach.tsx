@@ -8,14 +8,20 @@ import type { Differentiator } from "@/content/firm";
  * "Our approach" — a numbered list of the firm's five differentiators on the
  * left, the selected one's full copy over a photograph on the right.
  *
- * One photograph (`approach.png` in `public/`) serves all five entries; only
- * the copy changes when a different one is selected. A light wash sits under
- * the text so it stays legible regardless of what part of that photograph
- * falls behind it.
+ * One photograph (`hero-law-justice.png` in `public/` — brass scales on
+ * bound LAW and JUSTICE volumes) serves all five entries; only the copy
+ * changes when a different one is selected. It runs dark across the left
+ * side where the copy sits, so the wash under the text and the text itself
+ * are both tuned for a dark ground, not a light one.
  *
  * `photo` is resolved by the server-only `publicImage()` and passed in as a
  * plain URL — this is a client component (it holds the selection state), and
  * `publicImage()` reads the filesystem, which a client bundle can't do.
+ *
+ * Icons and the row arrow are gold throughout; the selected row's icon and
+ * arrow are the odd ones out, shown softened rather than bright — the
+ * highlighted background and gold rule already mark which row is active, so
+ * this is a deliberate inversion of the usual "active = brighter" pattern.
  */
 
 const icons: ((props: SVGProps<SVGSVGElement>) => React.JSX.Element)[] = [
@@ -103,13 +109,17 @@ export function OurApproach({
                 }`}
               >
                 <Icon
-                  className={`h-7 w-7 shrink-0 ${isActive ? "text-gold-deep" : "text-ink-soft"}`}
+                  className={`h-7 w-7 shrink-0 text-gold-bright transition ${
+                    isActive ? "opacity-50 blur-[1px]" : "opacity-100"
+                  }`}
                 />
                 <span className="flex-1 font-serif text-base font-semibold leading-snug tracking-tight text-ink">
                   {item.title}
                 </span>
                 <ArrowIcon
-                  className={`h-3.5 w-3.5 shrink-0 ${isActive ? "text-gold-deep" : "text-slate-light"}`}
+                  className={`h-3.5 w-3.5 shrink-0 text-gold-bright transition ${
+                    isActive ? "opacity-50 blur-[1px]" : "opacity-100"
+                  }`}
                 />
               </button>
             </li>
@@ -128,19 +138,19 @@ export function OurApproach({
           />
         )}
 
-        {/* A wash under the copy so it stays legible regardless of what
-            part of the photograph falls behind it. */}
+        {/* A dark wash under the copy — the photograph already runs dark on
+            this side, so this deepens that rather than fighting it. */}
         <div
           aria-hidden="true"
-          className="absolute inset-0 bg-[linear-gradient(105deg,var(--color-paper)_0%,color-mix(in_oklab,var(--color-paper)_78%,transparent)_38%,transparent_65%)]"
+          className="absolute inset-0 bg-[linear-gradient(105deg,var(--color-ink)_0%,color-mix(in_oklab,var(--color-ink)_75%,transparent)_38%,transparent_65%)]"
         />
 
         <div className="relative flex h-full flex-col justify-center p-8 sm:p-12">
-          <span aria-hidden="true" className="h-px w-9 bg-gold" />
-          <h3 className="mt-6 max-w-sm font-serif text-3xl font-semibold leading-tight tracking-tight text-ink sm:text-4xl">
+          <span aria-hidden="true" className="h-px w-9 bg-gold-bright" />
+          <h3 className="mt-6 max-w-sm font-serif text-3xl font-semibold leading-tight tracking-tight text-white sm:text-4xl">
             {active.title}
           </h3>
-          <p className="mt-6 max-w-sm text-base leading-relaxed text-ink-soft">
+          <p className="mt-6 max-w-sm text-base leading-relaxed text-white/80">
             {active.body}
           </p>
         </div>

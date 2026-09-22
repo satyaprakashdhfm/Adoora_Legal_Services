@@ -59,7 +59,7 @@ export default function Home() {
   /* Resolved at build time; a missing file falls back to the navy gradient,
      exactly as the hero frames do. */
   const careersImage = publicImage("careers-office");
-  const approachImage = publicImage("approach");
+  const approachImage = publicImage("hero-law-justice");
 
   return (
     <>
