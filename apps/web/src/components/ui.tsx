@@ -354,23 +354,44 @@ export function InsightCard({ insight }: { insight: Insight }) {
  * from the plain bands (`paper-tint`, not `paper-warm`) so it reads as a
  * distinct band rather than blending into the page. The home page has its
  * own photographic hero; every other page opens here.
+ *
+ * `image` opts a page into `hero-bg` — the blindfolded Lady Justice statue,
+ * sepia-toned on a matching pale ground — behind the heading. It is pale
+ * enough, and the statue sits far enough to the right, that the heading
+ * needs no scrim to stay readable over it. Not every page that uses
+ * `PageHero` gets it: only pass `image` on the pages the firm chose for it
+ * (currently Insights, Careers, About and Contact) so the others keep the
+ * plain `paper-tint` band.
  */
 export function PageHero({
   eyebrow,
   title,
   lead,
   trail,
+  image = false,
   children,
 }: {
   eyebrow?: string;
   title: string;
   lead?: string;
   trail?: { label: string; href?: string }[];
+  image?: boolean;
   children?: ReactNode;
 }) {
+  const heroBg = image ? publicImage("hero-bg") : null;
+
   return (
-    <section className="border-b border-line-strong bg-paper-tint text-ink">
-      <div className="container-page py-12 sm:py-14">
+    <section className="relative overflow-hidden border-b border-line-strong bg-paper-tint text-ink">
+      {heroBg && (
+        <Image
+          src={heroBg}
+          alt=""
+          fill
+          sizes="100vw"
+          className="object-cover object-right"
+        />
+      )}
+      <div className="container-page relative py-12 sm:py-14">
         {trail && <Breadcrumbs trail={trail} />}
         {eyebrow && (
           <p className="eyebrow mt-6 inline-flex items-center gap-2.5 text-gold-deep">

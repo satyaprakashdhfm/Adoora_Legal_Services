@@ -7,6 +7,14 @@
 `resources/als logo A.png`; the cut-outs deliberately show whatever sits behind
 them, exactly as the letterhead uses it.
 
+## Inner-page hero background
+
+`hero-bg` — the blindfolded Lady Justice statue, sepia-toned on a matching
+pale ground, subject on the right. Behind `PageHero` (`src/components/ui.tsx`)
+on the pages passed `image` — currently Insights, Careers, About and Contact.
+Pale enough that the heading needs no scrim over it; a page that doesn't pass
+`image` keeps the plain `paper-tint` band.
+
 ## Hero photography
 
 One frame per hero slide, cross-fading as the copy rotates. The slides and the

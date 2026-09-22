@@ -39,6 +39,7 @@ export default function AboutPage() {
         eyebrow="About us"
         title="About ADOORA Legal Services"
         trail={[{ label: "Home", href: "/" }, { label: "About Us" }]}
+        image
       />
 
       {/* Overview and core values, as the brochure sets them out. Replaced

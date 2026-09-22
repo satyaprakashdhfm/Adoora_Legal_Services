@@ -33,6 +33,7 @@ export default function CareersPage() {
         title="Work with us"
         lead="We look for lawyers who want responsibility early and are willing to learn a matter properly before forming a view. Roles are listed with the eligibility and the practice they sit in."
         trail={[{ label: "Home", href: "/" }, { label: "Careers" }]}
+        image
       />
 
       {/* Culture */}

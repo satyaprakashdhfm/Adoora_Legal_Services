@@ -24,6 +24,7 @@ export default function ContactPage() {
         title="Request information"
         lead="Tell us briefly what the matter concerns and we will point you to the right person in the firm. This form is for information requests; it is not an offer of legal services and sending it does not create a lawyer–client relationship."
         trail={[{ label: "Home", href: "/" }, { label: "Contact Us" }]}
+        image
       />
 
       <div className="container-page py-12 sm:py-14">

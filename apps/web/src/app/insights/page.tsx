@@ -22,6 +22,7 @@ export default function InsightsPage() {
         title="Insights & news"
         lead="Explainers and regulatory updates on the questions clients bring us most often. Informational only — none of it is legal advice."
         trail={[{ label: "Home", href: "/" }, { label: "Insights" }]}
+        image
       >
         <ul className="mt-8 flex flex-wrap gap-2">
           {activeCategories.map((category) => (
