@@ -18,10 +18,9 @@ import type { Differentiator } from "@/content/firm";
  * plain URL — this is a client component (it holds the selection state), and
  * `publicImage()` reads the filesystem, which a client bundle can't do.
  *
- * Icons and the row arrow are gold throughout; the selected row's icon and
- * arrow are the odd ones out, shown softened rather than bright — the
- * highlighted background and gold rule already mark which row is active, so
- * this is a deliberate inversion of the usual "active = brighter" pattern.
+ * Icons and the row arrow are gold (`text-gold`, the site's standard accent)
+ * on an inactive row, and switch to `text-ink` — the site's navy — on the
+ * selected one, matching the row's own title text.
  */
 
 const icons: ((props: SVGProps<SVGSVGElement>) => React.JSX.Element)[] = [
@@ -109,17 +108,13 @@ export function OurApproach({
                 }`}
               >
                 <Icon
-                  className={`h-7 w-7 shrink-0 text-gold-bright transition ${
-                    isActive ? "opacity-50 blur-[1px]" : "opacity-100"
-                  }`}
+                  className={`h-7 w-7 shrink-0 transition ${isActive ? "text-ink" : "text-gold"}`}
                 />
                 <span className="flex-1 font-serif text-base font-semibold leading-snug tracking-tight text-ink">
                   {item.title}
                 </span>
                 <ArrowIcon
-                  className={`h-3.5 w-3.5 shrink-0 text-gold-bright transition ${
-                    isActive ? "opacity-50 blur-[1px]" : "opacity-100"
-                  }`}
+                  className={`h-3.5 w-3.5 shrink-0 transition ${isActive ? "text-ink" : "text-gold"}`}
                 />
               </button>
             </li>

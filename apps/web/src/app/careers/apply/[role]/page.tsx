@@ -34,22 +34,24 @@ export default async function ApplyPage(
   return (
     <section className="container-page py-14 sm:py-16">
       <div className="mx-auto max-w-2xl">
-        <Link
-          href="/careers"
-          className="inline-flex items-center gap-2 text-sm font-semibold text-ink-soft transition hover:text-gold-deep"
-        >
-          <svg viewBox="0 0 16 16" aria-hidden="true" className="h-3.5 w-3.5">
-            <path
-              d="M14 8H3M7 4L3 8l4 4"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth={1.6}
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            />
-          </svg>
-          Back to careers
-        </Link>
+        <div className="flex justify-end">
+          <Link
+            href="/careers"
+            className="inline-flex items-center gap-2 text-sm font-semibold text-ink-soft transition hover:text-gold-deep"
+          >
+            <svg viewBox="0 0 16 16" aria-hidden="true" className="h-3.5 w-3.5">
+              <path
+                d="M14 8H3M7 4L3 8l4 4"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth={1.6}
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+            </svg>
+            Back to careers
+          </Link>
+        </div>
 
         <p className="eyebrow mt-8 inline-flex items-center gap-2.5 text-gold-deep">
           <span className="h-px w-8 bg-gold/50" />
