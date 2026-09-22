@@ -5,7 +5,7 @@ import { Hero } from "@/components/hero";
 import { InsightCard, SectionHeading } from "@/components/ui";
 import { PracticesCarousel } from "@/components/practices-carousel";
 import { CityIcon } from "@/components/city-icon";
-import { WhyUsWheel } from "@/components/why-us-wheel";
+import { OurApproach } from "@/components/our-approach";
 import { firm, firmOverview, differentiators, offices } from "@/content/firm";
 import { peopleBySlugs } from "@/content/people";
 import { PeopleCards } from "@/components/people-cards";
@@ -129,32 +129,31 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Practices — a horizontally scrolling row of cards in a framed
-          panel. The dense, bulleted index a visitor wants once they already
-          know which practice they need lives at /services; this is the
-          lighter teaser that gets them there. */}
-      <section>
-        <div className="container-page py-14 sm:py-16">
-          <div className="rounded-[2rem] border border-line bg-[linear-gradient(135deg,var(--color-paper-warm),var(--color-paper)_60%)] p-6 sm:p-10">
-            <div className="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
-              <SectionHeading
-                eyebrow="Practices"
-                title="Our practice areas"
-                lead="An integrated approach to the legal matters that shape businesses, industries and communities."
-              />
-              <Link
-                href="/services"
-                className="inline-flex shrink-0 items-center gap-2 self-start rounded-full border border-line-strong bg-paper px-6 py-3 text-sm font-semibold text-ink transition hover:border-gold hover:text-gold-deep lg:self-auto"
-              >
-                View all practices
-                <Arrow />
-              </Link>
-            </div>
+      {/* Practices — a horizontally scrolling row of cards. Plain ground,
+          same as About and Our approach: the home page already alternates
+          paper and paper-warm bands section to section, so this doesn't
+          need its own framed panel on top of that to read as a distinct
+          section. The dense, bulleted index a visitor wants once they
+          already know which practice they need lives at /services; this is
+          the lighter teaser that gets them there. */}
+      <section className="container-page py-14 sm:py-16">
+        <div className="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
+          <SectionHeading
+            eyebrow="Practices"
+            title="Our practice areas"
+            lead="An integrated approach to the legal matters that shape businesses, industries and communities."
+          />
+          <Link
+            href="/services"
+            className="inline-flex shrink-0 items-center gap-2 self-start rounded-full border border-line-strong px-6 py-3 text-sm font-semibold text-ink transition hover:border-gold hover:text-gold-deep lg:self-auto"
+          >
+            View all practices
+            <Arrow />
+          </Link>
+        </div>
 
-            <div className="mt-10">
-              <PracticesCarousel items={practiceCarouselItems} />
-            </div>
-          </div>
+        <div className="mt-12">
+          <PracticesCarousel items={practiceCarouselItems} />
         </div>
       </section>
 
@@ -195,16 +194,16 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Why partner with us. Copy supplied by the firm — see the note on
-          `differentiators` in firm.ts about the BCI advertising rules. Drawn
-          as a hub-and-spoke diagram rather than photo cards: the client felt
-          the cards weren't visually distinctive. */}
+      {/* Our approach. Copy supplied by the firm — see the note on
+          `differentiators` in firm.ts about the BCI advertising rules. A
+          numbered list with the selected entry's copy over a photograph,
+          rather than a diagram — one image (approach.png) serves all five. */}
       <section>
         <div className="container-page py-14 sm:py-16">
           <SectionHeading eyebrow="Why us" title="Our approach" lead="Five strengths. One committed partnership." />
 
           <div className="mt-12">
-            <WhyUsWheel items={differentiators} />
+            <OurApproach items={differentiators} />
           </div>
         </div>
       </section>
