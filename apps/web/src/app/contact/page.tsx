@@ -106,9 +106,6 @@ export default function ContactPage() {
                     <h3 className="font-serif text-lg font-semibold text-ink">
                       {office.city}
                     </h3>
-                    <p className="text-xs uppercase tracking-[0.14em] text-gold-deep">
-                      {office.label}
-                    </p>
                     <address className="mt-2 space-y-0.5 text-sm not-italic text-ink-soft">
                       {office.lines.map((line) => (
                         <p key={line}>{line}</p>

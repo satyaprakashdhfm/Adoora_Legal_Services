@@ -306,9 +306,6 @@ export default function AboutPage() {
                   <h3 className="font-serif text-base font-semibold text-ink">
                     {office.city}
                   </h3>
-                  <p className="text-[0.7rem] uppercase tracking-[0.14em] text-gold-deep">
-                    {office.label}
-                  </p>
                   <address className="mt-2.5 space-y-0.5 text-[0.8rem] not-italic leading-relaxed text-ink-soft">
                     {office.lines.map((line) => (
                       <p key={line}>{line}</p>

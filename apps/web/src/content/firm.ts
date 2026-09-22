@@ -136,7 +136,8 @@ export const keyStrengths = [
 export const offices = [
   {
     city: "Hyderabad",
-    label: "High Court of Telangana",
+    /** For the LocalBusiness JSON-LD's `addressRegion` — not shown on the page. */
+    state: "Telangana",
     lines: [
       "SRT 1032, 5th Floor, CZECH Colony",
       "Street No. 5, Sanath Nagar",
@@ -148,7 +149,7 @@ export const offices = [
   },
   {
     city: "Bengaluru",
-    label: "High Court of Karnataka",
+    state: "Karnataka",
     lines: [
       "2nd Floor, Juice Junction Building",
       "2nd Block, 9th Main Road, Jayanagar East",
@@ -160,7 +161,7 @@ export const offices = [
   },
   {
     city: "Guntur",
-    label: "High Court of Andhra Pradesh",
+    state: "Andhra Pradesh",
     lines: [
       "D. No. 4-5-62, Sai Baba Road",
       "Chandramouli Nagar",
