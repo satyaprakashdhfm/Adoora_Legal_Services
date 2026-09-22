@@ -3,7 +3,6 @@
 import Image from "next/image";
 import { useState, type SVGProps } from "react";
 import type { Differentiator } from "@/content/firm";
-import { publicImage } from "@/lib/public-image";
 
 /**
  * "Our approach" — a numbered list of the firm's five differentiators on the
@@ -13,6 +12,10 @@ import { publicImage } from "@/lib/public-image";
  * the copy changes when a different one is selected. A light wash sits under
  * the text so it stays legible regardless of what part of that photograph
  * falls behind it.
+ *
+ * `photo` is resolved by the server-only `publicImage()` and passed in as a
+ * plain URL — this is a client component (it holds the selection state), and
+ * `publicImage()` reads the filesystem, which a client bundle can't do.
  */
 
 const icons: ((props: SVGProps<SVGSVGElement>) => React.JSX.Element)[] = [
@@ -70,10 +73,15 @@ function ArrowIcon({ className = "" }: { className?: string }) {
   );
 }
 
-export function OurApproach({ items }: { items: readonly Differentiator[] }) {
+export function OurApproach({
+  items,
+  photo,
+}: {
+  items: readonly Differentiator[];
+  photo: string | null;
+}) {
   const [activeIndex, setActiveIndex] = useState(0);
   const active = items[activeIndex];
-  const photo = publicImage("approach");
 
   return (
     <div className="grid gap-8 lg:grid-cols-[22rem_1fr] lg:gap-10">

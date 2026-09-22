@@ -59,6 +59,7 @@ export default function Home() {
   /* Resolved at build time; a missing file falls back to the navy gradient,
      exactly as the hero frames do. */
   const careersImage = publicImage("careers-office");
+  const approachImage = publicImage("approach");
 
   return (
     <>
@@ -203,7 +204,7 @@ export default function Home() {
           <SectionHeading eyebrow="Why us" title="Our approach" lead="Five strengths. One committed partnership." />
 
           <div className="mt-12">
-            <OurApproach items={differentiators} />
+            <OurApproach items={differentiators} photo={approachImage} />
           </div>
         </div>
       </section>
