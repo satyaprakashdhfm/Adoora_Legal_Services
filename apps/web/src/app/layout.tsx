@@ -7,6 +7,7 @@ import { SiteFooter } from "@/components/site-footer";
 import { DisclaimerGate } from "@/components/disclaimer-gate";
 import { CookieBanner } from "@/components/cookie-banner";
 import { HideOnRoutes } from "@/components/hide-on-routes";
+import { WhatsAppButton } from "@/components/whatsapp-button";
 import { siteUrl } from "@/lib/site";
 
 const inter = Inter({
@@ -71,6 +72,12 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
         {/* Bar Council of India gate, then granular cookie consent. */}
         <DisclaimerGate />
         <CookieBanner />
+
+        {/* A contact channel, so it goes where the header and footer go: not
+            on `/notice`, which must offer no way to reach the firm. */}
+        <HideOnRoutes routes={["/notice"]}>
+          <WhatsAppButton />
+        </HideOnRoutes>
       </body>
     </html>
   );

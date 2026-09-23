@@ -181,9 +181,44 @@ figcaption {
   animation: fade-in 0.4s ease both;
 }
 
-/* Hero slide cross-fade. The active slide is opacity-1, others 0. */
+/*
+ * Hero slide cross-fade. The active slide is opacity-1, others 0.
+ *
+ * Deliberately slow: at the 900ms this used to be, a change — whether the
+ * timer, the arrow buttons or a swipe brought it on — read as a cut rather
+ * than a transition. The photograph takes the longest so it settles last;
+ * the copy is a little quicker, because two headings of different lengths
+ * are both half-visible at the midpoint of a cross-fade, and the longer that
+ * lasts the messier it looks.
+ */
 .hero-slide {
-  transition: opacity 900ms ease-in-out;
+  transition: opacity 1800ms ease-in-out;
+}
+
+.hero-copy {
+  transition: opacity 1300ms ease-in-out;
+}
+
+/*
+ * WhatsApp button ripple: a ring grows out from behind the button, fading to
+ * nothing as it goes, then starts again. Two rings run half a cycle apart
+ * (see the delay on the second) so one is always mid-flight. The ease-out
+ * curve front-loads the growth, which is what reads as a pulse rather than
+ * a slow zoom.
+ */
+@keyframes whatsapp-ripple {
+  0% {
+    transform: scale(1);
+    opacity: 0.5;
+  }
+  100% {
+    transform: scale(2);
+    opacity: 0;
+  }
+}
+
+.whatsapp-ripple {
+  animation: whatsapp-ripple 2.4s cubic-bezier(0, 0, 0.2, 1) infinite;
 }
 
 /*
@@ -257,7 +292,15 @@ figcaption {
     animation: none;
   }
 
-  .hero-slide {
+  .hero-slide,
+  .hero-copy {
     transition: none;
+  }
+
+  /* No pulsing for anyone who asked for less motion; the button itself is
+     unaffected, only the rings around it are removed. */
+  .whatsapp-ripple {
+    animation: none;
+    display: none;
   }
 }

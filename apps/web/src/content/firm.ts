@@ -22,9 +22,6 @@ export const firm = {
   phone: "+91 91548 25820",
   phoneHref: "tel:+919154825820",
   phoneE164: "+919154825820",
-  /* WhatsApp is a separate line from `phone`. wa.me wants the number in full
-     international form with no `+`, spaces or dashes. */
-  whatsappHref: "https://wa.me/919187088820",
   email: "info@adooralegalservices.com",
   emailHref: "mailto:info@adooralegalservices.com",
   responseTime: "We aim to acknowledge every enquiry within one working day.",

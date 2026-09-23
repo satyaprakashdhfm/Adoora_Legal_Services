@@ -3,23 +3,25 @@ import { publicImage } from "@/lib/public-image";
 
 /**
  * One building per office, keyed by city name — the High Court of the state
- * that office sits in, drawn as supplied artwork (`court-<state>.png`,
- * gold line work on a transparent ground) rather than the hand-drawn SVGs
- * this used to carry.
+ * that office sits in, drawn as supplied artwork (`hc-<state>.png`, in
+ * the site gold on a transparent ground).
  *
- * The files are cropped from one sheet, so they share a baseline and a
- * canvas: render them at a common height and the three sit level with each
- * other, at the relative sizes the artwork intends.
+ * The three buildings are very different shapes — the Karnataka façade is
+ * nearly three times as wide as it is tall, the Telangana one under twice —
+ * so they are not sized by a shared canvas. Each is fitted (`contain`) into
+ * a box as wide as its card and a fixed height, and anchored bottom-left, so
+ * a wide one is limited by the card's width, a tall one by the height, and
+ * all three keep their ground lines level with each other.
  */
 const courtByCity: Record<string, string> = {
-  Hyderabad: "court-telangana",
-  Bengaluru: "court-karnataka",
-  Guntur: "court-andhra-pradesh",
+  Hyderabad: "hc-telangana",
+  Bengaluru: "hc-karnataka",
+  Guntur: "hc-andhra-pradesh",
 };
 
 export function CityIcon({
   city,
-  className = "h-10 w-auto",
+  className = "h-20 w-full",
 }: {
   city: string;
   className?: string;
@@ -29,12 +31,14 @@ export function CityIcon({
   if (!src) return null;
 
   return (
-    <Image
-      src={src}
-      alt=""
-      width={180}
-      height={124}
-      className={className}
-    />
+    <span className={`relative block ${className}`}>
+      <Image
+        src={src}
+        alt=""
+        fill
+        sizes="(min-width: 1024px) 14rem, (min-width: 640px) 30vw, 90vw"
+        className="object-contain object-left-bottom"
+      />
+    </span>
   );
 }

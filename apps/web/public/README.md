@@ -21,21 +21,29 @@ does not fit, so a frame with the subject running edge to edge loses its
 head on the shorter pages. `PageHero` floors an image band at 22rem for the
 same reason.
 
-## Court marks
+## High Court marks
 
 One per office, behind the location cards on the home page
 (`src/components/city-icon.tsx`, keyed by city):
 
 | File | Office |
 | --- | --- |
-| `court-telangana.png` | Hyderabad |
-| `court-karnataka.png` | Bengaluru |
-| `court-andhra-pradesh.png` | Guntur |
+| `hc-telangana.png` | Hyderabad |
+| `hc-karnataka.png` | Bengaluru |
+| `hc-andhra-pradesh.png` | Guntur |
 
-Gold line work on a transparent ground, cropped from one supplied sheet onto
-a shared 180×124 canvas — so they keep a common baseline and their relative
-sizes, and render level with each other at one height. Replacing one means
-matching that canvas, or all three drift.
+Each was supplied as a one-colour illustration on white and converted to a
+transparent PNG in the exact site gold (`--color-gold`, `#c27c38`), with
+opacity taken from colour saturation — so the cream fills inside a building
+drop out rather than turning into grey blocks — then cropped tight to the
+artwork. Replacing one: do the same, or it will not match the other two —
+and give the new file a new name rather than overwriting, because the image
+optimizer caches by URL and would go on serving the old one for hours.
+
+They are **not** on a shared canvas: the Karnataka façade is nearly three
+times as wide as it is tall, so `CityIcon` fits each one (`contain`) into a
+box as wide as its card and a fixed height, bottom-left, and the ground
+lines line up.
 
 ## Hero photography
 

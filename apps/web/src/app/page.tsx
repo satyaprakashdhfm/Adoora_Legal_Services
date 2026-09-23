@@ -6,7 +6,6 @@ import { InsightCard, SectionHeading } from "@/components/ui";
 import { PracticesCarousel } from "@/components/practices-carousel";
 import { CityIcon } from "@/components/city-icon";
 import { OurApproach } from "@/components/our-approach";
-import { WhatsAppButton } from "@/components/whatsapp-button";
 import { firm, firmOverview, differentiators, offices } from "@/content/firm";
 import { peopleBySlugs } from "@/content/people";
 import { PeopleCards } from "@/components/people-cards";
@@ -228,7 +227,7 @@ export default function Home() {
                   key={office.city}
                   className="rounded-xl border border-line bg-paper p-5"
                 >
-                  <CityIcon city={office.city} className="h-16 w-auto" />
+                  <CityIcon city={office.city} className="h-20 w-full" />
                   <h3 className="mt-4 font-serif text-lg font-semibold text-ink">
                     {office.city}
                   </h3>
@@ -331,9 +330,6 @@ export default function Home() {
           }),
         }}
       />
-
-      {/* Home page only, by request — not in the root layout. */}
-      <WhatsAppButton />
     </>
   );
 }

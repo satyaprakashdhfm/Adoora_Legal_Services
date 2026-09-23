@@ -166,7 +166,7 @@ export function Hero({ images }: { images: (string | null)[] }) {
               return (
                 <div
                   key={slide.eyebrow}
-                  className={`hero-slide col-start-1 row-start-1 ${
+                  className={`hero-copy col-start-1 row-start-1 ${
                     isActive ? "opacity-100" : "pointer-events-none opacity-0"
                   }`}
                   aria-hidden={!isActive}
