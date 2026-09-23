@@ -362,6 +362,13 @@ export function InsightCard({ insight }: { insight: Insight }) {
  * `PageHero` gets it: only pass `image` on the pages the firm chose for it
  * (currently Insights, Careers, About and Contact) so the others keep the
  * plain `paper-tint` band.
+ *
+ * A band with the image gets a floor under its height, because the band is
+ * as tall as whatever copy the page passes and `cover` crops the statue to
+ * fit: About, with a title and no lead, was short enough to cut the statue
+ * off at the head. 22rem is Contact's natural height — the fullest of these
+ * four headers, and the framing the firm signed off — so the others now
+ * match it and a longer page (Insights) is still free to grow past it.
  */
 export function PageHero({
   eyebrow,
@@ -381,7 +388,11 @@ export function PageHero({
   const heroBg = image ? publicImage("hero-bg") : null;
 
   return (
-    <section className="relative overflow-hidden border-b border-line-strong bg-paper-tint text-ink">
+    <section
+      className={`relative overflow-hidden border-b border-line-strong bg-paper-tint text-ink ${
+        heroBg ? "flex min-h-[22rem] items-center" : ""
+      }`}
+    >
       {heroBg && (
         <Image
           src={heroBg}

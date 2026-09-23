@@ -227,7 +227,7 @@ export default function Home() {
                   key={office.city}
                   className="rounded-xl border border-line bg-paper p-5"
                 >
-                  <CityIcon city={office.city} className="h-9 w-9 text-gold" />
+                  <CityIcon city={office.city} className="h-16 w-auto" />
                   <h3 className="mt-4 font-serif text-lg font-semibold text-ink">
                     {office.city}
                   </h3>

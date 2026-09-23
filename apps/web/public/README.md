@@ -15,6 +15,28 @@ on the pages passed `image` — currently Insights, Careers, About and Contact.
 Pale enough that the heading needs no scrim over it; a page that doesn't pass
 `image` keeps the plain `paper-tint` band.
 
+Keep the subject on the **right** and give it room top and bottom. The band
+is only as tall as the page's own heading copy, and `cover` crops whatever
+does not fit, so a frame with the subject running edge to edge loses its
+head on the shorter pages. `PageHero` floors an image band at 22rem for the
+same reason.
+
+## Court marks
+
+One per office, behind the location cards on the home page
+(`src/components/city-icon.tsx`, keyed by city):
+
+| File | Office |
+| --- | --- |
+| `court-telangana.png` | Hyderabad |
+| `court-karnataka.png` | Bengaluru |
+| `court-andhra-pradesh.png` | Guntur |
+
+Gold line work on a transparent ground, cropped from one supplied sheet onto
+a shared 180×124 canvas — so they keep a common baseline and their relative
+sizes, and render level with each other at one height. Replacing one means
+matching that canvas, or all three drift.
+
 ## Hero photography
 
 One frame per hero slide, cross-fading as the copy rotates. The slides and the
