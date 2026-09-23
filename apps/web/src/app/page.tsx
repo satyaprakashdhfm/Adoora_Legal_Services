@@ -6,6 +6,7 @@ import { InsightCard, SectionHeading } from "@/components/ui";
 import { PracticesCarousel } from "@/components/practices-carousel";
 import { CityIcon } from "@/components/city-icon";
 import { OurApproach } from "@/components/our-approach";
+import { WhatsAppButton } from "@/components/whatsapp-button";
 import { firm, firmOverview, differentiators, offices } from "@/content/firm";
 import { peopleBySlugs } from "@/content/people";
 import { PeopleCards } from "@/components/people-cards";
@@ -330,6 +331,9 @@ export default function Home() {
           }),
         }}
       />
+
+      {/* Home page only, by request — not in the root layout. */}
+      <WhatsAppButton />
     </>
   );
 }
