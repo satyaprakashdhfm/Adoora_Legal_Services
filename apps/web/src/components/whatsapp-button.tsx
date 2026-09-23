@@ -8,10 +8,14 @@ import { firm } from "@/content/firm";
  * separate WhatsApp number to keep in step: `wa.me` wants the E.164 number
  * with the `+` dropped, which `firm.phoneE164` already is.
  *
- * Two rings expand from behind the button and fade out, staggered, so there
- * is always one mid-flight (`.whatsapp-ripple` in globals.css, which also
- * turns them off for reduced motion). They are inside the link, so they take
- * no pointer events of their own and never enlarge its click target.
+ * Two thin rings expand from the button's edge and fade to nothing,
+ * staggered so there is always one mid-flight (`.whatsapp-ripple` in
+ * globals.css, which also turns them off for reduced motion). Each is an
+ * outline only — unfilled, so the page shows through inside and outside the
+ * ring — and an SVG stroke rather than a CSS border: `non-scaling-stroke`
+ * keeps the line the same hairline width however far the ring has grown,
+ * where a scaled border would thicken as it went. They take no pointer
+ * events, so they never enlarge the link's click target.
  *
  * Sits at `z-40`, deliberately under the cookie banner (`z-50`, opaque, and
  * with its Accept / Reject buttons at the right-hand end): while the banner
@@ -34,14 +38,36 @@ export function WhatsAppButton() {
       aria-label="Chat with us on WhatsApp"
       className="fixed bottom-5 right-5 z-40 flex h-14 w-14 items-center justify-center rounded-full bg-[#25D366] text-white shadow-[0_8px_22px_rgba(11,24,52,0.3)] transition duration-200 hover:scale-105 hover:shadow-[0_10px_26px_rgba(11,24,52,0.38)] sm:bottom-6 sm:right-6 print:hidden"
     >
-      <span
+      <svg
+        viewBox="0 0 100 100"
         aria-hidden="true"
-        className="whatsapp-ripple pointer-events-none absolute inset-0 rounded-full bg-[#25D366]"
-      />
-      <span
+        className="whatsapp-ripple pointer-events-none absolute inset-0 h-full w-full overflow-visible"
+      >
+        <circle
+          cx="50"
+          cy="50"
+          r="50"
+          fill="none"
+          stroke="#25D366"
+          strokeWidth="1.5"
+          vectorEffect="non-scaling-stroke"
+        />
+      </svg>
+      <svg
+        viewBox="0 0 100 100"
         aria-hidden="true"
-        className="whatsapp-ripple pointer-events-none absolute inset-0 rounded-full bg-[#25D366] [animation-delay:1.2s]"
-      />
+        className="whatsapp-ripple pointer-events-none absolute inset-0 h-full w-full overflow-visible [animation-delay:1.2s]"
+      >
+        <circle
+          cx="50"
+          cy="50"
+          r="50"
+          fill="none"
+          stroke="#25D366"
+          strokeWidth="1.5"
+          vectorEffect="non-scaling-stroke"
+        />
+      </svg>
       <svg
         viewBox="0 0 24 24"
         aria-hidden="true"

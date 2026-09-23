@@ -9,9 +9,16 @@ import { publicImage } from "@/lib/public-image";
  * The three buildings are very different shapes — the Karnataka façade is
  * nearly three times as wide as it is tall, the Telangana one under twice —
  * so they are not sized by a shared canvas. Each is fitted (`contain`) into
- * a box as wide as its card and a fixed height, and anchored bottom-left, so
- * a wide one is limited by the card's width, a tall one by the height, and
- * all three keep their ground lines level with each other.
+ * a box as wide as its card and a fixed height, centred across the card and
+ * anchored to the bottom, so a wide one is limited by the card's width, a
+ * tall one by the height, and all three keep their ground lines level.
+ *
+ * The files are the exact site gold (`--color-gold`, checked pixel for pixel,
+ * and unchanged by the image optimizer), but they read heavier than the same
+ * gold on the thin strokes of the icons elsewhere on the site: a large solid
+ * fill shows the colour at full strength where a hairline anti-aliases into a
+ * lighter tan. `opacity-80` brings the rendered tone in line with those
+ * icons (about 205,148,92 on the paper ground) without touching the files.
  */
 const courtByCity: Record<string, string> = {
   Hyderabad: "hc-telangana",
@@ -37,7 +44,7 @@ export function CityIcon({
         alt=""
         fill
         sizes="(min-width: 1024px) 14rem, (min-width: 640px) 30vw, 90vw"
-        className="object-contain object-left-bottom"
+        className="object-contain object-bottom opacity-80"
       />
     </span>
   );
