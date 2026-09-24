@@ -101,7 +101,7 @@ export default function Home() {
       </section>
 
       {/* The team, below the about band — the founder and the two senior
-          associates, each a full-bleed portrait card. */}
+          associates, one per slide, auto-advancing. */}
       <section className="border-y border-line bg-paper-warm">
         <div className="container-page py-14 sm:py-16">
           <div className="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">

@@ -44,6 +44,22 @@ export type Person = {
   photo?: string;
   /** Initials used by the portrait placeholder until photography is supplied. */
   initials: string;
+  /**
+   * The home page "Our people" slide: a short introduction and three
+   * credentials under it. Kept apart from `bio`, `education` and
+   * `experience` so that sample copy here never shows up as fact on the
+   * About page.
+   */
+  spotlight?: Spotlight;
+};
+
+export type Spotlight = {
+  summary: string;
+  credentials: {
+    icon: "degree" | "bar" | "experience";
+    title: string;
+    detail: string;
+  }[];
 };
 
 export const people: Person[] = [
@@ -53,6 +69,18 @@ export const people: Person[] = [
     designation: "Founder",
     group: "legal",
     initials: "GR",
+    // SAMPLE: stock portrait and placeholder copy. Replace both with the
+    // firm's own before launch.
+    photo: "person-ganesh-raghavendra",
+    spotlight: {
+      summary:
+        "Leads the firm's litigation and advisory practice, advising businesses and individuals on commercial disputes, corporate matters and regulatory questions before courts and tribunals across South India.",
+      credentials: [
+        { icon: "degree", title: "LL.B.", detail: "Law Degree" },
+        { icon: "bar", title: "Admitted to the Bar", detail: "India" },
+        { icon: "experience", title: "15+ Years", detail: "of Experience" },
+      ],
+    },
   },
   {
     slug: "vidya-sagar",
@@ -60,6 +88,17 @@ export const people: Person[] = [
     designation: "Senior Associate",
     group: "legal",
     initials: "VS",
+    // SAMPLE: stock portrait and placeholder copy.
+    photo: "person-vidya-sagar",
+    spotlight: {
+      summary:
+        "Practises in civil and commercial litigation, representing clients before the High Courts, district courts and arbitral tribunals on contract, property and recovery disputes.",
+      credentials: [
+        { icon: "degree", title: "LL.B.", detail: "Law Degree" },
+        { icon: "bar", title: "Admitted to the Bar", detail: "India" },
+        { icon: "experience", title: "10+ Years", detail: "of Experience" },
+      ],
+    },
   },
   {
     slug: "kondal-rao",
@@ -67,6 +106,17 @@ export const people: Person[] = [
     designation: "Senior Associate",
     group: "legal",
     initials: "KR",
+    // SAMPLE: stock portrait and placeholder copy.
+    photo: "person-kondal-rao",
+    spotlight: {
+      summary:
+        "Advises on dispute resolution and regulatory matters, handling writ petitions, appeals and statutory proceedings for corporate and individual clients.",
+      credentials: [
+        { icon: "degree", title: "LL.B.", detail: "Law Degree" },
+        { icon: "bar", title: "Admitted to the Bar", detail: "India" },
+        { icon: "experience", title: "8+ Years", detail: "of Experience" },
+      ],
+    },
   },
   {
     slug: "roshini-a",

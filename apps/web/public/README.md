@@ -164,3 +164,11 @@ composite itself in `resources/`, not here, so it is not deployed.
 
 `src/app/icon.png` and `src/app/apple-icon.png`. Next.js picks those up from the
 `app` directory, not from here.
+
+## People portraits (sample)
+
+`person-ganesh-raghavendra.jpg`, `person-vidya-sagar.jpg` and
+`person-kondal-rao.jpg` are **stock placeholders** from Unsplash, set as
+`photo` in `src/content/people.ts` for the home page "Our people" slides.
+Replace them with the firm's own portraits before launch, keeping the same
+base names (any image extension works) and a 4:5 portrait crop.
