@@ -122,7 +122,9 @@ function Card({ item, index }: { item: PracticeArea; index: number }) {
 
 export function PracticesCarousel({ items }: { items: readonly PracticeArea[] }) {
   const scrollerRef = useRef<HTMLUListElement>(null);
+  const [stops, setStops] = useState<number[]>([0]);
   const [activeIndex, setActiveIndex] = useState(0);
+  const [paused, setPaused] = useState(false);
 
   function scrollByCard(direction: 1 | -1) {
     const el = scrollerRef.current;
@@ -132,19 +134,43 @@ export function PracticesCarousel({ items }: { items: readonly PracticeArea[] })
     el.scrollBy({ left: direction * step, behavior: "smooth" });
   }
 
+  /*
+   * The dots mark the scroll positions the row can actually reach, not the
+   * cards. Once the row is scrolled to its end, the last few cards are all
+   * in view but none of them can reach the left edge, so a dot per card
+   * would never light the final few. One stop per card that can reach the
+   * edge, plus the very end of the row. Recomputed on resize, since how many
+   * cards fit on screen changes with the width.
+   */
+  useEffect(() => {
+    const el = scrollerRef.current;
+    if (!el) return;
+
+    function measure() {
+      const max = el!.scrollWidth - el!.clientWidth;
+      const containerLeft = el!.getBoundingClientRect().left - el!.scrollLeft;
+      const offsets = Array.from(el!.querySelectorAll("li")).map(
+        (card) => card.getBoundingClientRect().left - containerLeft,
+      );
+      const next = offsets.filter((offset) => offset < max - 2);
+      next.push(max);
+      setStops(next.length > 0 ? next : [0]);
+    }
+
+    measure();
+    const observer = new ResizeObserver(measure);
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, [items.length]);
+
   useEffect(() => {
     const el = scrollerRef.current;
     if (!el) return;
 
     function onScroll() {
-      const cards = Array.from(el!.querySelectorAll("li"));
-      const containerLeft = el!.getBoundingClientRect().left;
       let closest = 0;
-      let closestDistance = Infinity;
-      cards.forEach((card, i) => {
-        const distance = Math.abs(card.getBoundingClientRect().left - containerLeft);
-        if (distance < closestDistance) {
-          closestDistance = distance;
+      stops.forEach((stop, i) => {
+        if (Math.abs(stop - el!.scrollLeft) < Math.abs(stops[closest] - el!.scrollLeft)) {
           closest = i;
         }
       });
@@ -154,10 +180,46 @@ export function PracticesCarousel({ items }: { items: readonly PracticeArea[] })
     el.addEventListener("scroll", onScroll, { passive: true });
     onScroll();
     return () => el.removeEventListener("scroll", onScroll);
-  }, []);
+  }, [stops]);
+
+  /*
+   * Auto-scroll: one card every 3s, back to the start after the end. Paused
+   * while the cursor or keyboard focus is on the row, or a finger is on it;
+   * the timer restarts from each new position, so a manual scroll or arrow
+   * click gets a full interval before the row moves again. Off for readers
+   * who ask for reduced motion.
+   */
+  useEffect(() => {
+    if (paused || stops.length < 2) return;
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    const id = window.setTimeout(() => {
+      const el = scrollerRef.current;
+      if (!el) return;
+      if (activeIndex >= stops.length - 1) {
+        el.scrollTo({ left: 0, behavior: "smooth" });
+      } else {
+        scrollByCard(1);
+      }
+    }, 3000);
+    return () => window.clearTimeout(id);
+  }, [activeIndex, paused, stops.length]);
+
+  function goTo(index: number) {
+    scrollerRef.current?.scrollTo({ left: stops[index], behavior: "smooth" });
+  }
 
   return (
-    <div className="relative">
+    <div
+      className="relative"
+      onMouseEnter={() => setPaused(true)}
+      onMouseLeave={() => setPaused(false)}
+      onTouchStart={() => setPaused(true)}
+      onTouchEnd={() => setPaused(false)}
+      onFocus={() => setPaused(true)}
+      onBlur={(event) => {
+        if (!event.currentTarget.contains(event.relatedTarget)) setPaused(false);
+      }}
+    >
       <button
         type="button"
         onClick={() => scrollByCard(-1)}
@@ -204,14 +266,21 @@ export function PracticesCarousel({ items }: { items: readonly PracticeArea[] })
       </button>
 
       <div className="mt-6 flex justify-center gap-1.5">
-        {items.map((item, index) => (
-          <span
-            key={item.slug}
-            aria-hidden="true"
-            className={`h-1 rounded-full transition-all ${
-              index === activeIndex ? "w-6 bg-gold" : "w-1.5 bg-line-strong"
-            }`}
-          />
+        {stops.map((stop, index) => (
+          <button
+            key={index}
+            type="button"
+            onClick={() => goTo(index)}
+            aria-label={`Scroll to position ${index + 1} of ${stops.length}`}
+            aria-current={index === activeIndex}
+            className="flex h-4 items-center"
+          >
+            <span
+              className={`block h-1 rounded-full transition-all ${
+                index === activeIndex ? "w-6 bg-gold" : "w-1.5 bg-line-strong"
+              }`}
+            />
+          </button>
         ))}
       </div>
     </div>
