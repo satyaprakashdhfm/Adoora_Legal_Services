@@ -1,7 +1,7 @@
-import Link from "next/link";
 import type { Metadata } from "next";
 import { PageHero, SectionHeading } from "@/components/ui";
-import { roles } from "@/content/careers";
+import { ApplyDialog } from "@/components/apply-dialog";
+import { roles, speculativeRole } from "@/content/careers";
 
 export const metadata: Metadata = {
   title: "Careers",
@@ -67,8 +67,8 @@ export default function CareersPage() {
         </div>
       </section>
 
-      {/* Roles — title, a short description, and an Apply button that leads
-          to that role's own application page. */}
+      {/* Roles — title, a short description, and an Apply button that opens
+          the application form for that role in a popup. */}
       <section className="border-y border-line bg-paper-warm">
         <div className="container-page py-12 sm:py-14">
           <SectionHeading
@@ -91,13 +91,13 @@ export default function CareersPage() {
                   </p>
                 </div>
 
-                <Link
-                  href={`/careers/apply/${role.slug}`}
+                <ApplyDialog
+                  role={role.title}
                   className="inline-flex shrink-0 items-center gap-2 self-start rounded-full bg-ink px-6 py-3 text-sm font-semibold text-white transition hover:bg-ink-mid sm:self-auto"
                 >
                   Apply
                   <ArrowIcon className="text-gold-bright" />
-                </Link>
+                </ApplyDialog>
               </li>
             ))}
           </ul>
@@ -105,12 +105,12 @@ export default function CareersPage() {
           <p className="mt-8 text-sm text-ink-soft">
             If none of these fit but you think the firm is right for you, send
             a{" "}
-            <Link
-              href="/careers/apply/speculative-application"
+            <ApplyDialog
+              role={speculativeRole.title}
               className="font-semibold text-gold-deep underline decoration-gold/40 underline-offset-4 transition hover:decoration-gold"
             >
               speculative application
-            </Link>
+            </ApplyDialog>
             .
           </p>
         </div>

@@ -204,17 +204,17 @@ figcaption {
  * fading to nothing as it goes, then starts again. Two rings run half a
  * cycle apart (see the delay on the second) so one is always mid-flight. The
  * ease-out curve front-loads the growth, which is what reads as a pulse
- * rather than a slow zoom. The ring is an unfilled SVG stroke, so it starts
- * fairly opaque — a hairline at the half opacity a filled disc could use
- * would barely show.
+ * rather than a slow zoom. The ring is an unfilled SVG stroke; it starts at
+ * under half opacity and only grows to 1.6x, so it stays a quiet pulse
+ * rather than a bright halo.
  */
 @keyframes whatsapp-ripple {
   0% {
     transform: scale(1);
-    opacity: 0.85;
+    opacity: 0.4;
   }
   100% {
-    transform: scale(2);
+    transform: scale(1.6);
     opacity: 0;
   }
 }
