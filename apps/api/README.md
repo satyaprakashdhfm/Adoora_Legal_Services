@@ -28,6 +28,7 @@ Deployed from `dev` at <https://adoora-api-production.up.railway.app>.
 | GET · POST | `/api/auth/me` · `/api/auth/logout` | Session | Current account; sign out. |
 | GET POST | `/api/cases` | Session | Cases in the caller's scope; create (clients create INTAKE matters). |
 | GET PATCH | `/api/cases/:ref` | Session | Case detail (filtered by role); edit (lawyers on the case, admins). |
+| GET | `/api/cases/:cnr` | Staff (not EDITOR) | Live case record from eCourtsIndia by 16-character CNR. 20 lookups/min per user; audited. |
 | POST | `/api/cases/:ref/updates` | Session | Timeline entry. |
 | PUT | `/api/cases/:ref/assignments` · `/clients` | Admin | Lawyers on the case; client accounts that can see it. |
 | POST | `/api/cases/:ref/documents` | Session | Multipart upload (`file`), encrypted and stored. |
@@ -39,6 +40,12 @@ Deployed from `dev` at <https://adoora-api-production.up.railway.app>.
 "Session" means the `__Host-als_session` cookie, sent by the website through
 its `/api` rewrite. Staff endpoints also accept the bearer token from
 `/api/admin/auth/login`. What each caller sees is decided in `src/access.ts`.
+
+`/api/cases/:cnr` and `/api/cases/:ref` share a path: a 16-character value
+with no hyphens is treated as a CNR and looked up on eCourtsIndia
+(`src/integrations/ecourts.ts`); anything else (`ALS-2026-K7Q3X9`) is the
+firm's own record. `ECOURTS_API_KEY` is sent only to eCourtsIndia, as a
+bearer token — it never reaches the browser or the logs.
 
 ## Local development
 

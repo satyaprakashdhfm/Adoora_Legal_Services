@@ -1,5 +1,7 @@
 import { Router } from "express";
+import rateLimit from "express-rate-limit";
 import { prisma } from "../db.js";
+import { CNR_PATTERN, fetchCaseByCnr, normaliseCnr } from "../integrations/ecourts.js";
 import { HttpError } from "../lib/http.js";
 import { audit } from "../lib/audit.js";
 import { makeCaseReference } from "../lib/ids.js";
@@ -317,6 +319,66 @@ async function loadCaseDetail(principal: Principal, id: string) {
     },
   });
 }
+
+// ---------------------------------------------------------------------------
+// eCourts case detail, by CNR
+// ---------------------------------------------------------------------------
+
+/**
+ * Each lookup is billed by eCourtsIndia, so it is limited per signed-in
+ * account rather than per IP (staff can share an office connection).
+ */
+const ecourtsLimiter = rateLimit({
+  windowMs: 60 * 1000,
+  limit: 20,
+  standardHeaders: "draft-7",
+  legacyHeaders: false,
+  keyGenerator: (req) => `ecourts:${req.principal?.id ?? "anonymous"}`,
+  message: {
+    error: "rate_limited",
+    message: "Too many eCourts lookups. Please wait a minute and try again.",
+  },
+});
+
+/**
+ * GET /api/cases/:cnr — the live case record from eCourtsIndia.
+ *
+ * Shares its path with the firm's own case records (`/api/cases/ALS-…`). The
+ * two cannot collide: a CNR is 16 letters and digits with no hyphens, a firm
+ * reference always has them. Anything that is not a CNR falls through to the
+ * firm-record handler below.
+ *
+ * Firm lawyers and admins only: the data is public court information, but
+ * every call spends the firm's eCourts credits.
+ */
+casesRouter.get(
+  "/:cnr",
+  (req, _res, next) => {
+    const cnr = normaliseCnr(String(req.params.cnr));
+    // Not a CNR (e.g. ALS-2026-K7Q3X9): let the next route handle it.
+    if (!CNR_PATTERN.test(cnr)) return next("route");
+    next();
+  },
+  (req, _res, next) => {
+    next(isCaseStaff(req.principal) ? undefined : notFound());
+  },
+  ecourtsLimiter,
+  async (req, res) => {
+    const cnr = normaliseCnr(String(req.params.cnr));
+    const result = await fetchCaseByCnr(cnr);
+
+    await audit(req, "ecourts.case_lookup", "EcourtsCase", cnr, { requestId: result.requestId });
+
+    res.set("Cache-Control", "private, no-store");
+    res.json({
+      source: "ecourtsindia",
+      cnr,
+      requestId: result.requestId,
+      fetchedAt: new Date().toISOString(),
+      data: result.data,
+    });
+  },
+);
 
 casesRouter.get("/:reference", async (req, res) => {
   const principal = req.principal!;

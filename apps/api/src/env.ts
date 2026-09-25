@@ -94,6 +94,14 @@ const schema = z.object({
   DOCUMENT_ENCRYPTION_KEY_ID: z.string().default("k1"),
 
   MAX_UPLOAD_MB: z.coerce.number().int().min(1).max(100).default(25),
+
+  /**
+   * eCourtsIndia partner API. The key is sent upstream as a bearer token and
+   * never leaves the API — the browser only ever sees the case data. Lookups
+   * are switched off (503) until it is set.
+   */
+  ECOURTS_API_KEY: optionalString(z.string()),
+  ECOURTS_API_URL: z.string().url().default("https://webapi.ecourtsindia.com"),
 });
 
 const parsed = schema.safeParse(process.env);

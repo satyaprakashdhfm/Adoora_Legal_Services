@@ -315,6 +315,8 @@ In Google Cloud Console, for the firm's project:
 | `S3_FORCE_PATH_STYLE` | no | `true` only for providers that need path-style URLs. |
 | `DOCUMENT_ENCRYPTION_KEY` | yes in production | 32 bytes base64. `openssl rand -base64 32`. Seal it, and keep a copy outside Railway. |
 | `DOCUMENT_ENCRYPTION_KEY_ID` | no | Label stored with each document; defaults to `k1`. |
+| `ECOURTS_API_KEY` | for eCourts lookups | eCourtsIndia partner token (`eci_live_…`). Server-side only; `GET /api/cases/:cnr` returns 503 until set. Seal it. |
+| `ECOURTS_API_URL` | no | Defaults to `https://webapi.ecourtsindia.com`. |
 | `MAX_UPLOAD_MB` | no | Defaults to 25. Keep below the web's `proxyClientMaxBodySize` (30 MB). |
 | `NOTIFY_EMAIL` | no | Enquiry notifications, once mail is wired up. |
 | `PORT` | no | Railway injects it. |
