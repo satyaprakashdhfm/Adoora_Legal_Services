@@ -47,8 +47,9 @@ The website works without the API running — every public page is prerendered.
 The forms, `/login`, `/dashboard` and `/admin` need it. The website forwards
 `/api/*` to `API_INTERNAL_URL` (default `http://localhost:4000`).
 
-Without Google credentials, sign in to the console with the seeded owner's
-password at `/login` → *Firm staff*. Documents go to `apps/api/storage/`
+`/login` offers only Google. Without Google credentials locally, sign in with
+the seeded owner's password by calling `POST /api/auth/password` (it sets the
+session cookie). Documents go to `apps/api/storage/`
 (encrypted) with the default `STORAGE_DRIVER=local`.
 
 Create the first staff account for the admin API:
@@ -71,7 +72,7 @@ SEED_OWNER_EMAIL=you@firm.com SEED_OWNER_PASSWORD='a-long-password' npm run seed
 | `/contact` · `/careers` | Intake and application forms |
 | `/disclaimer` `/privacy` `/cookies` `/terms` | Policies |
 | `/notice` | Shown when a visitor declines the disclaimer |
-| `/login` | "Continue with Google", plus staff password sign-in |
+| `/login` | Sign in — "Continue with Google" only |
 | `/dashboard` | Clients: their matters, documents, timeline, new-matter intake. Lawyers: their assigned cases |
 | `/admin` | Admin console (owners and admins): cases, documents, clients, lawyers & staff, enquiries, applications, audit log |
 

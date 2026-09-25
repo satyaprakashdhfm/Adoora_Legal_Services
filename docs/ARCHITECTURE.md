@@ -97,8 +97,9 @@ Cookie-authenticated writes must also carry an `Origin` matching the website.
 
 The original password login (`POST /api/admin/auth/login`, bearer token) still
 works for scripts, and now checks the account is still active on every call.
-`/login` also offers staff a password sign-in, so the console is reachable
-before Google is configured.
+`POST /api/auth/password` gives staff with a password a session cookie too —
+an emergency route if Google is ever unavailable. `/login` does not offer it;
+the page shows only "Continue with Google".
 
 ### Roles
 
