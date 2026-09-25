@@ -170,7 +170,7 @@ casesRouter.post("/", async (req, res) => {
           updates: {
             create: {
               kind: "NOTE",
-              title: "Matter opened from the client dashboard",
+              title: "Case added from the client dashboard",
               body: "The firm will review the details and confirm whether it can act. Until an engagement is confirmed in writing, no lawyer–client relationship exists.",
               visibility: "CLIENT",
               authorClientId: principal.id,

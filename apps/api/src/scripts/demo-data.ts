@@ -231,7 +231,7 @@ async function add(email: string) {
       updates: {
         createMany: {
           data: [
-            { kind: "NOTE", title: "Matter opened from the client dashboard", visibility: "CLIENT", authorClientId: client.id, createdAt: day(-125) },
+            { kind: "NOTE", title: "Case added from the client dashboard", visibility: "CLIENT", authorClientId: client.id, createdAt: day(-125) },
             { kind: "STATUS_CHANGE", title: "Status changed to Active", body: "Engagement confirmed in writing.", visibility: "CLIENT", authorUserId: author, createdAt: day(-122) },
             { kind: "FILING", title: "Complaint filed", eventDate: day(-120), visibility: "CLIENT", authorUserId: author, createdAt: day(-120) },
             { kind: "HEARING", title: "Evidence stage", body: "Please send the payment receipts and the builder's emails by the end of the week.", eventDate: day(-15), visibility: "CLIENT", authorUserId: author, createdAt: day(-15) },

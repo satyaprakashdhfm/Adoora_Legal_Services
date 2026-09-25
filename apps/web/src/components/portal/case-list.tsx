@@ -74,7 +74,7 @@ export function CaseList({
             type="search"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            placeholder={staff ? "Search reference, title, case no., CNR, party or client" : "Search your matters"}
+            placeholder={staff ? "Search reference, title, case no., CNR, party or client" : "Search your cases"}
             aria-label="Search cases"
           />
           <Select aria-label="Status" value={status} onChange={(e) => setStatus(e.target.value)} placeholder="All statuses" options={CASE_STATUSES} />
@@ -90,7 +90,7 @@ export function CaseList({
         <Spinner />
       ) : cases.length === 0 ? (
         <EmptyState title={query || status || court ? "No matching cases" : "No cases yet"} action={emptyAction}>
-          {!staff && !query && !status && "When the firm opens a matter for you, or you open one here, it appears in this list."}
+          {!staff && !query && !status && "When the firm opens a case for you, or you add one here, it appears in this list."}
         </EmptyState>
       ) : (
         <ul className="divide-y divide-line">

@@ -88,7 +88,7 @@ export default function AdminEnquiries() {
               <tr>
                 <Th>Received</Th>
                 <Th>From</Th>
-                <Th>Matter</Th>
+                <Th>Type of case</Th>
                 <Th>Status</Th>
                 <Th />
               </tr>

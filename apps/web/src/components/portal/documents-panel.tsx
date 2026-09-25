@@ -211,7 +211,7 @@ export function DocumentsPanel({
           <p className="text-sm text-slate">
             {staff
               ? "Encrypted at rest. Every download is recorded in the audit log."
-              : "Files you upload are encrypted and seen only by you and the lawyers on this matter."}
+              : "Files you upload are encrypted and seen only by you and the lawyers on this case."}
           </p>
         </div>
         <Button onClick={() => setUploadOpen(true)}>Upload document</Button>

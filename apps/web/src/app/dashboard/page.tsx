@@ -40,7 +40,7 @@ export default function DashboardOverview() {
         title={`Welcome, ${firstName(user.name)}`}
         description={
           client
-            ? "Follow your matters, upload documents for your lawyers, and see every hearing and order as the firm records it."
+            ? "Follow your cases, upload documents for your lawyers, and see every hearing and order as the firm records it."
             : "The cases assigned to you, with the client's documents and the full timeline."
         }
         actions={
@@ -52,7 +52,7 @@ export default function DashboardOverview() {
       />
 
       <div className="grid gap-4 sm:grid-cols-3">
-        <StatTile label={client ? "Open matters" : "Open cases"} value={cases ? open.length : "…"} href="/dashboard/cases" />
+        <StatTile label={"Open cases"} value={cases ? open.length : "…"} href="/dashboard/cases" />
         <StatTile label="Documents" value={cases ? documents : "…"} href="/dashboard/documents" />
         <StatTile
           label="Next hearing"
@@ -85,7 +85,7 @@ export default function DashboardOverview() {
       )}
 
       <div>
-        <h2 className="mb-3 font-serif text-xl font-semibold text-ink">{client ? "Your matters" : "Your cases"}</h2>
+        <h2 className="mb-3 font-serif text-xl font-semibold text-ink">Your cases</h2>
         <CaseList
           key={refresh}
           basePath="/dashboard"
@@ -104,7 +104,7 @@ export default function DashboardOverview() {
 
       {client && (
         <p className="text-xs leading-relaxed text-slate">
-          Opening a matter here does not by itself create a lawyer–client relationship. The firm first
+          Adding a case here does not by itself create a lawyer–client relationship. The firm first
           runs a conflicts check and confirms any engagement in writing.
         </p>
       )}

@@ -124,7 +124,7 @@ export function CourtRecordPanel({ record, onSynced }: { record: CaseDetail; onS
       )}
 
       <Card>
-        <CardHeader title="Hearing history" description="Each date the matter was listed, as the court recorded it." />
+        <CardHeader title="Hearing history" description="Each date the case was listed, as the court recorded it." />
         {record.hearings.length === 0 ? (
           <EmptyState title="No hearings on the court's record yet" />
         ) : (

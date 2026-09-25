@@ -83,7 +83,7 @@ export function CaseWorkspace({ reference, user, basePath }: { reference: string
     <div className="space-y-6">
       <div>
         <Link href={`${basePath}/cases`} className="text-xs font-semibold text-slate hover:text-ink">
-          ← All {user.kind === "client" ? "matters" : "cases"}
+          ← All {user.kind === "client" ? "my cases" : "cases"}
         </Link>
         <div className="mt-3 flex flex-wrap items-start justify-between gap-4">
           <div className="min-w-0">

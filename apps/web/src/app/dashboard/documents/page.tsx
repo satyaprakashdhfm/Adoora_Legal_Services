@@ -17,7 +17,7 @@ export default function DashboardDocuments() {
         title="Documents"
         description={
           client
-            ? "A folder for each of your matters, with what you have sent to the firm and what your lawyers have shared with you."
+            ? "A folder for each of your cases, with what you have sent to the firm and what your lawyers have shared with you."
             : "A folder for each case assigned to you, plus the firm's Team shared folder."
         }
         actions={<UploadButton onUploaded={() => setRefresh((n) => n + 1)} />}

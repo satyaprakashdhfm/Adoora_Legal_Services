@@ -50,7 +50,7 @@ export function RaiseQueryButton({ onRaised }: { onRaised: () => void }) {
       <Modal open={open} onClose={() => setOpen(false)} title="Raise a query">
         {open && (
           <form onSubmit={submit} className="space-y-4">
-            <Field label="About which matter?">
+            <Field label="About which case?">
               <Select
                 name="caseReference"
                 defaultValue=""
@@ -126,7 +126,7 @@ export function QueryList({ staff, basePath, refreshKey }: { staff: boolean; bas
         <Spinner />
       ) : rows.length === 0 ? (
         <EmptyState title={status === "OPEN" ? "No open queries" : "No queries yet"}>
-          {staff ? "Questions clients raise from their dashboard appear here." : "Ask your lawyers anything about your matters — the answer appears here."}
+          {staff ? "Questions clients raise from their dashboard appear here." : "Ask your lawyers anything about your cases — the answer appears here."}
         </EmptyState>
       ) : (
         <ul className="divide-y divide-line">

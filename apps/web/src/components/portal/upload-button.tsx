@@ -59,7 +59,7 @@ export function UploadButton({
           <div className="py-4 text-center">
             <p className="font-serif text-lg font-semibold text-ink">Uploaded</p>
             <p className="mt-1 text-sm text-slate">
-              {done}. {client ? "Your lawyers can see it on the matter now." : "It is on the case now."}
+              {done}. {client ? "Your lawyers can see it on the case now." : "It is on the case now."}
             </p>
             <div className="mt-5 flex justify-center gap-2">
               <Button tone="secondary" onClick={() => setDone(null)}>Upload another</Button>
@@ -70,16 +70,16 @@ export function UploadButton({
           <Spinner />
         ) : cases.length === 0 ? (
           <EmptyState
-            title={client ? "Open a matter first" : "No open cases"}
+            title={client ? "Add a case first" : "No open cases"}
             action={client ? <NewCaseButton /> : undefined}
           >
             {client
-              ? "Documents are kept with the matter they belong to, so only the lawyers on that matter can see them. Tell us briefly what it is about, then upload."
+              ? "Documents are kept with the case they belong to, so only the lawyers on that case can see them. Tell us briefly what it is about, then upload."
               : "Documents are uploaded to a case. You have no open cases assigned."}
           </EmptyState>
         ) : (
           <div className="space-y-5">
-            <Field label={client ? "Which matter is this for?" : "Case"} required>
+            <Field label={client ? "Which case is this for?" : "Case"} required>
               <Select
                 value={reference}
                 onChange={(e) => setReference(e.target.value)}

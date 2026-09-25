@@ -16,7 +16,7 @@ export default function DashboardQueries() {
         title={client ? "My queries" : "Client queries"}
         description={
           client
-            ? "Ask your lawyers a question about your matters. Their reply appears here."
+            ? "Ask your lawyers a question about your cases. Their reply appears here."
             : "Questions clients have raised about the cases assigned to you."
         }
         actions={client ? <RaiseQueryButton onRaised={() => setRefresh((n) => n + 1)} /> : undefined}

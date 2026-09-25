@@ -265,7 +265,7 @@ export function DocumentDrive({ basePath, staff }: { basePath: string; staff: bo
             type="search"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            placeholder={staff ? "Find a case folder by reference, title, case number, CNR, party or client" : "Find a matter"}
+            placeholder={staff ? "Find a case folder by reference, title, case number, CNR, party or client" : "Find a case"}
             aria-label="Search folders"
           />
           {!cases ? (
@@ -291,7 +291,7 @@ export function DocumentDrive({ basePath, staff }: { basePath: string; staff: bo
                 />
               ))}
               {cases.length === 0 && (
-                <p className="text-sm text-slate sm:col-span-2">{query ? "No matching case." : staff ? "No cases yet." : "No matters yet."}</p>
+                <p className="text-sm text-slate sm:col-span-2">{query ? "No matching case." : staff ? "No cases yet." : "No cases yet."}</p>
               )}
             </div>
           )}

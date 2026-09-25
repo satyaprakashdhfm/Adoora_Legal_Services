@@ -170,7 +170,7 @@ function NewCaseFlow({ admin, onDone }: { admin: boolean; onDone: (reference: st
                   </Link>
                 </span>
               ))}
-              . Open that instead unless this is a separate matter.
+              . Open that instead unless this is a separate case.
             </p>
           )}
         </div>
@@ -191,7 +191,7 @@ function NewCaseFlow({ admin, onDone }: { admin: boolean; onDone: (reference: st
         key={lookup?.fetchedAt ?? "manual"}
         mode={client ? "client" : "staff"}
         draft={lookup?.draft}
-        submitLabel={client ? "Open matter" : "Create case"}
+        submitLabel={client ? "Add case" : "Create case"}
         before={
           admin ? (
             <fieldset className="border-t border-line pt-6">
@@ -203,7 +203,7 @@ function NewCaseFlow({ admin, onDone }: { admin: boolean; onDone: (reference: st
                   <div className="mt-1.5">
                     <TeamPicker lawyers={lawyers} value={team} onChange={setTeam} />
                   </div>
-                  <p className="mt-1 text-xs text-slate">Add as many as the matter needs. Each sees the case on their dashboard.</p>
+                  <p className="mt-1 text-xs text-slate">Add as many as the case needs. Each sees the case on their dashboard.</p>
                 </div>
                 <Field label="Client account" hint="The client sees the case on their dashboard once linked.">
                   <Select value={clientId} onChange={(e) => setClientId(e.target.value)} placeholder="Link later" options={clients.map((c) => ({ value: c.id, label: `${c.name} — ${c.email}` }))} />
@@ -246,12 +246,12 @@ export function NewCaseButton({
   const router = useRouter();
   const [open, setOpen] = useState(false);
   const client = user.kind === "client";
-  const text = label ?? (client ? "Open a new matter" : admin ? "New case" : "Open a case");
+  const text = label ?? (client ? "Add a case" : admin ? "New case" : "Open a case");
 
   return (
     <>
       <Button tone={tone} size={size} onClick={() => setOpen(true)}>{text}</Button>
-      <Modal open={open} onClose={() => setOpen(false)} title={client ? "Open a new matter" : "New case"} wide>
+      <Modal open={open} onClose={() => setOpen(false)} title={client ? "Add a case" : "New case"} wide>
         {open && (
           <NewCaseFlow
             admin={admin}

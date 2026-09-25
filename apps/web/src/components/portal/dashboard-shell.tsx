@@ -23,7 +23,7 @@ export function DashboardShell({ children }: { children: ReactNode }) {
       {(user) => {
         const tabs = [
           { href: "/dashboard", label: "Overview", exact: true },
-          { href: "/dashboard/cases", label: user.kind === "client" ? "My matters" : "My cases" },
+          { href: "/dashboard/cases", label: "My cases" },
           { href: "/dashboard/documents", label: "Documents" },
           { href: "/dashboard/queries", label: user.kind === "client" ? "My queries" : "Client queries" },
         ];

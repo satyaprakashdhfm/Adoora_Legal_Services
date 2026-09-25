@@ -10,7 +10,7 @@ export default function AdminCases() {
       <PageTitle
         eyebrow="Cases"
         title="All cases"
-        description="Every matter in the firm. Search by the firm's reference, the court's case number, the CNR, a party or a client."
+        description="Every case in the firm. Search by the firm's reference, the court's case number, the CNR, a party or a client."
         actions={<NewCaseButton admin />}
       />
       <CaseList basePath="/admin" staff />

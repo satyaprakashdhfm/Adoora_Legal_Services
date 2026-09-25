@@ -246,11 +246,11 @@ export function CaseForm({
 
   return (
     <form onSubmit={submit} className="space-y-8">
-      <Section title="The matter">
+      <Section title="The case">
         <Field label="Title" required className="sm:col-span-2" hint={staff ? "Usually the cause title, e.g. “Ravi Kumar v. State of Telangana”." : "A few words you will recognise it by."}>
           <Input value={form.title} onChange={(e) => set("title", e.target.value)} required minLength={3} maxLength={300} />
         </Field>
-        <Field label={staff ? "Summary" : "What is the matter about?"} required={!staff} className="sm:col-span-2" hint={staff ? undefined : "Please do not include anything you would not want the firm to read before it has agreed to act — a conflicts check comes first."}>
+        <Field label={staff ? "Summary" : "What is the case about?"} required={!staff} className="sm:col-span-2" hint={staff ? undefined : "Please do not include anything you would not want the firm to read before it has agreed to act — a conflicts check comes first."}>
           <Textarea value={form.summary} onChange={(e) => set("summary", e.target.value)} required={!staff} minLength={staff ? undefined : 20} maxLength={5000} rows={staff ? 3 : 5} />
         </Field>
         <Field label="Practice area">
@@ -273,7 +273,7 @@ export function CaseForm({
         )}
       </Section>
 
-      <Section title="Court or forum" description="Where the matter is, or will be, heard.">
+      <Section title="Court or forum" description="Where the case is, or will be, heard.">
         <Field label="Forum" className="sm:col-span-2">
           <Select value={form.courtLevel} onChange={(e) => onCourtLevel(e.target.value)} options={COURT_LEVELS} />
         </Field>
@@ -322,7 +322,7 @@ export function CaseForm({
             <Field label="Court hall">
               <Input value={form.courtHall} onChange={(e) => set("courtHall", e.target.value)} maxLength={60} />
             </Field>
-            <Field label="Coram" hint="The judge or bench the matter is listed before.">
+            <Field label="Coram" hint="The judge or bench the case is listed before.">
               <Input value={form.coram} onChange={(e) => set("coram", e.target.value)} maxLength={300} />
             </Field>
           </>

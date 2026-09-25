@@ -12,8 +12,8 @@ export default function DashboardCases() {
   return (
     <div className="space-y-6">
       <PageTitle
-        title={client ? "My matters" : "My cases"}
-        description={client ? "Every matter the firm handles for you." : "Cases you are assigned to."}
+        title="My cases"
+        description={client ? "Every case the firm handles for you." : "Cases you are assigned to."}
         actions={<NewCaseButton />}
       />
       <CaseList basePath="/dashboard" staff={!client} />
