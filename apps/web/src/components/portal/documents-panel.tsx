@@ -47,7 +47,7 @@ function uploadWithProgress(url: string, body: FormData, onProgress: (fraction: 
   });
 }
 
-function UploadForm({
+export function UploadForm({
   action,
   staff,
   newVersionOf,

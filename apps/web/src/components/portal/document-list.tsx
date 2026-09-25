@@ -7,8 +7,26 @@ import { DOCUMENT_CATEGORIES, labelFor } from "@/lib/portal/legal";
 import { formatBytes, formatDate } from "@/lib/portal/format";
 import { Badge, Button, Card, EmptyState, ErrorNote, Input, Select, Spinner, Table, Td, Th, VisibilityBadge } from "@/components/portal/ui";
 
-/** Every document the caller can see, across their cases. */
-export function DocumentList({ basePath, staff }: { basePath: string; staff: boolean }) {
+/**
+ * Every document the caller can see, across their cases. `compact` drops the
+ * filters and paging (the overview's "Recent documents"); `refreshKey`
+ * refetches when it changes, e.g. after an upload.
+ */
+export function DocumentList({
+  basePath,
+  staff,
+  compact,
+  limit,
+  refreshKey,
+  emptyAction,
+}: {
+  basePath: string;
+  staff: boolean;
+  compact?: boolean;
+  limit?: number;
+  refreshKey?: number;
+  emptyAction?: React.ReactNode;
+}) {
   const [query, setQuery] = useState("");
   const [category, setCategory] = useState("");
   const [documents, setDocuments] = useState<DocumentRecord[] | null>(null);
@@ -20,6 +38,7 @@ export function DocumentList({ basePath, staff }: { basePath: string; staff: boo
     const params = new URLSearchParams();
     if (query.trim()) params.set("q", query.trim());
     if (category) params.set("category", category);
+    if (limit) params.set("limit", String(limit));
 
     const timer = setTimeout(() => {
       api<Page<DocumentRecord>>(`/documents?${params}`, { signal: controller.signal })
@@ -36,7 +55,7 @@ export function DocumentList({ basePath, staff }: { basePath: string; staff: boo
       clearTimeout(timer);
       controller.abort();
     };
-  }, [query, category]);
+  }, [query, category, limit, refreshKey]);
 
   async function loadMore() {
     if (!cursor) return;
@@ -50,18 +69,20 @@ export function DocumentList({ basePath, staff }: { basePath: string; staff: boo
 
   return (
     <Card>
-      <div className="grid gap-3 border-b border-line p-4 sm:grid-cols-[1fr_16rem]">
-        <Input type="search" value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Search by reference, title, file name or case" aria-label="Search documents" />
-        <Select aria-label="Type" value={category} onChange={(e) => setCategory(e.target.value)} placeholder="All types" options={DOCUMENT_CATEGORIES} />
-      </div>
+      {!compact && (
+        <div className="grid gap-3 border-b border-line p-4 sm:grid-cols-[1fr_16rem]">
+          <Input type="search" value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Search by reference, title, file name or case" aria-label="Search documents" />
+          <Select aria-label="Type" value={category} onChange={(e) => setCategory(e.target.value)} placeholder="All types" options={DOCUMENT_CATEGORIES} />
+        </div>
+      )}
 
       {error && <div className="p-4"><ErrorNote>{error}</ErrorNote></div>}
 
       {!documents ? (
         <Spinner />
       ) : documents.length === 0 ? (
-        <EmptyState title={query || category ? "No matching documents" : "No documents yet"}>
-          {!query && !category && "Documents are uploaded from a case's Documents tab."}
+        <EmptyState title={query || category ? "No matching documents" : "No documents yet"} action={query || category ? undefined : emptyAction}>
+          {!query && !category && (staff ? "Documents uploaded to your cases appear here." : "Documents you upload, and those the firm shares with you, appear here.")}
         </EmptyState>
       ) : (
         <Table>
@@ -102,6 +123,9 @@ export function DocumentList({ basePath, staff }: { basePath: string; staff: boo
                     <span className="text-slate">{formatDate(doc.createdAt)}</span>
                   </Td>
                   <Td className="text-right text-xs">
+                    {latest && /^(application\/pdf|image\/(png|jpeg|webp))$/.test(latest.mimeType) && (
+                      <a href={downloadUrl(doc.reference, { inline: true })} target="_blank" rel="noopener" className="mr-3 font-semibold text-gold-deep hover:underline">View</a>
+                    )}
                     <a href={downloadUrl(doc.reference)} className="font-semibold text-gold-deep hover:underline">Download</a>
                     {latest && <p className="mt-0.5 text-slate">{formatBytes(latest.sizeBytes)}</p>}
                   </Td>
@@ -112,7 +136,7 @@ export function DocumentList({ basePath, staff }: { basePath: string; staff: boo
         </Table>
       )}
 
-      {cursor && (
+      {cursor && !compact && (
         <div className="border-t border-line p-4 text-center">
           <Button tone="secondary" size="sm" onClick={() => void loadMore()}>Load more</Button>
         </div>
