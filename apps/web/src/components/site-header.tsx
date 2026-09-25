@@ -166,9 +166,6 @@ export function SiteHeader() {
               <UtilityIcon path={icons.mail} />
               {firm.email}
             </a>
-            {/* Sign-in sits at the top right of every page. */}
-            <span aria-hidden="true" className="h-4 w-px bg-white/20" />
-            <AccountControl variant="ribbon" />
           </div>
         </div>
       </div>
@@ -275,7 +272,7 @@ export function SiteHeader() {
             <div className="flex items-center gap-3">
               <Link
                 href="/contact"
-                className="hidden items-center gap-2 rounded-md bg-gold px-5 py-2.5 text-sm font-semibold text-ink-deep transition hover:bg-gold-bright lg:inline-flex"
+                className="hidden items-center gap-2 whitespace-nowrap rounded-md bg-gold px-5 py-2.5 text-sm font-semibold text-ink-deep transition hover:bg-gold-bright lg:inline-flex"
               >
                 Request Consultation
                 <svg viewBox="0 0 16 16" aria-hidden="true" className="h-3.5 w-3.5">
@@ -290,6 +287,9 @@ export function SiteHeader() {
                 </svg>
               </Link>
 
+              {/* Login / account menu: the right-hand end of the bar on
+                  desktop, an icon beside the menu button on mobile. */}
+              <AccountControl variant="nav" />
               <AccountControl variant="compact" />
 
               <button
