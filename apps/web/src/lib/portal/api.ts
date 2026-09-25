@@ -59,6 +59,20 @@ export async function api<T = unknown>(
   return payload as T;
 }
 
+/**
+ * After the console saves website content, ask the website to drop its
+ * cached copy so the change shows on the next visit. Best-effort: the pages
+ * refresh within five minutes regardless.
+ */
+export async function refreshWebsite(tags: ("website-people" | "website-jobs")[]) {
+  await fetch("/revalidate", {
+    method: "POST",
+    credentials: "same-origin",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ tags }),
+  }).catch(() => undefined);
+}
+
 /** Link target for a document download; the browser sends the cookie itself. */
 export function downloadUrl(reference: string, options: { version?: number; inline?: boolean } = {}) {
   const params = new URLSearchParams();
@@ -186,7 +200,18 @@ export type CaseDetail = Omit<CaseSummary, "assignments" | "clients" | "_count">
   clients?: { id: string; name: string; email: string; organisation: string | null; phone: string | null }[];
   assignments: {
     role: string;
-    user: { id: string; name: string; email: string; role?: StaffRole; barEnrolment?: string | null };
+    user: {
+      id: string;
+      name: string;
+      email: string;
+      role?: StaffRole;
+      barEnrolment?: string | null;
+      /** From the lawyer's website profile, when they have one. */
+      designation?: string | null;
+      photoUrl?: string | null;
+      /** Portrait bundled with the website (`public/`, .jpg), for carried-over profiles. */
+      photo?: string | null;
+    };
   }[];
   updates: TimelineEntry[];
   documents: DocumentRecord[];
@@ -241,6 +266,51 @@ export type ClientQuery = {
   case: { reference: string; title: string } | null;
   client: { id: string; name: string; email: string };
   answeredBy: { name: string } | null;
+};
+
+export type LawyerProfile = {
+  id: string;
+  slug: string;
+  name: string;
+  designation: string;
+  group: "LEGAL" | "BUSINESS";
+  qualification: string | null;
+  office: string | null;
+  enrolment: string | null;
+  stateBar: string | null;
+  enrolledSince: number | null;
+  experience: string | null;
+  practices: string[];
+  education: string[];
+  bio: string[];
+  memberships: string[];
+  email: string | null;
+  summary: string | null;
+  photo: string | null;
+  photoUrl: string | null;
+  featured: boolean;
+  published: boolean;
+  sortOrder: number;
+  userId: string | null;
+  user?: { id: string; name: string; email: string; role: StaffRole } | null;
+};
+
+export type JobOpening = {
+  id: string;
+  slug: string;
+  title: string;
+  practiceArea: string | null;
+  location: string | null;
+  employmentType: string;
+  experience: string | null;
+  summary: string;
+  responsibilities: string[];
+  requirements: string[];
+  status: "DRAFT" | "OPEN" | "CLOSED";
+  closesOn: string | null;
+  publishedAt: string | null;
+  sortOrder: number;
+  applications?: number;
 };
 
 export type Page<T> = { data: T[]; nextCursor: string | null };

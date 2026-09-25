@@ -8,7 +8,7 @@ import {
   industryFocus,
   offices,
 } from "@/content/firm";
-import { people, peopleByGroup } from "@/content/people";
+import { getPeople } from "@/lib/website-data";
 import { PersonCard } from "@/components/person-card";
 import { practiceAreaBySlug } from "@/content/practice-areas";
 
@@ -19,18 +19,24 @@ export const metadata: Metadata = {
   alternates: { canonical: "/about" },
 };
 
-const rosters = [
-  { heading: "Leadership & advocates", members: peopleByGroup("legal") },
-  {
-    heading: "Business development & corporate relations",
-    members: peopleByGroup("business"),
-  },
-].filter((roster) => roster.members.length > 0);
+/**
+ * The roster comes from the lawyer profiles maintained in the admin console
+ * (Website → Lawyer profiles), so a change in the team shows here without a
+ * code change.
+ */
+export default async function AboutPage() {
+  const people = await getPeople();
+  const rosters = [
+    { heading: "Leadership & advocates", members: people.filter((p) => p.group === "legal") },
+    {
+      heading: "Business development & corporate relations",
+      members: people.filter((p) => p.group === "business"),
+    },
+  ].filter((roster) => roster.members.length > 0);
 
-/** Only people with a bio earn a long-form card beneath the roster. */
-const profiled = people.filter((person) => person.bio?.length);
+  /** Only people with a bio earn a long-form card beneath the roster. */
+  const profiled = people.filter((person) => person.bio?.length);
 
-export default function AboutPage() {
   return (
     <>
       {/* No lead paragraph here — firm.descriptor said the same thing the

@@ -14,6 +14,7 @@ import { authRouter } from "./routes/auth.js";
 import { casesRouter } from "./routes/cases.js";
 import { documentsRouter } from "./routes/documents.js";
 import { queriesRouter } from "./routes/queries.js";
+import { websiteAdminRouter, websitePublicRouter } from "./routes/website.js";
 import { authenticate } from "./middleware/auth.js";
 import { errorHandler, notFound } from "./middleware/error.js";
 
@@ -95,8 +96,10 @@ export function createApp() {
   app.use("/api", authenticate);
 
   app.use("/api", publicRouter);
+  app.use("/api", websitePublicRouter);
   app.use("/api/auth", authRouter);
   app.use("/api/admin", adminRouter);
+  app.use("/api/admin", websiteAdminRouter);
   app.use("/api/cases", casesRouter);
   app.use("/api/documents", documentsRouter);
   app.use("/api/queries", queriesRouter);

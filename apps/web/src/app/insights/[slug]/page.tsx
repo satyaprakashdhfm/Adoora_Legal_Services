@@ -9,7 +9,7 @@ import {
   insightsByDate,
   type Block,
 } from "@/content/insights";
-import { personBySlug } from "@/content/people";
+import { getPeople } from "@/lib/website-data";
 import { practiceAreaBySlug } from "@/content/practice-areas";
 import { industryBySlug } from "@/content/industries";
 import { firm } from "@/content/firm";
@@ -97,7 +97,7 @@ export default async function InsightPage(
 
   if (!insight) notFound();
 
-  const author = personBySlug.get(insight.author);
+  const author = (await getPeople()).find((person) => person.slug === insight.author);
   const tags = [
     ...insight.practices.map((practiceSlug) => {
       const practice = practiceAreaBySlug.get(practiceSlug);

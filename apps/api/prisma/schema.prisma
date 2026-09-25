@@ -57,6 +57,8 @@ model User {
   documentsAdded  Document[]        @relation("DocumentUploadedByUser")
   versionsAdded   DocumentVersion[] @relation("VersionUploadedByUser")
   queriesAnswered ClientQuery[]     @relation("QueryAnsweredBy")
+  /// The lawyer's public profile on the website, when they have one.
+  profile         LawyerProfile?
   courtLookups    CourtSnapshot[]   @relation("SnapshotFetchedByUser")
 
   @@index([email])
@@ -513,14 +515,17 @@ enum DocumentCategory {
   OTHER
 }
 
-/// A document on a case. The bytes live in object storage, one object per
-/// version, so nothing is ever overwritten in place.
+/// A document on a case, or — with no case — in the firm's "Team shared"
+/// folder (templates, precedents, forms), which only staff can see. The
+/// bytes live in object storage, one object per version, so nothing is ever
+/// overwritten in place.
 model Document {
   id             String           @id @default(uuid()) @db.Uuid
-  /// `ALS-2026-K7Q3X9-D004` — the case reference plus a per-case sequence.
+  /// `ALS-2026-K7Q3X9-D004` — the case reference plus a per-case sequence;
+  /// `ALS-TEAM-K7Q3X9` for a team document.
   reference      String           @unique
-  caseId         String           @db.Uuid
-  case           Case             @relation(fields: [caseId], references: [id], onDelete: Restrict)
+  caseId         String?          @db.Uuid
+  case           Case?            @relation(fields: [caseId], references: [id], onDelete: Restrict)
   seq            Int
   title          String
   category       DocumentCategory @default(OTHER)
@@ -578,6 +583,96 @@ model DocumentVersion {
   createdAt DateTime @default(now())
 
   @@unique([documentId, version])
+}
+
+// ---------------------------------------------------------------------------
+// Website: lawyer profiles and job openings
+// ---------------------------------------------------------------------------
+
+enum ProfileGroup {
+  LEGAL // leadership and advocates
+  BUSINESS // business advisory
+}
+
+/// A person as the website shows them — the home page's "Our people" and
+/// the About page roster. Managed from the console, because the team
+/// changes. `userId` links the profile to that lawyer's sign-in account, so
+/// the same person is one person across the website, the cases and the
+/// client dashboard.
+model LawyerProfile {
+  id            String       @id @default(uuid()) @db.Uuid
+  slug          String       @unique
+  name          String
+  designation   String
+  group         ProfileGroup @default(LEGAL)
+  qualification String?
+  office        String?
+  enrolment     String?
+  stateBar      String?
+  enrolledSince Int?
+  experience    String?
+  /// Practice-area slugs from the website's practice-areas.ts.
+  practices     String[]     @default([])
+  education     String[]     @default([])
+  /// Paragraphs. A bio is what earns a long-form profile on the About page.
+  bio           String[]     @default([])
+  memberships   String[]     @default([])
+  email         String?
+  /// Home page introduction.
+  summary       String?      @db.Text
+
+  /// Base name of a portrait bundled with the website (`public/`), for the
+  /// profiles carried over from the static roster.
+  photo          String?
+  /// An uploaded portrait, stored inline: a few hundred KB at most.
+  photoData      Bytes?
+  photoType      String?
+  photoUpdatedAt DateTime?
+
+  /// Shown on the home page.
+  featured  Boolean @default(false)
+  /// Hidden from the website when false; kept for the record.
+  published Boolean @default(true)
+  sortOrder Int     @default(0)
+
+  userId String? @unique @db.Uuid
+  user   User?   @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([published, sortOrder])
+}
+
+enum JobStatus {
+  DRAFT // being written, not on the website
+  OPEN // listed on /careers and accepting applications
+  CLOSED // no longer listed
+}
+
+/// A vacancy on the careers page, posted from the console.
+model JobOpening {
+  id               String    @id @default(uuid()) @db.Uuid
+  slug             String    @unique
+  title            String
+  /// Practice-area slug, where the role sits in one.
+  practiceArea     String?
+  location         String?
+  /// e.g. "Full-time", "Internship".
+  employmentType   String    @default("Full-time")
+  /// e.g. "2–4 years' post-qualification".
+  experience       String?
+  summary          String    @db.Text
+  responsibilities String[]  @default([])
+  requirements     String[]  @default([])
+  status           JobStatus @default(DRAFT)
+  closesOn         DateTime? @db.Date
+  publishedAt      DateTime?
+  sortOrder        Int       @default(0)
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
+
+  @@index([status, sortOrder])
 }
 
 // ---------------------------------------------------------------------------

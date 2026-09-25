@@ -2,7 +2,7 @@ import Image from "next/image";
 import Link from "next/link";
 import type { ReactNode } from "react";
 import type { Faq } from "@/content/types";
-import { peopleBySlugs } from "@/content/people";
+import type { Person } from "@/content/people";
 import type { Insight } from "@/content/insights";
 import { InsightArtwork } from "@/components/insight-artwork";
 import { anchorFor } from "@/lib/anchor";
@@ -254,9 +254,7 @@ export function FaqList({ faqs }: { faqs: Faq[] }) {
 }
 
 /** Team grid. Initials stand in until the firm supplies photography. */
-export function TeamGrid({ slugs }: { slugs: string[] }) {
-  const members = peopleBySlugs(slugs);
-
+export function TeamGrid({ members }: { members: Person[] }) {
   if (!members.length) return null;
 
   return (

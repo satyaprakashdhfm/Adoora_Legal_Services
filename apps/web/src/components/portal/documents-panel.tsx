@@ -52,11 +52,14 @@ export function UploadForm({
   staff,
   newVersionOf,
   onDone,
+  fixedVisibility,
 }: {
   action: string;
   staff: boolean;
   newVersionOf?: string;
   onDone: () => void;
+  /** Set by the folder being uploaded into; hides the "Who can see it" choice. */
+  fixedVisibility?: "CLIENT" | "INTERNAL";
 }) {
   const fileRef = useRef<HTMLInputElement>(null);
   const [file, setFile] = useState<File | null>(null);
@@ -130,7 +133,8 @@ export function UploadForm({
           <Field label="Note" className="sm:col-span-2">
             <Textarea name="description" rows={2} maxLength={2000} />
           </Field>
-          {staff && (
+          {fixedVisibility && <input type="hidden" name="visibility" value={fixedVisibility} />}
+          {staff && !fixedVisibility && (
             <Field label="Who can see it" className="sm:col-span-2">
               <Select
                 name="visibility"

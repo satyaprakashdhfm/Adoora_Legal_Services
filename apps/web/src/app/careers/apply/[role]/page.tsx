@@ -2,17 +2,28 @@ import Link from "next/link";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { CareerForm } from "@/components/career-form";
-import { roles, speculativeRole, roleBySlug } from "@/content/careers";
+import { speculativeRole } from "@/content/careers";
+import { getJob } from "@/lib/website-data";
 
+/**
+ * Only the speculative application is known at build time; posted roles
+ * come from the admin console and are rendered on first request.
+ */
 export function generateStaticParams() {
-  return [...roles, speculativeRole].map((role) => ({ role: role.slug }));
+  return [{ role: speculativeRole.slug }];
+}
+
+async function roleFor(slug: string) {
+  if (slug === speculativeRole.slug) return speculativeRole;
+  const job = await getJob(slug);
+  return job ? { slug: job.slug, title: job.title } : null;
 }
 
 export async function generateMetadata(
   props: PageProps<"/careers/apply/[role]">,
 ): Promise<Metadata> {
   const { role: slug } = await props.params;
-  const role = roleBySlug.get(slug);
+  const role = await roleFor(slug);
 
   if (!role) return { title: "Role not found" };
 
@@ -27,7 +38,7 @@ export default async function ApplyPage(
   props: PageProps<"/careers/apply/[role]">,
 ) {
   const { role: slug } = await props.params;
-  const role = roleBySlug.get(slug);
+  const role = await roleFor(slug);
 
   if (!role) notFound();
 

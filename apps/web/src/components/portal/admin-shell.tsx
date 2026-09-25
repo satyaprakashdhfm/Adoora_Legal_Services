@@ -13,8 +13,9 @@ type NavItem = { href: string; label: string; icon: string; exact?: boolean };
 /**
  * Two groups, ruled apart: the practice (cases and the people on them,
  * including what clients ask from their dashboard) and the public website
- * (contact-form enquiries from people who are not clients yet, and job
- * applications).
+ * (contact-form enquiries from people who are not clients yet, careers, and
+ * the lawyer profiles the website shows — which the cases use too, through
+ * the account each profile is linked to).
  */
 const NAV: { title: string; items: NavItem[] }[] = [
   {
@@ -33,6 +34,8 @@ const NAV: { title: string; items: NavItem[] }[] = [
     items: [
       { href: "/admin/enquiries", label: "Enquiries", icon: "M3 5h14v9H8l-4 3v-3H3z" },
       { href: "/admin/applications", label: "Career applications", icon: "M5 3h10v14H5zM8 7h4M8 10h4M8 13h2" },
+      { href: "/admin/jobs", label: "Job openings", icon: "M3 7h14v9H3zM7.5 7V5h5v2M3 11h14" },
+      { href: "/admin/profiles", label: "Lawyer profiles", icon: "M4 3.5h12v13H4zM10 9.5a2.2 2.2 0 100-4.4 2.2 2.2 0 000 4.4zM6.5 14c.4-1.9 1.8-3 3.5-3s3.1 1.1 3.5 3" },
     ],
   },
 ];

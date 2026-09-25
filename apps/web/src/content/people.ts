@@ -42,6 +42,11 @@ export type Person = {
    * Until it is set (and the file exists) the card shows a silhouette.
    */
   photo?: string;
+  /**
+   * A portrait uploaded from the console (`/api/public/people/.../photo`).
+   * Takes precedence over `photo`.
+   */
+  photoUrl?: string;
   /** Initials used by the portrait placeholder until photography is supplied. */
   initials: string;
   /**

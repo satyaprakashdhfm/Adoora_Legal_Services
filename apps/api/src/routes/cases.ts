@@ -267,12 +267,23 @@ function serialiseCase(
     // Clients see who is on their team, but not the other clients on a
     // shared matter or anything marked internal.
     clients: staff ? record.clients.map((entry) => entry.client) : undefined,
-    assignments: record.assignments.map((entry) => ({
-      role: entry.role,
-      user: staff
-        ? entry.user
-        : { id: entry.user.id, name: entry.user.name, email: entry.user.email },
-    })),
+    assignments: record.assignments.map((entry) => {
+      const { profile, ...user } = entry.user;
+      const shown = profile?.published ? profile : null;
+      const extra = {
+        designation: shown?.designation ?? null,
+        photoUrl:
+          shown?.photoType && shown.photoUpdatedAt
+            ? `/api/public/people/${shown.slug}/photo?v=${shown.photoUpdatedAt.getTime()}`
+            : null,
+        /** Portrait bundled with the website (public/), for carried-over profiles. */
+        photo: shown?.photo ?? null,
+      };
+      return {
+        role: entry.role,
+        user: staff ? { ...user, ...extra } : { id: user.id, name: user.name, email: user.email, ...extra },
+      };
+    }),
     canEdit: isCaseStaff(principal),
     canManage: isFirmAdmin(principal),
   };
@@ -291,7 +302,18 @@ async function loadCaseDetail(principal: Principal, id: string) {
       assignments: {
         select: {
           role: true,
-          user: { select: { id: true, name: true, email: true, role: true, barEnrolment: true } },
+          user: {
+            select: {
+              id: true,
+              name: true,
+              email: true,
+              role: true,
+              barEnrolment: true,
+              // The lawyer's website profile, so the client sees the same
+              // face and title the website shows.
+              profile: { select: { slug: true, designation: true, photoType: true, photoUpdatedAt: true, photo: true, published: true } },
+            },
+          },
         },
         orderBy: { role: "asc" },
       },

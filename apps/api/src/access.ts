@@ -48,12 +48,20 @@ export function visibilityScope(principal: Principal) {
   return principal.kind === "client" ? { visibility: "CLIENT" as const } : {};
 }
 
+/**
+ * Documents the caller may see: those on cases in their scope, plus — for
+ * the firm's case staff — the "Team shared" folder (documents with no case),
+ * which clients never see.
+ */
 export function documentScope(principal: Principal): Prisma.DocumentWhereInput {
-  return {
-    deletedAt: null,
-    case: caseScope(principal),
-    ...visibilityScope(principal),
-  };
+  if (principal.kind === "client") {
+    return { deletedAt: null, case: { is: caseScope(principal) }, ...visibilityScope(principal) };
+  }
+  if (isFirmAdmin(principal)) return { deletedAt: null };
+  if (isCaseStaff(principal)) {
+    return { deletedAt: null, OR: [{ caseId: null }, { case: { is: caseScope(principal) } }] };
+  }
+  return { id: { in: [] } };
 }
 
 export function notFound(what = "case"): HttpError {

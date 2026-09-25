@@ -8,7 +8,7 @@ import { HttpError } from "../lib/http.js";
 import { audit } from "../lib/audit.js";
 import { decryptDocument, encryptDocument, sha256 } from "../lib/crypto.js";
 import { checkUpload, contentDisposition, isInlineSafe } from "../lib/files.js";
-import { makeDocumentReference } from "../lib/ids.js";
+import { makeDocumentReference, makeTeamDocumentReference } from "../lib/ids.js";
 import { ObjectNotFoundError, storage, storageFor } from "../storage/index.js";
 import { requireSignedIn } from "../middleware/auth.js";
 import {
@@ -60,7 +60,7 @@ export const uploadMiddleware: RequestHandler = (req, res, next) => {
  * failed write leaves nothing pointing at a missing object; if the row then
  * fails, the caller removes the orphaned object.
  */
-async function storeFile(req: Request, caseId: string) {
+async function storeFile(req: Request, caseId: string | null) {
   const file = req.file;
   if (!file) throw new HttpError(400, "Please choose a file to upload.", "no_file");
 
@@ -68,7 +68,7 @@ async function storeFile(req: Request, caseId: string) {
   if (!checked.ok) throw new HttpError(415, checked.reason, "file_rejected");
 
   const encrypted = encryptDocument(file.buffer);
-  const storageKey = `cases/${caseId}/${randomUUID()}`;
+  const storageKey = caseId ? `cases/${caseId}/${randomUUID()}` : `team/${randomUUID()}`;
   await storage.put(storageKey, encrypted.ciphertext, "application/octet-stream");
 
   return {
@@ -163,6 +163,53 @@ export async function uploadDocument(
   }
 }
 
+/**
+ * POST /api/documents/team — a document in the firm's "Team shared" folder:
+ * templates, precedents, checklists. Not on any case, never visible to a
+ * client, and always internal.
+ */
+documentsRouter.post("/team", uploadMiddleware, async (req, res) => {
+  const principal = req.principal!;
+  if (!isCaseStaff(principal)) throw notFound("document");
+  const fields = documentUploadSchema.parse(req.body ?? {});
+  const stored = await storeFile(req, null);
+  const title = fields.title ?? stored.filename.replace(/\.[^.]+$/, "");
+
+  try {
+    let document;
+    for (let attempt = 0; ; attempt++) {
+      try {
+        document = await prisma.document.create({
+          data: {
+            reference: makeTeamDocumentReference(),
+            seq: 0,
+            title,
+            category: fields.category,
+            description: fields.description ?? null,
+            visibility: "INTERNAL",
+            ...uploader(principal),
+            versions: { create: { version: 1, ...stored, ...uploader(principal) } },
+          },
+        });
+        break;
+      } catch (error) {
+        if ((error as { code?: string }).code !== "P2002" || attempt >= 4) throw error;
+      }
+    }
+
+    await audit(req, "document.upload", "Document", document.id, {
+      reference: document.reference,
+      folder: "team",
+      sizeBytes: stored.sizeBytes,
+      sha256: stored.sha256,
+    });
+    res.status(201).json(document);
+  } catch (error) {
+    await discard(stored.storageKey);
+    throw error;
+  }
+});
+
 // ---------------------------------------------------------------------------
 // Listing and metadata
 // ---------------------------------------------------------------------------
@@ -174,14 +221,19 @@ documentsRouter.get("/", async (req, res) => {
 
   const filters: Prisma.DocumentWhereInput[] = [documentScope(principal)];
   if (query.category) filters.push({ category: query.category });
-  if (query.case) filters.push({ case: { reference: query.case } });
+  if (query.case) filters.push({ case: { is: { reference: query.case } } });
+  if (query.team) filters.push({ caseId: null });
+  // The folders a case's documents are shown in.
+  if (query.folder === "client") filters.push({ uploadedByClientId: { not: null } });
+  if (query.folder === "firm") filters.push({ uploadedByClientId: null, visibility: "CLIENT" });
+  if (query.folder === "internal") filters.push({ uploadedByClientId: null, visibility: "INTERNAL" });
   if (query.q) {
     filters.push({
       OR: [
         { reference: { contains: query.q, mode: "insensitive" } },
         { title: { contains: query.q, mode: "insensitive" } },
         { versions: { some: { filename: { contains: query.q, mode: "insensitive" } } } },
-        { case: { title: { contains: query.q, mode: "insensitive" } } },
+        { case: { is: { title: { contains: query.q, mode: "insensitive" } } } },
       ],
     });
   }
@@ -277,18 +329,20 @@ documentsRouter.post("/:reference/versions", uploadMiddleware, async (req, res) 
         data: { documentId: found.id, version: currentVersion, ...stored, ...uploader(principal) },
       });
 
-      await tx.caseUpdate.create({
-        data: {
-          caseId: found.caseId,
-          kind: "DOCUMENT",
-          title: `New version (v${currentVersion}) of ${found.title}`,
-          body: found.reference,
-          visibility: found.visibility,
-          ...(principal.kind === "staff"
-            ? { authorUserId: principal.id }
-            : { authorClientId: principal.id }),
-        },
-      });
+      if (found.caseId) {
+        await tx.caseUpdate.create({
+          data: {
+            caseId: found.caseId,
+            kind: "DOCUMENT",
+            title: `New version (v${currentVersion}) of ${found.title}`,
+            body: found.reference,
+            visibility: found.visibility,
+            ...(principal.kind === "staff"
+              ? { authorUserId: principal.id }
+              : { authorClientId: principal.id }),
+          },
+        });
+      }
 
       return currentVersion;
     });

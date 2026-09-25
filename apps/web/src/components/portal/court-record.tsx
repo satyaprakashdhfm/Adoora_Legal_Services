@@ -41,7 +41,7 @@ function useCourtSync(record: CaseDetail, onSynced: (updated: CaseDetail, messag
 /** The court's own status line, for the case overview's side column. */
 export function CourtStatusCard({ record, onSynced }: { record: CaseDetail; onSynced: (updated: CaseDetail, message: string) => void }) {
   const { sync, syncing, error } = useCourtSync(record, onSynced);
-  if (!record.cnrNumber) return null;
+  if (!record.cnrNumber && !record.courtStatus && !record.courtStage) return null;
 
   return (
     <Card>
@@ -71,9 +71,11 @@ export function CourtStatusCard({ record, onSynced }: { record: CaseDetail; onSy
         )}
         {record.courtCheckedAt && <p className="text-xs text-slate">Last checked {formatDateTime(record.courtCheckedAt)}</p>}
         <ErrorNote>{error}</ErrorNote>
-        <Button size="sm" tone="secondary" onClick={() => void sync()} disabled={syncing}>
-          {syncing ? "Checking eCourts…" : "Check court status"}
-        </Button>
+        {record.cnrNumber && (
+          <Button size="sm" tone="secondary" onClick={() => void sync()} disabled={syncing}>
+            {syncing ? "Checking eCourts…" : "Check court status"}
+          </Button>
+        )}
       </div>
     </Card>
   );
@@ -83,7 +85,8 @@ export function CourtStatusCard({ record, onSynced }: { record: CaseDetail; onSy
 export function CourtRecordPanel({ record, onSynced }: { record: CaseDetail; onSynced: (updated: CaseDetail, message: string) => void }) {
   const { sync, syncing, error } = useCourtSync(record, onSynced);
 
-  if (!record.cnrNumber) {
+  const hasHistory = record.hearings.length > 0 || record.orders.length > 0;
+  if (!record.cnrNumber && !hasHistory) {
     return (
       <Card>
         <EmptyState title="No CNR on this case">
@@ -97,6 +100,7 @@ export function CourtRecordPanel({ record, onSynced }: { record: CaseDetail; onS
 
   return (
     <div className="space-y-6">
+      {record.cnrNumber ? (
       <Card>
         <div className="flex flex-wrap items-center justify-between gap-4 px-5 py-4">
           <div>
@@ -115,6 +119,9 @@ export function CourtRecordPanel({ record, onSynced }: { record: CaseDetail; onS
         </div>
         {error && <div className="px-5 pb-4"><ErrorNote>{error}</ErrorNote></div>}
       </Card>
+      ) : (
+        <p className="text-sm text-slate">No CNR on this case, so it cannot be checked against eCourts. The history below was entered by the firm.</p>
+      )}
 
       <Card>
         <CardHeader title="Hearing history" description="Each date the matter was listed, as the court recorded it." />

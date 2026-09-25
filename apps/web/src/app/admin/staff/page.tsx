@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
 import { api, type StaffRole } from "@/lib/portal/api";
 import { useUser } from "@/lib/portal/session";
@@ -20,6 +21,7 @@ type StaffRow = {
   hasPassword: boolean;
   googleLinked: boolean;
   _count: { assignments: number };
+  profile: { id: string; slug: string; designation: string; published: boolean } | null;
 };
 
 const ROLES: { value: StaffRole; label: string; description: string }[] = [
@@ -110,7 +112,7 @@ export default function AdminStaff() {
       <PageTitle
         eyebrow="Team (Lawyers)"
         title="The firm's team"
-        description="Lawyers see only the cases they are assigned to. Admins and owners see everything."
+        description="Sign-in accounts. Lawyers see only the cases they are assigned to; admins and owners see everything. What the website shows about each lawyer is edited under Website → Lawyer profiles."
         actions={<Button onClick={() => setEditing("new")}>Add a lawyer</Button>}
       />
 
@@ -125,6 +127,7 @@ export default function AdminStaff() {
                 <Th>Name</Th>
                 <Th>Role</Th>
                 <Th>Cases</Th>
+                <Th>Website</Th>
                 <Th>Sign-in</Th>
                 <Th />
               </tr>
@@ -149,6 +152,15 @@ export default function AdminStaff() {
                     {!row.isActive && <div className="mt-1"><Badge tone="red">Deactivated</Badge></div>}
                   </Td>
                   <Td className="text-sm">{row._count.assignments}</Td>
+                  <Td className="text-xs">
+                    {row.profile ? (
+                      <Link href="/admin/profiles" className="text-gold-deep hover:underline">
+                        {row.profile.published ? "Profile shown" : "Profile hidden"}
+                      </Link>
+                    ) : (
+                      <span className="text-slate">No profile</span>
+                    )}
+                  </Td>
                   <Td className="text-xs">
                     <div className="flex flex-wrap gap-1">
                       {row.googleLinked && <Badge tone="green">Google</Badge>}

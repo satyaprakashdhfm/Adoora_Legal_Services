@@ -282,11 +282,11 @@ function TeamCard({ record, onChange }: { record: CaseDetail; onChange: () => vo
           <ul className="divide-y divide-line">
             {record.assignments.map((a) => (
               <li key={a.user.id} className="flex items-center gap-3 px-5 py-3">
-                <Avatar name={a.user.name} size={32} />
+                <Avatar name={a.user.name} src={a.user.photoUrl ?? (a.user.photo ? `/${a.user.photo}.jpg` : null)} size={36} />
                 <div className="min-w-0">
                   <p className="truncate text-sm font-semibold text-ink">{a.user.name}</p>
                   <p className="truncate text-xs text-slate">
-                    {a.role === "LEAD" ? "Lead counsel" : a.role === "ASSOCIATE" ? "Associate" : "Support"} · {a.user.email}
+                    {[a.role === "LEAD" ? "Lead counsel" : a.role === "ASSOCIATE" ? "Associate" : "Support", a.user.designation, a.user.email].filter(Boolean).join(" · ")}
                   </p>
                 </div>
               </li>

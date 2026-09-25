@@ -34,5 +34,10 @@ export function makeDocumentReference(caseReference: string, seq: number): strin
   return `${caseReference}-D${String(seq).padStart(3, "0")}`;
 }
 
+/** A document in the "Team shared" folder, which belongs to no case. */
+export function makeTeamDocumentReference(): string {
+  return `${FIRM_PREFIX}-TEAM-${randomCode(6)}`;
+}
+
 export const CASE_REFERENCE = /^ALS-\d{4}-[0-9A-HJKMNP-TV-Z]{6}$/;
 export const DOCUMENT_REFERENCE = /^ALS-\d{4}-[0-9A-HJKMNP-TV-Z]{6}-D\d{3,}$/;

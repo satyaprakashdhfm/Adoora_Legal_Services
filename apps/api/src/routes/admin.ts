@@ -314,6 +314,7 @@ adminRouter.get(
         passwordHash: true,
         googleSub: true,
         _count: { select: { assignments: true } },
+        profile: { select: { id: true, slug: true, designation: true, published: true } },
       },
     });
 

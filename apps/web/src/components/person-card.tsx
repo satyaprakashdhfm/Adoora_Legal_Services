@@ -37,7 +37,7 @@ export function PersonCard({
   person: Person;
   index?: number;
 }) {
-  const photo = person.photo ? publicImage(person.photo) : null;
+  const photo = person.photoUrl ?? (person.photo ? publicImage(person.photo) : null);
   const accent = accents[index % accents.length];
 
   return (
@@ -59,6 +59,8 @@ export function PersonCard({
             alt={person.name}
             fill
             sizes="(min-width: 640px) 96px, 64px"
+            // Uploaded portraits are served, already sized, by the API.
+            unoptimized={Boolean(person.photoUrl)}
             className="object-cover"
           />
         ) : (

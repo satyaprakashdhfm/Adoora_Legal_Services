@@ -12,7 +12,7 @@ import {
   ServiceList,
   TeamGrid,
 } from "@/components/ui";
-import { peopleBySlugs } from "@/content/people";
+import { getPeople, teamFor } from "@/lib/website-data";
 import { practiceAreas, practiceAreaBySlug } from "@/content/practice-areas";
 import { insightsForPractice } from "@/content/insights";
 import { firm } from "@/content/firm";
@@ -51,6 +51,7 @@ export default async function PracticeAreaPage(
   if (!area) notFound();
 
   const relatedInsights = insightsForPractice(area.slug, 3);
+  const team = teamFor(await getPeople(), { practice: area.slug, slugs: area.team });
 
   const tabs: TabDefinition[] = [
     {
@@ -134,7 +135,7 @@ export default async function PracticeAreaPage(
             The lawyers who lead this practice.
           </p>
           <div className="mt-8">
-            <TeamGrid slugs={area.team} />
+            <TeamGrid members={team} />
           </div>
         </section>
       ),
@@ -189,7 +190,7 @@ export default async function PracticeAreaPage(
     // The firm has not assigned lawyers to individual practices yet, so
     // the Team tab only appears once `team` resolves to somebody.
     .filter(
-      (tab) => tab.id !== "team" || peopleBySlugs(area.team).length > 0,
+      (tab) => tab.id !== "team" || team.length > 0,
     );
 
   return (

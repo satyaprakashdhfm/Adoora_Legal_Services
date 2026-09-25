@@ -11,7 +11,7 @@ import {
   ServiceList,
   TeamGrid,
 } from "@/components/ui";
-import { peopleBySlugs } from "@/content/people";
+import { getPeople, teamFor } from "@/lib/website-data";
 import { industries, industryBySlug } from "@/content/industries";
 import { practiceAreaBySlug } from "@/content/practice-areas";
 import { insightsForIndustry } from "@/content/insights";
@@ -50,6 +50,7 @@ export default async function IndustryPage(
   if (!industry) notFound();
 
   const relatedInsights = insightsForIndustry(industry.slug, 3);
+  const team = teamFor(await getPeople(), { slugs: industry.team });
   const relatedPractices = industry.relatedPractices
     .map((practiceSlug) => practiceAreaBySlug.get(practiceSlug))
     .filter((practice): practice is NonNullable<typeof practice> =>
@@ -131,7 +132,7 @@ export default async function IndustryPage(
             The lawyers who most often advise clients in this domain.
           </p>
           <div className="mt-8">
-            <TeamGrid slugs={industry.team} />
+            <TeamGrid members={team} />
           </div>
         </section>
       ),
@@ -186,7 +187,7 @@ export default async function IndustryPage(
     // The firm has not assigned lawyers to individual practices yet, so
     // the Team tab only appears once `team` resolves to somebody.
     .filter(
-      (tab) => tab.id !== "team" || peopleBySlugs(industry.team).length > 0,
+      (tab) => tab.id !== "team" || team.length > 0,
     );
 
   return (

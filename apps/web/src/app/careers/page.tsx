@@ -1,7 +1,9 @@
 import type { Metadata } from "next";
 import { PageHero, SectionHeading } from "@/components/ui";
 import { ApplyDialog } from "@/components/apply-dialog";
-import { roles, speculativeRole } from "@/content/careers";
+import { roles as staticRoles, speculativeRole } from "@/content/careers";
+import { getJobs, type Job } from "@/lib/website-data";
+import { practiceAreaBySlug } from "@/content/practice-areas";
 
 export const metadata: Metadata = {
   title: "Careers",
@@ -25,7 +27,44 @@ function ArrowIcon({ className = "" }: { className?: string }) {
   );
 }
 
-export default function CareersPage() {
+function formatDay(value: string) {
+  return new Date(value).toLocaleDateString("en-IN", { day: "numeric", month: "long", year: "numeric", timeZone: "UTC" });
+}
+
+/** The listing line under a role's title: type, location, experience, closing date. */
+function jobMeta(job: Job) {
+  return [
+    job.employmentType,
+    job.location,
+    job.experience,
+    job.practiceArea ? practiceAreaBySlug.get(job.practiceArea)?.name : null,
+    job.closesOn ? `Apply by ${formatDay(job.closesOn)}` : null,
+  ].filter(Boolean);
+}
+
+/**
+ * Roles are posted from the admin console (Website → Job openings). If the
+ * API cannot be reached the page falls back to the roles bundled in
+ * careers.ts rather than claiming there are none.
+ */
+export default async function CareersPage() {
+  const live = await getJobs();
+  const jobs: Job[] =
+    live ??
+    staticRoles.map((role) => ({
+      slug: role.slug,
+      title: role.title,
+      summary: role.detail,
+      practiceArea: null,
+      location: null,
+      employmentType: "Full-time",
+      experience: null,
+      responsibilities: [],
+      requirements: [],
+      closesOn: null,
+      publishedAt: null,
+    }));
+
   return (
     <>
       <PageHero
@@ -76,35 +115,81 @@ export default function CareersPage() {
             title="Current vacancies"
           />
 
-          <ul className="mt-12 space-y-4">
-            {roles.map((role) => (
-              <li
-                key={role.slug}
-                className="flex flex-col gap-5 rounded-2xl border border-line bg-paper p-6 sm:flex-row sm:items-center sm:justify-between sm:gap-8 sm:p-7"
-              >
-                <div>
-                  <h3 className="font-serif text-lg font-semibold tracking-tight text-ink sm:text-xl">
-                    {role.title}
-                  </h3>
-                  <p className="mt-2 max-w-2xl text-sm leading-relaxed text-ink-soft">
-                    {role.detail}
-                  </p>
-                </div>
+          {jobs.length === 0 ? (
+            <p className="mt-10 max-w-2xl rounded-2xl border border-line bg-paper p-6 text-sm leading-relaxed text-ink-soft sm:p-7">
+              There are no open vacancies at the moment. New roles are listed
+              here as they open.
+            </p>
+          ) : (
+            <ul className="mt-12 space-y-4">
+              {jobs.map((job) => {
+                const meta = jobMeta(job);
+                const details = job.responsibilities.length > 0 || job.requirements.length > 0;
+                return (
+                  <li
+                    key={job.slug}
+                    className="rounded-2xl border border-line bg-paper p-6 sm:p-7"
+                  >
+                    <div className="flex flex-col gap-5 sm:flex-row sm:items-start sm:justify-between sm:gap-8">
+                      <div>
+                        <h3 className="font-serif text-lg font-semibold tracking-tight text-ink sm:text-xl">
+                          {job.title}
+                        </h3>
+                        {meta.length > 0 && (
+                          <p className="mt-1.5 text-xs font-semibold uppercase tracking-[0.12em] text-slate">
+                            {meta.join(" · ")}
+                          </p>
+                        )}
+                        <p className="mt-3 max-w-2xl whitespace-pre-line text-sm leading-relaxed text-ink-soft">
+                          {job.summary}
+                        </p>
+                      </div>
 
-                <ApplyDialog
-                  role={role.title}
-                  className="inline-flex shrink-0 items-center gap-2 self-start rounded-full bg-ink px-6 py-3 text-sm font-semibold text-white transition hover:bg-ink-mid sm:self-auto"
-                >
-                  Apply
-                  <ArrowIcon className="text-gold-bright" />
-                </ApplyDialog>
-              </li>
-            ))}
-          </ul>
+                      <ApplyDialog
+                        role={job.title}
+                        className="inline-flex shrink-0 items-center gap-2 self-start rounded-full bg-ink px-6 py-3 text-sm font-semibold text-white transition hover:bg-ink-mid"
+                      >
+                        Apply
+                        <ArrowIcon className="text-gold-bright" />
+                      </ApplyDialog>
+                    </div>
+
+                    {details && (
+                      <details className="group mt-5 border-t border-line pt-4">
+                        <summary className="cursor-pointer list-none text-sm font-semibold text-gold-deep">
+                          <span className="group-open:hidden">Responsibilities and requirements</span>
+                          <span className="hidden group-open:inline">Hide details</span>
+                        </summary>
+                        <div className="mt-4 grid gap-6 text-sm leading-relaxed text-ink-soft sm:grid-cols-2">
+                          {[
+                            { heading: "What you will do", items: job.responsibilities },
+                            { heading: "What we look for", items: job.requirements },
+                          ]
+                            .filter((block) => block.items.length > 0)
+                            .map((block) => (
+                              <div key={block.heading}>
+                                <p className="font-semibold text-ink">{block.heading}</p>
+                                <ul className="mt-2 space-y-1.5">
+                                  {block.items.map((item) => (
+                                    <li key={item} className="flex gap-2.5">
+                                      <span aria-hidden="true" className="mt-[0.45rem] h-1.5 w-1.5 shrink-0 rounded-full bg-gold" />
+                                      {item}
+                                    </li>
+                                  ))}
+                                </ul>
+                              </div>
+                            ))}
+                        </div>
+                      </details>
+                    )}
+                  </li>
+                );
+              })}
+            </ul>
+          )}
 
           <p className="mt-8 text-sm text-ink-soft">
-            If none of these fit but you think the firm is right for you, send
-            a{" "}
+            {jobs.length === 0 ? "You can still send a" : "If none of these fit but you think the firm is right for you, send a"}{" "}
             <ApplyDialog
               role={speculativeRole.title}
               className="font-semibold text-gold-deep underline decoration-gold/40 underline-offset-4 transition hover:decoration-gold"

@@ -26,7 +26,7 @@ export function PeopleCards({ people }: { people: readonly Person[] }) {
 }
 
 function PersonSlide({ person }: { person: Person }) {
-  const photo = person.photo ? publicImage(person.photo) : null;
+  const photo = person.photoUrl ?? (person.photo ? publicImage(person.photo) : null);
 
   return (
     <article className="grid items-center gap-10 rounded-2xl border border-line bg-paper p-6 shadow-sm sm:p-10 md:grid-cols-[minmax(0,5fr)_minmax(0,7fr)] lg:gap-16 lg:p-12">
@@ -43,6 +43,7 @@ function PersonSlide({ person }: { person: Person }) {
               alt={`Portrait of ${person.name}`}
               fill
               sizes="(min-width: 768px) 24rem, 100vw"
+              unoptimized={Boolean(person.photoUrl)}
               className="object-cover"
             />
           ) : (

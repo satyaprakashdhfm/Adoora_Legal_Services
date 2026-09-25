@@ -7,7 +7,7 @@ import { PracticesCarousel } from "@/components/practices-carousel";
 import { CityIcon } from "@/components/city-icon";
 import { OurApproach } from "@/components/our-approach";
 import { firm, firmOverview, differentiators, offices } from "@/content/firm";
-import { peopleBySlugs } from "@/content/people";
+import { getFeaturedPeople } from "@/lib/website-data";
 import { PeopleCards } from "@/components/people-cards";
 import { practiceAreas } from "@/content/practice-areas";
 import { insightsByDate } from "@/content/insights";
@@ -51,7 +51,9 @@ const practiceCarouselOrder = [
   "regulatory-environmental",
 ];
 
-export default function Home() {
+export default async function Home() {
+  /* Profiles marked "Show on the home page" in the admin console. */
+  const featuredPeople = await getFeaturedPeople();
   const latestInsights = insightsByDate.slice(0, 3);
   const practiceCarouselItems = practiceCarouselOrder
     .map((slug) => practiceAreas.find((area) => area.slug === slug))
@@ -100,8 +102,8 @@ export default function Home() {
         </div>
       </section>
 
-      {/* The team, below the about band — the founder and the two senior
-          associates, one per slide, auto-advancing. */}
+      {/* The team, below the about band — the profiles marked for the home
+          page in the admin console, one per slide, auto-advancing. */}
       <section className="border-y border-line bg-paper-warm">
         <div className="container-page py-14 sm:py-16">
           <div className="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
@@ -119,13 +121,7 @@ export default function Home() {
           </div>
 
           <div className="mt-10">
-            <PeopleCards
-              people={peopleBySlugs([
-                "ganesh-raghavendra",
-                "vidya-sagar",
-                "kondal-rao",
-              ])}
-            />
+            <PeopleCards people={featuredPeople} />
           </div>
         </div>
       </section>
