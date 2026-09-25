@@ -1,5 +1,6 @@
 import { Router } from "express";
 import { checkDatabase } from "../db.js";
+import { storage } from "../storage/index.js";
 
 export const healthRouter = Router();
 
@@ -18,11 +19,15 @@ healthRouter.get("/health", (_req, res) => {
 
 /** Readiness. Checks the database, so it can legitimately return 503. */
 healthRouter.get("/health/ready", async (_req, res) => {
-  const database = await checkDatabase();
+  const [database, documentStorage] = await Promise.all([
+    checkDatabase(),
+    storage.check(),
+  ]);
+  const ready = database && documentStorage;
 
-  res.status(database ? 200 : 503).json({
-    status: database ? "ready" : "degraded",
-    checks: { database },
+  res.status(ready ? 200 : 503).json({
+    status: ready ? "ready" : "degraded",
+    checks: { database, storage: documentStorage, storageDriver: storage.name },
     timestamp: new Date().toISOString(),
   });
 });

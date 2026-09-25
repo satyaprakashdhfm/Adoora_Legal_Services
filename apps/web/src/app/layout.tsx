@@ -58,24 +58,29 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
           Skip to content
         </a>
 
-        {/* `/notice` stands alone — no nav, no firm information. */}
-        <HideOnRoutes routes={["/notice"]}>
+        {/* `/notice` stands alone — no nav, no firm information. The admin
+            console brings its own chrome. */}
+        <HideOnRoutes routes={["/notice"]} prefixes={["/admin"]}>
           <SiteHeader />
         </HideOnRoutes>
         <main id="main" className="flex-1">
           {children}
         </main>
-        <HideOnRoutes routes={["/notice"]}>
+        <HideOnRoutes routes={["/notice"]} prefixes={["/admin", "/dashboard"]}>
           <SiteFooter />
         </HideOnRoutes>
 
-        {/* Bar Council of India gate, then granular cookie consent. */}
-        <DisclaimerGate />
-        <CookieBanner />
+        {/* Bar Council of India gate, then granular cookie consent. Firm staff
+            in the console are not the visitors either one is addressed to. */}
+        <HideOnRoutes prefixes={["/admin"]}>
+          <DisclaimerGate />
+          <CookieBanner />
+        </HideOnRoutes>
 
         {/* A contact channel, so it goes where the header and footer go: not
-            on `/notice`, which must offer no way to reach the firm. */}
-        <HideOnRoutes routes={["/notice"]}>
+            on `/notice`, which must offer no way to reach the firm, and not
+            over the working screens of the dashboards. */}
+        <HideOnRoutes routes={["/notice"]} prefixes={["/admin", "/dashboard"]}>
           <WhatsAppButton />
         </HideOnRoutes>
       </body>

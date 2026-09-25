@@ -18,7 +18,27 @@ Deployed from `dev` at <https://adoora-api-production.up.railway.app>.
 | GET | `/api/admin/me` | Bearer | Current token claims. |
 | GET | `/api/admin/enquiries` | Bearer (OWNER/ADMIN) | Cursor-paginated enquiries. |
 | GET | `/api/admin/applications` | Bearer (OWNER/ADMIN) | Cursor-paginated applications. |
-| GET | `/api/admin/stats` | Bearer (OWNER/ADMIN) | Dashboard counts. |
+| GET | `/api/admin/stats` | Staff (OWNER/ADMIN) | Console counts and upcoming hearings. |
+| PATCH | `/api/admin/enquiries/:id` · `/api/admin/applications/:id` | Staff (OWNER/ADMIN) | Status and internal notes. |
+| GET POST PATCH | `/api/admin/users` | Staff (OWNER/ADMIN) | Lawyers and staff. Only an OWNER manages owners and admins. |
+| GET POST PATCH | `/api/admin/clients` | Staff (OWNER/ADMIN) | Client accounts. Deactivating revokes sessions. |
+| GET | `/api/admin/audit` | Staff (OWNER/ADMIN) | Audit log. |
+| GET | `/api/auth/google` → `/api/auth/google/callback` | — | Google sign-in (OIDC + PKCE). Sets the session cookie. |
+| POST | `/api/auth/password` | — | Staff password sign-in, session cookie. |
+| GET · POST | `/api/auth/me` · `/api/auth/logout` | Session | Current account; sign out. |
+| GET POST | `/api/cases` | Session | Cases in the caller's scope; create (clients create INTAKE matters). |
+| GET PATCH | `/api/cases/:ref` | Session | Case detail (filtered by role); edit (lawyers on the case, admins). |
+| POST | `/api/cases/:ref/updates` | Session | Timeline entry. |
+| PUT | `/api/cases/:ref/assignments` · `/clients` | Admin | Lawyers on the case; client accounts that can see it. |
+| POST | `/api/cases/:ref/documents` | Session | Multipart upload (`file`), encrypted and stored. |
+| GET | `/api/documents` · `/api/documents/:ref` | Session | Documents in scope; metadata and versions. |
+| POST | `/api/documents/:ref/versions` | Session | New version; nothing is overwritten. |
+| GET | `/api/documents/:ref/download` | Session | Decrypted file. Audited. `?version=n`, `?inline=1`. |
+| PATCH · DELETE | `/api/documents/:ref` | Staff · Admin | Title, type, visibility; soft delete. |
+
+"Session" means the `__Host-als_session` cookie, sent by the website through
+its `/api` rewrite. Staff endpoints also accept the bearer token from
+`/api/admin/auth/login`. What each caller sees is decided in `src/access.ts`.
 
 ## Local development
 

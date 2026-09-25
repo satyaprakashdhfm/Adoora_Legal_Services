@@ -1,11 +1,9 @@
 // ADOORA Legal Services — API data model.
 //
-// Scope note: this covers what the public website needs today (intake,
-// applications, subscriptions) plus the auth and audit foundation the admin
-// portal will sit on. The client portal, document storage and RAG/chatbot
-// models are deliberately not created yet — see docs/ARCHITECTURE.md for how
-// they attach to this schema when we get there. Empty tables are migration
-// noise; we add them when the feature lands.
+// Scope note: this covers the public website (intake, applications,
+// subscriptions), staff and client accounts, and the case and document
+// records behind the client dashboard and the admin console. RAG/chatbot
+// models are deliberately not created yet — see docs/ARCHITECTURE.md.
 
 generator client {
   provider = "prisma-client-js"
@@ -23,43 +21,439 @@ datasource db {
 
 enum UserRole {
   OWNER // full access, can manage other users
-  ADMIN // manage enquiries, applications, content
+  ADMIN // manage cases, documents, clients, enquiries, applications, content
+  LAWYER // the cases they are assigned to
   EDITOR // content only
 }
 
+/// A member of the firm. Clients are not users — see `Client`. Keeping the
+/// two apart means a bug in one audience's checks cannot hand the other
+/// audience's access to a client.
 model User {
   id           String    @id @default(uuid()) @db.Uuid
   email        String    @unique
   name         String
-  passwordHash String
+  /// Null for accounts that only ever sign in with Google.
+  passwordHash String?
+  /// Google's stable subject id, linked on first Google sign-in.
+  googleSub    String?   @unique
+  avatarUrl    String?
+  phone        String?
+  /// Bar Council enrolment number, for advocates.
+  barEnrolment String?
   role         UserRole  @default(EDITOR)
   isActive     Boolean   @default(true)
   lastLoginAt  DateTime?
   createdAt    DateTime  @default(now())
   updatedAt    DateTime  @updatedAt
 
-  articles  Article[]
-  auditLogs AuditLog[]
+  articles    Article[]
+  auditLogs   AuditLog[]
+  sessions    Session[]
+  assignments CaseAssignment[]
+
+  casesCreated    Case[]            @relation("CaseCreatedByUser")
+  updatesAuthored CaseUpdate[]      @relation("UpdateAuthorUser")
+  documentsAdded  Document[]        @relation("DocumentUploadedByUser")
+  versionsAdded   DocumentVersion[] @relation("VersionUploadedByUser")
 
   @@index([email])
 }
 
-/// Append-only record of staff actions. Enquiries can contain privileged
-/// information, so who read or changed what needs to be reconstructable.
+/// Append-only record of who did what. Enquiries and case documents can
+/// contain privileged information, so who read or changed what needs to be
+/// reconstructable — document downloads are logged here, not only uploads.
 model AuditLog {
-  id         String   @id @default(uuid()) @db.Uuid
-  actorId    String?  @db.Uuid
-  actor      User?    @relation(fields: [actorId], references: [id], onDelete: SetNull)
-  action     String // e.g. "enquiry.status_changed"
-  entityType String // e.g. "Enquiry"
-  entityId   String?
+  id            String   @id @default(uuid()) @db.Uuid
+  actorId       String?  @db.Uuid
+  actor         User?    @relation(fields: [actorId], references: [id], onDelete: SetNull)
+  /// Set instead of actorId when a client did it.
+  actorClientId String?  @db.Uuid
+  actorClient   Client?  @relation(fields: [actorClientId], references: [id], onDelete: SetNull)
+  action        String // e.g. "enquiry.status_changed"
+  entityType    String // e.g. "Enquiry"
+  entityId      String?
   /// Before/after values, or request context for unauthenticated actions.
-  metadata   Json?
-  ipAddress  String?
-  createdAt  DateTime @default(now())
+  metadata      Json?
+  ipAddress     String?
+  createdAt     DateTime @default(now())
 
   @@index([entityType, entityId])
   @@index([actorId, createdAt])
+  @@index([actorClientId, createdAt])
+  @@index([createdAt])
+}
+
+// ---------------------------------------------------------------------------
+// Client accounts and sessions
+// ---------------------------------------------------------------------------
+
+enum ClientKind {
+  INDIVIDUAL
+  ORGANISATION
+}
+
+/// A person or organisation the firm acts for, who signs in to the client
+/// dashboard. Created on first Google sign-in, or in advance by an admin so
+/// the account is waiting when the client arrives.
+model Client {
+  id           String     @id @default(uuid()) @db.Uuid
+  email        String     @unique
+  name         String
+  kind         ClientKind @default(INDIVIDUAL)
+  /// Organisation name when the client acts for a company.
+  organisation String?
+  phone        String?
+  address      String?    @db.Text
+  googleSub    String?    @unique
+  avatarUrl    String?
+  isActive     Boolean    @default(true)
+  lastLoginAt  DateTime?
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+
+  sessions        Session[]
+  cases           CaseClient[]
+  auditLogs       AuditLog[]
+  casesCreated    Case[]            @relation("CaseCreatedByClient")
+  updatesAuthored CaseUpdate[]      @relation("UpdateAuthorClient")
+  documentsAdded  Document[]        @relation("DocumentUploadedByClient")
+  versionsAdded   DocumentVersion[] @relation("VersionUploadedByClient")
+
+  @@index([createdAt])
+}
+
+/// Server-side session behind the httpOnly cookie. Only a hash of the token
+/// is stored, so reading the table does not yield usable sessions. Unlike a
+/// stateless token, a row can be revoked the moment an account is disabled.
+model Session {
+  id         String    @id @default(uuid()) @db.Uuid
+  tokenHash  String    @unique
+  userId     String?   @db.Uuid
+  user       User?     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  clientId   String?   @db.Uuid
+  client     Client?   @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  /// "google" or "password".
+  method     String
+  expiresAt  DateTime
+  lastSeenAt DateTime  @default(now())
+  revokedAt  DateTime?
+  ipAddress  String?
+  userAgent  String?
+  createdAt  DateTime  @default(now())
+
+  @@index([userId])
+  @@index([clientId])
+  @@index([expiresAt])
+}
+
+// ---------------------------------------------------------------------------
+// Cases (matters)
+// ---------------------------------------------------------------------------
+
+enum CaseStatus {
+  INTAKE // opened by a client or the firm, not yet taken on
+  ACTIVE
+  ON_HOLD
+  DISPOSED // decided by the court or forum
+  CLOSED // file closed by the firm
+  WITHDRAWN
+}
+
+/// Procedural stage, in the terms Indian courts use on their case status pages.
+enum CaseStage {
+  PRE_FILING
+  FILED
+  UNDER_SCRUTINY
+  DEFECTS_NOTIFIED
+  REGISTERED
+  ADMISSION
+  NOTICE_ISSUED
+  PLEADINGS
+  EVIDENCE
+  ARGUMENTS
+  RESERVED_FOR_ORDERS
+  DISPOSED
+}
+
+enum CourtLevel {
+  SUPREME_COURT
+  HIGH_COURT
+  DISTRICT_COURT
+  SUBORDINATE_COURT // civil judge, magistrate
+  FAMILY_COURT
+  COMMERCIAL_COURT
+  TRIBUNAL // NCLT, NCLAT, ITAT, DRT, NGT, CAT, ...
+  CONSUMER_COMMISSION
+  ARBITRATION
+  QUASI_JUDICIAL // regulators and statutory authorities
+  NOT_IN_LITIGATION // advisory or transactional matters
+  OTHER
+}
+
+/// A matter. The reference (`ALS-2026-K7Q3X9`) is the firm's own file number
+/// and never changes; the court's case number is recorded separately because
+/// it only exists once the court registers the case, and can change on
+/// transfer.
+model Case {
+  id           String     @id @default(uuid()) @db.Uuid
+  reference    String     @unique
+  title        String
+  summary      String?    @db.Text
+  /// Practice-area slug from the website's practice-areas.ts.
+  practiceArea String?
+  status       CaseStatus @default(INTAKE)
+  stage        CaseStage  @default(PRE_FILING)
+
+  // Forum.
+  courtLevel CourtLevel @default(NOT_IN_LITIGATION)
+  /// e.g. "High Court for the State of Telangana".
+  courtName  String?
+  /// Principal seat or named bench, e.g. "Principal Seat at Hyderabad".
+  bench      String?
+  state      String?
+  district   String?
+  courtHall  String?
+  /// Judge(s) the matter is listed before.
+  coram      String?
+
+  // Court numbering. Case type codes vary by court (WP, WA, CRL.P, CRP, AS,
+  // OS, SLP(C), ...), so they are stored as the court writes them.
+  caseTypeCode     String?
+  caseTypeName     String?
+  caseNumber       String?
+  caseYear         Int?
+  /// Filing or diary number, assigned before registration.
+  filingNumber     String?
+  filingDate       DateTime? @db.Date
+  registrationDate DateTime? @db.Date
+  /// eCourts Case Number Record — 16 characters, e.g. TSHC010012342025.
+  cnrNumber        String?
+
+  /// Provisions invoked, e.g. "Article 226, Constitution of India".
+  actsAndSections String[] @default([])
+  reliefSought    String?  @db.Text
+
+  // Lower forum, for appeals, revisions and writs against an order.
+  originCourt       String?
+  originCaseNumber  String?
+  impugnedOrderDate DateTime? @db.Date
+
+  // Hearing calendar.
+  lastHearingDate    DateTime? @db.Date
+  nextHearingDate    DateTime? @db.Date
+  nextHearingPurpose String?
+  disposalDate       DateTime? @db.Date
+  disposalNature     String?
+
+  /// Counter behind the document references, so they run D001, D002, ...
+  /// within a case without revealing the firm's overall volume.
+  documentSeq Int @default(0)
+
+  createdById       String? @db.Uuid
+  createdBy         User?   @relation("CaseCreatedByUser", fields: [createdById], references: [id], onDelete: SetNull)
+  createdByClientId String? @db.Uuid
+  createdByClient   Client? @relation("CaseCreatedByClient", fields: [createdByClientId], references: [id], onDelete: SetNull)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  parties     CaseParty[]
+  clients     CaseClient[]
+  assignments CaseAssignment[]
+  updates     CaseUpdate[]
+  documents   Document[]
+
+  @@index([status, updatedAt])
+  @@index([courtLevel])
+  @@index([nextHearingDate])
+  @@index([cnrNumber])
+}
+
+enum PartyRole {
+  PETITIONER
+  RESPONDENT
+  APPELLANT
+  APPLICANT
+  PLAINTIFF
+  DEFENDANT
+  COMPLAINANT
+  ACCUSED
+  OPPOSITE_PARTY
+  INTERVENOR
+  OTHER
+}
+
+/// A party as the cause title names it — "Respondent No. 2" is role
+/// RESPONDENT, position 2.
+model CaseParty {
+  id       String    @id @default(uuid()) @db.Uuid
+  caseId   String    @db.Uuid
+  case     Case      @relation(fields: [caseId], references: [id], onDelete: Cascade)
+  role     PartyRole
+  position Int       @default(1)
+  name     String
+  /// True for the party (or parties) the firm represents.
+  isClient Boolean   @default(false)
+  /// Advocate for this party, where known.
+  counsel  String?
+
+  @@index([caseId])
+}
+
+/// Which client accounts can see a case.
+model CaseClient {
+  caseId   String   @db.Uuid
+  case     Case     @relation(fields: [caseId], references: [id], onDelete: Cascade)
+  clientId String   @db.Uuid
+  client   Client   @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  addedAt  DateTime @default(now())
+
+  @@id([caseId, clientId])
+  @@index([clientId])
+}
+
+enum AssignmentRole {
+  LEAD
+  ASSOCIATE
+  SUPPORT
+}
+
+/// Which lawyers work a case. A LAWYER sees only the cases assigned here.
+model CaseAssignment {
+  caseId     String         @db.Uuid
+  case       Case           @relation(fields: [caseId], references: [id], onDelete: Cascade)
+  userId     String         @db.Uuid
+  user       User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  role       AssignmentRole @default(ASSOCIATE)
+  assignedAt DateTime       @default(now())
+
+  @@id([caseId, userId])
+  @@index([userId])
+}
+
+enum UpdateKind {
+  NOTE
+  HEARING
+  ORDER
+  FILING
+  STATUS_CHANGE
+  DOCUMENT
+}
+
+enum Visibility {
+  CLIENT // the client can see it
+  INTERNAL // firm only
+}
+
+/// The case timeline both dashboards read — hearings, orders, notes, and the
+/// entries written automatically for uploads and status changes.
+model CaseUpdate {
+  id         String     @id @default(uuid()) @db.Uuid
+  caseId     String     @db.Uuid
+  case       Case       @relation(fields: [caseId], references: [id], onDelete: Cascade)
+  kind       UpdateKind @default(NOTE)
+  title      String
+  body       String?    @db.Text
+  /// When the event happened (a hearing date), as opposed to when it was logged.
+  eventDate  DateTime?  @db.Date
+  visibility Visibility @default(CLIENT)
+
+  authorUserId   String? @db.Uuid
+  authorUser     User?   @relation("UpdateAuthorUser", fields: [authorUserId], references: [id], onDelete: SetNull)
+  authorClientId String? @db.Uuid
+  authorClient   Client? @relation("UpdateAuthorClient", fields: [authorClientId], references: [id], onDelete: SetNull)
+
+  createdAt DateTime @default(now())
+
+  @@index([caseId, createdAt])
+}
+
+// ---------------------------------------------------------------------------
+// Documents
+// ---------------------------------------------------------------------------
+
+enum DocumentCategory {
+  PETITION // plaints, petitions, applications
+  PLEADING // written statements, counters, replies, rejoinders
+  AFFIDAVIT
+  VAKALATNAMA
+  EVIDENCE
+  ORDER
+  JUDGMENT
+  NOTICE
+  CORRESPONDENCE
+  AGREEMENT
+  IDENTITY // KYC and identity proofs
+  FINANCIAL
+  OTHER
+}
+
+/// A document on a case. The bytes live in object storage, one object per
+/// version, so nothing is ever overwritten in place.
+model Document {
+  id             String           @id @default(uuid()) @db.Uuid
+  /// `ALS-2026-K7Q3X9-D004` — the case reference plus a per-case sequence.
+  reference      String           @unique
+  caseId         String           @db.Uuid
+  case           Case             @relation(fields: [caseId], references: [id], onDelete: Restrict)
+  seq            Int
+  title          String
+  category       DocumentCategory @default(OTHER)
+  description    String?          @db.Text
+  visibility     Visibility       @default(CLIENT)
+  currentVersion Int              @default(1)
+
+  uploadedByUserId   String? @db.Uuid
+  uploadedByUser     User?   @relation("DocumentUploadedByUser", fields: [uploadedByUserId], references: [id], onDelete: SetNull)
+  uploadedByClientId String? @db.Uuid
+  uploadedByClient   Client? @relation("DocumentUploadedByClient", fields: [uploadedByClientId], references: [id], onDelete: SetNull)
+
+  /// Soft delete. The stored objects are kept: record-keeping obligations,
+  /// not a button, decide when they may be destroyed.
+  deletedAt DateTime?
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
+  versions DocumentVersion[]
+
+  @@unique([caseId, seq])
+  @@index([caseId, deletedAt])
+  @@index([createdAt])
+}
+
+model DocumentVersion {
+  id            String   @id @default(uuid()) @db.Uuid
+  documentId    String   @db.Uuid
+  document      Document @relation(fields: [documentId], references: [id], onDelete: Cascade)
+  version       Int
+  /// Object key in the storage provider. Carries no filename or client
+  /// detail, so a bucket listing reveals nothing.
+  storageKey    String   @unique
+  /// Which storage driver holds the object ("s3", "local").
+  storageDriver String
+  filename      String
+  mimeType      String
+  sizeBytes     Int
+  /// SHA-256 of the plaintext, for integrity checks.
+  sha256        String
+
+  // Envelope encryption: the object is AES-256-GCM encrypted under a random
+  // data key, and the data key is stored here wrapped by the master key
+  // named in encKeyId.
+  encKeyId   String
+  wrappedKey String
+  iv         String
+  authTag    String
+
+  uploadedByUserId   String? @db.Uuid
+  uploadedByUser     User?   @relation("VersionUploadedByUser", fields: [uploadedByUserId], references: [id], onDelete: SetNull)
+  uploadedByClientId String? @db.Uuid
+  uploadedByClient   Client? @relation("VersionUploadedByClient", fields: [uploadedByClientId], references: [id], onDelete: SetNull)
+
+  createdAt DateTime @default(now())
+
+  @@unique([documentId, version])
 }
 
 // ---------------------------------------------------------------------------

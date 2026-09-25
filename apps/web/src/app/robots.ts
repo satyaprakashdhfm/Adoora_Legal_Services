@@ -7,8 +7,8 @@ export default function robots(): MetadataRoute.Robots {
       {
         userAgent: "*",
         allow: "/",
-        // `/notice` carries no firm information and should not be indexed.
-        disallow: ["/notice"],
+        // `/notice` carries no firm information; the signed-in areas are private.
+        disallow: ["/notice", "/login", "/dashboard", "/admin", "/api/"],
       },
     ],
     sitemap: `${siteUrl}/sitemap.xml`,

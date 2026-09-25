@@ -4,11 +4,11 @@ The firm's website and the services behind it.
 
 | App | Stack | Purpose |
 | --- | --- | --- |
-| [`apps/web`](apps/web) | Next.js 16 (App Router), Tailwind v4 | Public website |
-| [`apps/api`](apps/api) | Express 5, Prisma 7, Postgres | Forms, auth, admin API |
+| [`apps/web`](apps/web) | Next.js 16 (App Router), Tailwind v4 | Public website, client & lawyer dashboard, admin console |
+| [`apps/api`](apps/api) | Express 5, Prisma 7, Postgres | Forms, Google sign-in, cases, encrypted documents, admin API |
 
-`docs/ARCHITECTURE.md` covers how they fit together, the roadmap for the admin
-and client portals, and the known gaps.
+`docs/ARCHITECTURE.md` covers how they fit together — sign-in, roles, the case
+and document model, storage and encryption — plus the roadmap and known gaps.
 
 ## Branches
 
@@ -43,8 +43,13 @@ npm run migrate             # create the schema
 npm run dev                 # http://localhost:4000
 ```
 
-The website works without the API running — every page is prerendered. Only
-the contact and careers forms need it.
+The website works without the API running — every public page is prerendered.
+The forms, `/login`, `/dashboard` and `/admin` need it. The website forwards
+`/api/*` to `API_INTERNAL_URL` (default `http://localhost:4000`).
+
+Without Google credentials, sign in to the console with the seeded owner's
+password at `/login` → *Firm staff*. Documents go to `apps/api/storage/`
+(encrypted) with the default `STORAGE_DRIVER=local`.
 
 Create the first staff account for the admin API:
 
@@ -66,6 +71,12 @@ SEED_OWNER_EMAIL=you@firm.com SEED_OWNER_PASSWORD='a-long-password' npm run seed
 | `/contact` · `/careers` | Intake and application forms |
 | `/disclaimer` `/privacy` `/cookies` `/terms` | Policies |
 | `/notice` | Shown when a visitor declines the disclaimer |
+| `/login` | "Continue with Google", plus staff password sign-in |
+| `/dashboard` | Clients: their matters, documents, timeline, new-matter intake. Lawyers: their assigned cases |
+| `/admin` | Admin console (owners and admins): cases, documents, clients, lawyers & staff, enquiries, applications, audit log |
+
+"Continue with Google" sits at the top right of every page; once signed in it
+becomes the account menu.
 
 Content is typed data in `apps/web/src/content` — practice areas, industries,
 insights, people, awards and policies. Editing copy means editing those files,

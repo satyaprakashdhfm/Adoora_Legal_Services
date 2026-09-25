@@ -6,6 +6,7 @@ import { useEffect, useRef, useState } from "react";
 import { Wordmark } from "@/components/brand";
 import { primaryNav } from "@/lib/nav";
 import { firm } from "@/content/firm";
+import { AccountControl } from "@/components/account-control";
 
 /** 14×14 stroke icons for the utility bar. */
 function UtilityIcon({ path }: { path: string }) {
@@ -165,6 +166,9 @@ export function SiteHeader() {
               <UtilityIcon path={icons.mail} />
               {firm.email}
             </a>
+            {/* Sign-in sits at the top right of every page. */}
+            <span aria-hidden="true" className="h-4 w-px bg-white/20" />
+            <AccountControl variant="ribbon" />
           </div>
         </div>
       </div>
@@ -286,6 +290,8 @@ export function SiteHeader() {
                 </svg>
               </Link>
 
+              <AccountControl variant="compact" />
+
               <button
                 type="button"
                 onClick={() => setMobileOpen((open) => !open)}
@@ -390,6 +396,9 @@ export function SiteHeader() {
             </ul>
 
             <div className="border-t border-white/10 bg-ink-deep px-6 py-5">
+              <div className="mb-4 border-b border-white/10 pb-4">
+                <AccountControl variant="drawer" />
+              </div>
               <Link
                 href="/contact"
                 className="block rounded-md bg-gold px-5 py-3 text-center text-sm font-semibold text-ink-deep"

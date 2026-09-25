@@ -306,3 +306,12 @@ figcaption {
     display: none;
   }
 }
+
+/*
+ * Small uppercase labels in the dashboards and admin console. They are
+ * interface chrome, so they take the sans like `.eyebrow` does — and, like
+ * it, this has to be an unlayered class to win over the serif `p` rule above.
+ */
+.portal-label {
+  font-family: var(--font-sans);
+}

@@ -10,6 +10,10 @@ import { logger } from "./logger.js";
 import { healthRouter } from "./routes/health.js";
 import { publicRouter } from "./routes/public.js";
 import { adminRouter } from "./routes/admin.js";
+import { authRouter } from "./routes/auth.js";
+import { casesRouter } from "./routes/cases.js";
+import { documentsRouter } from "./routes/documents.js";
+import { authenticate } from "./middleware/auth.js";
 import { errorHandler, notFound } from "./middleware/error.js";
 
 export function createApp() {
@@ -51,7 +55,7 @@ export function createApp() {
         logger.warn({ origin }, "Blocked CORS origin");
         return callback(null, false);
       },
-      methods: ["GET", "POST", "PATCH", "DELETE", "OPTIONS"],
+      methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
       allowedHeaders: ["Content-Type", "Authorization"],
       maxAge: 86_400,
     }),
@@ -82,8 +86,18 @@ export function createApp() {
   );
 
   app.use(healthRouter);
+
+  /*
+   * Identify the caller once, for every API route. Anonymous requests pass
+   * through; the routers that need a signed-in caller say so themselves.
+   */
+  app.use("/api", authenticate);
+
   app.use("/api", publicRouter);
+  app.use("/api/auth", authRouter);
   app.use("/api/admin", adminRouter);
+  app.use("/api/cases", casesRouter);
+  app.use("/api/documents", documentsRouter);
 
   app.get("/", (_req, res) => {
     res.json({

@@ -11,11 +11,25 @@ import {
   signToken,
   type AuthClaims,
 } from "../middleware/auth.js";
-import type { EnquiryStatus, ApplicationStatus } from "../../generated/prisma/client.js";
+import { z } from "zod";
+import { audit } from "../lib/audit.js";
+import { revokeAllSessions } from "../auth/session.js";
+import {
+  applicationPatchSchema,
+  auditQuerySchema,
+  clientCreateSchema,
+  clientPatchSchema,
+  enquiryPatchSchema,
+  searchQuerySchema,
+  staffCreateSchema,
+  staffPatchSchema,
+} from "../portal-schemas.js";
+import type { EnquiryStatus, ApplicationStatus, UserRole } from "../../generated/prisma/client.js";
 
 /**
- * Admin API. The portal UI is not built yet — these are the endpoints it will
- * consume, and they are complete and usable from a client today.
+ * Admin API, consumed by the console at `/admin` on the website. Cases and
+ * documents live on their own routers (they serve every dashboard); this one
+ * holds what only the firm's administrators do.
  */
 export const adminRouter = Router();
 
@@ -148,24 +162,337 @@ adminRouter.get(
   },
 );
 
-/** Counts for the portal dashboard. */
+/** Counts for the console's overview. */
 adminRouter.get(
   "/stats",
   requireAuth,
   requireRole("OWNER", "ADMIN"),
   async (_req, res) => {
-    const [enquiriesNew, enquiriesTotal, applicationsNew, subscribers] =
-      await Promise.all([
-        prisma.enquiry.count({ where: { status: "NEW" } }),
-        prisma.enquiry.count(),
-        prisma.careerApplication.count({ where: { status: "NEW" } }),
-        prisma.subscriber.count({ where: { confirmedAt: { not: null } } }),
-      ]);
+    const today = new Date(new Date().toISOString().slice(0, 10));
+    const fortnight = new Date(today.getTime() + 14 * 24 * 60 * 60 * 1000);
+
+    const [
+      enquiriesNew,
+      enquiriesTotal,
+      applicationsNew,
+      subscribers,
+      casesByStatus,
+      documents,
+      clients,
+      lawyers,
+      upcoming,
+      unassigned,
+    ] = await Promise.all([
+      prisma.enquiry.count({ where: { status: "NEW" } }),
+      prisma.enquiry.count(),
+      prisma.careerApplication.count({ where: { status: "NEW" } }),
+      prisma.subscriber.count({ where: { confirmedAt: { not: null } } }),
+      prisma.case.groupBy({ by: ["status"], _count: { _all: true } }),
+      prisma.document.count({ where: { deletedAt: null } }),
+      prisma.client.count({ where: { isActive: true } }),
+      prisma.user.count({ where: { isActive: true, role: "LAWYER" } }),
+      prisma.case.findMany({
+        where: {
+          nextHearingDate: { gte: today, lte: fortnight },
+          status: { in: ["ACTIVE", "ON_HOLD", "INTAKE"] },
+        },
+        orderBy: { nextHearingDate: "asc" },
+        take: 10,
+        select: {
+          reference: true,
+          title: true,
+          courtName: true,
+          caseTypeCode: true,
+          caseNumber: true,
+          caseYear: true,
+          nextHearingDate: true,
+          nextHearingPurpose: true,
+        },
+      }),
+      prisma.case.count({
+        where: { assignments: { none: {} }, status: { notIn: ["CLOSED", "WITHDRAWN", "DISPOSED"] } },
+      }),
+    ]);
 
     res.json({
       enquiries: { new: enquiriesNew, total: enquiriesTotal },
       applications: { new: applicationsNew },
       subscribers: { confirmed: subscribers },
+      cases: Object.fromEntries(casesByStatus.map((row) => [row.status, row._count._all])),
+      casesUnassigned: unassigned,
+      documents,
+      clients,
+      lawyers,
+      upcomingHearings: upcoming,
     });
+  },
+);
+
+adminRouter.patch(
+  "/enquiries/:id",
+  requireAuth,
+  requireRole("OWNER", "ADMIN"),
+  async (req, res) => {
+    const input = enquiryPatchSchema.parse(req.body);
+    const id = z.string().uuid().parse(req.params.id);
+    const before = await prisma.enquiry.findUnique({ where: { id }, select: { status: true } });
+    if (!before) throw new HttpError(404, "Enquiry not found.", "not_found");
+
+    const updated = await prisma.enquiry.update({
+      where: { id },
+      data: {
+        ...input,
+        acknowledgedAt:
+          input.status === "ACKNOWLEDGED" && before.status === "NEW" ? new Date() : undefined,
+      },
+    });
+    await audit(req, "enquiry.updated", "Enquiry", id, { from: before.status, to: input.status ?? before.status });
+    res.json(updated);
+  },
+);
+
+adminRouter.patch(
+  "/applications/:id",
+  requireAuth,
+  requireRole("OWNER", "ADMIN"),
+  async (req, res) => {
+    const input = applicationPatchSchema.parse(req.body);
+    const id = z.string().uuid().parse(req.params.id);
+    const updated = await prisma.careerApplication.update({ where: { id }, data: input });
+    await audit(req, "application.updated", "CareerApplication", id, { status: input.status ?? null });
+    res.json(updated);
+  },
+);
+
+// ---------------------------------------------------------------------------
+// Staff
+// ---------------------------------------------------------------------------
+
+/**
+ * Only an OWNER can create, promote to, or change an OWNER or ADMIN. An ADMIN
+ * manages lawyers and editors. Nobody can demote or deactivate themselves —
+ * that is how a firm locks itself out of its own console.
+ */
+function assertCanManageRole(actorRole: UserRole, ...roles: (UserRole | undefined)[]) {
+  if (actorRole === "OWNER") return;
+  if (roles.some((role) => role === "OWNER" || role === "ADMIN")) {
+    throw new HttpError(403, "Only an owner can manage owner and admin accounts.", "forbidden");
+  }
+}
+
+adminRouter.get(
+  "/users",
+  requireAuth,
+  requireRole("OWNER", "ADMIN"),
+  async (req, res) => {
+    const query = searchQuerySchema.parse(req.query);
+    const users = await prisma.user.findMany({
+      where: {
+        ...(query.role ? { role: query.role } : {}),
+        ...(query.q
+          ? {
+              OR: [
+                { name: { contains: query.q, mode: "insensitive" } },
+                { email: { contains: query.q, mode: "insensitive" } },
+              ],
+            }
+          : {}),
+      },
+      orderBy: [{ isActive: "desc" }, { name: "asc" }],
+      take: query.limit,
+      select: {
+        id: true,
+        email: true,
+        name: true,
+        role: true,
+        isActive: true,
+        phone: true,
+        barEnrolment: true,
+        avatarUrl: true,
+        lastLoginAt: true,
+        createdAt: true,
+        passwordHash: true,
+        googleSub: true,
+        _count: { select: { assignments: true } },
+      },
+    });
+
+    res.json({
+      data: users.map(({ passwordHash, googleSub, ...user }) => ({
+        ...user,
+        hasPassword: Boolean(passwordHash),
+        googleLinked: Boolean(googleSub),
+      })),
+    });
+  },
+);
+
+adminRouter.post(
+  "/users",
+  requireAuth,
+  requireRole("OWNER", "ADMIN"),
+  async (req, res) => {
+    const input = staffCreateSchema.parse(req.body);
+    assertCanManageRole(req.auth!.role, input.role);
+
+    if (await prisma.client.findUnique({ where: { email: input.email } })) {
+      throw new HttpError(409, "That email belongs to a client account. Use a different address for staff.", "email_in_use");
+    }
+    if (await prisma.user.findUnique({ where: { email: input.email } })) {
+      throw new HttpError(409, "A staff account with that email already exists.", "email_in_use");
+    }
+
+    // No password: the new member signs in with Google using this email.
+    const user = await prisma.user.create({ data: input });
+    await audit(req, "user.created", "User", user.id, { role: user.role });
+    res.status(201).json({ id: user.id });
+  },
+);
+
+adminRouter.patch(
+  "/users/:id",
+  requireAuth,
+  requireRole("OWNER", "ADMIN"),
+  async (req, res) => {
+    const id = z.string().uuid().parse(req.params.id);
+    const input = staffPatchSchema.parse(req.body);
+    const target = await prisma.user.findUnique({ where: { id } });
+    if (!target) throw new HttpError(404, "Staff member not found.", "not_found");
+
+    assertCanManageRole(req.auth!.role, target.role, input.role);
+
+    if (id === req.auth!.sub && (input.isActive === false || (input.role && input.role !== target.role))) {
+      throw new HttpError(400, "You cannot change your own role or deactivate yourself.", "self_change");
+    }
+
+    const updated = await prisma.user.update({ where: { id }, data: input });
+    if (input.isActive === false) await revokeAllSessions({ userId: id });
+
+    await audit(req, "user.updated", "User", id, {
+      changes: Object.keys(input),
+      role: input.role ?? null,
+      isActive: input.isActive ?? null,
+    });
+    res.json({ id: updated.id });
+  },
+);
+
+// ---------------------------------------------------------------------------
+// Clients
+// ---------------------------------------------------------------------------
+
+adminRouter.get(
+  "/clients",
+  requireAuth,
+  requireRole("OWNER", "ADMIN"),
+  async (req, res) => {
+    const query = searchQuerySchema.parse(req.query);
+    const clients = await prisma.client.findMany({
+      where: query.q
+        ? {
+            OR: [
+              { name: { contains: query.q, mode: "insensitive" } },
+              { email: { contains: query.q, mode: "insensitive" } },
+              { organisation: { contains: query.q, mode: "insensitive" } },
+            ],
+          }
+        : undefined,
+      orderBy: [{ isActive: "desc" }, { name: "asc" }],
+      take: query.limit,
+      ...(query.cursor ? { cursor: { id: query.cursor }, skip: 1 } : {}),
+      select: {
+        id: true,
+        email: true,
+        name: true,
+        kind: true,
+        organisation: true,
+        phone: true,
+        address: true,
+        isActive: true,
+        avatarUrl: true,
+        lastLoginAt: true,
+        createdAt: true,
+        googleSub: true,
+        cases: {
+          select: { case: { select: { reference: true, title: true, status: true } } },
+        },
+      },
+    });
+
+    res.json({
+      data: clients.map(({ googleSub, cases, ...client }) => ({
+        ...client,
+        googleLinked: Boolean(googleSub),
+        cases: cases.map((entry) => entry.case),
+      })),
+    });
+  },
+);
+
+adminRouter.post(
+  "/clients",
+  requireAuth,
+  requireRole("OWNER", "ADMIN"),
+  async (req, res) => {
+    const input = clientCreateSchema.parse(req.body);
+
+    if (await prisma.user.findUnique({ where: { email: input.email } })) {
+      throw new HttpError(409, "That email belongs to a staff account.", "email_in_use");
+    }
+    if (await prisma.client.findUnique({ where: { email: input.email } })) {
+      throw new HttpError(409, "A client with that email already exists.", "email_in_use");
+    }
+
+    const client = await prisma.client.create({ data: input });
+    await audit(req, "client.created", "Client", client.id);
+    res.status(201).json({ id: client.id });
+  },
+);
+
+adminRouter.patch(
+  "/clients/:id",
+  requireAuth,
+  requireRole("OWNER", "ADMIN"),
+  async (req, res) => {
+    const id = z.string().uuid().parse(req.params.id);
+    const input = clientPatchSchema.parse(req.body);
+
+    const updated = await prisma.client.update({ where: { id }, data: input }).catch(() => null);
+    if (!updated) throw new HttpError(404, "Client not found.", "not_found");
+    if (input.isActive === false) await revokeAllSessions({ clientId: id });
+
+    await audit(req, "client.updated", "Client", id, { changes: Object.keys(input) });
+    res.json({ id });
+  },
+);
+
+// ---------------------------------------------------------------------------
+// Audit log
+// ---------------------------------------------------------------------------
+
+adminRouter.get(
+  "/audit",
+  requireAuth,
+  requireRole("OWNER", "ADMIN"),
+  async (req, res) => {
+    const query = auditQuerySchema.parse(req.query);
+    const entries = await prisma.auditLog.findMany({
+      where: {
+        ...(query.entityType ? { entityType: query.entityType } : {}),
+        ...(query.entityId ? { entityId: query.entityId } : {}),
+        ...(query.action ? { action: { startsWith: query.action } } : {}),
+      },
+      orderBy: [{ createdAt: "desc" }, { id: "desc" }],
+      take: query.limit + 1,
+      ...(query.cursor ? { cursor: { id: query.cursor }, skip: 1 } : {}),
+      include: {
+        actor: { select: { name: true, email: true } },
+        actorClient: { select: { name: true, email: true } },
+      },
+    });
+
+    const hasMore = entries.length > query.limit;
+    const page = hasMore ? entries.slice(0, query.limit) : entries;
+    res.json({ data: page, nextCursor: hasMore ? page[page.length - 1]?.id : null });
   },
 );
