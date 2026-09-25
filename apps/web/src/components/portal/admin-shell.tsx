@@ -8,22 +8,62 @@ import { RequireSession } from "@/components/portal/guard";
 import { Avatar } from "@/components/portal/ui";
 import { isFirmAdmin, signOut } from "@/lib/portal/session";
 
-const NAV = [
-  { href: "/admin", label: "Overview", exact: true, icon: "M3 10.5 10 4l7 6.5V17H3z" },
-  { href: "/admin/cases", label: "Cases", icon: "M4 5h12v11H4zM7 5V3.5h6V5M4 9h12" },
-  { href: "/admin/documents", label: "Documents", icon: "M6 2.5h6l3.5 3.5v11.5H6zM12 2.5V6h3.5M8.5 10h5M8.5 13h5" },
-  { href: "/admin/clients", label: "Clients", icon: "M10 9a3 3 0 100-6 3 3 0 000 6zM4 17c0-3.3 2.7-5.5 6-5.5s6 2.2 6 5.5" },
-  { href: "/admin/staff", label: "Lawyers & staff", icon: "M7 8.5a2.5 2.5 0 100-5 2.5 2.5 0 000 5zM2.5 16c0-2.8 2-4.5 4.5-4.5s4.5 1.7 4.5 4.5M13.5 8.5a2.2 2.2 0 100-4.4M14.5 11.6c1.8.4 3 1.9 3 4.4" },
-  { href: "/admin/enquiries", label: "Enquiries", icon: "M3 5h14v9H8l-4 3v-3H3z" },
-  { href: "/admin/applications", label: "Applications", icon: "M5 3h10v14H5zM8 7h4M8 10h4M8 13h2" },
-  { href: "/admin/audit", label: "Audit log", icon: "M10 3a7 7 0 110 14 7 7 0 010-14zM10 6.5V10l2.5 2" },
+type NavItem = { href: string; label: string; icon: string; exact?: boolean };
+
+/**
+ * Two groups, ruled apart: the practice (cases and the people on them,
+ * including what clients ask from their dashboard) and the public website
+ * (contact-form enquiries from people who are not clients yet, and job
+ * applications).
+ */
+const NAV: { title: string; items: NavItem[] }[] = [
+  {
+    title: "Clients & court cases",
+    items: [
+      { href: "/admin", label: "Overview", exact: true, icon: "M3 10.5 10 4l7 6.5V17H3z" },
+      { href: "/admin/cases", label: "Cases", icon: "M4 5h12v11H4zM7 5V3.5h6V5M4 9h12" },
+      { href: "/admin/documents", label: "Documents", icon: "M6 2.5h6l3.5 3.5v11.5H6zM12 2.5V6h3.5M8.5 10h5M8.5 13h5" },
+      { href: "/admin/clients", label: "Clients", icon: "M10 9a3 3 0 100-6 3 3 0 000 6zM4 17c0-3.3 2.7-5.5 6-5.5s6 2.2 6 5.5" },
+      { href: "/admin/queries", label: "Client queries", icon: "M3 4.5h14v9H9l-4 3v-3H3zM7.5 8h5M7.5 10.5h3" },
+      { href: "/admin/staff", label: "Team (Lawyers)", icon: "M7 8.5a2.5 2.5 0 100-5 2.5 2.5 0 000 5zM2.5 16c0-2.8 2-4.5 4.5-4.5s4.5 1.7 4.5 4.5M13.5 8.5a2.2 2.2 0 100-4.4M14.5 11.6c1.8.4 3 1.9 3 4.4" },
+    ],
+  },
+  {
+    title: "Website",
+    items: [
+      { href: "/admin/enquiries", label: "Enquiries", icon: "M3 5h14v9H8l-4 3v-3H3z" },
+      { href: "/admin/applications", label: "Career applications", icon: "M5 3h10v14H5zM8 7h4M8 10h4M8 13h2" },
+    ],
+  },
 ];
+
+const AUDIT: NavItem = { href: "/admin/audit", label: "Audit log", icon: "M10 3a7 7 0 110 14 7 7 0 010-14zM10 6.5V10l2.5 2" };
 
 function NavIcon({ d }: { d: string }) {
   return (
     <svg viewBox="0 0 20 20" aria-hidden="true" className="h-4 w-4 shrink-0">
       <path d={d} fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round" />
     </svg>
+  );
+}
+
+function NavLink({ item, pathname, muted }: { item: NavItem; pathname: string; muted?: boolean }) {
+  const active = item.exact ? pathname === item.href : pathname.startsWith(item.href);
+  return (
+    <Link
+      href={item.href}
+      aria-current={active ? "page" : undefined}
+      className={`flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition ${
+        active
+          ? "bg-white/10 font-semibold text-gold-bright"
+          : muted
+            ? "text-white/55 hover:bg-white/5 hover:text-white"
+            : "text-white/75 hover:bg-white/5 hover:text-white"
+      }`}
+    >
+      <NavIcon d={item.icon} />
+      {item.label}
+    </Link>
   );
 }
 
@@ -65,33 +105,21 @@ export function AdminShell({ children }: { children: ReactNode }) {
             </div>
 
             <nav aria-label="Admin" className="flex-1 overflow-y-auto px-3 py-4">
-              <ul className="space-y-0.5">
-                {NAV.map((item) => {
-                  const active = item.exact ? pathname === item.href : pathname.startsWith(item.href);
-                  return (
-                    <li key={item.href}>
-                      <Link
-                        href={item.href}
-                        aria-current={active ? "page" : undefined}
-                        className={`flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition ${
-                          active ? "bg-white/10 font-semibold text-gold-bright" : "text-white/75 hover:bg-white/5 hover:text-white"
-                        }`}
-                      >
-                        <NavIcon d={item.icon} />
-                        {item.label}
-                      </Link>
-                    </li>
-                  );
-                })}
-              </ul>
+              {NAV.map((group, index) => (
+                <div key={group.title} className={index > 0 ? "mt-5 border-t border-white/15 pt-5" : ""}>
+                  <p className="mb-2 px-3 text-[0.65rem] font-semibold uppercase tracking-[0.18em] text-white/45">{group.title}</p>
+                  <ul className="space-y-0.5">
+                    {group.items.map((item) => (
+                      <li key={item.href}>
+                        <NavLink item={item} pathname={pathname} />
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              ))}
 
-              <div className="mt-6 border-t border-white/10 pt-4">
-                <Link href="/dashboard" className="block rounded-lg px-3 py-2 text-sm text-white/60 hover:text-white">
-                  Case dashboard
-                </Link>
-                <Link href="/" className="block rounded-lg px-3 py-2 text-sm text-white/60 hover:text-white">
-                  View website
-                </Link>
+              <div className="mt-5 border-t border-white/10 pt-4">
+                <NavLink item={AUDIT} pathname={pathname} muted />
               </div>
             </nav>
 

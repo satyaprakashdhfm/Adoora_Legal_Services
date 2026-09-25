@@ -10,7 +10,8 @@ import { Badge, Button, Card, EmptyState, ErrorNote, Input, Select, Spinner, Tab
 /**
  * Every document the caller can see, across their cases. `compact` drops the
  * filters and paging (the overview's "Recent documents"); `refreshKey`
- * refetches when it changes, e.g. after an upload.
+ * refetches when it changes, e.g. after an upload. `caseReference` narrows
+ * it to one case, and drops the Case column that would repeat it.
  */
 export function DocumentList({
   basePath,
@@ -19,6 +20,7 @@ export function DocumentList({
   limit,
   refreshKey,
   emptyAction,
+  caseReference,
 }: {
   basePath: string;
   staff: boolean;
@@ -26,6 +28,7 @@ export function DocumentList({
   limit?: number;
   refreshKey?: number;
   emptyAction?: React.ReactNode;
+  caseReference?: string;
 }) {
   const [query, setQuery] = useState("");
   const [category, setCategory] = useState("");
@@ -39,6 +42,7 @@ export function DocumentList({
     if (query.trim()) params.set("q", query.trim());
     if (category) params.set("category", category);
     if (limit) params.set("limit", String(limit));
+    if (caseReference) params.set("case", caseReference);
 
     const timer = setTimeout(() => {
       api<Page<DocumentRecord>>(`/documents?${params}`, { signal: controller.signal })
@@ -55,11 +59,12 @@ export function DocumentList({
       clearTimeout(timer);
       controller.abort();
     };
-  }, [query, category, limit, refreshKey]);
+  }, [query, category, limit, refreshKey, caseReference]);
 
   async function loadMore() {
     if (!cursor) return;
     const params = new URLSearchParams({ cursor });
+    if (caseReference) params.set("case", caseReference);
     if (query.trim()) params.set("q", query.trim());
     if (category) params.set("category", category);
     const page = await api<Page<DocumentRecord>>(`/documents?${params}`);
@@ -89,7 +94,7 @@ export function DocumentList({
           <thead>
             <tr>
               <Th>Document</Th>
-              <Th>Case</Th>
+              {!caseReference && <Th>Case</Th>}
               <Th>Type</Th>
               <Th>Uploaded</Th>
               <Th className="text-right">File</Th>
@@ -108,14 +113,14 @@ export function DocumentList({
                       {staff && <VisibilityBadge visibility={doc.visibility} />}
                     </div>
                   </Td>
-                  <Td>
+                  {!caseReference && <Td>
                     {doc.case && (
                       <Link href={`${basePath}/cases/${doc.case.reference}`} className="hover:text-gold-deep">
                         <span className="block max-w-[16rem] truncate">{doc.case.title}</span>
                         <span className="font-mono text-xs text-slate">{doc.case.reference}</span>
                       </Link>
                     )}
-                  </Td>
+                  </Td>}
                   <Td className="text-xs">{labelFor(DOCUMENT_CATEGORIES, doc.category)}</Td>
                   <Td className="text-xs">
                     {doc.uploadedByUser?.name ?? doc.uploadedByClient?.name ?? "—"}

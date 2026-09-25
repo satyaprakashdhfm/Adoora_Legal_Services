@@ -60,9 +60,24 @@ type FormState = {
   parties: Party[];
 };
 
-function initialState(initial?: CaseDetail): FormState {
+/**
+ * A draft from "fill from CNR" arrives in the form's own shape (strings, a
+ * list of acts); anything it does not carry keeps its default.
+ */
+function fromDraft(draft: Record<string, unknown>): Partial<FormState> {
+  const out: Record<string, unknown> = {};
+  for (const [key, value] of Object.entries(draft)) {
+    if (key === "court") continue;
+    if (key === "actsAndSections") out[key] = Array.isArray(value) ? value.join("\n") : "";
+    else if (key === "parties") out[key] = Array.isArray(value) ? value : [];
+    else if (value !== null && value !== undefined) out[key] = String(value);
+  }
+  return out as Partial<FormState>;
+}
+
+function initialState(initial?: CaseDetail, draft?: Record<string, unknown>): FormState {
   const text = (value: string | number | null | undefined) => (value == null ? "" : String(value));
-  return {
+  const base: FormState = {
     title: text(initial?.title),
     summary: text(initial?.summary),
     practiceArea: text(initial?.practiceArea),
@@ -95,6 +110,7 @@ function initialState(initial?: CaseDetail): FormState {
     disposalNature: text(initial?.disposalNature),
     parties: initial?.parties?.map(({ role, position, name, isClient, counsel }) => ({ role, position, name, isClient, counsel })) ?? [],
   };
+  return draft ? { ...base, ...fromDraft(draft) } : base;
 }
 
 function toPayload(form: FormState, mode: Mode) {
@@ -158,18 +174,21 @@ function Section({ title, description, children }: { title: string; description?
 export function CaseForm({
   mode,
   initial,
+  draft,
   submitLabel,
   onSubmit,
   before,
 }: {
   mode: Mode;
   initial?: CaseDetail;
+  /** Prefill for a new case, e.g. from an eCourts lookup. */
+  draft?: Record<string, unknown>;
   submitLabel: string;
   onSubmit: (payload: ReturnType<typeof toPayload>) => Promise<void>;
   /** Extra controls rendered above the submit button (admin pickers). */
   before?: ReactNode;
 }) {
-  const [form, setForm] = useState<FormState>(() => initialState(initial));
+  const [form, setForm] = useState<FormState>(() => initialState(initial, draft));
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const staff = mode === "staff";

@@ -68,7 +68,7 @@ export default function AdminApplications() {
 
   return (
     <div className="space-y-6">
-      <PageTitle eyebrow="Careers" title="Applications" description="From the careers page. Candidates email their CV quoting the reference." />
+      <PageTitle eyebrow="Website" title="Career applications" description="From the careers page on the website. Candidates email their CV quoting the reference." />
       <Card>
         <div className="border-b border-line p-4 sm:max-w-xs">
           <Select aria-label="Status" value={status} onChange={(e) => setStatus(e.target.value)} placeholder="All statuses" options={STATUSES} />
@@ -77,7 +77,7 @@ export default function AdminApplications() {
         {!rows ? (
           <Spinner />
         ) : rows.length === 0 ? (
-          <EmptyState title="No applications" />
+          <EmptyState title="No career applications" />
         ) : (
           <Table>
             <thead>

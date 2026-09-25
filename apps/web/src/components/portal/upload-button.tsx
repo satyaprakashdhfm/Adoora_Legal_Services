@@ -5,7 +5,8 @@ import { api, type CaseSummary, type Page } from "@/lib/portal/api";
 import { useUser } from "@/lib/portal/session";
 import { courtNumber } from "@/lib/portal/format";
 import { UploadForm } from "@/components/portal/documents-panel";
-import { Button, ButtonLink, EmptyState, Field, Modal, Select, Spinner } from "@/components/portal/ui";
+import { NewCaseButton } from "@/components/portal/new-case-dialog";
+import { Button, EmptyState, Field, Modal, Select, Spinner } from "@/components/portal/ui";
 
 /**
  * "Upload document" from anywhere in the dashboard, not only from inside a
@@ -70,7 +71,7 @@ export function UploadButton({
         ) : cases.length === 0 ? (
           <EmptyState
             title={client ? "Open a matter first" : "No open cases"}
-            action={client ? <ButtonLink href="/dashboard/cases/new">Open a new matter</ButtonLink> : undefined}
+            action={client ? <NewCaseButton /> : undefined}
           >
             {client
               ? "Documents are kept with the matter they belong to, so only the lawyers on that matter can see them. Tell us briefly what it is about, then upload."

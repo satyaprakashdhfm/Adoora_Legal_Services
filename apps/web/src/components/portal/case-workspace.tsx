@@ -7,11 +7,12 @@ import { CASE_STAGES, COURT_LEVELS, labelFor } from "@/lib/portal/legal";
 import { practiceAreas } from "@/content/practice-areas";
 import { causeTitle, courtNumber, daysUntil, formatDate, partyLabel } from "@/lib/portal/format";
 import { CaseForm } from "@/components/portal/case-form";
+import { CourtRecordPanel, CourtStatusCard } from "@/components/portal/court-record";
 import { DocumentsPanel } from "@/components/portal/documents-panel";
 import { Timeline } from "@/components/portal/timeline";
 import { Avatar, Badge, Button, Card, CardHeader, EmptyState, ErrorNote, Select, Spinner, StatusBadge, SuccessNote } from "@/components/portal/ui";
 
-type Tab = "overview" | "documents" | "timeline" | "edit";
+type Tab = "overview" | "court" | "documents" | "timeline" | "edit";
 
 function Detail({ label, children }: { label: string; children: ReactNode }) {
   if (children === null || children === undefined || children === "" || children === "—") return null;
@@ -65,9 +66,14 @@ export function CaseWorkspace({ reference, user, basePath }: { reference: string
   const hearingIn = daysUntil(record.nextHearingDate);
   const parties = record.parties;
   const countByRole = (role: string) => parties.filter((p) => p.role === role).length;
+  const onSynced = (updated: CaseDetail, message: string) => {
+    setRecord(updated);
+    setSaved(message);
+  };
 
   const tabs: { id: Tab; label: string }[] = [
     { id: "overview", label: "Overview" },
+    { id: "court", label: "Court record" },
     { id: "documents", label: `Documents (${record.documents.length})` },
     { id: "timeline", label: "Timeline" },
     ...(record.canEdit ? [{ id: "edit" as const, label: "Edit details" }] : []),
@@ -187,11 +193,14 @@ export function CaseWorkspace({ reference, user, basePath }: { reference: string
           </div>
 
           <div className="space-y-6">
+            <CourtStatusCard record={record} onSynced={onSynced} />
             <TeamCard record={record} onChange={load} />
             {record.canManage && <ClientsCard record={record} onChange={load} />}
           </div>
         </div>
       )}
+
+      {tab === "court" && <CourtRecordPanel record={record} onSynced={onSynced} />}
 
       {tab === "documents" && (
         <Card>

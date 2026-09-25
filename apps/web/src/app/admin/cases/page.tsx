@@ -1,7 +1,8 @@
 "use client";
 
 import { CaseList } from "@/components/portal/case-list";
-import { ButtonLink, PageTitle } from "@/components/portal/ui";
+import { NewCaseButton } from "@/components/portal/new-case-dialog";
+import { PageTitle } from "@/components/portal/ui";
 
 export default function AdminCases() {
   return (
@@ -10,7 +11,7 @@ export default function AdminCases() {
         eyebrow="Cases"
         title="All cases"
         description="Every matter in the firm. Search by the firm's reference, the court's case number, the CNR, a party or a client."
-        actions={<ButtonLink href="/admin/cases/new">New case</ButtonLink>}
+        actions={<NewCaseButton admin />}
       />
       <CaseList basePath="/admin" staff />
     </div>

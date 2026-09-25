@@ -69,9 +69,9 @@ export default function AdminEnquiries() {
   return (
     <div className="space-y-6">
       <PageTitle
-        eyebrow="Enquiries"
+        eyebrow="Website"
         title="Website enquiries"
-        description="From the contact form. An enquiry is not a client: run the conflicts check before engaging, then open a case and add the client."
+        description="From the contact form on the public website, sent by people who are not clients yet. Questions from signed-in clients are under Client queries. An enquiry is not a client: run the conflicts check before engaging, then open a case and add the client."
       />
       <Card>
         <div className="border-b border-line p-4 sm:max-w-xs">

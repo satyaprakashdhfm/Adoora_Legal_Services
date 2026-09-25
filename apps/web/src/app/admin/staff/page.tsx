@@ -108,10 +108,10 @@ export default function AdminStaff() {
   return (
     <div className="space-y-6">
       <PageTitle
-        eyebrow="Lawyers & staff"
-        title="The firm's accounts"
+        eyebrow="Team (Lawyers)"
+        title="The firm's team"
         description="Lawyers see only the cases they are assigned to. Admins and owners see everything."
-        actions={<Button onClick={() => setEditing("new")}>Add lawyer or staff</Button>}
+        actions={<Button onClick={() => setEditing("new")}>Add a lawyer</Button>}
       />
 
       <Card>
@@ -169,7 +169,7 @@ export default function AdminStaff() {
         )}
       </Card>
 
-      <Modal open={editing !== null} onClose={() => setEditing(null)} title={editing === "new" ? "Add a lawyer or staff member" : "Edit account"}>
+      <Modal open={editing !== null} onClose={() => setEditing(null)} title={editing === "new" ? "Add a lawyer" : "Edit account"}>
         {editing !== null && (
           <StaffForm
             initial={editing === "new" ? undefined : editing}

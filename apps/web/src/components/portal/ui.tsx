@@ -11,7 +11,7 @@ import { initials } from "@/lib/portal/format";
  * same firm as the public pages.
  */
 
-type ButtonTone = "primary" | "secondary" | "ghost" | "danger";
+export type ButtonTone = "primary" | "secondary" | "ghost" | "danger";
 
 const buttonTones: Record<ButtonTone, string> = {
   primary: "bg-gold text-ink-deep hover:bg-gold-bright",

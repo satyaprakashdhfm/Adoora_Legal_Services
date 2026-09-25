@@ -1,7 +1,8 @@
 import { Router } from "express";
 import rateLimit from "express-rate-limit";
 import { prisma } from "../db.js";
-import { CNR_PATTERN, fetchCaseByCnr, normaliseCnr } from "../integrations/ecourts.js";
+import { CNR_PATTERN, normaliseCnr } from "../integrations/ecourts.js";
+import { attachCourtRecord, draftFromRecord, lookupCnr, syncCase } from "../integrations/court-record.js";
 import { HttpError } from "../lib/http.js";
 import { audit } from "../lib/audit.js";
 import { makeCaseReference } from "../lib/ids.js";
@@ -180,6 +181,7 @@ casesRouter.post("/", async (req, res) => {
       }),
     );
 
+    await attachCourtRecord(created.id, fields.cnrNumber, { clientId: principal.id });
     await audit(req, "case.create", "Case", created.id, { reference: created.reference, by: "client" });
     res.status(201).json(created);
     return;
@@ -226,6 +228,7 @@ casesRouter.post("/", async (req, res) => {
     }),
   );
 
+  await attachCourtRecord(created.id, fields.cnrNumber, { userId: principal.id });
   await audit(req, "case.create", "Case", created.id, { reference: created.reference });
   res.status(201).json(created);
 });
@@ -316,12 +319,22 @@ async function loadCaseDetail(principal: Principal, id: string) {
       },
       createdBy: { select: { name: true } },
       createdByClient: { select: { name: true } },
+      hearings: {
+        orderBy: { hearingDate: "desc" },
+        take: 300,
+        select: { id: true, hearingDate: true, purpose: true, judge: true, business: true, nextDate: true },
+      },
+      orders: {
+        orderBy: { orderDate: "desc" },
+        take: 300,
+        select: { id: true, orderDate: true, orderType: true, fileName: true, summary: true },
+      },
     },
   });
 }
 
 // ---------------------------------------------------------------------------
-// eCourts case detail, by CNR
+// eCourts: lookup by CNR, and syncing a case
 // ---------------------------------------------------------------------------
 
 /**
@@ -340,16 +353,33 @@ const ecourtsLimiter = rateLimit({
   },
 });
 
+/** Clients get a tighter hourly allowance on top: they check, they do not research. */
+const clientEcourtsLimiter = rateLimit({
+  windowMs: 60 * 60 * 1000,
+  limit: 15,
+  standardHeaders: "draft-7",
+  legacyHeaders: false,
+  skip: (req) => req.principal?.kind !== "client",
+  keyGenerator: (req) => `ecourts-client:${req.principal?.id ?? "anonymous"}`,
+  message: {
+    error: "rate_limited",
+    message: "You have checked eCourts several times this hour. Please try again later.",
+  },
+});
+
 /**
- * GET /api/cases/:cnr — the live case record from eCourtsIndia.
+ * GET /api/cases/:cnr — "fill from CNR". Fetches the court's record, keeps
+ * the response (see court-record.ts), and returns it shaped for the case
+ * form, so a new case can be reviewed and saved instead of typed in.
  *
  * Shares its path with the firm's own case records (`/api/cases/ALS-…`). The
  * two cannot collide: a CNR is 16 letters and digits with no hyphens, a firm
  * reference always has them. Anything that is not a CNR falls through to the
  * firm-record handler below.
  *
- * Firm lawyers and admins only: the data is public court information, but
- * every call spends the firm's eCourts credits.
+ * Open to clients as well as case staff. `existing` lists cases with this
+ * CNR that the caller can already see; a client is never told about a firm
+ * case they are not linked to.
  */
 casesRouter.get(
   "/:cnr",
@@ -360,12 +390,21 @@ casesRouter.get(
     next();
   },
   (req, _res, next) => {
-    next(isCaseStaff(req.principal) ? undefined : notFound());
+    next(isCaseStaff(req.principal) || req.principal?.kind === "client" ? undefined : notFound());
   },
   ecourtsLimiter,
+  clientEcourtsLimiter,
   async (req, res) => {
+    const principal = req.principal!;
     const cnr = normaliseCnr(String(req.params.cnr));
-    const result = await fetchCaseByCnr(cnr);
+    const [result, existing] = await Promise.all([
+      lookupCnr(principal, cnr),
+      prisma.case.findMany({
+        where: { cnrNumber: cnr, ...caseScope(principal) },
+        select: { reference: true, title: true, status: true },
+        take: 5,
+      }),
+    ]);
 
     await audit(req, "ecourts.case_lookup", "EcourtsCase", cnr, { requestId: result.requestId });
 
@@ -375,10 +414,35 @@ casesRouter.get(
       cnr,
       requestId: result.requestId,
       fetchedAt: new Date().toISOString(),
-      data: result.data,
+      draft: draftFromRecord(cnr, result.record),
+      existing,
+      // The raw record is for the firm; a client gets the form draft only.
+      data: principal.kind === "staff" ? result.data : undefined,
     });
   },
 );
+
+/**
+ * POST /api/cases/:reference/court-sync — "Check court status". Anyone who
+ * can see the case may ask; the result is written to the case for everyone.
+ */
+casesRouter.post("/:reference/court-sync", ecourtsLimiter, clientEcourtsLimiter, async (req, res) => {
+  const principal = req.principal!;
+  const found = await findVisibleCase(principal, String(req.params.reference));
+  if (!found.cnrNumber) {
+    throw new HttpError(400, "Add the case's CNR number first — it is what eCourts looks the case up by.", "no_cnr");
+  }
+
+  const result = await syncCase(principal, found);
+  await audit(req, "ecourts.case_sync", "Case", found.id, {
+    reference: found.reference,
+    requestId: result?.requestId ?? null,
+    changes: result?.changes ?? [],
+  });
+
+  const record = await loadCaseDetail(principal, found.id);
+  res.json({ case: serialiseCase(principal, record), changes: result?.changes ?? [], recordChanged: result?.recordChanged ?? false });
+});
 
 casesRouter.get("/:reference", async (req, res) => {
   const principal = req.principal!;

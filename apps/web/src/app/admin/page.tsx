@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import { api } from "@/lib/portal/api";
 import { courtNumber, formatDate } from "@/lib/portal/format";
+import { NewCaseButton } from "@/components/portal/new-case-dialog";
 import { ButtonLink, Card, CardHeader, EmptyState, ErrorNote, PageTitle, Spinner, StatTile } from "@/components/portal/ui";
 
 type Stats = {
@@ -12,7 +13,7 @@ type Stats = {
   subscribers: { confirmed: number };
   cases: Record<string, number>;
   casesUnassigned: number;
-  documents: number;
+  queries: { open: number };
   clients: number;
   lawyers: number;
   upcomingHearings: {
@@ -47,7 +48,7 @@ export default function AdminOverview() {
         title="The firm at a glance"
         actions={
           <>
-            <ButtonLink href="/admin/cases/new">New case</ButtonLink>
+            <NewCaseButton admin />
             <ButtonLink href="/admin/clients" tone="secondary">Add client</ButtonLink>
           </>
         }
@@ -57,11 +58,11 @@ export default function AdminOverview() {
         <StatTile label="Open cases" value={open} hint={`${stats.cases.DISPOSED ?? 0} disposed · ${stats.cases.CLOSED ?? 0} closed`} href="/admin/cases" />
         <StatTile label="Intake to review" value={stats.cases.INTAKE ?? 0} hint="Opened by clients or awaiting take-on" href="/admin/cases" />
         <StatTile label="Unassigned" value={stats.casesUnassigned} hint="Open cases with no lawyer" href="/admin/cases" />
-        <StatTile label="Documents" value={stats.documents} href="/admin/documents" />
-        <StatTile label="Clients" value={stats.clients} href="/admin/clients" />
-        <StatTile label="Lawyers" value={stats.lawyers} href="/admin/staff" />
-        <StatTile label="New enquiries" value={stats.enquiries.new} hint={`${stats.enquiries.total} in total`} href="/admin/enquiries" />
-        <StatTile label="New applications" value={stats.applications.new} href="/admin/applications" />
+        <StatTile label="Client queries" value={stats.queries.open} hint="Raised from the client dashboard, not yet answered" href="/admin/queries" />
+        <StatTile label="Clients" value={stats.clients} hint="Active client accounts" href="/admin/clients" />
+        <StatTile label="Lawyers" value={stats.lawyers} hint="Active lawyer accounts" href="/admin/staff" />
+        <StatTile label="Website enquiries" value={stats.enquiries.new} hint={`New · ${stats.enquiries.total} in total`} href="/admin/enquiries" />
+        <StatTile label="Career applications" value={stats.applications.new} hint="New, not yet reviewed" href="/admin/applications" />
       </div>
 
       <Card>

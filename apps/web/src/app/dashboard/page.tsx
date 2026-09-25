@@ -8,7 +8,8 @@ import { courtNumber, daysUntil, firstName, formatDate } from "@/lib/portal/form
 import { CaseList } from "@/components/portal/case-list";
 import { DocumentList } from "@/components/portal/document-list";
 import { UploadButton } from "@/components/portal/upload-button";
-import { ButtonLink, Card, CardHeader, PageTitle, StatTile } from "@/components/portal/ui";
+import { NewCaseButton } from "@/components/portal/new-case-dialog";
+import { Card, CardHeader, PageTitle, StatTile } from "@/components/portal/ui";
 
 export default function DashboardOverview() {
   const user = useUser();
@@ -45,7 +46,7 @@ export default function DashboardOverview() {
         actions={
           <>
             <UploadButton onUploaded={() => setRefresh((n) => n + 1)} />
-            <ButtonLink href="/dashboard/cases/new" tone="secondary">{client ? "Open a new matter" : "Open a case"}</ButtonLink>
+            <NewCaseButton tone="secondary" />
           </>
         }
       />
@@ -89,7 +90,7 @@ export default function DashboardOverview() {
           key={refresh}
           basePath="/dashboard"
           staff={!client}
-          emptyAction={<ButtonLink href="/dashboard/cases/new">{client ? "Open a new matter" : "Open a case"}</ButtonLink>}
+          emptyAction={<NewCaseButton />}
         />
       </div>
 

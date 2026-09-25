@@ -13,6 +13,7 @@ import { adminRouter } from "./routes/admin.js";
 import { authRouter } from "./routes/auth.js";
 import { casesRouter } from "./routes/cases.js";
 import { documentsRouter } from "./routes/documents.js";
+import { queriesRouter } from "./routes/queries.js";
 import { authenticate } from "./middleware/auth.js";
 import { errorHandler, notFound } from "./middleware/error.js";
 
@@ -98,6 +99,7 @@ export function createApp() {
   app.use("/api/admin", adminRouter);
   app.use("/api/cases", casesRouter);
   app.use("/api/documents", documentsRouter);
+  app.use("/api/queries", queriesRouter);
 
   app.get("/", (_req, res) => {
     res.json({

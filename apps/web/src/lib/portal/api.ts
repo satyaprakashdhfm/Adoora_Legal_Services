@@ -177,6 +177,11 @@ export type CaseDetail = Omit<CaseSummary, "assignments" | "clients" | "_count">
   lastHearingDate: string | null;
   disposalDate: string | null;
   disposalNature: string | null;
+  courtStatus: string | null;
+  courtStage: string | null;
+  courtCheckedAt: string | null;
+  hearings: CourtHearing[];
+  orders: CourtOrder[];
   parties: Party[];
   clients?: { id: string; name: string; email: string; organisation: string | null; phone: string | null }[];
   assignments: {
@@ -189,6 +194,53 @@ export type CaseDetail = Omit<CaseSummary, "assignments" | "clients" | "_count">
   createdByClient: { name: string } | null;
   canEdit: boolean;
   canManage: boolean;
+};
+
+/** A row of the court's hearing history, from eCourts. */
+export type CourtHearing = {
+  id: string;
+  hearingDate: string;
+  purpose: string | null;
+  judge: string | null;
+  business: string | null;
+  nextDate: string | null;
+};
+
+/** An order or judgment on the court's record, from eCourts. */
+export type CourtOrder = {
+  id: string;
+  orderDate: string;
+  orderType: string;
+  fileName: string;
+  summary: string | null;
+};
+
+/** `GET /api/cases/:cnr` — the court's record, shaped for the case form. */
+export type CnrLookup = {
+  cnr: string;
+  fetchedAt: string;
+  requestId: string | null;
+  draft: Record<string, unknown> & {
+    title: string;
+    parties: Party[];
+    actsAndSections: string[];
+    court: { status: string | null; stage: string | null; hearings: number; orders: number };
+  };
+  existing: { reference: string; title: string; status: CaseStatus }[];
+};
+
+export type ClientQuery = {
+  id: string;
+  reference: string;
+  subject: string;
+  message: string;
+  status: "OPEN" | "ANSWERED" | "CLOSED";
+  reply: string | null;
+  answeredAt: string | null;
+  createdAt: string;
+  case: { reference: string; title: string } | null;
+  client: { id: string; name: string; email: string };
+  answeredBy: { name: string } | null;
 };
 
 export type Page<T> = { data: T[]; nextCursor: string | null };

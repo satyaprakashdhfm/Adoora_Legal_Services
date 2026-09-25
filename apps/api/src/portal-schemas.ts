@@ -242,6 +242,8 @@ export const clientCreateSchema = z.object({
   organisation: optionalText(200),
   phone: optionalText(32),
   address: optionalText(1000),
+  /** Cases to give the new client access to. */
+  caseIds: z.array(z.string().uuid()).max(50).optional(),
 });
 
 export const clientPatchSchema = z.object({
@@ -251,6 +253,8 @@ export const clientPatchSchema = z.object({
   phone: optionalText(32),
   address: optionalText(1000),
   isActive: z.boolean().optional(),
+  /** When present, the complete set of cases the client can see. */
+  caseIds: z.array(z.string().uuid()).max(50).optional(),
 });
 
 export const searchQuerySchema = z.object({
@@ -277,4 +281,25 @@ export const enquiryPatchSchema = z.object({
 export const applicationPatchSchema = z.object({
   status: z.enum(["NEW", "REVIEWING", "SHORTLISTED", "REJECTED", "WITHDRAWN"]).optional(),
   internalNote: optionalText(5000),
+});
+
+// Client queries -------------------------------------------------------------
+
+export const queryStatus = z.enum(["OPEN", "ANSWERED", "CLOSED"]);
+
+export const queryCreateSchema = z.object({
+  subject: z.string().trim().min(3, "Please add a short subject.").max(200),
+  message: z.string().trim().min(10, "Please describe your question in a sentence or two.").max(5000),
+  caseReference: z.string().trim().max(40).optional().transform((value) => value || undefined),
+});
+
+export const queryPatchSchema = z.object({
+  reply: optionalText(5000),
+  status: queryStatus.optional(),
+});
+
+export const queryListSchema = z.object({
+  status: queryStatus.optional(),
+  cursor: z.string().uuid().optional(),
+  limit: z.coerce.number().int().min(1).max(100).default(50),
 });

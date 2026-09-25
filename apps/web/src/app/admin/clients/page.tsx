@@ -2,7 +2,8 @@
 
 import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
-import { api } from "@/lib/portal/api";
+import { api, type CaseSummary, type Page } from "@/lib/portal/api";
+import { courtNumber } from "@/lib/portal/format";
 import { formatDate } from "@/lib/portal/format";
 import {
   Avatar,
@@ -37,12 +38,62 @@ type ClientRow = {
   lastLoginAt: string | null;
   createdAt: string;
   googleLinked: boolean;
-  cases: { reference: string; title: string; status: string }[];
+  cases: { id: string; reference: string; title: string; status: string }[];
 };
+
+/**
+ * Which cases the client can see. Picking a case here is the same link as
+ * "Client access" on the case page — the client's dashboard shows it from
+ * their next visit. A client who has none yet can still sign in and open
+ * their own matter from its CNR; it arrives here as Intake.
+ */
+function CasePicker({ value, onChange }: { value: string[]; onChange: (ids: string[]) => void }) {
+  const [cases, setCases] = useState<CaseSummary[] | null>(null);
+
+  useEffect(() => {
+    api<Page<CaseSummary>>("/cases?limit=100")
+      .then((page) => setCases(page.data))
+      .catch(() => setCases([]));
+  }, []);
+
+  const label = (c: CaseSummary) => [c.reference, c.title, courtNumber(c)].filter(Boolean).join(" · ");
+
+  return (
+    <div className="space-y-2">
+      {value.length > 0 && (
+        <ul className="space-y-1.5">
+          {value.map((id) => {
+            const c = cases?.find((item) => item.id === id);
+            return (
+              <li key={id} className="flex items-center justify-between gap-3 rounded-md border border-line bg-paper-warm px-3 py-2 text-sm">
+                <span className="min-w-0 truncate">
+                  <span className="font-mono text-xs font-semibold text-gold-deep">{c?.reference ?? "…"}</span>{" "}
+                  {c?.title}
+                </span>
+                <button type="button" onClick={() => onChange(value.filter((v) => v !== id))} className="shrink-0 text-xs text-slate hover:text-red-700">
+                  Remove
+                </button>
+              </li>
+            );
+          })}
+        </ul>
+      )}
+      <Select
+        aria-label="Link a case"
+        value=""
+        onChange={(e) => e.target.value && onChange([...value, e.target.value])}
+        placeholder={cases === null ? "Loading cases…" : cases.length === 0 ? "No cases yet" : "+ Link a case"}
+        options={(cases ?? []).filter((c) => !value.includes(c.id)).map((c) => ({ value: c.id, label: label(c) }))}
+        disabled={!cases?.length}
+      />
+    </div>
+  );
+}
 
 function ClientForm({ initial, onSaved }: { initial?: ClientRow; onSaved: () => void }) {
   const [error, setError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
+  const [caseIds, setCaseIds] = useState<string[]>(() => initial?.cases.map((c) => c.id) ?? []);
 
   async function submit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -53,10 +104,10 @@ function ClientForm({ initial, onSaved }: { initial?: ClientRow; onSaved: () => 
       if (initial) {
         await api(`/admin/clients/${initial.id}`, {
           method: "PATCH",
-          body: { name: data.name, kind: data.kind, organisation: data.organisation, phone: data.phone, address: data.address, isActive: data.isActive === "true" },
+          body: { name: data.name, kind: data.kind, organisation: data.organisation, phone: data.phone, address: data.address, isActive: data.isActive === "true", caseIds },
         });
       } else {
-        await api("/admin/clients", { method: "POST", body: data });
+        await api("/admin/clients", { method: "POST", body: { ...data, caseIds } });
       }
       onSaved();
     } catch (cause) {
@@ -85,6 +136,18 @@ function ClientForm({ initial, onSaved }: { initial?: ClientRow; onSaved: () => 
       <Field label="Address" className="sm:col-span-2">
         <Textarea name="address" rows={2} defaultValue={initial?.address ?? ""} />
       </Field>
+      {/* Not a <Field>: that is a <label>, and this holds several controls. */}
+      <div className="sm:col-span-2">
+        <p className="text-xs font-semibold uppercase tracking-wide text-ink-soft">Cases</p>
+        <div className="mt-1.5">
+          <CasePicker value={caseIds} onChange={setCaseIds} />
+        </div>
+        <p className="mt-1 text-xs text-slate">
+          {initial
+            ? "The cases this client sees on their dashboard."
+            : "Attach the client's case now so it is waiting when they sign in. No case yet? They can open one from its CNR after signing in."}
+        </p>
+      </div>
       {initial && (
         <Field label="Account" className="sm:col-span-2" hint="Deactivating signs the client out everywhere at once.">
           <Select name="isActive" defaultValue={String(initial.isActive)} options={[{ value: "true", label: "Active" }, { value: "false", label: "Deactivated" }]} />

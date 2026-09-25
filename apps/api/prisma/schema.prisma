@@ -56,6 +56,8 @@ model User {
   updatesAuthored CaseUpdate[]      @relation("UpdateAuthorUser")
   documentsAdded  Document[]        @relation("DocumentUploadedByUser")
   versionsAdded   DocumentVersion[] @relation("VersionUploadedByUser")
+  queriesAnswered ClientQuery[]     @relation("QueryAnsweredBy")
+  courtLookups    CourtSnapshot[]   @relation("SnapshotFetchedByUser")
 
   @@index([email])
 }
@@ -119,6 +121,8 @@ model Client {
   updatesAuthored CaseUpdate[]      @relation("UpdateAuthorClient")
   documentsAdded  Document[]        @relation("DocumentUploadedByClient")
   versionsAdded   DocumentVersion[] @relation("VersionUploadedByClient")
+  queries         ClientQuery[]
+  courtLookups    CourtSnapshot[]   @relation("SnapshotFetchedByClient")
 
   @@index([createdAt])
 }
@@ -246,6 +250,15 @@ model Case {
   disposalDate       DateTime? @db.Date
   disposalNature     String?
 
+  // What the court's own record says, from the last eCourts sync. Kept as
+  // the court words them: the court's status and stage vocabularies vary by
+  // court and do not map one-to-one onto `status` and `stage`, which are the
+  // firm's own view of the matter.
+  courtStatus    String?
+  courtStage     String?
+  /// Last successful eCourts check, whether or not anything had changed.
+  courtCheckedAt DateTime?
+
   /// Counter behind the document references, so they run D001, D002, ...
   /// within a case without revealing the firm's overall volume.
   documentSeq Int @default(0)
@@ -263,6 +276,10 @@ model Case {
   assignments CaseAssignment[]
   updates     CaseUpdate[]
   documents   Document[]
+  hearings    CourtHearing[]
+  orders      CourtOrder[]
+  snapshots   CourtSnapshot[]
+  queries     ClientQuery[]
 
   @@index([status, updatedAt])
   @@index([courtLevel])
@@ -367,6 +384,113 @@ model CaseUpdate {
   createdAt DateTime @default(now())
 
   @@index([caseId, createdAt])
+}
+
+// ---------------------------------------------------------------------------
+// Court record (eCourts)
+// ---------------------------------------------------------------------------
+
+/// One eCourtsIndia response, stored exactly as received. A new row is
+/// written only when the record has changed since the last one for that CNR
+/// (compared by `contentHash`); an unchanged check just moves
+/// `Case.courtCheckedAt`. That keeps a history of what the court's record
+/// said and when, without a row for every look.
+///
+/// `caseId` is null for a lookup made before the case was opened (the
+/// "fill from CNR" step); it is attached when a case with that CNR is saved.
+model CourtSnapshot {
+  id          String   @id @default(uuid()) @db.Uuid
+  cnr         String
+  caseId      String?  @db.Uuid
+  case        Case?    @relation(fields: [caseId], references: [id], onDelete: SetNull)
+  source      String   @default("ecourtsindia")
+  /// eCourtsIndia's request id — quote it to their support.
+  requestId   String?
+  /// SHA-256 of the payload with volatile timestamps removed.
+  contentHash String
+  payload     Json
+  fetchedAt   DateTime @default(now())
+
+  fetchedByUserId   String? @db.Uuid
+  fetchedByUser     User?   @relation("SnapshotFetchedByUser", fields: [fetchedByUserId], references: [id], onDelete: SetNull)
+  fetchedByClientId String? @db.Uuid
+  fetchedByClient   Client? @relation("SnapshotFetchedByClient", fields: [fetchedByClientId], references: [id], onDelete: SetNull)
+
+  @@index([cnr, fetchedAt])
+  @@index([caseId, fetchedAt])
+}
+
+/// A hearing from the court's case history — the "business on date" table
+/// on an eCourts status page. Upserted on every sync by (case, date), so
+/// re-reading the same history never duplicates it.
+model CourtHearing {
+  id          String    @id @default(uuid()) @db.Uuid
+  caseId      String    @db.Uuid
+  case        Case      @relation(fields: [caseId], references: [id], onDelete: Cascade)
+  hearingDate DateTime  @db.Date
+  /// e.g. "Admission", "Hearing", "Arguments", "Orders".
+  purpose     String?
+  judge       String?
+  /// What was recorded as done on the day, where the court gives it.
+  business    String?   @db.Text
+  nextDate    DateTime? @db.Date
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  @@unique([caseId, hearingDate])
+}
+
+/// An interim order or judgment listed on the court's record.
+model CourtOrder {
+  id        String   @id @default(uuid()) @db.Uuid
+  caseId    String   @db.Uuid
+  case      Case     @relation(fields: [caseId], references: [id], onDelete: Cascade)
+  orderDate DateTime @db.Date
+  /// e.g. "Interim Order", "Final Order", "Judgment".
+  orderType String   @default("Order")
+  /// The file name eCourtsIndia gives for the order PDF.
+  fileName  String   @default("")
+  /// Short summary, where eCourtsIndia provides one.
+  summary   String?  @db.Text
+  createdAt DateTime @default(now())
+
+  @@unique([caseId, orderDate, orderType, fileName])
+}
+
+// ---------------------------------------------------------------------------
+// Client queries
+// ---------------------------------------------------------------------------
+
+enum QueryStatus {
+  OPEN
+  ANSWERED
+  CLOSED
+}
+
+/// A question a signed-in client raises from their dashboard, optionally
+/// about one of their cases. Distinct from `Enquiry`, which is a stranger
+/// writing in through the public website's contact form.
+model ClientQuery {
+  id        String      @id @default(uuid()) @db.Uuid
+  reference String      @unique // e.g. QRY-2A4F19
+  clientId  String      @db.Uuid
+  client    Client      @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  caseId    String?     @db.Uuid
+  case      Case?       @relation(fields: [caseId], references: [id], onDelete: SetNull)
+  subject   String
+  message   String      @db.Text
+  status    QueryStatus @default(OPEN)
+
+  reply        String?   @db.Text
+  answeredById String?   @db.Uuid
+  answeredBy   User?     @relation("QueryAnsweredBy", fields: [answeredById], references: [id], onDelete: SetNull)
+  answeredAt   DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([status, createdAt])
+  @@index([clientId, createdAt])
 }
 
 // ---------------------------------------------------------------------------
@@ -483,20 +607,20 @@ model Enquiry {
 
   /// Explicit DPDP consent, plus when it was given. Both are required for
   /// submission and are retained as evidence of the consent.
-  consent     Boolean
-  consentAt   DateTime
+  consent   Boolean
+  consentAt DateTime
 
   /// Request context, kept for abuse investigation and deleted with the record.
-  ipAddress   String?
-  userAgent   String?
+  ipAddress String?
+  userAgent String?
 
   /// Internal handling. Never exposed on a public endpoint.
-  assignedTo  String?
-  internalNote String?      @db.Text
+  assignedTo     String?
+  internalNote   String?   @db.Text
   acknowledgedAt DateTime?
 
-  createdAt   DateTime      @default(now())
-  updatedAt   DateTime      @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   @@index([status, createdAt])
   @@index([email])
@@ -527,16 +651,16 @@ model CareerApplication {
   message    String            @db.Text
   status     ApplicationStatus @default(NEW)
 
-  consent    Boolean
-  consentAt  DateTime
+  consent   Boolean
+  consentAt DateTime
 
-  ipAddress  String?
-  userAgent  String?
+  ipAddress String?
+  userAgent String?
 
-  internalNote String?         @db.Text
+  internalNote String? @db.Text
 
-  createdAt  DateTime          @default(now())
-  updatedAt  DateTime          @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   @@index([status, createdAt])
   @@index([email])
@@ -557,9 +681,9 @@ model Subscriber {
   /// Practice-area slugs the subscriber asked to hear about. Empty means all.
   interests      String[]  @default([])
 
-  ipAddress      String?
-  createdAt      DateTime  @default(now())
-  updatedAt      DateTime  @updatedAt
+  ipAddress String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   @@index([confirmedAt])
 }
@@ -578,30 +702,30 @@ enum ArticleStatus {
 /// Mirrors the shape of `apps/web/src/content/insights.ts` so the site can be
 /// switched from file-based content to the database without a page rewrite.
 model Article {
-  id           String        @id @default(uuid()) @db.Uuid
-  slug         String        @unique
+  id           String   @id @default(uuid()) @db.Uuid
+  slug         String   @unique
   title        String
   category     String
-  summary      String        @db.Text
+  summary      String   @db.Text
   /// Block array — see the `Block` type in the web app.
   body         Json
-  keyTakeaways String[]      @default([])
+  keyTakeaways String[] @default([])
   readingTime  String?
   /// Practice-area and industry slugs, used for cross-linking.
-  practices    String[]      @default([])
-  industries   String[]      @default([])
+  practices    String[] @default([])
+  industries   String[] @default([])
 
-  status       ArticleStatus @default(DRAFT)
-  publishedAt  DateTime?
+  status      ArticleStatus @default(DRAFT)
+  publishedAt DateTime?
 
-  authorId     String?       @db.Uuid
-  author       User?         @relation(fields: [authorId], references: [id], onDelete: SetNull)
+  authorId   String? @db.Uuid
+  author     User?   @relation(fields: [authorId], references: [id], onDelete: SetNull)
   /// Person slug from the web app's people.ts, for the by-line, where the
   /// author is not a portal user.
-  authorSlug   String?
+  authorSlug String?
 
-  createdAt    DateTime      @default(now())
-  updatedAt    DateTime      @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   @@index([status, publishedAt])
   @@index([slug])

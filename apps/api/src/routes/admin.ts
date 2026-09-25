@@ -24,7 +24,7 @@ import {
   staffCreateSchema,
   staffPatchSchema,
 } from "../portal-schemas.js";
-import type { EnquiryStatus, ApplicationStatus, UserRole } from "../../generated/prisma/client.js";
+import type { EnquiryStatus, ApplicationStatus, Prisma, UserRole } from "../../generated/prisma/client.js";
 
 /**
  * Admin API, consumed by the console at `/admin` on the website. Cases and
@@ -177,7 +177,7 @@ adminRouter.get(
       applicationsNew,
       subscribers,
       casesByStatus,
-      documents,
+      queriesOpen,
       clients,
       lawyers,
       upcoming,
@@ -188,8 +188,8 @@ adminRouter.get(
       prisma.careerApplication.count({ where: { status: "NEW" } }),
       prisma.subscriber.count({ where: { confirmedAt: { not: null } } }),
       prisma.case.groupBy({ by: ["status"], _count: { _all: true } }),
-      prisma.document.count({ where: { deletedAt: null } }),
-      prisma.client.count({ where: { isActive: true } }),
+      prisma.clientQuery.count({ where: { status: "OPEN" } }),
+      prisma.client.count({ where: { isActive: true, ...(await notStaff()) } }),
       prisma.user.count({ where: { isActive: true, role: "LAWYER" } }),
       prisma.case.findMany({
         where: {
@@ -220,7 +220,7 @@ adminRouter.get(
       subscribers: { confirmed: subscribers },
       cases: Object.fromEntries(casesByStatus.map((row) => [row.status, row._count._all])),
       casesUnassigned: unassigned,
-      documents,
+      queries: { open: queriesOpen },
       clients,
       lawyers,
       upcomingHearings: upcoming,
@@ -381,6 +381,25 @@ adminRouter.patch(
 // Clients
 // ---------------------------------------------------------------------------
 
+/**
+ * A firm member's own Google account can also have a client row — signed
+ * in once before their staff account existed. Sign-in always resolves them
+ * as staff, so that row is never used; it is kept out of the client list,
+ * the pickers and the counts rather than shown as a client.
+ */
+async function notStaff(): Promise<Prisma.ClientWhereInput> {
+  const staff = await prisma.user.findMany({ select: { email: true } });
+  return staff.length ? { email: { notIn: staff.map((u) => u.email.toLowerCase()) } } : {};
+}
+
+async function assertCasesExist(caseIds: string[]) {
+  if (!caseIds.length) return;
+  const found = await prisma.case.count({ where: { id: { in: caseIds } } });
+  if (found !== new Set(caseIds).size) {
+    throw new HttpError(400, "One of the selected cases no longer exists.", "bad_case");
+  }
+}
+
 adminRouter.get(
   "/clients",
   requireAuth,
@@ -388,15 +407,20 @@ adminRouter.get(
   async (req, res) => {
     const query = searchQuerySchema.parse(req.query);
     const clients = await prisma.client.findMany({
-      where: query.q
-        ? {
-            OR: [
-              { name: { contains: query.q, mode: "insensitive" } },
-              { email: { contains: query.q, mode: "insensitive" } },
-              { organisation: { contains: query.q, mode: "insensitive" } },
-            ],
-          }
-        : undefined,
+      where: {
+        AND: [
+          await notStaff(),
+          query.q
+            ? {
+                OR: [
+                  { name: { contains: query.q, mode: "insensitive" } },
+                  { email: { contains: query.q, mode: "insensitive" } },
+                  { organisation: { contains: query.q, mode: "insensitive" } },
+                ],
+              }
+            : {},
+        ],
+      },
       orderBy: [{ isActive: "desc" }, { name: "asc" }],
       take: query.limit,
       ...(query.cursor ? { cursor: { id: query.cursor }, skip: 1 } : {}),
@@ -414,7 +438,7 @@ adminRouter.get(
         createdAt: true,
         googleSub: true,
         cases: {
-          select: { case: { select: { reference: true, title: true, status: true } } },
+          select: { case: { select: { id: true, reference: true, title: true, status: true } } },
         },
       },
     });
@@ -443,8 +467,18 @@ adminRouter.post(
       throw new HttpError(409, "A client with that email already exists.", "email_in_use");
     }
 
-    const client = await prisma.client.create({ data: input });
-    await audit(req, "client.created", "Client", client.id);
+    const { caseIds = [], ...fields } = input;
+    await assertCasesExist(caseIds);
+
+    const client = await prisma.client.create({
+      data: {
+        ...fields,
+        cases: caseIds.length
+          ? { createMany: { data: [...new Set(caseIds)].map((caseId) => ({ caseId })) } }
+          : undefined,
+      },
+    });
+    await audit(req, "client.created", "Client", client.id, { caseIds });
     res.status(201).json({ id: client.id });
   },
 );
@@ -457,8 +491,20 @@ adminRouter.patch(
     const id = z.string().uuid().parse(req.params.id);
     const input = clientPatchSchema.parse(req.body);
 
-    const updated = await prisma.client.update({ where: { id }, data: input }).catch(() => null);
+    const { caseIds, ...fields } = input;
+    if (caseIds) await assertCasesExist(caseIds);
+
+    const updated = await prisma.client.update({ where: { id }, data: fields }).catch(() => null);
     if (!updated) throw new HttpError(404, "Client not found.", "not_found");
+    if (caseIds) {
+      await prisma.$transaction([
+        prisma.caseClient.deleteMany({ where: { clientId: id, caseId: { notIn: caseIds } } }),
+        prisma.caseClient.createMany({
+          data: [...new Set(caseIds)].map((caseId) => ({ caseId, clientId: id })),
+          skipDuplicates: true,
+        }),
+      ]);
+    }
     if (input.isActive === false) await revokeAllSessions({ clientId: id });
 
     await audit(req, "client.updated", "Client", id, { changes: Object.keys(input) });
