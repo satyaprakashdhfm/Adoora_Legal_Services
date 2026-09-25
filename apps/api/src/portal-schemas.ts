@@ -78,7 +78,7 @@ const cnr = z
   .pipe(
     z
       .string()
-      .regex(/^[A-Z0-9]{16}$/, "A CNR number is 16 letters and digits, e.g. TSHC010012342025.")
+      .regex(/^[A-Z0-9]{16}$/, "A CNR number is 16 letters and digits, e.g. HBHC01… for the Telangana High Court.")
       .nullable()
       .optional(),
   );

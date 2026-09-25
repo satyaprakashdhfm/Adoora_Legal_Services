@@ -348,7 +348,7 @@ export function CaseForm({
           <Field label="Year">
             <Input value={form.caseYear} onChange={(e) => set("caseYear", e.target.value)} type="number" min={1900} max={2100} />
           </Field>
-          <Field label="CNR number" className="sm:col-span-2" hint="16 characters, printed on eCourts case status pages, e.g. TSHC010012342025.">
+          <Field label="CNR number" className="sm:col-span-2" hint="16 characters, printed on eCourts case status pages, e.g. HBHC01… for the Telangana High Court.">
             <Input value={form.cnrNumber} onChange={(e) => set("cnrNumber", e.target.value.toUpperCase())} maxLength={20} className="font-mono uppercase" />
           </Field>
           {staff && (

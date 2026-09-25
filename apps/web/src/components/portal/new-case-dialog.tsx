@@ -96,7 +96,7 @@ function NewCaseFlow({ admin, onDone }: { admin: boolean; onDone: (reference: st
     event.preventDefault();
     const cleaned = cnr.replace(/[\s-]/g, "").toUpperCase();
     if (!/^[A-Z0-9]{16}$/.test(cleaned)) {
-      setError("A CNR number is 16 letters and digits, e.g. TSHC010012342025.");
+      setError("A CNR number is 16 letters and digits, e.g. HBHC01… for the Telangana High Court.");
       return;
     }
     setLooking(true);
@@ -117,14 +117,14 @@ function NewCaseFlow({ admin, onDone }: { admin: boolean; onDone: (reference: st
         <form onSubmit={fetchRecord} className="space-y-4">
           <Field
             label="CNR number"
-            hint="16 characters, printed at the top of the case status page on eCourts and on the court's orders, e.g. TSHC010012342025."
+            hint="16 characters, printed at the top of the case status page on eCourts and on the court's orders, e.g. HBHC01… for the Telangana High Court."
           >
             <Input
               value={cnr}
               onChange={(e) => setCnr(e.target.value.toUpperCase())}
               maxLength={24}
               autoFocus
-              placeholder="TSHC010012342025"
+              placeholder="HBHC01XXXXXXYYYY"
               className="font-mono uppercase tracking-wider"
             />
           </Field>

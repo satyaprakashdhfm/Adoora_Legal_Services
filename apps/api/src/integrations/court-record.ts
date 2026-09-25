@@ -142,28 +142,19 @@ export type CourtRecord = {
   orders: { orderDate: Date; orderType: string; fileName: string; summary: string | null }[];
 };
 
-/** eCourts' two-letter state codes, where a High Court CNR starts with one. */
-const HIGH_COURT_BY_CODE: Record<string, { name: string; state: string }> = {
-  AP: { name: "High Court of Andhra Pradesh", state: "Andhra Pradesh" },
-  TS: { name: "High Court for the State of Telangana", state: "Telangana" },
-  KA: { name: "High Court of Karnataka", state: "Karnataka" },
-  TN: { name: "High Court of Judicature at Madras", state: "Tamil Nadu" },
-  KL: { name: "High Court of Kerala", state: "Kerala" },
-  MH: { name: "High Court of Judicature at Bombay", state: "Maharashtra" },
-  DL: { name: "High Court of Delhi", state: "Delhi" },
-  GJ: { name: "High Court of Gujarat", state: "Gujarat" },
-  UP: { name: "High Court of Judicature at Allahabad", state: "Uttar Pradesh" },
-  WB: { name: "High Court at Calcutta", state: "West Bengal" },
-  RJ: { name: "Rajasthan High Court", state: "Rajasthan" },
-  MP: { name: "High Court of Madhya Pradesh", state: "Madhya Pradesh" },
-  OR: { name: "Orissa High Court", state: "Odisha" },
-  BR: { name: "Patna High Court", state: "Bihar" },
-  PH: { name: "High Court of Punjab and Haryana", state: "Punjab" },
-  CG: { name: "High Court of Chhattisgarh", state: "Chhattisgarh" },
-  JH: { name: "High Court of Jharkhand", state: "Jharkhand" },
-  UK: { name: "High Court of Uttarakhand", state: "Uttarakhand" },
-  HP: { name: "High Court of Himachal Pradesh", state: "Himachal Pradesh" },
-  AS: { name: "Gauhati High Court", state: "Assam" },
+/**
+ * High Court CNR prefixes, where known. A CNR starts with the court's
+ * establishment code, not the state code: the Telangana High Court's is
+ * HBHC01 (from its Hyderabad days), not "TS". Only prefixes confirmed from
+ * published CNRs are listed; anything else is still read as a High Court
+ * when it carries "HC" in the code, and the court's own name from the
+ * eCourts record is used first in any case.
+ */
+const HIGH_COURT_BY_PREFIX: Record<string, { name: string; state: string }> = {
+  HBHC: { name: "High Court for the State of Telangana", state: "Telangana" },
+  APHC: { name: "High Court of Andhra Pradesh", state: "Andhra Pradesh" },
+  KAHC: { name: "High Court of Karnataka", state: "Karnataka" },
+  DLHC: { name: "High Court of Delhi", state: "Delhi" },
 };
 
 function splitCaseType(raw: string | null): { code: string | null; name: string | null } {
@@ -204,15 +195,16 @@ export function readCourtRecord(cnr: string, data: unknown): CourtRecord {
   const src = [main, root];
   const get = (...keys: string[]) => pick(src, keys);
 
-  const hcCode = cnr.slice(2, 4) === "HC" ? cnr.slice(0, 2) : null;
+  const prefix = cnr.slice(0, 4);
+  const isHighCourt = prefix.slice(2) === "HC" || prefix.startsWith("HC");
   const courtLevel: CourtRecord["courtLevel"] = cnr.startsWith("SCIN")
     ? "SUPREME_COURT"
     : tribunal
       ? "TRIBUNAL"
-      : hcCode
+      : isHighCourt
         ? "HIGH_COURT"
         : "DISTRICT_COURT";
-  const knownHc = hcCode ? HIGH_COURT_BY_CODE[hcCode] : undefined;
+  const knownHc = isHighCourt ? HIGH_COURT_BY_PREFIX[prefix] : undefined;
 
   const type = splitCaseType(text(get("caseTypeName", "caseType", "caseTypeDescription", "type"), 120));
   const registration = splitRegistration(text(get("registrationNumber", "regNo", "caseNumber", "caseNo"), 80));

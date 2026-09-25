@@ -233,7 +233,7 @@ model Case {
   filingNumber     String?
   filingDate       DateTime? @db.Date
   registrationDate DateTime? @db.Date
-  /// eCourts Case Number Record — 16 characters, e.g. TSHC010012342025.
+  /// eCourts Case Number Record — 16 characters, e.g. HBHC01… for the Telangana High Court.
   cnrNumber        String?
 
   /// Provisions invoked, e.g. "Article 226, Constitution of India".
