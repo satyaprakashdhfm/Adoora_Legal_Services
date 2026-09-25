@@ -282,9 +282,10 @@ In Google Cloud Console, for the firm's project:
    app to **In production**; in *Testing* only listed test users can sign in.
 2. **Credentials → Create credentials → OAuth client ID**, type **Web
    application**.
-   - Authorised JavaScript origins: the website origin, e.g.
-     `https://adoora-web-production.up.railway.app` (and
-     `http://localhost:3000` for development).
+   - Authorised JavaScript origins: **not needed.** Sign-in is a server-side
+     redirect flow; origins only matter for in-browser Google sign-in (One
+     Tap, the Google Identity Services button). Leave empty, or add the
+     website origin if that is ever added.
    - Authorised redirect URIs — exactly:
      - `https://adoora-web-production.up.railway.app/api/auth/google/callback`
      - `http://localhost:3000/api/auth/google/callback`
