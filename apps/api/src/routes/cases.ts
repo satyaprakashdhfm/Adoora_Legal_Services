@@ -2,7 +2,7 @@ import { Router } from "express";
 import rateLimit from "express-rate-limit";
 import { prisma } from "../db.js";
 import { CNR_PATTERN, normaliseCnr } from "../integrations/ecourts.js";
-import { attachCourtRecord, draftFromRecord, lookupCnr, syncCase } from "../integrations/court-record.js";
+import { attachCourtRecord, draftFromRecord, lookupCnr, readCourtRecord, rebuildFromSnapshot, syncCase } from "../integrations/court-record.js";
 import { HttpError } from "../lib/http.js";
 import { audit } from "../lib/audit.js";
 import { makeCaseReference } from "../lib/ids.js";
@@ -260,10 +260,14 @@ function serialiseCase(
   record: Awaited<ReturnType<typeof loadCaseDetail>>,
 ) {
   const staff = principal.kind === "staff";
-  const { documentSeq: _seq, createdById: _a, createdByClientId: _b, ...rest } = record;
+  const { documentSeq: _seq, createdById: _a, createdByClientId: _b, snapshots, ...rest } = record;
+  const latest = snapshots[0];
 
   return {
     ...rest,
+    // The parts of the court's record with no column of their own (FIR,
+    // category, tagged matters…), read from the latest stored response.
+    courtFacts: latest ? readCourtRecord(latest.cnr, latest.payload).facts : [],
     // Clients see who is on their team, but not the other clients on a
     // shared matter or anything marked internal.
     clients: staff ? record.clients.map((entry) => entry.client) : undefined,
@@ -350,6 +354,11 @@ async function loadCaseDetail(principal: Principal, id: string) {
         orderBy: { orderDate: "desc" },
         take: 300,
         select: { id: true, orderDate: true, orderType: true, fileName: true, summary: true },
+      },
+      snapshots: {
+        orderBy: { fetchedAt: "desc" },
+        take: 1,
+        select: { cnr: true, payload: true },
       },
     },
   });
@@ -464,6 +473,27 @@ casesRouter.post("/:reference/court-sync", ecourtsLimiter, clientEcourtsLimiter,
 
   const record = await loadCaseDetail(principal, found.id);
   res.json({ case: serialiseCase(principal, record), changes: result?.changes ?? [], recordChanged: result?.recordChanged ?? false });
+});
+
+/**
+ * POST /api/cases/:reference/court-rebuild — re-reads the stored eCourts
+ * response without calling eCourts (no credit spent). Case staff only.
+ */
+casesRouter.post("/:reference/court-rebuild", async (req, res) => {
+  const principal = req.principal!;
+  const found = await findEditableCase(principal, String(req.params.reference));
+  const result = await rebuildFromSnapshot(found.id, { userId: principal.id });
+  if (!result) {
+    throw new HttpError(400, "There is no stored court record for this case yet. Use Check court status first.", "no_snapshot");
+  }
+  await audit(req, "ecourts.case_rebuild", "Case", found.id, { reference: found.reference, hearings: result.hearings, orders: result.orders });
+
+  const record = await loadCaseDetail(principal, found.id);
+  res.json({
+    case: serialiseCase(principal, record),
+    changes: [`${result.hearings} hearings`, `${result.orders} orders`, ...result.changes.filter((c) => !/new order/.test(c))],
+    recordChanged: false,
+  });
 });
 
 casesRouter.get("/:reference", async (req, res) => {

@@ -14,28 +14,31 @@ type SyncResult = { case: CaseDetail; changes: string[]; recordChanged: boolean 
  * client see the same thing afterwards.
  */
 function useCourtSync(record: CaseDetail, onSynced: (updated: CaseDetail, message: string) => void) {
-  const [syncing, setSyncing] = useState(false);
+  const [syncing, setSyncing] = useState<"check" | "rebuild" | null>(null);
   const [error, setError] = useState<string | null>(null);
 
-  async function sync() {
-    setSyncing(true);
+  async function run(kind: "check" | "rebuild") {
+    setSyncing(kind);
     setError(null);
     try {
-      const result = await api<SyncResult>(`/cases/${encodeURIComponent(record.reference)}/court-sync`, { method: "POST" });
+      const path = kind === "check" ? "court-sync" : "court-rebuild";
+      const result = await api<SyncResult>(`/cases/${encodeURIComponent(record.reference)}/${path}`, { method: "POST" });
       onSynced(
         result.case,
-        result.changes.length
-          ? `Court record checked. ${result.changes.join(" · ")}.`
-          : "Court record checked — nothing has changed since the last check.",
+        kind === "rebuild"
+          ? `Saved court record re-read: ${result.changes.join(" · ")}.`
+          : result.changes.length
+            ? `Court record checked. ${result.changes.join(" · ")}.`
+            : "Court record checked — nothing has changed since the last check.",
       );
     } catch (cause) {
       setError((cause as Error).message);
     } finally {
-      setSyncing(false);
+      setSyncing(null);
     }
   }
 
-  return { sync, syncing, error };
+  return { sync: () => run("check"), rebuild: () => run("rebuild"), syncing, error };
 }
 
 /** The court's own status line, for the case overview's side column. */
@@ -72,7 +75,7 @@ export function CourtStatusCard({ record, onSynced }: { record: CaseDetail; onSy
         {record.courtCheckedAt && <p className="text-xs text-slate">Last checked {formatDateTime(record.courtCheckedAt)}</p>}
         <ErrorNote>{error}</ErrorNote>
         {record.cnrNumber && (
-          <Button size="sm" tone="secondary" onClick={() => void sync()} disabled={syncing}>
+          <Button size="sm" tone="secondary" onClick={() => void sync()} disabled={syncing !== null}>
             {syncing ? "Checking eCourts…" : "Check court status"}
           </Button>
         )}
@@ -83,7 +86,7 @@ export function CourtStatusCard({ record, onSynced }: { record: CaseDetail; onSy
 
 /** The full court record: hearing history and orders. */
 export function CourtRecordPanel({ record, onSynced }: { record: CaseDetail; onSynced: (updated: CaseDetail, message: string) => void }) {
-  const { sync, syncing, error } = useCourtSync(record, onSynced);
+  const { sync, rebuild, syncing, error } = useCourtSync(record, onSynced);
 
   const hasHistory = record.hearings.length > 0 || record.orders.length > 0;
   if (!record.cnrNumber && !hasHistory) {
@@ -113,18 +116,47 @@ export function CourtRecordPanel({ record, onSynced }: { record: CaseDetail; onS
               {record.courtCheckedAt ? `Last checked ${formatDateTime(record.courtCheckedAt)}` : "Not checked against eCourts yet."}
             </p>
           </div>
-          <Button size="sm" onClick={() => void sync()} disabled={syncing}>
-            {syncing ? "Checking eCourts…" : "Check court status"}
-          </Button>
+          <div className="flex flex-wrap gap-2">
+            {record.canEdit && record.courtCheckedAt && (
+              <Button size="sm" tone="secondary" onClick={() => void rebuild()} disabled={syncing !== null}>
+                {syncing === "rebuild" ? "Re-reading…" : "Re-read saved record"}
+              </Button>
+            )}
+            <Button size="sm" onClick={() => void sync()} disabled={syncing !== null}>
+              {syncing === "check" ? "Checking eCourts…" : "Check court status"}
+            </Button>
+          </div>
         </div>
+        {record.canEdit && record.courtCheckedAt && (
+          <p className="px-5 pb-4 text-xs text-slate">
+            “Check court status” asks eCourts again and uses a credit. “Re-read saved record” rebuilds this page from the last answer eCourts gave — free.
+          </p>
+        )}
         {error && <div className="px-5 pb-4"><ErrorNote>{error}</ErrorNote></div>}
       </Card>
       ) : (
         <p className="text-sm text-slate">No CNR on this case, so it cannot be checked against eCourts. The history below was entered by the firm.</p>
       )}
 
+      {(record.courtFacts ?? []).length > 0 && (
+        <Card>
+          <CardHeader title="Court details" description="More from the court's record." />
+          <dl className="grid gap-x-6 gap-y-3 px-5 py-4 text-sm sm:grid-cols-2">
+            {record.courtFacts.map((fact, index) => (
+              <div key={`${fact.label}-${index}`}>
+                <dt className="text-xs text-slate">{fact.label}</dt>
+                <dd className="mt-0.5 text-ink">{fact.value}</dd>
+              </div>
+            ))}
+          </dl>
+        </Card>
+      )}
+
       <Card>
-        <CardHeader title="Hearing history" description="Each date the case was listed, as the court recorded it." />
+        <CardHeader
+          title="Hearing history"
+          description={`Each date the case was listed, as the court recorded it${record.hearings.length ? ` — ${record.hearings.length} in all` : ""}.`}
+        />
         {record.hearings.length === 0 ? (
           <EmptyState title="No hearings on the court's record yet" />
         ) : (
@@ -132,7 +164,7 @@ export function CourtRecordPanel({ record, onSynced }: { record: CaseDetail; onS
             <thead>
               <tr>
                 <Th>Date</Th>
-                <Th>Purpose</Th>
+                <Th>Listed for · what happened</Th>
                 <Th>Judge</Th>
                 <Th>Next date</Th>
               </tr>
@@ -155,7 +187,10 @@ export function CourtRecordPanel({ record, onSynced }: { record: CaseDetail; onS
       </Card>
 
       <Card>
-        <CardHeader title="Orders and judgments" />
+        <CardHeader
+          title="Orders and judgments"
+          description={record.orders.length ? `${record.orders.length} on the court's record. The copies themselves are on the eCourts portal.` : undefined}
+        />
         {record.orders.length === 0 ? (
           <EmptyState title="No orders on the court's record yet" />
         ) : (

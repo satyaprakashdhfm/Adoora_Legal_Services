@@ -196,6 +196,8 @@ export type CaseDetail = Omit<CaseSummary, "assignments" | "clients" | "_count">
   courtCheckedAt: string | null;
   hearings: CourtHearing[];
   orders: CourtOrder[];
+  /** The rest of the court's record (FIR, category, tagged matters…), as label/value pairs. */
+  courtFacts: { label: string; value: string }[];
   parties: Party[];
   clients?: { id: string; name: string; email: string; organisation: string | null; phone: string | null }[];
   assignments: {

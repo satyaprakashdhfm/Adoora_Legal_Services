@@ -30,6 +30,7 @@ Deployed from `dev` at <https://adoora-api-production.up.railway.app>.
 | GET PATCH | `/api/cases/:ref` | Session | Case detail (filtered by role); edit (lawyers on the case, admins). |
 | GET | `/api/cases/:cnr` | Staff (not EDITOR), clients | eCourtsIndia record by 16-character CNR, returned as a case-form `draft`. The response is stored. 20/min per account; clients also 15/hour. Audited. |
 | POST | `/api/cases/:ref/court-sync` | Session | "Check court status": fetch the case's CNR from eCourts and apply it to the case. Same limits. |
+| POST | `/api/cases/:ref/court-rebuild` | Case staff | Re-read the latest stored eCourts response (no eCourts call, no credit) and rebuild the hearings and orders from it. |
 | POST | `/api/cases/:ref/updates` | Session | Timeline entry. |
 | PUT | `/api/cases/:ref/assignments` · `/clients` | Admin | Lawyers on the case; client accounts that can see it. |
 | POST | `/api/cases/:ref/documents` | Session | Multipart upload (`file`), encrypted and stored. |
