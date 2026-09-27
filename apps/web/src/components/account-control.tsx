@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { homeFor, isFirmAdmin, signOut, useSession } from "@/lib/portal/session";
+import { openLogin } from "@/lib/portal/login-dialog";
 import { Avatar } from "@/components/portal/ui";
 import { firstName as firstNameOf } from "@/lib/portal/format";
 
@@ -26,8 +27,8 @@ function ProfileIcon({ className = "h-4 w-4" }: { className?: string }) {
 /**
  * The account control in the main navigation bar, at its right-hand end.
  *
- * Signed out it is a "Login" button that opens `/login`, where the Google
- * button lives. Signed in it becomes the account menu, with a link into the
+ * Signed out it is a "Login" button that opens the sign-in popup (mobile
+ * OTP and Google), coming back to the current page afterwards. Signed in it becomes the account menu, with a link into the
  * right workspace: `/admin` for owners and admins, `/dashboard` for clients
  * and lawyers.
  *
@@ -61,46 +62,47 @@ export function AccountControl({ variant }: { variant: "nav" | "compact" | "draw
   }, [open]);
 
   // Come back to the page the visitor was on, unless that page is /login.
-  const loginHref =
-    pathname && pathname !== "/" && pathname !== "/login"
-      ? `/login?next=${encodeURIComponent(pathname)}`
-      : "/login";
+  const next = pathname && pathname !== "/" && pathname !== "/login" ? pathname : "";
+  const login = () => openLogin(next);
 
   if (!user) {
     if (variant === "compact") {
       return (
-        <Link
-          href={loginHref}
+        <button
+          type="button"
+          onClick={login}
           className="flex h-10 w-10 items-center justify-center rounded-lg border border-white/20 text-white transition hover:border-gold-bright hover:text-gold-bright lg:hidden"
         >
           <span className="sr-only">Login</span>
           <ProfileIcon className="h-5 w-5" />
-        </Link>
+        </button>
       );
     }
 
     if (variant === "drawer") {
       return (
-        <Link
-          href={loginHref}
+        <button
+          type="button"
+          onClick={login}
           className="flex w-full items-center justify-center gap-2 rounded-md border border-white/25 px-5 py-3 text-sm font-semibold text-white"
         >
           <ProfileIcon />
           Login
-        </Link>
+        </button>
       );
     }
 
     return (
-      <Link
-        href={loginHref}
+      <button
+        type="button"
+        onClick={login}
         aria-label="Login"
         className="hidden items-center gap-2 rounded-md border border-white/25 px-3 py-2.5 text-sm font-semibold text-white transition hover:border-gold-bright hover:text-gold-bright lg:inline-flex xl:px-4"
       >
         <ProfileIcon className="h-[18px] w-[18px]" />
         {/* The bar is full at laptop widths; the label joins from xl up. */}
         <span className="hidden xl:inline">Login</span>
-      </Link>
+      </button>
     );
   }
 

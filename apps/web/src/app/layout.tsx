@@ -8,6 +8,7 @@ import { DisclaimerGate } from "@/components/disclaimer-gate";
 import { CookieBanner } from "@/components/cookie-banner";
 import { HideOnRoutes } from "@/components/hide-on-routes";
 import { WhatsAppButton } from "@/components/whatsapp-button";
+import { LoginDialog } from "@/components/login-dialog";
 import { siteUrl } from "@/lib/site";
 
 const inter = Inter({
@@ -83,6 +84,9 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
         <HideOnRoutes routes={["/notice"]} prefixes={["/admin", "/dashboard"]}>
           <WhatsAppButton />
         </HideOnRoutes>
+
+        {/* The sign-in popup the header's Login button opens. */}
+        <LoginDialog />
       </body>
     </html>
   );

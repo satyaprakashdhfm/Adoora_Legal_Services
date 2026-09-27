@@ -32,7 +32,7 @@ export type VerifiedIdentity = { kind: "phone"; digits: string } | { kind: "emai
 export async function verifyOtpAccessToken(accessToken: string): Promise<VerifiedIdentity> {
   if (!otpEnabled) throw new HttpError(503, "otp_unavailable", "otp_unavailable");
 
-  type Reply = { type?: string; message?: unknown } | null;
+  type Reply = { type?: string; message?: unknown; code?: unknown } | null;
   let body: Reply;
   try {
     const response = await fetch(VERIFY_URL, {
@@ -49,7 +49,16 @@ export async function verifyOtpAccessToken(accessToken: string): Promise<Verifie
 
   if (body?.type !== "success" || typeof body.message !== "string") {
     // The message on failure is MSG91's reason ("invalid token" and the like).
-    logger.warn({ type: body?.type, reason: typeof body?.message === "string" ? body.message.slice(0, 120) : null }, "MSG91 rejected an OTP token");
+    // "AuthenticationFailure" is about our authkey, not the person's code:
+    // code 201 is a wrong key, 418 a key refused from this IP (MSG91's IP
+    // whitelist). Either is ours to fix, so it is logged as an error.
+    const reason = typeof body?.message === "string" ? body.message.slice(0, 120) : null;
+    const code = typeof body?.code === "string" || typeof body?.code === "number" ? String(body.code) : null;
+    if (reason === "AuthenticationFailure") {
+      logger.error({ code }, "MSG91 refused our authkey — check MSG91_TOKEN is the account authkey and MSG91's IP whitelist");
+      throw new HttpError(503, "otp_unavailable", "otp_unavailable");
+    }
+    logger.warn({ type: body?.type, reason, code }, "MSG91 rejected an OTP token");
     throw new HttpError(401, "otp_invalid", "otp_invalid");
   }
 
