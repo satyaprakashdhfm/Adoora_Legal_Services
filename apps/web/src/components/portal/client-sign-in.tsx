@@ -51,7 +51,7 @@ type WidgetConfig = { widgetId: string; tokenAuth: string };
 /** MSG91's widget script, and the mirror it publishes as a fallback. */
 const SCRIPT_URLS = ["https://verify.msg91.com/otp-provider.js", "https://verify.phone91.com/otp-provider.js"];
 
-let widgetReady: Promise<void> | null = null;
+let scriptLoaded: Promise<void> | null = null;
 
 function loadScript(index = 0): Promise<void> {
   return new Promise((resolve, reject) => {
@@ -74,10 +74,19 @@ function loadScript(index = 0): Promise<void> {
  */
 const CAPTCHA_ID = "msg91-captcha";
 
-/** Loads the widget once and starts it headless; resolves when its methods exist. */
-function ensureWidget(config: WidgetConfig) {
-  widgetReady ??= (async () => {
-    await loadScript();
+/**
+ * Starts the widget headless for one form; resolves when its methods exist.
+ * The script loads once per page, but each form (the popup, reopened, or the
+ * /login page) starts the widget again, so the captcha is drawn into the
+ * captcha box that is on screen now.
+ */
+function ensureWidget(ref: { current: Promise<void> | null }, config: WidgetConfig) {
+  ref.current ??= (async () => {
+    scriptLoaded ??= loadScript().catch((error: unknown) => {
+      scriptLoaded = null;
+      throw error;
+    });
+    await scriptLoaded;
     if (!window.initSendOTP) throw new Error("widget");
     window.initSendOTP({
       widgetId: config.widgetId,
@@ -92,10 +101,10 @@ function ensureWidget(config: WidgetConfig) {
       await new Promise((resolve) => setTimeout(resolve, 100));
     }
   })().catch((error: unknown) => {
-    widgetReady = null;
+    ref.current = null;
     throw error;
   });
-  return widgetReady;
+  return ref.current;
 }
 
 const RESEND_AFTER = 30;
@@ -119,6 +128,7 @@ export function ClientSignIn({ next, initialError = null }: { next: string; init
   const [wait, setWait] = useState(0);
   const reqId = useRef<string | undefined>(undefined);
   const codeInput = useRef<HTMLInputElement>(null);
+  const widget = useRef<Promise<void> | null>(null);
 
   useEffect(() => {
     let live = true;
@@ -129,6 +139,12 @@ export function ClientSignIn({ next, initialError = null }: { next: string; init
       live = false;
     };
   }, []);
+
+  // Start the widget as soon as the form is on screen, so its captcha (if
+  // switched on) is already there before the first press of Send OTP.
+  useEffect(() => {
+    if (config) void ensureWidget(widget, config).catch(() => undefined);
+  }, [config]);
 
   useEffect(() => {
     if (wait <= 0) return;
@@ -152,7 +168,7 @@ export function ClientSignIn({ next, initialError = null }: { next: string; init
     setError(null);
     setDetail(null);
     try {
-      await ensureWidget(config);
+      await ensureWidget(widget, config);
     } catch {
       fail("otp_unavailable");
       return;
