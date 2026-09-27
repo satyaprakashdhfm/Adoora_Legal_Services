@@ -1,5 +1,5 @@
 import { revalidateTag } from "next/cache";
-import { JOBS_TAG, PEOPLE_TAG } from "@/lib/website-data";
+import { ARTICLES_TAG, JOBS_TAG, PEOPLE_TAG } from "@/lib/website-data";
 
 /**
  * POST /revalidate { "tags": ["website-people"] } — called by the admin
@@ -10,7 +10,7 @@ import { JOBS_TAG, PEOPLE_TAG } from "@/lib/website-data";
  * to the API's /auth/me and the role checked there.
  */
 const apiOrigin = (process.env.API_INTERNAL_URL ?? process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:4000").replace(/\/$/, "");
-const ALLOWED = new Set([PEOPLE_TAG, JOBS_TAG]);
+const ALLOWED = new Set([PEOPLE_TAG, JOBS_TAG, ARTICLES_TAG]);
 
 export async function POST(request: Request) {
   const me = await fetch(`${apiOrigin}/api/auth/me`, {

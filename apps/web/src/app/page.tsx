@@ -7,10 +7,9 @@ import { PracticesCarousel } from "@/components/practices-carousel";
 import { CityIcon } from "@/components/city-icon";
 import { OurApproach } from "@/components/our-approach";
 import { firm, firmOverview, differentiators, offices } from "@/content/firm";
-import { getFeaturedPeople } from "@/lib/website-data";
+import { getFeaturedPeople, getInsights } from "@/lib/website-data";
 import { PeopleCards } from "@/components/people-cards";
 import { practiceAreas } from "@/content/practice-areas";
-import { insightsByDate } from "@/content/insights";
 import { heroSlides } from "@/content/hero-slides";
 import { publicImage } from "@/lib/public-image";
 import { siteUrl } from "@/lib/site";
@@ -54,7 +53,7 @@ const practiceCarouselOrder = [
 export default async function Home() {
   /* Profiles marked "Show on the home page" in the admin console. */
   const featuredPeople = await getFeaturedPeople();
-  const latestInsights = insightsByDate.slice(0, 3);
+  const latestInsights = (await getInsights()).slice(0, 3);
   const practiceCarouselItems = practiceCarouselOrder
     .map((slug) => practiceAreas.find((area) => area.slug === slug))
     .filter((area): area is (typeof practiceAreas)[number] => Boolean(area));

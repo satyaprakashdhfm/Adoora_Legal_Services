@@ -64,7 +64,7 @@ export async function api<T = unknown>(
  * cached copy so the change shows on the next visit. Best-effort: the pages
  * refresh within five minutes regardless.
  */
-export async function refreshWebsite(tags: ("website-people" | "website-jobs")[]) {
+export async function refreshWebsite(tags: ("website-people" | "website-jobs" | "website-articles")[]) {
   await fetch("/revalidate", {
     method: "POST",
     credentials: "same-origin",
@@ -320,3 +320,48 @@ export type JobOpening = {
 };
 
 export type Page<T> = { data: T[]; nextCursor: string | null };
+
+// ---------------------------------------------------------------------------
+// Articles
+// ---------------------------------------------------------------------------
+
+export type ArticleStatus = "DRAFT" | "REVIEW" | "PUBLISHED" | "ARCHIVED";
+
+/** A body block as the API stores it: images by id. */
+export type ArticleBlock =
+  | { type: "p" | "h2" | "h3" | "quote"; text: string }
+  | { type: "ul" | "ol"; items: string[] }
+  | { type: "image"; imageId: string; alt: string; caption?: string };
+
+export type ArticleRow = {
+  id: string;
+  slug: string;
+  title: string;
+  category: string;
+  summary: string;
+  status: ArticleStatus;
+  source: "MANUAL" | "PIPELINE";
+  keywords: string[];
+  focusKeyword: string | null;
+  authorSlug: string | null;
+  coverImageId: string | null;
+  readingTime: string | null;
+  publishedAt: string | null;
+  createdAt: string;
+  updatedAt: string;
+};
+
+export type ArticleDetail = ArticleRow & {
+  body: ArticleBlock[];
+  keyTakeaways: string[];
+  practices: string[];
+  industries: string[];
+  metaTitle: string | null;
+  sourceMeta: Record<string, unknown> | null;
+  images: { id: string; mimeType: string; bytes: number; createdAt: string }[];
+};
+
+/** An article image as the console sees it — drafts included. */
+export function articleImageUrl(articleId: string, imageId: string) {
+  return `/api/admin/articles/${articleId}/images/${imageId}`;
+}

@@ -35,7 +35,9 @@ const NAV: { title: string; items: NavItem[] }[] = [
       { href: "/admin/enquiries", label: "Enquiries", icon: "M3 5h14v9H8l-4 3v-3H3z" },
       { href: "/admin/applications", label: "Career applications", icon: "M5 3h10v14H5zM8 7h4M8 10h4M8 13h2" },
       { href: "/admin/jobs", label: "Job openings", icon: "M3 7h14v9H3zM7.5 7V5h5v2M3 11h14" },
-      { href: "/admin/profiles", label: "Lawyer profiles", icon: "M4 3.5h12v13H4zM10 9.5a2.2 2.2 0 100-4.4 2.2 2.2 0 000 4.4zM6.5 14c.4-1.9 1.8-3 3.5-3s3.1 1.1 3.5 3" },
+      { href: "/admin/profiles", label: "Lawyer profiles", icon: "M4 3.5h12v13H4zM10 9.5a2.2 2.2 0 100-4.4 2.2 2.2 0 000 4.4zM6.5 14c.4-1.9 1.8-3 3.5-3s3.1 1.1 3.5 3" },
+      { href: "/admin/articles", label: "Articles", icon: "M4 3.5h9l3 3v10H4zM7 8h6M7 11h6M7 14h4" },
+      { href: "/admin/seo", label: "SEO & Analytics", icon: "M3 16.5h14M5.5 13.5V10M9 13.5V6.5M12.5 13.5V9M16 13.5V4" },
     ],
   },
 ];

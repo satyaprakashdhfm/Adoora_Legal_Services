@@ -12,9 +12,8 @@ import {
   ServiceList,
   TeamGrid,
 } from "@/components/ui";
-import { getPeople, teamFor } from "@/lib/website-data";
+import { getPeople, insightsFor, teamFor } from "@/lib/website-data";
 import { practiceAreas, practiceAreaBySlug } from "@/content/practice-areas";
-import { insightsForPractice } from "@/content/insights";
 import { firm } from "@/content/firm";
 
 /** Pre-render every practice area at build time. */
@@ -50,7 +49,7 @@ export default async function PracticeAreaPage(
 
   if (!area) notFound();
 
-  const relatedInsights = insightsForPractice(area.slug, 3);
+  const relatedInsights = await insightsFor("practice", area.slug, 3);
   const team = teamFor(await getPeople(), { practice: area.slug, slugs: area.team });
 
   const tabs: TabDefinition[] = [

@@ -294,7 +294,7 @@ export function TeamGrid({ members }: { members: Person[] }) {
 export function InsightCard({ insight }: { insight: Insight }) {
   /* Resolved on the server at build time. Nothing client-side imports this
      file; if that changes, resolve the image in the page and pass it down. */
-  const image = insight.imageBase ? publicImage(insight.imageBase) : null;
+  const image = insight.coverUrl ?? (insight.imageBase ? publicImage(insight.imageBase) : null);
 
   return (
     <article className="group relative flex h-full flex-col overflow-hidden rounded-xl border border-line bg-paper transition hover:border-line-strong hover:shadow-lg hover:shadow-ink/5">
@@ -307,6 +307,7 @@ export function InsightCard({ insight }: { insight: Insight }) {
             alt=""
             fill
             sizes="(min-width: 1024px) 30vw, (min-width: 640px) 50vw, 100vw"
+            unoptimized={Boolean(insight.coverUrl)}
             style={insight.imageFocus ? { objectPosition: insight.imageFocus } : undefined}
             className="object-cover transition duration-500 group-hover:scale-[1.03]"
           />

@@ -1,12 +1,13 @@
 import type { MetadataRoute } from "next";
 import { practiceAreas, serviceHref } from "@/content/practice-areas";
 import { industries } from "@/content/industries";
-import { insights } from "@/content/insights";
+import { getInsights } from "@/lib/website-data";
 import { policies } from "@/content/policies";
 import { siteUrl } from "@/lib/site";
 
-export default function sitemap(): MetadataRoute.Sitemap {
+export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const now = new Date();
+  const insights = await getInsights();
 
   const staticRoutes: MetadataRoute.Sitemap = [
     { url: `${siteUrl}/`, lastModified: now, changeFrequency: "monthly", priority: 1 },
@@ -42,7 +43,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
     })),
     ...insights.map((insight) => ({
       url: `${siteUrl}/insights/${insight.slug}`,
-      lastModified: new Date(insight.date),
+      lastModified: new Date(insight.updated ?? insight.date),
       changeFrequency: "yearly" as const,
       priority: 0.7,
     })),

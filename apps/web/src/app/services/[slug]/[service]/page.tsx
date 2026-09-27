@@ -14,8 +14,8 @@ import {
   serviceHref,
   serviceSlug,
 } from "@/content/practice-areas";
-import { insightsForPractice } from "@/content/insights";
 import { firm } from "@/content/firm";
+import { insightsFor } from "@/lib/website-data";
 
 /**
  * One page per service inside a practice — the case types the practices index
@@ -65,7 +65,7 @@ export default async function ServicePage(
 
   if (!area || !service) notFound();
 
-  const relatedInsights = insightsForPractice(area.slug, 2);
+  const relatedInsights = await insightsFor("practice", area.slug, 2);
 
   return (
     <>

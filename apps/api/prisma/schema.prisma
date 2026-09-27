@@ -794,6 +794,25 @@ enum ArticleStatus {
   ARCHIVED
 }
 
+enum ArticleSource {
+  MANUAL
+  PIPELINE
+}
+
+/// An image inside an article (or its cover), stored in the database like
+/// lawyer portraits: small, public once the article is, and no bucket needed.
+model ArticleImage {
+  id        String   @id @default(uuid()) @db.Uuid
+  articleId String   @db.Uuid
+  article   Article  @relation(fields: [articleId], references: [id], onDelete: Cascade)
+  data      Bytes
+  mimeType  String
+  bytes     Int
+  createdAt DateTime @default(now())
+
+  @@index([articleId])
+}
+
 /// Mirrors the shape of `apps/web/src/content/insights.ts` so the site can be
 /// switched from file-based content to the database without a page rewrite.
 model Article {
@@ -812,6 +831,22 @@ model Article {
 
   status      ArticleStatus @default(DRAFT)
   publishedAt DateTime?
+
+  // SEO. `keywords` are the searches the article targets; `focusKeyword`
+  // is the main one, which the editor's checklist tests the copy against.
+  metaTitle    String?
+  focusKeyword String?
+  keywords     String[] @default([])
+
+  /// ArticleImage id shown on the card and at the top of the article.
+  coverImageId String? @db.Uuid
+  images       ArticleImage[]
+
+  /// Written in the console, or drafted by the judgments pipeline.
+  source     ArticleSource @default(MANUAL)
+  /// For pipeline drafts: court, CNR / case number, judgment date, source
+  /// URL — whatever the draft was built from, for the reviewer to check.
+  sourceMeta Json?
 
   authorId   String? @db.Uuid
   author     User?   @relation(fields: [authorId], references: [id], onDelete: SetNull)

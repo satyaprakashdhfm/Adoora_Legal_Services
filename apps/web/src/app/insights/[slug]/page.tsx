@@ -2,19 +2,17 @@ import Link from "next/link";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { InsightCard, PageHero, formatDate } from "@/components/ui";
+/* eslint-disable @next/next/no-img-element -- cover images are served by the API */
 import { anchorFor } from "@/lib/anchor";
-import {
-  insights,
-  insightBySlug,
-  insightsByDate,
-  type Block,
-} from "@/content/insights";
-import { getPeople } from "@/lib/website-data";
+import { insights, type Block } from "@/content/insights";
+import { ArticleBody } from "@/components/article-body";
+import { getInsight, getInsights, getPeople } from "@/lib/website-data";
 import { practiceAreaBySlug } from "@/content/practice-areas";
 import { industryBySlug } from "@/content/industries";
 import { firm } from "@/content/firm";
 import { siteUrl } from "@/lib/site";
 
+/** The bundled articles are built ahead; console articles render on first visit and are cached. */
 export function generateStaticParams() {
   return insights.map((insight) => ({ slug: insight.slug }));
 }
@@ -23,79 +21,34 @@ export async function generateMetadata(
   props: PageProps<"/insights/[slug]">,
 ): Promise<Metadata> {
   const { slug } = await props.params;
-  const insight = insightBySlug.get(slug);
+  const insight = await getInsight(slug);
 
   if (!insight) return { title: "Article not found" };
 
   return {
-    title: insight.title,
+    title: insight.metaTitle || insight.title,
     description: insight.summary,
+    keywords: insight.keywords?.length ? insight.keywords : undefined,
     alternates: { canonical: `/insights/${insight.slug}` },
     openGraph: {
-      title: insight.title,
+      title: insight.metaTitle || insight.title,
       description: insight.summary,
       type: "article",
       publishedTime: insight.date,
+      modifiedTime: insight.updated ?? insight.date,
+      images: insight.coverUrl ? [{ url: insight.coverUrl }] : undefined,
     },
   };
-}
-
-/** Renders the small block vocabulary used by `insights.ts`. */
-function BlockRenderer({ blocks }: { blocks: Block[] }) {
-  return (
-    <>
-      {blocks.map((block, index) => {
-        switch (block.type) {
-          case "h2":
-            return (
-              <h2
-                key={index}
-                id={anchorFor(block.text)}
-                style={{ scrollMarginTop: "var(--header-h, 4.5rem)" }}
-              >
-                {block.text}
-              </h2>
-            );
-          case "p":
-            return <p key={index}>{block.text}</p>;
-          case "ul":
-            return (
-              <ul key={index}>
-                {block.items.map((item) => (
-                  <li key={item}>{item}</li>
-                ))}
-              </ul>
-            );
-          case "ol":
-            return (
-              <ol key={index}>
-                {block.items.map((item) => (
-                  <li key={item}>{item}</li>
-                ))}
-              </ol>
-            );
-          case "quote":
-            return (
-              <blockquote
-                key={index}
-                className="my-8 border-l-2 border-gold pl-6 font-serif text-xl leading-relaxed text-ink"
-              >
-                {block.text}
-              </blockquote>
-            );
-        }
-      })}
-    </>
-  );
 }
 
 export default async function InsightPage(
   props: PageProps<"/insights/[slug]">,
 ) {
   const { slug } = await props.params;
-  const insight = insightBySlug.get(slug);
+  const insight = await getInsight(slug);
 
   if (!insight) notFound();
+  const allInsights = await getInsights();
 
   const author = (await getPeople()).find((person) => person.slug === insight.author);
   const tags = [
@@ -119,7 +72,7 @@ export default async function InsightPage(
     .filter((block): block is Extract<Block, { type: "h2" }> => block.type === "h2")
     .map((block) => ({ text: block.text, id: anchorFor(block.text) }));
 
-  const related = insightsByDate
+  const related = allInsights
     .filter((other) => other.slug !== insight.slug)
     .filter(
       (other) =>
@@ -166,12 +119,15 @@ export default async function InsightPage(
             only once there is a second column to put it in. */}
         <div className="grid gap-12 lg:grid-cols-[15rem_1fr] lg:gap-14">
           <article className="min-w-0">
+            {insight.coverUrl && (
+              <img src={insight.coverUrl} alt="" className="mb-10 aspect-[16/9] w-full rounded-xl border border-line object-cover" />
+            )}
             <p className="border-l-2 border-gold pl-6 text-lg leading-relaxed text-ink">
               {insight.summary}
             </p>
 
             <div className="prose-adoora mt-10 max-w-none">
-              <BlockRenderer blocks={insight.body} />
+              <ArticleBody blocks={insight.body} />
             </div>
 
             {/* Not-legal-advice notice — required on every article. */}
@@ -279,7 +235,9 @@ export default async function InsightPage(
             headline: insight.title,
             description: insight.summary,
             datePublished: insight.date,
-            dateModified: insight.date,
+            dateModified: insight.updated ?? insight.date,
+            ...(insight.coverUrl ? { image: `${siteUrl}${insight.coverUrl}` } : {}),
+            ...(insight.keywords?.length ? { keywords: insight.keywords.join(", ") } : {}),
             author: author
               ? { "@type": "Person", name: author.name, jobTitle: author.designation }
               : { "@type": "Organization", name: firm.name },

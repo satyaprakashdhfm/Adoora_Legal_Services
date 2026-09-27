@@ -16,12 +16,18 @@ export type InsightCategory =
   | "Regulatory Update"
   | "Explainer"
   | "Deal Announcement"
-  | "Event Recap";
+  | "Event Recap"
+  | "Judgment";
 
-/** Body blocks, kept deliberately small so the renderer stays simple. */
+/**
+ * Body blocks, kept deliberately small so the renderer stays simple. The
+ * console's article editor writes the same shapes (plus `h3` and `image`).
+ */
 export type Block =
   | { type: "p"; text: string }
   | { type: "h2"; text: string }
+  | { type: "h3"; text: string }
+  | { type: "image"; src: string; alt: string; caption?: string }
   | { type: "ul"; items: string[] }
   | { type: "ol"; items: string[] }
   | { type: "quote"; text: string };
@@ -60,6 +66,13 @@ export type Insight = {
   /** Industry slugs. */
   industries: string[];
   body: Block[];
+  /** Articles written in the console: an uploaded cover image. */
+  coverUrl?: string | null;
+  /** Articles written in the console: the SEO title, when it differs from the headline. */
+  metaTitle?: string | null;
+  keywords?: string[];
+  /** ISO date of the last edit, for the Article schema. */
+  updated?: string;
 };
 
 export const insights: Insight[] = [
@@ -616,4 +629,5 @@ export const insightCategories: InsightCategory[] = [
   "Explainer",
   "Deal Announcement",
   "Event Recap",
+  "Judgment",
 ];

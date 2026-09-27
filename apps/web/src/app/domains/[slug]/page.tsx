@@ -11,10 +11,9 @@ import {
   ServiceList,
   TeamGrid,
 } from "@/components/ui";
-import { getPeople, teamFor } from "@/lib/website-data";
+import { getPeople, insightsFor, teamFor } from "@/lib/website-data";
 import { industries, industryBySlug } from "@/content/industries";
 import { practiceAreaBySlug } from "@/content/practice-areas";
-import { insightsForIndustry } from "@/content/insights";
 import { firm } from "@/content/firm";
 
 export function generateStaticParams() {
@@ -49,7 +48,7 @@ export default async function IndustryPage(
 
   if (!industry) notFound();
 
-  const relatedInsights = insightsForIndustry(industry.slug, 3);
+  const relatedInsights = await insightsFor("industry", industry.slug, 3);
   const team = teamFor(await getPeople(), { slugs: industry.team });
   const relatedPractices = industry.relatedPractices
     .map((practiceSlug) => practiceAreaBySlug.get(practiceSlug))

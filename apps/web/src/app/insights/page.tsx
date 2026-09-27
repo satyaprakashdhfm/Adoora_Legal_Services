@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { InsightCard, PageHero } from "@/components/ui";
-import { insightsByDate, insightCategories } from "@/content/insights";
+import { insightCategories } from "@/content/insights";
+import { getInsights } from "@/lib/website-data";
 
 export const metadata: Metadata = {
   title: "Insights & News",
@@ -9,7 +10,9 @@ export const metadata: Metadata = {
   alternates: { canonical: "/insights" },
 };
 
-export default function InsightsPage() {
+export default async function InsightsPage() {
+  const insightsByDate = await getInsights();
+
   /** Only show category chips that actually have content behind them. */
   const activeCategories = insightCategories.filter((category) =>
     insightsByDate.some((insight) => insight.category === category),
