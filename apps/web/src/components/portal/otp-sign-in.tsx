@@ -13,21 +13,31 @@ declare global {
   }
 }
 
-const SCRIPT_URL = "https://verify.msg91.com/otp-provider.js";
+/** MSG91's widget script, and the mirror it publishes as a fallback. */
+const SCRIPT_URLS = ["https://verify.msg91.com/otp-provider.js", "https://verify.phone91.com/otp-provider.js"];
 
-/** Loads MSG91's widget script once per page. */
+/** Loads MSG91's widget script once per page, trying the mirror if needed. */
 let scriptPromise: Promise<void> | null = null;
 function loadWidgetScript() {
   scriptPromise ??= new Promise<void>((resolve, reject) => {
-    const script = document.createElement("script");
-    script.src = SCRIPT_URL;
-    script.async = true;
-    script.onload = () => resolve();
-    script.onerror = () => {
-      scriptPromise = null;
-      reject(new Error("script"));
+    let index = 0;
+    const attempt = () => {
+      const script = document.createElement("script");
+      script.src = SCRIPT_URLS[index]!;
+      script.async = true;
+      script.onload = () => resolve();
+      script.onerror = () => {
+        script.remove();
+        index += 1;
+        if (index < SCRIPT_URLS.length) attempt();
+        else {
+          scriptPromise = null;
+          reject(new Error("script"));
+        }
+      };
+      document.head.appendChild(script);
     };
-    document.head.appendChild(script);
+    attempt();
   });
   return scriptPromise;
 }
