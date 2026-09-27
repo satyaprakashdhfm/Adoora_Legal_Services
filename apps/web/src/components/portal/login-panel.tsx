@@ -1,9 +1,11 @@
 "use client";
 
 import Link from "next/link";
+import { useState } from "react";
 import { googleSignInUrl } from "@/lib/portal/api";
 import { homeFor, useSession } from "@/lib/portal/session";
 import { ErrorNote, GoogleMark } from "@/components/portal/ui";
+import { OtpSignIn } from "@/components/portal/otp-sign-in";
 
 /** What went wrong, in words a client can act on. Shown only after a failed attempt. */
 const ERRORS: Record<string, string> = {
@@ -20,6 +22,11 @@ const ERRORS: Record<string, string> = {
   signup_closed: "New accounts are created by the firm. Please contact us and we will set one up for you.",
   use_admin_login: "This is a firm account. Firm members sign in at the admin console, not here.",
   not_staff: "This Google account is not a member of the firm. Clients sign in on the client sign-in page.",
+  otp_unavailable: "Mobile sign-in is not available right now. Please use Google, or try again later.",
+  otp_invalid: "That code could not be verified. Please try again.",
+  otp_failed: "We could not complete the mobile sign-in. Please try again.",
+  phone_not_registered: "This mobile number is not on any client account. Sign in with Google, or ask the firm to add your number.",
+  phone_ambiguous: "This mobile number is on more than one account. Please sign in with Google, or contact the firm.",
 };
 
 /**
@@ -32,6 +39,9 @@ const ERRORS: Record<string, string> = {
  */
 export function LoginPanel({ error, next, audience = "client" }: { error: string | null; next: string; audience?: "staff" | "client" }) {
   const user = useSession();
+  /** An error from the mobile sign-in, which happens on this page rather than by redirect. */
+  const [otpError, setOtpError] = useState<string | null>(null);
+  const shownError = otpError ?? error;
   const otherPage = audience === "staff" ? "/login" : "/admin/login";
 
   return (
@@ -52,12 +62,12 @@ export function LoginPanel({ error, next, audience = "client" }: { error: string
         </Link>
       ) : (
         <>
-          {error && (
+          {shownError && (
             <div className="mt-6 text-left">
-              <ErrorNote>{ERRORS[error] ?? "We could not sign you in. Please try again."}</ErrorNote>
-              {(error === "use_admin_login" || error === "not_staff") && (
+              <ErrorNote>{ERRORS[shownError] ?? "We could not sign you in. Please try again."}</ErrorNote>
+              {(shownError === "use_admin_login" || shownError === "not_staff") && (
                 <Link href={otherPage} className="mt-2 inline-block text-sm font-semibold text-gold-deep underline underline-offset-4">
-                  {error === "use_admin_login" ? "Go to the admin console sign-in" : "Go to client sign-in"}
+                  {shownError === "use_admin_login" ? "Go to the admin console sign-in" : "Go to client sign-in"}
                 </Link>
               )}
             </div>
@@ -69,6 +79,7 @@ export function LoginPanel({ error, next, audience = "client" }: { error: string
             <GoogleMark className="h-5 w-5" />
             Continue with Google
           </a>
+          {audience === "client" && <OtpSignIn next={next} onError={setOtpError} />}
         </>
       )}
     </div>

@@ -10,6 +10,7 @@ import { audit } from "../lib/audit.js";
 import { OAUTH_COOKIE, clearCookie, readCookie, setCookie, signValue, verifySignedValue } from "../lib/cookies.js";
 import { beginGoogleSignIn, completeGoogleSignIn, type GoogleIdentity, type OAuthState } from "../auth/google.js";
 import { endSession, startSession } from "../auth/session.js";
+import { otpWidgetConfig, samePhone, verifyOtpAccessToken } from "../auth/msg91.js";
 import type { UserRole } from "../../generated/prisma/client.js";
 
 /**
@@ -70,7 +71,59 @@ function loginError(code: string, audience: "staff" | "client" = "client") {
 }
 
 authRouter.get("/providers", (_req, res) => {
-  res.json({ google: googleEnabled, password: true });
+  res.json({ google: googleEnabled, password: true, otp: otpWidgetConfig() });
+});
+
+/**
+ * POST /api/auth/otp — client sign-in with a mobile number, verified by the
+ * MSG91 widget. The body carries the widget's access token, which MSG91
+ * confirms server to server before anything else happens.
+ *
+ * Only existing client accounts are admitted, matched on the phone number
+ * the firm holds for them: a Client needs an email, which a phone number
+ * alone cannot give, so new clients still join through Google. A number that
+ * belongs to a firm account is sent to the console's sign-in instead.
+ */
+authRouter.post("/otp", loginLimiter, async (req, res) => {
+  const accessToken = typeof req.body?.accessToken === "string" ? req.body.accessToken.trim() : "";
+  if (!accessToken || accessToken.length > 4000) throw new HttpError(400, "otp_invalid", "otp_invalid");
+
+  const identity = await verifyOtpAccessToken(accessToken);
+
+  const firm =
+    identity.kind === "email"
+      ? await prisma.user.findFirst({ where: { email: identity.email }, select: { id: true } })
+      : (await prisma.user.findMany({ where: { phone: { not: null } }, select: { id: true, phone: true } })).find((u) =>
+          samePhone(u.phone, identity.digits),
+        );
+  if (firm || (identity.kind === "email" && adminEmails.includes(identity.email))) {
+    throw new HttpError(403, "use_admin_login", "use_admin_login");
+  }
+
+  const matches =
+    identity.kind === "email"
+      ? await prisma.client.findMany({ where: { email: identity.email }, select: { id: true, isActive: true } })
+      : (await prisma.client.findMany({ where: { phone: { not: null } }, select: { id: true, phone: true, isActive: true } })).filter((c) =>
+          samePhone(c.phone, identity.digits),
+        );
+
+  if (matches.length === 0) throw new HttpError(404, "phone_not_registered", "phone_not_registered");
+  // Two clients on one number: the firm has to say which account it is.
+  if (matches.length > 1) throw new HttpError(409, "phone_ambiguous", "phone_ambiguous");
+  const client = matches[0]!;
+  if (!client.isActive) throw new HttpError(403, "account_inactive", "account_inactive");
+
+  const updated = await prisma.client.update({
+    where: { id: client.id },
+    data: { lastLoginAt: new Date() },
+    select: { id: true, email: true, name: true, avatarUrl: true },
+  });
+  await startSession(req, res, { clientId: updated.id }, "otp");
+
+  req.principal = { kind: "client", id: updated.id, email: updated.email, name: updated.name, avatarUrl: updated.avatarUrl, sessionId: "" };
+  await audit(req, "auth.login", "Client", updated.id, { method: "otp" });
+
+  res.json({ redirect: landingFor("client", null, safeNext(req.body?.next)) });
 });
 
 authRouter.get("/google", (req, res) => {

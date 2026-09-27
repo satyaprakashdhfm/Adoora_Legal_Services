@@ -25,6 +25,7 @@ Deployed from `dev` at <https://adoora-api-production.up.railway.app>.
 | GET | `/api/admin/audit` | Staff (OWNER/ADMIN) | Audit log. |
 | GET | `/api/auth/google` → `/api/auth/google/callback` | — | Google sign-in (OIDC + PKCE). Sets the session cookie. |
 | POST | `/api/auth/password` | — | Staff password sign-in, session cookie. |
+| POST | `/api/auth/otp` | — | Client sign-in with mobile OTP: `{ accessToken, next }` from the MSG91 widget, verified with MSG91 server to server. Existing clients only, matched on phone. |
 | GET · POST | `/api/auth/me` · `/api/auth/logout` | Session | Current account; sign out. |
 | GET POST | `/api/cases` | Session | Cases in the caller's scope; create (clients create INTAKE matters). |
 | GET PATCH | `/api/cases/:ref` | Session | Case detail (filtered by role); edit (lawyers on the case, admins). |

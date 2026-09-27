@@ -41,7 +41,7 @@ export async function startSession(
   req: Request,
   res: Response,
   who: { userId: string } | { clientId: string },
-  method: "google" | "password",
+  method: "google" | "password" | "otp",
 ) {
   const token = randomBytes(32).toString("base64url");
   const ttl = "userId" in who ? STAFF_TTL_SECONDS : CLIENT_TTL_SECONDS;

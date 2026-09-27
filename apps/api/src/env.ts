@@ -102,6 +102,18 @@ const schema = z.object({
    */
   ECOURTS_API_KEY: optionalString(z.string()),
   ECOURTS_API_URL: z.string().url().default("https://webapi.ecourtsindia.com"),
+
+  /**
+   * MSG91 OTP widget, for clients signing in with their mobile number. The
+   * authkey is secret and used only server to server; the widget id and
+   * widget token are public by design and are handed to the sign-in page.
+   * Mobile sign-in is hidden until all three are set.
+   */
+  /** The account authkey (secret) — MSG91 dashboard → Authkey. */
+  MSG91_TOKEN: optionalString(z.string().min(10)),
+  /** OTP widget → the widget's id and its token (both public). */
+  MSG91_WIDGET_ID: optionalString(z.string().min(4)),
+  MSG91_WIDGET_TOKEN: optionalString(z.string().min(4)),
 });
 
 const parsed = schema.safeParse(process.env);
