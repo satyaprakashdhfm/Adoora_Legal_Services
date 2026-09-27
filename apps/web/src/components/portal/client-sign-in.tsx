@@ -23,6 +23,7 @@ export const SIGN_IN_ERRORS: Record<string, string> = {
   otp_invalid: "That code could not be verified. Please try again.",
   otp_failed: "We could not complete the mobile sign-in. Please try again.",
   otp_send_failed: "We could not send a code to that number. Please check it and try again.",
+  otp_captcha: "Please complete the check below the number, then press Send OTP again.",
   otp_wrong_code: "That code is not right, or it has expired. Please check it or send a new one.",
   phone_not_registered: "This mobile number is not on any client account. Sign in with Google, or ask the firm to add your number.",
   phone_ambiguous: "This mobile number is on more than one account. Please sign in with Google, or contact the firm.",
@@ -32,7 +33,7 @@ export const SIGN_IN_ERRORS: Record<string, string> = {
 // MSG91's OTP widget, driven from our own form (exposeMethods: true)
 // ---------------------------------------------------------------------------
 
-type Reply = { type?: string; message?: string };
+type Reply = { type?: string; message?: string; code?: string | number };
 type Callback = (data: Reply) => void;
 
 declare global {
@@ -41,6 +42,7 @@ declare global {
     sendOtp?: (identifier: string, success: Callback, failure: Callback) => void;
     retryOtp?: (channel: string | null, success: Callback, failure: Callback, reqId?: string) => void;
     verifyOtp?: (otp: string, success: Callback, failure: Callback, reqId?: string) => void;
+    isCaptchaVerified?: () => boolean;
   }
 }
 
@@ -66,6 +68,12 @@ function loadScript(index = 0): Promise<void> {
   });
 }
 
+/**
+ * Where MSG91 draws its captcha, when the widget has captcha switched on in
+ * the MSG91 dashboard. Empty otherwise.
+ */
+const CAPTCHA_ID = "msg91-captcha";
+
 /** Loads the widget once and starts it headless; resolves when its methods exist. */
 function ensureWidget(config: WidgetConfig) {
   widgetReady ??= (async () => {
@@ -75,6 +83,7 @@ function ensureWidget(config: WidgetConfig) {
       widgetId: config.widgetId,
       tokenAuth: config.tokenAuth,
       exposeMethods: true,
+      captchaRenderId: CAPTCHA_ID,
       success: () => undefined,
       failure: () => undefined,
     });
@@ -105,6 +114,8 @@ export function ClientSignIn({ next, initialError = null }: { next: string; init
   const [code, setCode] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(initialError);
+  /** MSG91's own words for a failure in the browser, shown under ours. */
+  const [detail, setDetail] = useState<string | null>(null);
   const [wait, setWait] = useState(0);
   const reqId = useRef<string | undefined>(undefined);
   const codeInput = useRef<HTMLInputElement>(null);
@@ -127,8 +138,11 @@ export function ClientSignIn({ next, initialError = null }: { next: string; init
 
   const validPhone = /^[6-9]\d{9}$/.test(phone);
 
-  function fail(errorCode: string) {
+  function fail(errorCode: string, reply?: Reply) {
     setError(errorCode);
+    const reason = typeof reply?.message === "string" ? reply.message.slice(0, 160) : null;
+    setDetail(reason ? `${reason}${reply?.code ? ` (code ${reply.code})` : ""}` : null);
+    if (reply) console.warn("MSG91:", reply);
     setBusy(false);
   }
 
@@ -136,6 +150,7 @@ export function ClientSignIn({ next, initialError = null }: { next: string; init
     if (!config || !validPhone) return;
     setBusy(true);
     setError(null);
+    setDetail(null);
     try {
       await ensureWidget(config);
     } catch {
@@ -150,8 +165,17 @@ export function ClientSignIn({ next, initialError = null }: { next: string; init
       setBusy(false);
       window.setTimeout(() => codeInput.current?.focus(), 50);
     };
-    if (resend && window.retryOtp) window.retryOtp(null, sent, () => fail("otp_send_failed"), reqId.current);
-    else window.sendOtp!(`91${phone}`, sent, () => fail("otp_send_failed"));
+    // Only when MSG91 has actually drawn a captcha (it is off by setting).
+    const captchaShown = Boolean(document.getElementById(CAPTCHA_ID)?.childElementCount);
+    if (!resend && captchaShown && window.isCaptchaVerified && !window.isCaptchaVerified()) {
+      setError("otp_captcha");
+      setDetail(null);
+      setBusy(false);
+      return;
+    }
+    const failed: Callback = (reply) => fail("otp_send_failed", reply);
+    if (resend && window.retryOtp) window.retryOtp(null, sent, failed, reqId.current);
+    else window.sendOtp!(`91${phone}`, sent, failed);
   }
 
   function verifyCode(event: React.FormEvent) {
@@ -170,7 +194,7 @@ export function ClientSignIn({ next, initialError = null }: { next: string; init
           fail(cause instanceof ApiError && cause.code ? cause.code : "otp_failed");
         }
       },
-      () => fail("otp_wrong_code"),
+      (reply) => fail("otp_wrong_code", reply),
       reqId.current,
     );
   }
@@ -180,6 +204,7 @@ export function ClientSignIn({ next, initialError = null }: { next: string; init
       {error && (
         <div className="mb-4">
           <ErrorNote>{SIGN_IN_ERRORS[error] ?? "We could not sign you in. Please try again."}</ErrorNote>
+          {detail && <p className="mt-1.5 text-xs text-slate">MSG91: {detail}</p>}
           {error === "use_admin_login" && (
             <a href="/admin/login" className="mt-2 inline-block text-sm font-semibold text-gold-deep underline underline-offset-4">
               Go to the admin console sign-in
@@ -212,6 +237,8 @@ export function ClientSignIn({ next, initialError = null }: { next: string; init
               className="min-w-0 flex-1 rounded-r-lg bg-transparent px-3 py-2.5 text-sm text-ink outline-none placeholder:text-slate-light"
             />
           </div>
+          {/* MSG91's captcha, if it has one switched on. */}
+          <div id={CAPTCHA_ID} className="mt-3 empty:hidden" />
           <button
             type="submit"
             disabled={!validPhone || busy}
