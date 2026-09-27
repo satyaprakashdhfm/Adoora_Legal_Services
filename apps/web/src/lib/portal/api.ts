@@ -82,8 +82,12 @@ export function downloadUrl(reference: string, options: { version?: number; inli
   return `/api/documents/${encodeURIComponent(reference)}/download${query ? `?${query}` : ""}`;
 }
 
-export function googleSignInUrl(next = "") {
-  return `/api/auth/google${next ? `?next=${encodeURIComponent(next)}` : ""}`;
+export function googleSignInUrl(next = "", audience: "staff" | "client" = "client") {
+  const params = new URLSearchParams();
+  if (next) params.set("next", next);
+  if (audience === "staff") params.set("audience", "staff");
+  const query = params.toString();
+  return `/api/auth/google${query ? `?${query}` : ""}`;
 }
 
 // ---------------------------------------------------------------------------

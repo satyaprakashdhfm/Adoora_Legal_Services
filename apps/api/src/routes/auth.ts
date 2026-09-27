@@ -13,20 +13,25 @@ import { endSession, startSession } from "../auth/session.js";
 import type { UserRole } from "../../generated/prisma/client.js";
 
 /**
- * Sign-in for both audiences.
+ * Sign-in, kept apart for the two audiences:
  *
- * One "Continue with Google" button serves staff and clients alike. Which
- * one a Google account becomes is decided here, in this order:
+ *   /admin/login  the firm   (?audience=staff)
+ *   /login        clients    (?audience=client, the default)
  *
+ * From the firm's page:
  *   1. an existing staff account with that Google id or email  -> staff
  *   2. an email listed in ADMIN_EMAILS                          -> new OWNER
- *   3. an existing client account                               -> client
- *   4. anyone else                                              -> new client
+ *   3. anyone else                                              -> refused
+ *
+ * From the clients' page:
+ *   1. a staff account, or an ADMIN_EMAILS address              -> refused,
+ *      pointed to /admin/login (a firm email never becomes a client)
+ *   2. an existing client account                               -> client
+ *   3. anyone else                                              -> new client
  *                                                  (if ALLOW_CLIENT_SIGNUP)
  *
  * Staff are never created by signing in (bar the ADMIN_EMAILS bootstrap): an
- * admin adds them by email first. A stranger who signs in therefore gets a
- * client account that can see nothing until the firm links a case to it.
+ * admin adds them by email first.
  */
 export const authRouter = Router();
 
@@ -60,8 +65,8 @@ function landingFor(kind: "staff" | "client", role: UserRole | null, next: strin
   return role === "OWNER" || role === "ADMIN" ? "/admin" : "/dashboard";
 }
 
-function loginError(code: string) {
-  return `${appUrl}/login?error=${encodeURIComponent(code)}`;
+function loginError(code: string, audience: "staff" | "client" = "client") {
+  return `${appUrl}${audience === "staff" ? "/admin/login" : "/login"}?error=${encodeURIComponent(code)}`;
 }
 
 authRouter.get("/providers", (_req, res) => {
@@ -74,7 +79,8 @@ authRouter.get("/google", (req, res) => {
     return;
   }
 
-  const { url, state } = beginGoogleSignIn(safeNext(req.query.next));
+  const audience = req.query.audience === "staff" ? "staff" : "client";
+  const { url, state } = beginGoogleSignIn(safeNext(req.query.next), audience);
   setCookie(res, OAUTH_COOKIE, signValue(state), {
     maxAgeSeconds: 10 * 60,
     path: OAUTH_COOKIE_PATH,
@@ -86,12 +92,17 @@ type Resolved =
   | { kind: "staff"; id: string; role: UserRole }
   | { kind: "client"; id: string };
 
-async function resolveAccount(identity: GoogleIdentity): Promise<Resolved> {
+async function resolveAccount(identity: GoogleIdentity, audience: "staff" | "client"): Promise<Resolved> {
   const now = new Date();
 
   const staff = await prisma.user.findFirst({
     where: { OR: [{ googleSub: identity.sub }, { email: identity.email }] },
   });
+
+  // A firm account signs in at the console, never as a client.
+  if (audience === "client" && (staff || adminEmails.includes(identity.email))) {
+    throw new HttpError(403, "use_admin_login");
+  }
 
   if (staff) {
     if (!staff.isActive) throw new HttpError(403, "account_inactive");
@@ -120,6 +131,9 @@ async function resolveAccount(identity: GoogleIdentity): Promise<Resolved> {
     logger.info({ userId: owner.id }, "Bootstrapped owner account from ADMIN_EMAILS");
     return { kind: "staff", id: owner.id, role: owner.role };
   }
+
+  // The console's page does not create or admit client accounts.
+  if (audience === "staff") throw new HttpError(403, "not_staff");
 
   const client = await prisma.client.findFirst({
     where: { OR: [{ googleSub: identity.sub }, { email: identity.email }] },
@@ -157,19 +171,19 @@ authRouter.get("/google/callback", async (req, res) => {
 
   if (typeof req.query.error === "string") {
     // The person pressed "Cancel" on Google's screen, most likely.
-    res.redirect(302, loginError("google_cancelled"));
+    res.redirect(302, loginError("google_cancelled", saved?.audience));
     return;
   }
 
   const code = typeof req.query.code === "string" ? req.query.code : null;
   if (!googleEnabled || !code || !saved || saved.exp < Date.now() || saved.state !== req.query.state) {
-    res.redirect(302, loginError("google_state"));
+    res.redirect(302, loginError("google_state", saved?.audience));
     return;
   }
 
   try {
     const identity = await completeGoogleSignIn(code, saved);
-    const account = await resolveAccount(identity);
+    const account = await resolveAccount(identity, saved.audience ?? "client");
 
     await startSession(
       req,
@@ -193,7 +207,7 @@ authRouter.get("/google/callback", async (req, res) => {
     } else {
       logger.warn({ code, ip: clientIp(req) }, "Google sign-in refused");
     }
-    res.redirect(302, loginError(code));
+    res.redirect(302, loginError(code, saved.audience));
   }
 });
 

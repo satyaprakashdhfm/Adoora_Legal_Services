@@ -27,7 +27,8 @@ export function RequireSession({
 
   useEffect(() => {
     if (user === null) {
-      window.location.replace(`/login?next=${encodeURIComponent(pathname)}`);
+      const page = pathname.startsWith("/admin") ? "/admin/login" : "/login";
+      window.location.replace(`${page}?next=${encodeURIComponent(pathname)}`);
     }
   }, [user, pathname]);
 

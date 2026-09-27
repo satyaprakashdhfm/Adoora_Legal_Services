@@ -18,20 +18,30 @@ const ERRORS: Record<string, string> = {
   account_inactive: "This account has been deactivated. Please contact the firm.",
   account_mismatch: "This email is linked to a different Google account. Sign in with that account, or contact the firm.",
   signup_closed: "New accounts are created by the firm. Please contact us and we will set one up for you.",
+  use_admin_login: "This is a firm account. Firm members sign in at the admin console, not here.",
+  not_staff: "This Google account is not a member of the firm. Clients sign in on the client sign-in page.",
 };
 
 /**
- * The sign-in page: a heading and the Google button, nothing else.
+ * A sign-in page: a heading and the Google button, nothing else. Clients use
+ * /login; the firm uses /admin/login. The API enforces the split — a firm
+ * account is refused on the clients' page and the other way round.
  *
  * Staff password sign-in still exists on the API (`POST /api/auth/password`)
  * for emergencies, but is deliberately not offered here.
  */
-export function LoginPanel({ error, next }: { error: string | null; next: string }) {
+export function LoginPanel({ error, next, audience = "client" }: { error: string | null; next: string; audience?: "staff" | "client" }) {
   const user = useSession();
+  const otherPage = audience === "staff" ? "/login" : "/admin/login";
 
   return (
     <div className="w-full max-w-sm rounded-2xl border border-line bg-white p-8 text-center shadow-sm sm:p-10">
-      <h1 className="font-serif text-3xl font-semibold tracking-tight text-ink">Sign in</h1>
+      <h1 className="font-serif text-3xl font-semibold tracking-tight text-ink">
+        {audience === "staff" ? "Admin console" : "Client sign in"}
+      </h1>
+      <p className="mt-2 text-sm text-slate">
+        {audience === "staff" ? "For members of the firm." : "Follow your cases, documents and queries."}
+      </p>
 
       {user ? (
         <Link
@@ -45,10 +55,15 @@ export function LoginPanel({ error, next }: { error: string | null; next: string
           {error && (
             <div className="mt-6 text-left">
               <ErrorNote>{ERRORS[error] ?? "We could not sign you in. Please try again."}</ErrorNote>
+              {(error === "use_admin_login" || error === "not_staff") && (
+                <Link href={otherPage} className="mt-2 inline-block text-sm font-semibold text-gold-deep underline underline-offset-4">
+                  {error === "use_admin_login" ? "Go to the admin console sign-in" : "Go to client sign-in"}
+                </Link>
+              )}
             </div>
           )}
           <a
-            href={googleSignInUrl(next)}
+            href={googleSignInUrl(next, audience)}
             className="mt-8 flex w-full items-center justify-center gap-3 rounded-md border border-[#dadce0] bg-white px-5 py-3 text-sm font-semibold text-[#1f1f1f] transition hover:bg-[#f8f9fa]"
           >
             <GoogleMark className="h-5 w-5" />

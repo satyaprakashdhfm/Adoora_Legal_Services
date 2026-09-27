@@ -29,12 +29,12 @@ function PersonSlide({ person }: { person: Person }) {
   const photo = person.photoUrl ?? (person.photo ? publicImage(person.photo) : null);
 
   return (
-    <article className="grid items-center gap-10 rounded-2xl border border-line bg-paper p-6 shadow-sm sm:p-10 md:grid-cols-[minmax(0,5fr)_minmax(0,7fr)] lg:gap-16 lg:p-12">
+    <article className="grid items-center gap-6 rounded-2xl border border-line bg-paper p-5 shadow-sm sm:gap-10 sm:p-10 md:grid-cols-[minmax(0,5fr)_minmax(0,7fr)] lg:gap-16 lg:p-12">
       {/* Portrait, with a thin gold frame set off behind it to the right. */}
-      <div className="relative mx-auto w-full max-w-xs pr-4 pb-4 sm:max-w-sm">
+      <div className="relative mx-auto w-full max-w-[12.5rem] pr-3 pb-3 sm:max-w-sm sm:pr-4 sm:pb-4">
         <div
           aria-hidden="true"
-          className="absolute inset-0 left-4 top-4 rounded-sm border border-gold"
+          className="absolute inset-0 left-3 top-3 rounded-sm sm:left-4 sm:top-4 border border-gold"
         />
         <div className="relative aspect-[4/5] overflow-hidden rounded-sm shadow-lg shadow-ink/15">
           {photo ? (
@@ -63,19 +63,19 @@ function PersonSlide({ person }: { person: Person }) {
       </div>
 
       <div>
-        <h3 className="font-serif text-3xl font-semibold leading-tight tracking-tight text-ink sm:text-4xl">
+        <h3 className="font-serif text-2xl font-semibold leading-tight tracking-tight text-ink sm:text-4xl">
           {person.name}
         </h3>
         <p className="mt-3 text-xs font-semibold uppercase tracking-[0.3em] text-gold-deep sm:text-sm">
           {person.designation}
         </p>
-        <span aria-hidden="true" className="mt-6 block h-px w-12 bg-gold" />
+        <span aria-hidden="true" className="mt-4 block h-px w-12 bg-gold sm:mt-6" />
 
         {person.spotlight && <SpotlightBody spotlight={person.spotlight} />}
 
         <Link
           href={`/about#${person.slug}`}
-          className="group mt-8 inline-flex items-center gap-3 rounded-lg border border-gold px-6 py-3 text-sm font-semibold text-ink transition hover:bg-gold hover:text-white"
+          className="group mt-6 inline-flex items-center gap-3 rounded-lg border border-gold px-5 py-2.5 sm:mt-8 sm:px-6 sm:py-3 text-sm font-semibold text-ink transition hover:bg-gold hover:text-white"
         >
           View Profile
           <svg viewBox="0 0 16 16" aria-hidden="true" className="h-3.5 w-3.5 transition-transform group-hover:translate-x-0.5">
@@ -98,12 +98,12 @@ function PersonSlide({ person }: { person: Person }) {
 function SpotlightBody({ spotlight }: { spotlight: Spotlight }) {
   return (
     <>
-      <p className="mt-6 max-w-xl text-base leading-relaxed text-ink-soft">
+      <p className="mt-4 max-w-xl text-[0.95rem] leading-relaxed text-ink-soft sm:mt-6 sm:text-base">
         {spotlight.summary}
       </p>
-      <span aria-hidden="true" className="mt-8 block h-px w-12 bg-gold" />
+      <span aria-hidden="true" className="mt-6 block h-px w-12 bg-gold sm:mt-8" />
 
-      <ul className="mt-8 grid grid-cols-3 divide-x divide-line">
+      <ul className="mt-6 grid grid-cols-3 sm:mt-8 divide-x divide-line">
         {spotlight.credentials.map((item) => (
           <li key={item.title} className="flex flex-col items-center px-2 text-center">
             <CredentialIcon name={item.icon} />

@@ -89,20 +89,54 @@ export function SiteHeader() {
    * open menu with it.
    */
   useEffect(() => {
-    let lastY = window.scrollY;
+    /*
+     * Phones need tolerance the desktop does not: touch scrolling reports
+     * fractional positions that wobble by a pixel either way, momentum
+     * scrolling overshoots and settles back, and the address bar collapsing
+     * moves the page by itself. Taken literally, each of those reads as
+     * "scrolled up" and snaps the bar back. So a direction only counts once
+     * the page has travelled a few pixels in it (from the point it turned),
+     * and nothing counts while the page is past its end (rubber-banding).
+     */
+    const HIDE_AFTER = 12;
+    const SHOW_AFTER = 6;
+    let anchorY = window.scrollY;
+    let hiddenNow = false;
+    let frame = 0;
+
+    function update() {
+      frame = 0;
+      const y = Math.max(0, Math.round(window.scrollY));
+      const maxY = document.documentElement.scrollHeight - window.innerHeight;
+      if (y > maxY) return;
+
+      if (y <= 80) {
+        hiddenNow = false;
+        anchorY = y;
+      } else if (!hiddenNow) {
+        if (y < anchorY) anchorY = y;
+        else if (y - anchorY >= HIDE_AFTER) {
+          hiddenNow = true;
+          anchorY = y;
+        }
+      } else if (y > anchorY) {
+        anchorY = y;
+      } else if (anchorY - y >= SHOW_AFTER) {
+        hiddenNow = false;
+        anchorY = y;
+      }
+      setScrolling(hiddenNow);
+    }
 
     function onScroll() {
-      const y = window.scrollY;
-      const goingDown = y > lastY;
-      lastY = y;
-
-      // No new event fires once the page stops, so whichever direction the
-      // last one carried is exactly the state that persists at rest.
-      setScrolling(y > 80 && goingDown);
+      if (!frame) frame = window.requestAnimationFrame(update);
     }
 
     window.addEventListener("scroll", onScroll, { passive: true });
-    return () => window.removeEventListener("scroll", onScroll);
+    return () => {
+      window.removeEventListener("scroll", onScroll);
+      if (frame) window.cancelAnimationFrame(frame);
+    };
   }, []);
 
   // Lock body scroll behind the mobile drawer.

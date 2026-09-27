@@ -45,6 +45,17 @@ html {
   scroll-padding-top: 7rem;
 }
 
+/*
+ * Phones: everything in rem — type, spacing, radii — a notch smaller, so a
+ * page reads as a page rather than a stack of oversized blocks. A percentage,
+ * not a pixel value, so a reader's own larger-text setting still applies.
+ */
+@media (max-width: 639px) {
+  html {
+    font-size: 93.75%;
+  }
+}
+
 body {
   background: var(--color-paper);
   color: var(--color-ink);

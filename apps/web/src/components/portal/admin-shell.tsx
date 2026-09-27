@@ -82,6 +82,9 @@ export function AdminShell({ children }: { children: ReactNode }) {
   const [openOn, setOpenOn] = useState<string | null>(null);
   const menuOpen = openOn === pathname;
 
+  // The console's own sign-in page sits outside the console.
+  if (pathname === "/admin/login") return <>{children}</>;
+
   return (
     <RequireSession
       allow={isFirmAdmin}

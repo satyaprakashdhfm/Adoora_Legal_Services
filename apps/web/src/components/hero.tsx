@@ -173,7 +173,7 @@ export function Hero({ images }: { images: (string | null)[] }) {
                 >
                   <p className="eyebrow text-gold-bright">{slide.eyebrow}</p>
 
-                  <h1 className="mt-5 font-serif text-3xl font-semibold leading-[1.12] tracking-tight text-balance sm:text-4xl lg:text-[2.75rem] xl:text-[3.15rem]">
+                  <h1 className="mt-4 font-serif text-[1.7rem] font-semibold leading-[1.15] tracking-tight text-balance sm:text-4xl lg:text-[2.75rem] xl:text-[3.15rem]">
                     {slide.heading}{" "}
                     <span className="text-gold-bright">{slide.accent}</span>
                   </h1>
@@ -185,14 +185,14 @@ export function Hero({ images }: { images: (string | null)[] }) {
                   <div className="mt-8 flex flex-col gap-3 sm:flex-row">
                     <Link
                       href={slide.href}
-                      className="inline-flex items-center justify-center gap-2 rounded-md bg-gold px-7 py-3.5 text-sm font-semibold text-ink-deep transition hover:bg-gold-bright"
+                      className="inline-flex items-center justify-center gap-2 rounded-md bg-gold px-6 py-3 text-sm font-semibold sm:px-7 sm:py-3.5 text-ink-deep transition hover:bg-gold-bright"
                     >
                       {slide.cta}
                       <Arrow />
                     </Link>
                     <Link
                       href="/contact"
-                      className="inline-flex items-center justify-center rounded-md border border-white/30 px-7 py-3.5 text-sm font-semibold text-white transition hover:border-white hover:bg-white/5"
+                      className="inline-flex items-center justify-center rounded-md border border-white/30 px-6 py-3 text-sm font-semibold sm:px-7 sm:py-3.5 text-white transition hover:border-white hover:bg-white/5"
                     >
                       Request information
                     </Link>

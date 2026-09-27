@@ -26,16 +26,19 @@ export type OAuthState = {
   nonce: string;
   verifier: string;
   next: string;
+  /** Which sign-in page started this: the firm's (/admin/login) or clients' (/login). */
+  audience: "staff" | "client";
   /** Epoch ms after which the attempt is void. */
   exp: number;
 };
 
-export function beginGoogleSignIn(next: string): { url: string; state: OAuthState } {
+export function beginGoogleSignIn(next: string, audience: "staff" | "client"): { url: string; state: OAuthState } {
   const state: OAuthState = {
     state: randomBytes(16).toString("base64url"),
     nonce: randomBytes(16).toString("base64url"),
     verifier: randomBytes(32).toString("base64url"),
     next,
+    audience,
     exp: Date.now() + 10 * 60 * 1000,
   };
 

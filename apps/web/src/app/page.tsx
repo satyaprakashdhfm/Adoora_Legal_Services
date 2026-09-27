@@ -79,7 +79,7 @@ export default async function Home() {
               aria-hidden="true"
               className="mt-8 block h-0.5 w-16 bg-gold"
             />
-            <p className="mt-8 max-w-sm font-serif text-lg leading-relaxed text-ink-soft">
+            <p className="mt-6 max-w-sm font-serif text-base leading-relaxed sm:mt-8 sm:text-lg text-ink-soft">
               Strategic legal solutions for businesses, institutions and
               individuals.
             </p>

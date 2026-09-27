@@ -80,7 +80,10 @@ export function AutoSlider({
       </div>
 
       {slides.length > 1 && (
-        <div className="mt-6 flex justify-center gap-2">
+        <div className="mt-5 flex items-center justify-center gap-2 sm:mt-6">
+          {/* On phones the arrows sit here, beside the dots, rather than
+              over the slide where they would cover its text. */}
+          <ArrowButton direction={-1} onClick={() => step(-1)} inline />
           {slides.map((_, i) => (
             <button
               key={i}
@@ -95,6 +98,7 @@ export function AutoSlider({
               }`}
             />
           ))}
+          <ArrowButton direction={1} onClick={() => step(1)} inline />
         </div>
       )}
     </div>
@@ -104,17 +108,24 @@ export function AutoSlider({
 function ArrowButton({
   direction,
   onClick,
+  inline = false,
 }: {
   direction: 1 | -1;
   onClick: () => void;
+  /** The phone-only pair beside the dots, instead of the pair over the slide. */
+  inline?: boolean;
 }) {
   return (
     <button
       type="button"
       onClick={onClick}
       aria-label={direction === 1 ? "Next slide" : "Previous slide"}
-      className={`absolute top-1/2 z-10 flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full border border-line-strong bg-paper text-ink shadow-md transition hover:border-gold hover:bg-gold hover:text-white ${
-        direction === 1 ? "right-0 translate-x-1/3" : "left-0 -translate-x-1/3"
+      className={`items-center justify-center rounded-full border border-line-strong bg-paper text-ink transition hover:border-gold hover:bg-gold hover:text-white ${
+        inline
+          ? `flex h-9 w-9 md:hidden ${direction === 1 ? "ml-2" : "mr-2"}`
+          : `absolute top-1/2 z-10 hidden h-11 w-11 -translate-y-1/2 shadow-md md:flex ${
+              direction === 1 ? "right-0 translate-x-1/3" : "left-0 -translate-x-1/3"
+            }`
       }`}
     >
       <svg viewBox="0 0 16 16" aria-hidden="true" className="h-4 w-4">

@@ -39,7 +39,7 @@ export function SectionHeading({
         </p>
       )}
       <h2
-        className={`mt-4 font-serif text-3xl font-semibold leading-tight tracking-tight text-balance sm:text-4xl ${
+        className={`mt-3 font-serif text-2xl font-semibold leading-tight tracking-tight text-balance sm:text-4xl ${
           isDark ? "text-white" : "text-ink"
         }`}
       >
@@ -408,11 +408,11 @@ export function PageHero({
             {eyebrow}
           </p>
         )}
-        <h1 className="mt-4 max-w-4xl font-serif text-3xl font-semibold leading-tight tracking-tight text-balance sm:text-4xl lg:text-5xl">
+        <h1 className="mt-3 max-w-4xl font-serif text-[1.7rem] font-semibold leading-tight tracking-tight text-balance sm:text-4xl lg:text-5xl">
           {title}
         </h1>
         {lead && (
-          <p className="mt-5 max-w-3xl text-base leading-relaxed text-ink-soft sm:text-lg">
+          <p className="mt-4 max-w-3xl text-base leading-relaxed text-ink-soft sm:mt-5 sm:text-lg">
             {lead}
           </p>
         )}

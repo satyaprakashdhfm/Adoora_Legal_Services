@@ -57,7 +57,7 @@ export default function ContactPage() {
               <span aria-hidden="true" className="h-px w-8 bg-gold-bright/60" />
               Enquiry
             </p>
-            <h2 className="mt-4 font-serif text-3xl font-semibold tracking-tight text-white">
+            <h2 className="mt-4 font-serif text-2xl font-semibold tracking-tight text-white sm:text-3xl">
               Send an enquiry
             </h2>
             <p className="mt-3 max-w-xl leading-relaxed text-white/80">

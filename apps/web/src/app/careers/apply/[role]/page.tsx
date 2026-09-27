@@ -68,7 +68,7 @@ export default async function ApplyPage(
           <span className="h-px w-8 bg-gold/50" />
           Apply now
         </p>
-        <h1 className="mt-4 font-serif text-3xl font-semibold leading-tight tracking-tight text-ink sm:text-4xl">
+        <h1 className="mt-4 font-serif text-2xl font-semibold leading-tight tracking-tight text-ink sm:text-4xl">
           {role.title}
         </h1>
         <p className="mt-3 text-base text-ink-soft">

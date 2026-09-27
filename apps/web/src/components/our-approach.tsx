@@ -142,7 +142,7 @@ export function OurApproach({
 
         <div className="relative flex h-full flex-col justify-center p-8 sm:p-12">
           <span aria-hidden="true" className="h-px w-9 bg-gold-bright" />
-          <h3 className="mt-6 max-w-sm font-serif text-3xl font-semibold leading-tight tracking-tight text-white sm:text-4xl">
+          <h3 className="mt-5 max-w-sm font-serif text-2xl font-semibold leading-tight tracking-tight text-white sm:text-4xl">
             {active.title}
           </h3>
           <p className="mt-6 max-w-sm text-base leading-relaxed text-white/80">
