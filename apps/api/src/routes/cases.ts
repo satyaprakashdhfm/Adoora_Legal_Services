@@ -468,11 +468,18 @@ casesRouter.post("/:reference/court-sync", ecourtsLimiter, clientEcourtsLimiter,
   await audit(req, "ecourts.case_sync", "Case", found.id, {
     reference: found.reference,
     requestId: result?.requestId ?? null,
+    refreshed: result?.refreshed ?? false,
     changes: result?.changes ?? [],
   });
 
   const record = await loadCaseDetail(principal, found.id);
-  res.json({ case: serialiseCase(principal, record), changes: result?.changes ?? [], recordChanged: result?.recordChanged ?? false });
+  res.json({
+    case: serialiseCase(principal, record),
+    changes: result?.changes ?? [],
+    recordChanged: result?.recordChanged ?? false,
+    refreshed: result?.refreshed ?? false,
+    sourceUpdatedAt: result?.sourceUpdatedAt ?? null,
+  });
 });
 
 /**

@@ -5,7 +5,7 @@ import { api, type CaseDetail } from "@/lib/portal/api";
 import { formatDate, formatDateTime } from "@/lib/portal/format";
 import { Badge, Button, Card, CardHeader, EmptyState, ErrorNote, Table, Td, Th } from "@/components/portal/ui";
 
-type SyncResult = { case: CaseDetail; changes: string[]; recordChanged: boolean };
+type SyncResult = { case: CaseDetail; changes: string[]; recordChanged: boolean; refreshed?: boolean; sourceUpdatedAt?: string | null };
 
 /**
  * "Check court status": fetches the court's record from eCourts and writes
@@ -27,9 +27,11 @@ function useCourtSync(record: CaseDetail, onSynced: (updated: CaseDetail, messag
         result.case,
         kind === "rebuild"
           ? `Saved court record re-read: ${result.changes.join(" · ")}.`
-          : result.changes.length
-            ? `Court record checked. ${result.changes.join(" · ")}.`
-            : "Court record checked — nothing has changed since the last check.",
+          : `${
+              result.changes.length
+                ? `Court record checked. ${result.changes.join(" · ")}.`
+                : "Court record checked — nothing has changed since the last check."
+            }${result.sourceUpdatedAt ? ` eCourts data as of ${formatDateTime(result.sourceUpdatedAt)}.` : ""}`,
       );
     } catch (cause) {
       setError((cause as Error).message);
@@ -76,7 +78,7 @@ export function CourtStatusCard({ record, onSynced }: { record: CaseDetail; onSy
         <ErrorNote>{error}</ErrorNote>
         {record.cnrNumber && (
           <Button size="sm" tone="secondary" onClick={() => void sync()} disabled={syncing !== null}>
-            {syncing ? "Checking eCourts…" : "Check court status"}
+            {syncing ? "Checking eCourts (about 15 s)…" : "Check court status"}
           </Button>
         )}
       </div>
@@ -123,13 +125,13 @@ export function CourtRecordPanel({ record, onSynced }: { record: CaseDetail; onS
               </Button>
             )}
             <Button size="sm" onClick={() => void sync()} disabled={syncing !== null}>
-              {syncing === "check" ? "Checking eCourts…" : "Check court status"}
+              {syncing === "check" ? "Checking eCourts (about 15 s)…" : "Check court status"}
             </Button>
           </div>
         </div>
         {record.canEdit && record.courtCheckedAt && (
           <p className="px-5 pb-4 text-xs text-slate">
-            “Check court status” asks eCourts again and uses a credit. “Re-read saved record” rebuilds this page from the last answer eCourts gave — free.
+            “Check court status” has eCourts re-read the court’s page, then fetches it — about 15 seconds. “Re-read saved record” rebuilds this page from the last answer eCourts gave — free.
           </p>
         )}
         {error && <div className="px-5 pb-4"><ErrorNote>{error}</ErrorNote></div>}

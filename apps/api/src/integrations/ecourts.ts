@@ -91,3 +91,34 @@ export async function fetchCaseByCnr(cnr: string): Promise<EcourtsCase> {
       throw new HttpError(502, "eCourts could not return this case. Please try again.", "ecourts_error");
   }
 }
+
+/**
+ * Asks eCourtsIndia to re-scrape a case from the eCourts source:
+ *
+ *   POST {ECOURTS_API_URL}/api/partner/case/{cnr}/refresh   → 202 QUEUED
+ *
+ * Asynchronous — the fresh data is readable with `fetchCaseByCnr` some 5–10
+ * seconds later. Repeats within 15 seconds are idempotent on their side.
+ *
+ * Never throws: if the refresh cannot be queued, the caller still reads the
+ * record eCourtsIndia already has, which is better than failing the check.
+ * Returns whether it was queued.
+ */
+export async function queueCaseRefresh(cnr: string): Promise<boolean> {
+  if (!env.ECOURTS_API_KEY) return false;
+  const url = `${env.ECOURTS_API_URL.replace(/\/$/, "")}/api/partner/case/${encodeURIComponent(cnr)}/refresh`;
+  try {
+    const response = await fetch(url, {
+      method: "POST",
+      headers: { Authorization: `Bearer ${env.ECOURTS_API_KEY}`, Accept: "application/json" },
+      signal: AbortSignal.timeout(TIMEOUT_MS),
+    });
+    const body = (await response.json().catch(() => null)) as { meta?: { request_id?: string } } | null;
+    if (response.ok) return true;
+    logger.warn({ cnr, status: response.status, requestId: body?.meta?.request_id ?? null }, "eCourts refresh not queued");
+    return false;
+  } catch (error) {
+    logger.warn({ cnr, err: error }, "eCourts refresh request failed");
+    return false;
+  }
+}

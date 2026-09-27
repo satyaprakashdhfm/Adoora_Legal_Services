@@ -1,6 +1,6 @@
 import { createHash } from "node:crypto";
 import { prisma } from "../db.js";
-import { fetchCaseByCnr } from "./ecourts.js";
+import { fetchCaseByCnr, queueCaseRefresh } from "./ecourts.js";
 import type { Principal } from "../auth/session.js";
 import type { Prisma } from "../../generated/prisma/client.js";
 
@@ -724,12 +724,23 @@ export async function applyCourtRecord(
   return { changes };
 }
 
+/** eCourtsIndia says a queued refresh lands in 5–10 seconds. */
+const REFRESH_WAIT_MS = 10_000;
+
 /**
  * Fetches the court's record for a case and applies it. Used by "Check
  * court status" on either dashboard.
+ *
+ * The case detail call returns eCourtsIndia's stored copy, which may be days
+ * old. So a check first queues a re-scrape from eCourts (the cheap refresh
+ * call), waits for it, and then reads the case once — fresh data for the
+ * price of a refresh plus one read. If the refresh cannot be queued, the
+ * stored copy is read straight away.
  */
 export async function syncCase(principal: Principal, found: { id: string; cnrNumber: string | null }) {
   if (!found.cnrNumber) return null;
+  const refreshed = await queueCaseRefresh(found.cnrNumber);
+  if (refreshed) await new Promise((resolve) => setTimeout(resolve, REFRESH_WAIT_MS));
   const result = await fetchCaseByCnr(found.cnrNumber);
   const snapshot = await storeSnapshot(principal, found.cnrNumber, found.id, result.data, result.requestId);
   const record = readCourtRecord(found.cnrNumber, result.data);
@@ -737,7 +748,9 @@ export async function syncCase(principal: Principal, found: { id: string; cnrNum
     userId: principal.kind === "staff" ? principal.id : null,
     clientId: principal.kind === "client" ? principal.id : null,
   });
-  return { requestId: result.requestId, recordChanged: snapshot.changed, ...applied };
+  // When eCourtsIndia last scraped the court's page, as it reports it.
+  const sourceUpdatedAt = text(asObj(asObj(result.data)?.entityInfo)?.dateModified, 60);
+  return { requestId: result.requestId, recordChanged: snapshot.changed, refreshed, sourceUpdatedAt, ...applied };
 }
 
 /**
