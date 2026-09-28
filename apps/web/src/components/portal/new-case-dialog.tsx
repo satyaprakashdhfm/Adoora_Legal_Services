@@ -6,6 +6,7 @@ import { useEffect, useState } from "react";
 import { api, type CnrLookup } from "@/lib/portal/api";
 import { useUser } from "@/lib/portal/session";
 import { CaseForm } from "@/components/portal/case-form";
+import { CourtCaptcha } from "@/components/portal/court-captcha";
 import { Button, ErrorNote, Field, Input, Modal, Select, type ButtonTone } from "@/components/portal/ui";
 
 type Person = { id: string; name: string; email: string; role?: string; isActive: boolean };
@@ -62,12 +63,13 @@ function TeamPicker({ lawyers, value, onChange }: { lawyers: Person[]; value: Te
 /**
  * Opening a case, in a dialog, from either dashboard.
  *
- * Step one asks for the CNR: with it, the court's record is fetched from
- * eCourts and the form arrives filled in — cause title, parties and their
+ * Step one asks for the CNR: with it, the court's record is read from the
+ * court's own website (the person types its captcha) and the form arrives
+ * filled in — cause title, parties and their
  * counsel, court, case number, dates, stage, coram — for the person to check
- * and correct before saving. The lookup is kept on the server, and saving
- * the case attaches it along with the hearing history and orders, so the
- * court is not asked twice. Without a CNR (a matter not yet filed, or an
+ * and correct before saving. The lookup is held on the server, and saving
+ * the case attaches it with the hearing history and the order PDFs, so the
+ * court is not asked twice. Staff may use eCourtsIndia as a paid backup. Without a CNR (a matter not yet filed, or an
  * advisory one), the same form opens empty.
  *
  * `admin` adds the lead lawyer and client pickers the console needs.
@@ -80,6 +82,8 @@ function NewCaseFlow({ admin, onDone }: { admin: boolean; onDone: (reference: st
   const [error, setError] = useState<string | null>(null);
   const [lookup, setLookup] = useState<CnrLookup | null>(null);
   const [manual, setManual] = useState(false);
+  // The CNR being looked up on the court's website (step two: its captcha).
+  const [asking, setAsking] = useState<string | null>(null);
 
   const [lawyers, setLawyers] = useState<Person[]>([]);
   const [clients, setClients] = useState<Person[]>([]);
@@ -92,13 +96,24 @@ function NewCaseFlow({ admin, onDone }: { admin: boolean; onDone: (reference: st
     api<{ data: Person[] }>("/admin/clients?limit=200").then((r) => setClients(r.data.filter((c) => c.isActive))).catch(() => undefined);
   }, [admin]);
 
-  async function fetchRecord(event: React.FormEvent) {
-    event.preventDefault();
+  function cleanedCnr() {
     const cleaned = cnr.replace(/[\s-]/g, "").toUpperCase();
-    if (!/^[A-Z0-9]{16}$/.test(cleaned)) {
-      setError("A CNR number is 16 letters and digits, e.g. HBHC01… for the Telangana High Court.");
-      return;
-    }
+    if (/^[A-Z0-9]{16}$/.test(cleaned)) return cleaned;
+    setError("A CNR number is 16 letters and digits, e.g. HBHC01… for the Telangana High Court.");
+    return null;
+  }
+
+  function askCourt(event: React.FormEvent) {
+    event.preventDefault();
+    setError(null);
+    const cleaned = cleanedCnr();
+    if (cleaned) setAsking(cleaned);
+  }
+
+  /** Staff only, paid: the same lookup through eCourtsIndia. */
+  async function fetchFromBackup() {
+    const cleaned = cleanedCnr();
+    if (!cleaned) return;
     setLooking(true);
     setError(null);
     try {
@@ -110,14 +125,43 @@ function NewCaseFlow({ admin, onDone }: { admin: boolean; onDone: (reference: st
     }
   }
 
+  // Step two: the court's captcha for that CNR.
+  if (asking && !lookup) {
+    return (
+      <div className="space-y-4">
+        <p className="text-sm text-ink-soft">
+          Reading CNR <span className="font-mono font-semibold">{asking}</span> on the court&apos;s own website. The form fills in from it; the hearings and
+          order PDFs are saved when you create the case.
+        </p>
+        <CourtCaptcha<CnrLookup>
+          base="/cases/cnr-lookup"
+          startBody={{ cnr: asking }}
+          submitLabel="Fetch case details"
+          onResult={setLookup}
+        />
+        <div className="flex flex-wrap items-center gap-4 border-t border-line pt-4">
+          <button type="button" onClick={() => setAsking(null)} className="text-xs font-semibold text-slate hover:text-ink">
+            ← Change the CNR
+          </button>
+          {!client && (
+            <button type="button" onClick={() => void fetchFromBackup()} disabled={looking} className="text-xs text-slate underline hover:text-ink">
+              {looking ? "Asking eCourtsIndia…" : "Court website not working? Use the eCourtsIndia backup (paid)"}
+            </button>
+          )}
+        </div>
+        <ErrorNote>{error}</ErrorNote>
+      </div>
+    );
+  }
+
   // Step one: the CNR, or skip it.
   if (!lookup && !manual) {
     return (
       <div className="space-y-6">
-        <form onSubmit={fetchRecord} className="space-y-4">
+        <form onSubmit={askCourt} className="space-y-4">
           <Field
             label="CNR number"
-            hint="16 characters, printed at the top of the case status page on eCourts and on the court's orders, e.g. HBHC01… for the Telangana High Court."
+            hint="16 characters, printed on the court's case status page and on its orders, e.g. HBHC01… for the Telangana High Court."
           >
             <Input
               value={cnr}
@@ -129,8 +173,8 @@ function NewCaseFlow({ admin, onDone }: { admin: boolean; onDone: (reference: st
             />
           </Field>
           <ErrorNote>{error}</ErrorNote>
-          <Button type="submit" disabled={looking || !cnr.trim()}>
-            {looking ? "Fetching from eCourts…" : "Fetch case details"}
+          <Button type="submit" disabled={!cnr.trim()}>
+            Next: the court&apos;s captcha
           </Button>
         </form>
 
@@ -181,6 +225,7 @@ function NewCaseFlow({ admin, onDone }: { admin: boolean; onDone: (reference: st
         onClick={() => {
           setLookup(null);
           setManual(false);
+          setAsking(null);
         }}
         className="text-xs font-semibold text-slate hover:text-ink"
       >

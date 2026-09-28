@@ -746,7 +746,14 @@ export async function applyCourtRecord(
       await tx.courtHearing.upsert({
         where: { caseId_hearingDate: { caseId, hearingDate: hearing.hearingDate } },
         create: { caseId, ...hearing },
-        update: { purpose: hearing.purpose, judge: hearing.judge, business: hearing.business, nextDate: hearing.nextDate },
+        // A source that lacks a field (the court's page has no "business" text)
+        // leaves what another source recorded.
+        update: {
+          purpose: hearing.purpose ?? undefined,
+          judge: hearing.judge ?? undefined,
+          business: hearing.business ?? undefined,
+          nextDate: hearing.nextDate ?? undefined,
+        },
       });
     }
 

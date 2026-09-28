@@ -171,9 +171,10 @@ async function captchaImage(session: Session): Promise<string> {
 // ---------------------------------------------------------------------------
 
 /** Opens a court-website session for a CNR and returns its captcha image. */
-export async function startPortalLookup(cnr: string, caseId: string, owner: string, courtName?: string | null) {
+export async function startPortalLookup(cnr: string, caseId: string, owner: string, courtName?: string | null, chosen?: Portal) {
   sweep();
-  const portal = portalFor(cnr, courtName);
+  // The person may pick the other website when the first says "no such case".
+  const portal = chosen ?? portalFor(cnr, courtName);
   const session: Session = {
     id: randomUUID(),
     portal,

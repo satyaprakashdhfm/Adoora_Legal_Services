@@ -128,6 +128,11 @@ const schema = z.object({
 
   ECOURTS_PRICE_DETAILS: optionalString(z.string().max(40)),
   ECOURTS_PRICE_REFRESH: optionalString(z.string().max(40)),
+  /**
+   * eCourtsIndia is only a backup now; the court's own website (a person
+   * types its captcha) is the source. "false" removes the backup entirely.
+   */
+  ECOURTS_BACKUP: z.enum(["true", "false"]).default("true"),
   /** OTP widget → the widget's id and its token (both public). */
   MSG91_WIDGET_ID: optionalString(z.string().min(4)),
   MSG91_WIDGET_TOKEN: optionalString(z.string().min(4)),

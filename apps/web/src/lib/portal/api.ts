@@ -206,6 +206,8 @@ export type CaseDetail = Omit<CaseSummary, "assignments" | "clients" | "_count">
   courtRefreshQueuedAt: string | null;
   /** Staff only: what eCourtsIndia charges per request. */
   ecourtsPricing?: { details: string | null; refresh: string | null };
+  /** Staff, while the eCourtsIndia backup is switched on. */
+  ecourtsBackup?: boolean;
   hearings: CourtHearing[];
   orders: CourtOrder[];
   /** The rest of the court's record (FIR, category, tagged matters…), as label/value pairs. */
@@ -268,6 +270,8 @@ export type CnrLookup = {
     court: { status: string | null; stage: string | null; hearings: number; orders: number };
   };
   existing: { reference: string; title: string; status: CaseStatus }[];
+  /** "court-website" (captcha) or "ecourtsindia" (the backup). */
+  source?: string;
 };
 
 export type ClientQuery = {

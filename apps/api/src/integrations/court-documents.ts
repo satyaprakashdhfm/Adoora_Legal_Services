@@ -3,8 +3,8 @@ import type { Request } from "express";
 import { prisma } from "../db.js";
 import { logger } from "../logger.js";
 import { saveCourtDocument } from "../routes/documents.js";
-import { applyCourtRecord } from "./court-record.js";
-import { downloadPortalOrder, endPortalSession, type PortalResult } from "./court-portal.js";
+import { applyCourtRecord, ECOURTSINDIA_ONLY, rebuildFromSnapshot } from "./court-record.js";
+import { downloadPortalOrder, endPortalSession, readCasePage, type Portal, type PortalResult } from "./court-portal.js";
 import type { Prisma } from "../../generated/prisma/client.js";
 
 /**
@@ -27,6 +27,57 @@ export const PORTAL_COOLDOWN_MS = 30 * 60 * 1000;
 const MAX_DOWNLOADS = 30;
 
 const ymd = (value: Date) => value.toISOString().slice(0, 10);
+
+type PortalOk = Extract<PortalResult, { ok: true }>;
+
+/**
+ * "New case from CNR": the court's answer is held here until the case is
+ * saved, then written to it like any other lookup (hearings, orders, PDFs).
+ * Kept in memory — a restart in between only means pressing "Update from
+ * court" once on the new case.
+ */
+const LOOKUP_KEEP_MS = 30 * 60 * 1000;
+const heldLookups = new Map<string, { result: PortalOk; at: number }>();
+const heldKey = (owner: string, cnr: string) => `${owner}|${cnr}`;
+
+export function holdLookup(owner: string, cnr: string, result: PortalOk) {
+  for (const [key, held] of heldLookups) if (Date.now() - held.at > LOOKUP_KEEP_MS) heldLookups.delete(key);
+  heldLookups.set(heldKey(owner, cnr), { result, at: Date.now() });
+}
+
+/** Writes a held lookup onto a just-created case. False when there is none. */
+export async function attachHeldLookup(req: Request, target: { id: string; reference: string; cnrNumber: string | null | undefined }) {
+  if (!target.cnrNumber) return false;
+  const key = heldKey(req.principal!.id, target.cnrNumber);
+  const held = heldLookups.get(key);
+  if (!held || Date.now() - held.at > LOOKUP_KEEP_MS) return false;
+  heldLookups.delete(key);
+  try {
+    await storePortalResult(req, { id: target.id, reference: target.reference, cnrNumber: target.cnrNumber }, held.result);
+  } catch (error) {
+    logger.warn({ err: error, case: target.reference }, "Court portal: could not attach the lookup to the new case");
+  }
+  return true;
+}
+
+/**
+ * "Re-read saved record": the latest saved page, from either source, read
+ * again with today's reader. A court-website page is applied like a fresh
+ * lookup (hearings updated, nothing deleted), so saved PDFs stay linked.
+ */
+export async function rereadCase(caseId: string, author: { userId?: string | null; clientId?: string | null }) {
+  const [portal, ecourts] = await Promise.all([
+    prisma.courtSnapshot.findFirst({ where: { caseId, requestId: PORTAL_REQUEST_ID }, orderBy: { fetchedAt: "desc" }, select: { payload: true, fetchedAt: true } }),
+    prisma.courtSnapshot.findFirst({ where: { caseId, ...ECOURTSINDIA_ONLY }, orderBy: { fetchedAt: "desc" }, select: { fetchedAt: true } }),
+  ]);
+  if (portal && (!ecourts || portal.fetchedAt >= ecourts.fetchedAt)) {
+    const payload = portal.payload as { html?: string; portal?: Portal };
+    const record = readCasePage(String(payload.html ?? ""), payload.portal === "hc" ? "hc" : "district");
+    const applied = await applyCourtRecord(caseId, record, author);
+    return { ...applied, hearings: record.hearings.length, orders: await prisma.courtOrder.count({ where: { caseId } }) };
+  }
+  return rebuildFromSnapshot(caseId, author);
+}
 
 export async function recentPortalLookup(caseId: string) {
   return prisma.courtSnapshot.findFirst({

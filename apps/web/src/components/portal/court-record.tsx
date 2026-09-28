@@ -1,9 +1,9 @@
 "use client";
 
-/* eslint-disable @next/next/no-img-element -- the captcha arrives as a data: URL from the API */
 import { useState } from "react";
 import { api, downloadUrl, type CaseDetail, type CourtHearing, type CourtOrder } from "@/lib/portal/api";
 import { formatDate, formatDateTime } from "@/lib/portal/format";
+import { CourtCaptcha } from "@/components/portal/court-captcha";
 import { Badge, Button, Card, CardHeader, EmptyState, ErrorNote, Modal, Table, Td, Th } from "@/components/portal/ui";
 
 type SyncResult = {
@@ -25,9 +25,9 @@ function refreshPending(record: CaseDetail) {
 }
 
 /**
- * "Check court status": asks eCourtsIndia to re-read the court's record, then
- * picks the fresh copy up a few minutes later (see court-record.ts on the
- * API). Anyone who can see the case can ask; the result is saved for everyone.
+ * The eCourtsIndia backup (staff only, paid): asks eCourtsIndia to re-read
+ * the court's record, then picks the fresh copy up a few minutes later (see
+ * court-record.ts on the API). Also "Re-read saved record", which is free.
  */
 function useCourtSync(record: CaseDetail, onSynced: OnSynced) {
   const [syncing, setSyncing] = useState<"check" | "rebuild" | null>(null);
@@ -44,10 +44,10 @@ function useCourtSync(record: CaseDetail, onSynced: OnSynced) {
         kind === "rebuild"
           ? `Saved court record re-read: ${result.changes.join(" · ")}.`
           : result.pending
-            ? "Update requested from eCourts. The fresh record appears here in about 5 minutes — no need to wait on this page."
+            ? "Backup update requested from eCourtsIndia. The fresh record appears here in about 5 minutes — no need to wait on this page."
             : `${
-                result.changes.length ? `Court record checked. ${result.changes.join(" · ")}.` : "Court record checked — nothing has changed since the last check."
-              }${result.sourceUpdatedAt ? ` eCourts data as of ${formatDateTime(result.sourceUpdatedAt)}.` : ""}`,
+                result.changes.length ? `Checked through eCourtsIndia. ${result.changes.join(" · ")}.` : "Checked through eCourtsIndia — nothing has changed."
+              }${result.sourceUpdatedAt ? ` eCourtsIndia data as of ${formatDateTime(result.sourceUpdatedAt)}.` : ""}`,
       );
     } catch (cause) {
       setError((cause as Error).message);
@@ -59,16 +59,14 @@ function useCourtSync(record: CaseDetail, onSynced: OnSynced) {
   return { sync: () => run("check"), rebuild: () => run("rebuild"), syncing, error };
 }
 
-/** Staff only: what each way of checking costs. Clients never see prices. */
+/** Staff only: what the backup costs. Clients never see prices. */
 function PriceLine({ record }: { record: CaseDetail }) {
   const pricing = record.ecourtsPricing;
-  if (!pricing) return null;
-  const set = pricing.details || pricing.refresh;
+  if (!pricing || !record.ecourtsBackup) return null;
   return (
     <p className="text-xs text-slate">
-      {set
-        ? `eCourtsIndia: details ${pricing.details ?? "—"} · refresh ${pricing.refresh ?? "—"} per request. Court website: free.`
-        : "eCourtsIndia prices not set (ECOURTS_PRICE_DETAILS / ECOURTS_PRICE_REFRESH on Railway). Court website: free."}
+      Court website: free. eCourtsIndia backup: refresh {pricing.refresh ?? "—"} + details {pricing.details ?? "—"} per check — use it only when the
+      court&apos;s website is not working.
     </p>
   );
 }
@@ -77,20 +75,99 @@ function PendingNote({ record }: { record: CaseDetail }) {
   if (!refreshPending(record)) return null;
   return (
     <p className="rounded-md bg-sky-50 px-3 py-2 text-xs text-sky-800">
-      Updating from eCourts — requested {formatDateTime(record.courtRefreshQueuedAt!)}. The fresh record appears within a few minutes.
+      Updating through eCourtsIndia — requested {formatDateTime(record.courtRefreshQueuedAt!)}. The fresh record appears within a few minutes.
     </p>
+  );
+}
+
+/** The small "use the backup" button, for staff while the backup is switched on. */
+function BackupButton({ record, onSynced }: { record: CaseDetail; onSynced: OnSynced }) {
+  const { sync, syncing, error } = useCourtSync(record, onSynced);
+  if (!record.ecourtsBackup || !record.cnrNumber) return null;
+  const pending = refreshPending(record);
+  return (
+    <>
+      <Button size="sm" tone="ghost" onClick={() => void sync()} disabled={syncing !== null || pending}>
+        {syncing ? "Asking eCourtsIndia…" : pending ? "Backup update on its way" : "Use eCourtsIndia backup"}
+      </Button>
+      {error && <ErrorNote>{error}</ErrorNote>}
+    </>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Update from court: the court's own website (captcha typed by a person)
+// ---------------------------------------------------------------------------
+
+type Summary = { hearings: number; orders: number; saved: number; alreadySaved: number; failed: number; remaining: number; changes: string[] };
+
+function summaryMessage(s: Summary) {
+  const changed = s.changes.length ? ` ${s.changes.join(" · ")}.` : "";
+  if (!s.orders) {
+    return `Updated from the court's website: ${s.hearings} hearing${s.hearings === 1 ? "" : "s"} on record.${changed} The court has not uploaded any orders or judgments for this case yet.`;
+  }
+  const parts = [
+    s.saved ? `${s.saved} new document${s.saved === 1 ? "" : "s"} saved` : "No new documents",
+    s.alreadySaved ? `${s.alreadySaved} already saved` : null,
+    s.failed ? `${s.failed} could not be downloaded — try again later` : null,
+    s.remaining ? `${s.remaining} more on the next update` : null,
+    `${s.hearings} hearing${s.hearings === 1 ? "" : "s"} on record`,
+  ].filter(Boolean);
+  return `Updated from the court's website: ${parts.join(" · ")}.${changed} Documents are in Documents → From the court.`;
+}
+
+/**
+ * "Update from court": the court's website shows a captcha, the person types
+ * it, and the API reads the case page — status, next date, hearings — and
+ * saves each order's PDF to the case's documents, skipping any it already has.
+ */
+export function UpdateFromCourtButton({
+  record,
+  onSynced,
+  size,
+  tone,
+}: {
+  record: CaseDetail;
+  onSynced: OnSynced;
+  size?: "sm";
+  tone?: "primary" | "secondary";
+}) {
+  const [open, setOpen] = useState(false);
+  if (!record.cnrNumber) return null;
+  return (
+    <>
+      <Button size={size} tone={tone} onClick={() => setOpen(true)}>
+        Update from court
+      </Button>
+      <Modal open={open} onClose={() => setOpen(false)} title="Update from court">
+        {open && (
+          <div className="space-y-4">
+            <p className="text-sm text-ink-soft">
+              Reads CNR <span className="font-mono font-semibold">{record.cnrNumber}</span> on the court&apos;s own website: the latest status, next date and
+              hearings, and every order and judgment PDF — saved to this case. PDFs already saved are not downloaded again.
+            </p>
+            <CourtCaptcha<{ case: CaseDetail; summary: Summary }>
+              base={`/cases/${encodeURIComponent(record.reference)}/portal`}
+              submitLabel="Update"
+              onResult={(result) => {
+                onSynced(result.case, summaryMessage(result.summary));
+                setOpen(false);
+              }}
+            />
+          </div>
+        )}
+      </Modal>
+    </>
   );
 }
 
 /** The court's own status line, for the case overview's side column. */
 export function CourtStatusCard({ record, onSynced }: { record: CaseDetail; onSynced: OnSynced }) {
-  const { sync, syncing, error } = useCourtSync(record, onSynced);
   if (!record.cnrNumber && !record.courtStatus && !record.courtStage) return null;
-  const pending = refreshPending(record);
 
   return (
     <Card>
-      <CardHeader title="Court status" description="From the court's record on eCourts." />
+      <CardHeader title="Court status" description="From the court's own record." />
       <div className="space-y-3 px-5 py-4 text-sm">
         {record.courtStatus || record.courtStage ? (
           <dl className="space-y-2">
@@ -114,153 +191,17 @@ export function CourtStatusCard({ record, onSynced }: { record: CaseDetail; onSy
             </div>
           </dl>
         ) : (
-          <p className="text-slate">Not checked against eCourts yet.</p>
+          <p className="text-slate">Not updated from the court yet.</p>
         )}
-        {record.courtCheckedAt && <p className="text-xs text-slate">Last checked {formatDateTime(record.courtCheckedAt)}</p>}
+        {record.courtCheckedAt && <p className="text-xs text-slate">Last updated {formatDateTime(record.courtCheckedAt)}</p>}
         <PendingNote record={record} />
-        <ErrorNote>{error}</ErrorNote>
-        {record.cnrNumber && (
-          <Button size="sm" tone="secondary" onClick={() => void sync()} disabled={syncing !== null || pending}>
-            {syncing ? "Asking eCourts…" : pending ? "Update on its way" : "Check court status"}
-          </Button>
-        )}
+        <div className="flex flex-wrap gap-2">
+          <UpdateFromCourtButton record={record} onSynced={onSynced} size="sm" tone="secondary" />
+          <BackupButton record={record} onSynced={onSynced} />
+        </div>
         <PriceLine record={record} />
       </div>
     </Card>
-  );
-}
-
-// ---------------------------------------------------------------------------
-// Court documents from the court's own website (captcha typed by a person)
-// ---------------------------------------------------------------------------
-
-type Summary = { hearings: number; orders: number; saved: number; alreadySaved: number; failed: number; remaining: number };
-
-/**
- * "Get court documents": the court's website shows a captcha, the person
- * types it, and the API fetches the case page and saves each order's PDF to
- * the case's documents — skipping any it already has.
- */
-function CourtDocumentsDialog({ record, onSynced, onClose }: { record: CaseDetail; onSynced: OnSynced; onClose: () => void }) {
-  const base = `/cases/${encodeURIComponent(record.reference)}/portal`;
-  const [session, setSession] = useState<{ sessionId: string; captcha: string } | null>(null);
-  const [code, setCode] = useState("");
-  const [busy, setBusy] = useState<"start" | "image" | "submit" | null>(null);
-  const [error, setError] = useState<string | null>(null);
-  const [note, setNote] = useState<string | null>(null);
-
-  async function start() {
-    setBusy("start");
-    setError(null);
-    try {
-      setSession(await api<{ sessionId: string; captcha: string }>(`${base}/start`, { method: "POST" }));
-    } catch (cause) {
-      setError((cause as Error).message);
-    } finally {
-      setBusy(null);
-    }
-  }
-
-  async function newImage() {
-    if (!session) return;
-    setBusy("image");
-    setError(null);
-    try {
-      const next = await api<{ sessionId: string; captcha: string }>(`${base}/captcha`, { method: "POST", body: { sessionId: session.sessionId } });
-      setSession(next);
-      setCode("");
-    } catch (cause) {
-      setError((cause as Error).message);
-      setSession(null);
-    } finally {
-      setBusy(null);
-    }
-  }
-
-  async function submit(event: React.FormEvent) {
-    event.preventDefault();
-    if (!session || !code.trim()) return;
-    setBusy("submit");
-    setError(null);
-    setNote(null);
-    try {
-      const result = await api<{ retry?: boolean; captcha?: string; case?: CaseDetail; summary?: Summary }>(`${base}/submit`, {
-        method: "POST",
-        body: { sessionId: session.sessionId, code },
-      });
-      if (result.retry && result.captcha) {
-        setSession({ sessionId: session.sessionId, captcha: result.captcha });
-        setCode("");
-        setNote("That did not match. Here is a new picture — please try again.");
-        return;
-      }
-      const s = result.summary!;
-      if (!s.orders) {
-        onSynced(
-          result.case!,
-          `Checked the court's website: ${s.hearings} hearing${s.hearings === 1 ? "" : "s"} on record, but the court has not uploaded any orders or judgments for this case yet — there is nothing to download. Try again after the next hearing.`,
-        );
-        onClose();
-        return;
-      }
-      const parts = [
-        s.saved ? `${s.saved} new document${s.saved === 1 ? "" : "s"} saved` : "No new documents",
-        s.alreadySaved ? `${s.alreadySaved} already saved` : null,
-        s.failed ? `${s.failed} could not be downloaded` : null,
-        s.remaining ? `${s.remaining} more on the next check` : null,
-        `${s.hearings} hearing${s.hearings === 1 ? "" : "s"} on record`,
-      ].filter(Boolean);
-      onSynced(result.case!, `From the court's website: ${parts.join(" · ")}. Saved in Documents → From the court.`);
-      onClose();
-    } catch (cause) {
-      setError((cause as Error).message);
-      setSession(null);
-      setCode("");
-    } finally {
-      setBusy(null);
-    }
-  }
-
-  return (
-    <div className="space-y-4">
-      <p className="text-sm text-ink-soft">
-        Fetches the hearing history and every order and judgment PDF for CNR <span className="font-mono font-semibold">{record.cnrNumber}</span> from the
-        court&apos;s own website, and saves them to this case. Documents already saved are not downloaded again.
-      </p>
-      <p className="rounded-md bg-paper-warm px-3 py-2 text-xs text-ink-soft">
-        <span className="font-semibold">Why a captcha?</span> The court&apos;s website asks for this code to check a person is asking. We pass it straight to the court.
-      </p>
-      <ErrorNote>{error}</ErrorNote>
-      {note && <p className="text-sm text-amber-800">{note}</p>}
-
-      {!session ? (
-        <Button onClick={() => void start()} disabled={busy !== null}>
-          {busy === "start" ? "Opening the court's website…" : "Show the court's captcha"}
-        </Button>
-      ) : (
-        <form onSubmit={submit} className="space-y-3">
-          <div className="flex flex-wrap items-center gap-3">
-            <img src={session.captcha} alt="Captcha from the court's website" className="h-14 rounded border border-line bg-white" />
-            <Button size="sm" tone="ghost" onClick={() => void newImage()} disabled={busy !== null}>
-              {busy === "image" ? "Loading…" : "New picture"}
-            </Button>
-          </div>
-          <label className="block text-xs font-semibold text-ink-soft">
-            Type the characters in the picture
-            <input
-              autoFocus
-              value={code}
-              onChange={(event) => setCode(event.target.value.replace(/[^a-zA-Z0-9]/g, "").slice(0, 12))}
-              autoComplete="off"
-              className="mt-1.5 w-full rounded-md border border-line-strong bg-white px-3 py-2 font-mono text-lg tracking-[0.3em] text-ink outline-none focus:border-gold focus:ring-2 focus:ring-gold/25"
-            />
-          </label>
-          <Button type="submit" disabled={busy !== null || !code.trim()}>
-            {busy === "submit" ? "Fetching from the court — this can take a minute…" : "Get documents"}
-          </Button>
-        </form>
-      )}
-    </div>
   );
 }
 
@@ -312,9 +253,7 @@ function OrderLine({ order }: { order: CourtOrder }) {
 }
 
 export function CourtRecordPanel({ record, onSynced }: { record: CaseDetail; onSynced: OnSynced }) {
-  const { sync, rebuild, syncing, error } = useCourtSync(record, onSynced);
-  const [fetching, setFetching] = useState(false);
-  const pending = refreshPending(record);
+  const { rebuild, syncing, error } = useCourtSync(record, onSynced);
 
   const hasHistory = record.hearings.length > 0 || record.orders.length > 0;
   if (!record.cnrNumber && !hasHistory) {
@@ -349,7 +288,7 @@ export function CourtRecordPanel({ record, onSynced }: { record: CaseDetail; onS
                 {record.courtStage && <> · {record.courtStage}</>}
               </p>
               <p className="mt-0.5 text-xs text-slate">
-                {record.courtCheckedAt ? `Last checked ${formatDateTime(record.courtCheckedAt)}` : "Not checked against eCourts yet."}
+                {record.courtCheckedAt ? `Last updated ${formatDateTime(record.courtCheckedAt)}` : "Not updated from the court yet."}
               </p>
             </div>
             <div className="flex flex-wrap gap-2">
@@ -358,27 +297,22 @@ export function CourtRecordPanel({ record, onSynced }: { record: CaseDetail; onS
                   {syncing === "rebuild" ? "Re-reading…" : "Re-read saved record"}
                 </Button>
               )}
-              <Button size="sm" tone="secondary" onClick={() => setFetching(true)}>
-                Get court documents
-              </Button>
-              <Button size="sm" onClick={() => void sync()} disabled={syncing !== null || pending}>
-                {syncing === "check" ? "Asking eCourts…" : pending ? "Update on its way" : "Check court status"}
-              </Button>
+              <BackupButton record={record} onSynced={onSynced} />
+              <UpdateFromCourtButton record={record} onSynced={onSynced} size="sm" />
             </div>
           </div>
           <div className="space-y-2 px-5 pb-4">
             <PendingNote record={record} />
             {error && <ErrorNote>{error}</ErrorNote>}
             <p className="text-xs text-slate">
-              <span className="font-semibold text-ink-soft">Check court status</span> updates dates and stage through eCourtsIndia.{" "}
-              <span className="font-semibold text-ink-soft">Get court documents</span> fetches hearing history and order PDFs from the court&apos;s own
-              website — you type its captcha.
+              <span className="font-semibold text-ink-soft">Update from court</span> reads the court&apos;s own website — status, hearings and order PDFs.
+              You type its captcha; it is free.
             </p>
             <PriceLine record={record} />
           </div>
         </Card>
       ) : (
-        <p className="text-sm text-slate">No CNR on this case, so it cannot be checked against eCourts. The history below was entered by the firm.</p>
+        <p className="text-sm text-slate">No CNR on this case, so it cannot be updated from the court. The history below was entered by the firm.</p>
       )}
 
       {(record.courtFacts ?? []).length > 0 && (
@@ -405,7 +339,7 @@ export function CourtRecordPanel({ record, onSynced }: { record: CaseDetail; onS
                   `${record.hearings.length} hearing${record.hearings.length === 1 ? "" : "s"}`,
                   `${record.orders.length} order${record.orders.length === 1 ? "" : "s"}${
                     record.orders.length
-                      ? ` (${savedOrders} saved to Documents${savedOrders < record.orders.length ? " — use Get court documents for the rest" : ""})`
+                      ? ` (${savedOrders} saved to Documents${savedOrders < record.orders.length ? " — use Update from court for the rest" : ""})`
                       : ""
                   }`,
                 ].join(" · ") + ". An order appears on the hearing of the same date."
@@ -443,9 +377,6 @@ export function CourtRecordPanel({ record, onSynced }: { record: CaseDetail; onS
         )}
       </Card>
 
-      <Modal open={fetching} onClose={() => setFetching(false)} title="Get court documents">
-        {fetching && <CourtDocumentsDialog record={record} onSynced={onSynced} onClose={() => setFetching(false)} />}
-      </Modal>
     </div>
   );
 }

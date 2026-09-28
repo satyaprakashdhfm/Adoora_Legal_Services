@@ -1,10 +1,10 @@
-import { Router } from "express";
+import { Router, type RequestHandler } from "express";
 import rateLimit from "express-rate-limit";
 import { prisma } from "../db.js";
 import { CNR_PATTERN, normaliseCnr } from "../integrations/ecourts.js";
-import { attachCourtRecord, catchUpRefresh, draftFromRecord, ECOURTSINDIA_ONLY, lookupCnr, readCourtRecord, rebuildFromSnapshot, syncCase } from "../integrations/court-record.js";
-import { newPortalCaptcha, startPortalLookup, submitPortalCaptcha } from "../integrations/court-portal.js";
-import { PORTAL_COOLDOWN_MS, recentPortalLookup, storePortalResult } from "../integrations/court-documents.js";
+import { attachCourtRecord, catchUpRefresh, draftFromRecord, ECOURTSINDIA_ONLY, lookupCnr, readCourtRecord, syncCase } from "../integrations/court-record.js";
+import { newPortalCaptcha, startPortalLookup, submitPortalCaptcha, type Portal } from "../integrations/court-portal.js";
+import { attachHeldLookup, holdLookup, PORTAL_COOLDOWN_MS, recentPortalLookup, rereadCase, storePortalResult } from "../integrations/court-documents.js";
 import { env } from "../env.js";
 import { HttpError } from "../lib/http.js";
 import { audit } from "../lib/audit.js";
@@ -184,7 +184,9 @@ casesRouter.post("/", async (req, res) => {
       }),
     );
 
-    await attachCourtRecord(created.id, fields.cnrNumber, { clientId: principal.id });
+    if (!(await attachHeldLookup(req, { ...created, cnrNumber: fields.cnrNumber }))) {
+      await attachCourtRecord(created.id, fields.cnrNumber, { clientId: principal.id });
+    }
     await audit(req, "case.create", "Case", created.id, { reference: created.reference, by: "client" });
     res.status(201).json(created);
     return;
@@ -231,7 +233,9 @@ casesRouter.post("/", async (req, res) => {
     }),
   );
 
-  await attachCourtRecord(created.id, fields.cnrNumber, { userId: principal.id });
+  if (!(await attachHeldLookup(req, { ...created, cnrNumber: fields.cnrNumber }))) {
+    await attachCourtRecord(created.id, fields.cnrNumber, { userId: principal.id });
+  }
   await audit(req, "case.create", "Case", created.id, { reference: created.reference });
   res.status(201).json(created);
 });
@@ -295,6 +299,7 @@ function serialiseCase(
     canManage: isFirmAdmin(principal),
     // What eCourtsIndia charges — for the firm's eyes only.
     ecourtsPricing: staff ? { details: env.ECOURTS_PRICE_DETAILS ?? null, refresh: env.ECOURTS_PRICE_REFRESH ?? null } : undefined,
+    ecourtsBackup: staff && env.ECOURTS_BACKUP === "true",
     orders: record.orders.map(({ document, ...order }) => ({
       ...order,
       documentReference: document && !document.deletedAt ? document.reference : null,
@@ -417,7 +422,15 @@ const clientEcourtsLimiter = rateLimit({
 });
 
 /**
- * GET /api/cases/:cnr — "fill from CNR". Fetches the court's record, keeps
+ * eCourtsIndia is the paid backup to the court's website, for staff only,
+ * and can be switched off (ECOURTS_BACKUP=false).
+ */
+const backupOnly: RequestHandler = (_req, _res, next) => {
+  next(env.ECOURTS_BACKUP === "true" ? undefined : new HttpError(404, "The eCourtsIndia backup is switched off — use Update from court.", "backup_off"));
+};
+
+/**
+ * GET /api/cases/:cnr — "fill from CNR" through eCourtsIndia (the backup). Fetches the court's record, keeps
  * the response (see court-record.ts), and returns it shaped for the case
  * form, so a new case can be reviewed and saved instead of typed in.
  *
@@ -439,8 +452,9 @@ casesRouter.get(
     next();
   },
   (req, _res, next) => {
-    next(isCaseStaff(req.principal) || req.principal?.kind === "client" ? undefined : notFound());
+    next(isCaseStaff(req.principal) ? undefined : notFound());
   },
+  backupOnly,
   ecourtsLimiter,
   clientEcourtsLimiter,
   async (req, res) => {
@@ -472,11 +486,13 @@ casesRouter.get(
 );
 
 /**
- * POST /api/cases/:reference/court-sync — "Check court status". Anyone who
+ * POST /api/cases/:reference/court-sync — the eCourtsIndia backup ("Use
+ * eCourtsIndia backup"), staff only; "Update from court" is the usual way. Anyone who
  * can see the case may ask; the result is written to the case for everyone.
  */
-casesRouter.post("/:reference/court-sync", ecourtsLimiter, clientEcourtsLimiter, async (req, res) => {
+casesRouter.post("/:reference/court-sync", backupOnly, ecourtsLimiter, clientEcourtsLimiter, async (req, res) => {
   const principal = req.principal!;
+  if (!isCaseStaff(principal)) throw notFound();
   const found = await findVisibleCase(principal, String(req.params.reference));
   if (!found.cnrNumber) {
     throw new HttpError(400, "Add the case's CNR number first — it is what eCourts looks the case up by.", "no_cnr");
@@ -508,9 +524,9 @@ casesRouter.post("/:reference/court-sync", ecourtsLimiter, clientEcourtsLimiter,
 casesRouter.post("/:reference/court-rebuild", async (req, res) => {
   const principal = req.principal!;
   const found = await findEditableCase(principal, String(req.params.reference));
-  const result = await rebuildFromSnapshot(found.id, { userId: principal.id });
+  const result = await rereadCase(found.id, { userId: principal.id });
   if (!result) {
-    throw new HttpError(400, "There is no stored court record for this case yet. Use Check court status first.", "no_snapshot");
+    throw new HttpError(400, "There is no saved court record for this case yet. Use Update from court first.", "no_snapshot");
   }
   await audit(req, "ecourts.case_rebuild", "Case", found.id, { reference: found.reference, hearings: result.hearings, orders: result.orders });
 
@@ -536,6 +552,71 @@ const portalLimiter = rateLimit({
   message: { error: "rate_limited", message: "Too many court-website lookups this hour. Please try again later." },
 });
 
+const chosenPortal = (body: unknown): Portal | undefined => {
+  const value = (body as { portal?: unknown } | undefined)?.portal;
+  return value === "hc" || value === "district" ? value : undefined;
+};
+
+/** Sessions for a case not yet saved. */
+const NEW_CASE = "new";
+
+/**
+ * POST /api/cases/cnr-lookup/start {cnr, portal?} — "New case from CNR" on
+ * the court's own website: returns the captcha. Staff and clients.
+ */
+casesRouter.post("/cnr-lookup/start", portalLimiter, async (req, res) => {
+  const principal = req.principal!;
+  if (!isCaseStaff(principal) && principal.kind !== "client") throw notFound();
+  const cnr = normaliseCnr(String(req.body?.cnr ?? ""));
+  if (!CNR_PATTERN.test(cnr)) throw new HttpError(400, "A CNR is 16 letters and digits, e.g. TSHC010025912022.", "bad_cnr");
+  res.set("Cache-Control", "no-store");
+  res.json({ cnr, ...(await startPortalLookup(cnr, NEW_CASE, principal.id, null, chosenPortal(req.body))) });
+});
+
+casesRouter.post("/cnr-lookup/captcha", portalLimiter, async (req, res) => {
+  const principal = req.principal!;
+  res.set("Cache-Control", "no-store");
+  res.json(await newPortalCaptcha(String(req.body?.sessionId ?? ""), NEW_CASE, principal.id));
+});
+
+/**
+ * POST /api/cases/cnr-lookup/submit {sessionId, code} — the typed captcha.
+ * Returns the case shaped for the new-case form; the court's page is held
+ * and written to the case (hearings, orders, PDFs) once it is saved.
+ */
+casesRouter.post("/cnr-lookup/submit", async (req, res) => {
+  const principal = req.principal!;
+  const code = String(req.body?.code ?? "");
+  if (!code.trim()) throw new HttpError(400, "Please type the characters in the picture.", "portal_no_code");
+  const result = await submitPortalCaptcha(String(req.body?.sessionId ?? ""), NEW_CASE, principal.id, code);
+  if (!result.ok) {
+    res.set("Cache-Control", "no-store");
+    res.json({ retry: true, captcha: result.captcha });
+    return;
+  }
+  const cnr = result.session.cnr;
+  holdLookup(principal.id, cnr, result);
+  const existing = await prisma.case.findMany({
+    where: { cnrNumber: cnr, ...caseScope(principal) },
+    select: { reference: true, title: true, status: true },
+    take: 5,
+  });
+  await audit(req, "court_portal.case_lookup", "EcourtsCase", cnr, { portal: result.session.portal, orders: result.orders.length });
+  res.set("Cache-Control", "private, no-store");
+  res.json({
+    source: "court-website",
+    cnr,
+    requestId: null,
+    fetchedAt: new Date().toISOString(),
+    // Orders sit apart from the case details on the court's page.
+    draft: (() => {
+      const draft = draftFromRecord(cnr, result.record);
+      return { ...draft, court: { ...draft.court, orders: result.orders.length } };
+    })(),
+    existing,
+  });
+});
+
 /**
  * POST /api/cases/:reference/portal/start — opens a session on the court's
  * website for the case's CNR and returns its captcha image. Staff and the
@@ -558,7 +639,7 @@ casesRouter.post("/:reference/portal/start", portalLimiter, async (req, res) => 
     );
   }
   res.set("Cache-Control", "no-store");
-  res.json(await startPortalLookup(found.cnrNumber, found.id, principal.id, found.courtName));
+  res.json(await startPortalLookup(found.cnrNumber, found.id, principal.id, found.courtName, chosenPortal(req.body)));
 });
 
 /** POST /api/cases/:reference/portal/captcha — a new image, when the first cannot be read. */
