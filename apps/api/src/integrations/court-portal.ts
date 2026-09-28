@@ -259,7 +259,7 @@ export async function submitPortalCaptcha(sessionId: string, caseId: string, own
 
   const record = readCasePage(html, session.portal);
   const orders = readOrders(html, session.portal);
-  if (!record.hearings.length && !orders.length && !record.status) {
+  if (!record.hearings.length && !orders.length) {
     logger.warn({ portal: session.portal, bytes: html.length }, "Court portal: case page had nothing we could read — layout may have changed");
   }
   return { ok: true, html, record, orders, session };
@@ -329,40 +329,71 @@ function first(map: Map<string, string>, ...keys: string[]): string | null {
 function parties(root: HTMLElement, kind: "Petitioner" | "Respondent") {
   const block = root.querySelector(`[class*="${kind}_Advocate"]`) ?? root.querySelector(`[class*="${kind.toLowerCase()}"]`);
   if (!block) return [];
-  return block.text
-    .split(/\n|(?=\b\d+\)\s)/)
-    .map((line) => clean(line))
-    .filter(Boolean)
-    .map((line) => {
-      const [name, counsel] = line.split(/\s*Advocate\s*[-:–]\s*/i);
-      const person = partyName(name);
-      return person ? { name: person, counsel: partyName(counsel ?? "") } : null;
+  // One <li> per party: "1) K.T.Rama Rao<br/>&nbsp;Advocate- P Mohith Reddy".
+  const items = block.querySelectorAll("li");
+  return (items.length ? items : [block])
+    .flatMap((item) => {
+      const lines = item.innerHTML
+        .replace(/<br\s*\/?>/gi, "\n")
+        .replace(/<[^>]+>/g, " ")
+        .replace(/&nbsp;/g, " ")
+        .split("\n")
+        .map(clean)
+        .filter(Boolean);
+      // Without <li>s, each line starting "2)" begins another party.
+      const groups: string[][] = [];
+      for (const line of lines) {
+        if (!groups.length || (!items.length && /^\d+\)\s/.test(line))) groups.push([line]);
+        else groups.at(-1)!.push(line);
+      }
+      return groups.map((group) => {
+        const [first = "", ...rest] = group;
+        const [name, inline] = first.split(/\s*Advocate\s*[-:–]\s*/i);
+        const counselLine = rest.find((line) => /^Advocate\s*[-:–]/i.test(line));
+        const counsel = inline ?? counselLine?.replace(/^Advocate\s*[-:–]\s*/i, "") ?? "";
+        const person = partyName(name);
+        return person ? { name: person, counsel: partyName(counsel) } : null;
+      });
     })
     .filter((p): p is { name: string; counsel: string | null } => Boolean(p))
     .slice(0, 30);
 }
 
-function readCasePage(html: string, portal: Portal): CourtRecord {
+/**
+ * A table's column headings and its data rows. The district site puts the
+ * headings straight into <thead> with no <tr> ("<thead><th>Judge</th>…"),
+ * so the first <tr> is already a data row there.
+ */
+function tableParts(table: HTMLElement) {
+  const theadCells = table.querySelectorAll("thead th");
+  const firstRow = table.querySelector("tr");
+  const heads = (theadCells.length ? theadCells : (firstRow?.querySelectorAll("th, td") ?? [])).map((cell) => clean(cell.text).toLowerCase());
+  const rows = table.querySelectorAll("tr").filter((row) => row.querySelectorAll("td").length > 0 && (theadCells.length > 0 || row !== firstRow));
+  return { heads, rows };
+}
+
+export function readCasePage(html: string, portal: Portal): CourtRecord {
   const root = parse(html);
   const fields = labelValues(root);
 
   const type = splitCaseType(text(first(fields, "case type"), 120));
   const registration = splitRegistration(text(first(fields, "registration number", "registration no"), 80));
-  const status = text(first(fields, "case status"), 120);
   const decisionDate = date(first(fields, "decision date", "date of decision"));
-  const disposed = Boolean(decisionDate) || /dispos|decided/i.test(status ?? "");
+  const statusField = text(first(fields, "case status"), 120);
+  const disposed = Boolean(decisionDate) || /dispos|decided/i.test(statusField ?? "");
+  // A pending case's page often has no "Case Status" row at all.
+  const status = statusField ?? (disposed ? "Disposed" : "Pending");
 
   // Hearing history: the table whose header has "Business on Date" and "Hearing Date".
   const hearings: CourtRecord["hearings"] = [];
   for (const table of root.querySelectorAll("table")) {
-    const header = table.querySelector("tr");
-    const heads = header ? header.querySelectorAll("th, td").map((cell) => clean(cell.text).toLowerCase()) : [];
+    const { heads, rows } = tableParts(table);
     const businessAt = heads.findIndex((h) => h.includes("business on date"));
     const hearingAt = heads.findIndex((h) => h.includes("hearing date"));
     if (businessAt < 0 || hearingAt < 0) continue;
     const judgeAt = heads.findIndex((h) => h.includes("judge"));
     const purposeAt = heads.findIndex((h) => h.includes("purpose"));
-    for (const row of table.querySelectorAll("tr").slice(1)) {
+    for (const row of rows) {
       const cells = row.querySelectorAll("td").map((cell) => clean(cell.text));
       const onDate = date(cells[businessAt]);
       if (!onDate) continue;
@@ -379,11 +410,12 @@ function readCasePage(html: string, portal: Portal): CourtRecord {
 
   const acts: string[] = [];
   for (const table of root.querySelectorAll("table")) {
-    const head = clean(table.querySelector("tr")?.text ?? "").toLowerCase();
-    if (!head.includes("under act")) continue;
-    for (const row of table.querySelectorAll("tr").slice(1)) {
+    const { heads, rows } = tableParts(table);
+    if (!heads.some((head) => head.includes("under act"))) continue;
+    for (const row of rows) {
       const [act, section] = row.querySelectorAll("td").map((cell) => clean(cell.text));
-      if (act) acts.push(section ? `Section ${section}, ${act}` : act);
+      const sections = section?.replace(/[,\s]+$/, "");
+      if (act) acts.push(sections ? `Section ${sections}, ${act}` : act);
     }
   }
 
@@ -407,7 +439,7 @@ function readCasePage(html: string, portal: Portal): CourtRecord {
     disposed,
     lastHearingDate: [...unique.values()].sort((a, b) => +b.hearingDate - +a.hearingDate)[0]?.hearingDate ?? null,
     nextHearingDate,
-    nextHearingPurpose: nextHearingDate ? text(first(fields, "purpose of hearing", "stage of case"), 200) : null,
+    nextHearingPurpose: nextHearingDate ? text(first(fields, "purpose of hearing", "case stage", "stage of case"), 200) : null,
     disposalDate: decisionDate,
     disposalNature: text(first(fields, "nature of disposal"), 200),
     petitioners: parties(root, "Petitioner"),
@@ -420,7 +452,7 @@ function readCasePage(html: string, portal: Portal): CourtRecord {
 }
 
 /** Every order on the page with a way to fetch its PDF. */
-function readOrders(html: string, portal: Portal): PortalOrder[] {
+export function readOrders(html: string, portal: Portal): PortalOrder[] {
   const root = parse(html);
   const orders: PortalOrder[] = [];
   const seen = new Set<string>();

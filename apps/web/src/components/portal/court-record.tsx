@@ -195,6 +195,14 @@ function CourtDocumentsDialog({ record, onSynced, onClose }: { record: CaseDetai
         return;
       }
       const s = result.summary!;
+      if (!s.orders) {
+        onSynced(
+          result.case!,
+          `Checked the court's website: ${s.hearings} hearing${s.hearings === 1 ? "" : "s"} on record, but the court has not uploaded any orders or judgments for this case yet — there is nothing to download. Try again after the next hearing.`,
+        );
+        onClose();
+        return;
+      }
       const parts = [
         s.saved ? `${s.saved} new document${s.saved === 1 ? "" : "s"} saved` : "No new documents",
         s.alreadySaved ? `${s.alreadySaved} already saved` : null,
