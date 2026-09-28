@@ -110,6 +110,36 @@ export function WriteNowDialog({
   );
 }
 
+/** The rules of the news reading and the AI drafts, in a few lines. */
+export function HowItWorks({ pipeline }: { pipeline: Pipeline | null }) {
+  const limit = pipeline?.dailyLimit ?? 3;
+  const minScore = pipeline?.minScore ?? 6;
+  const rows: [string, string][] = [
+    ["Reading the news", "Every 3 hours we read the headlines and links — never the full text — from LiveLaw, Bar & Bench, Verdictum and Google News."],
+    ["Trending score", "Higher when more outlets carry the same judgment, for the Supreme Court and High Courts, and for your practice areas and keywords. It fades over 48 hours."],
+    ["Write today", "A judgment that 4 or more outlets report within 6 hours (or with a very high score) is flagged red."],
+    ["Morning drafts", `From 06:30 IST the AI drafts up to ${limit} articles a day from the top trending judgments (score ${minScore} or more).`],
+    ["Write now", "You give a topic, or pick a trending judgment; the AI searches the web, writes a draft in about a minute and lists its sources."],
+    ["AI rules", "Facts only from its sources · names the court, case and date · never names victims, children or family-case parties · informs, never advertises (Bar Council rules)."],
+    ["Publishing", "Every AI draft lands In review. Nothing goes on the website until a person checks it and presses Publish."],
+  ];
+  return (
+    <details className="group rounded-xl border border-line bg-white">
+      <summary className="cursor-pointer select-none px-4 py-3 text-sm font-semibold text-ink">
+        How AI articles work <span className="font-normal text-slate">— the rules in brief</span>
+      </summary>
+      <dl className="grid gap-x-6 gap-y-2.5 border-t border-line px-4 py-3 text-sm sm:grid-cols-[9rem_1fr]">
+        {rows.map(([term, text]) => (
+          <div key={term} className="contents">
+            <dt className="font-semibold text-ink">{term}</dt>
+            <dd className="text-ink-soft">{text}</dd>
+          </div>
+        ))}
+      </dl>
+    </details>
+  );
+}
+
 /** The red "write today" strip, shown wherever a lead is urgent. */
 export function UrgentBanner({ count, onOpen }: { count: number; onOpen: () => void }) {
   if (!count) return null;

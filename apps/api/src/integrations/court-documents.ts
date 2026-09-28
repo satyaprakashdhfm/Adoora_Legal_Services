@@ -95,7 +95,11 @@ export async function storePortalResult(
     }
 
     try {
-      const pdf = await downloadPortalOrder(result.session, order);
+      // The court's server sometimes drops a connection mid-way; one more try after a pause.
+      const pdf = await downloadPortalOrder(result.session, order).catch(async () => {
+        await new Promise((resolve) => setTimeout(resolve, 2_000));
+        return downloadPortalOrder(result.session, order);
+      });
       if (!pdf) {
         failed++;
         continue;

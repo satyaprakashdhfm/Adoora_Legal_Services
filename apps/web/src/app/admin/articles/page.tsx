@@ -6,7 +6,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { api, type ArticleRow, type ArticleStatus } from "@/lib/portal/api";
 import { formatDate, formatDateTime } from "@/lib/portal/format";
 import { STATUS_LABEL } from "@/components/portal/article-editor";
-import { TrendingLeads, UrgentBanner, usePipeline, WriteNowDialog } from "@/components/portal/trending";
+import { HowItWorks, TrendingLeads, UrgentBanner, usePipeline, WriteNowDialog } from "@/components/portal/trending";
 import { Badge, Button, Card, EmptyState, ErrorNote, Input, PageTitle, Spinner, Table, Td, Th } from "@/components/portal/ui";
 
 const TONE: Record<ArticleStatus, "gold" | "blue" | "green" | "grey"> = {
@@ -95,6 +95,7 @@ export default function AdminArticles() {
       />
 
       <UrgentBanner count={pipeline?.urgent ?? 0} onOpen={() => setTab("trending")} />
+      <HowItWorks pipeline={pipeline} />
 
       <div className="flex gap-1 border-b border-line">
         {(

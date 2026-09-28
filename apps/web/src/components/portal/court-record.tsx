@@ -2,7 +2,7 @@
 
 /* eslint-disable @next/next/no-img-element -- the captcha arrives as a data: URL from the API */
 import { useState } from "react";
-import { api, downloadUrl, type CaseDetail } from "@/lib/portal/api";
+import { api, downloadUrl, type CaseDetail, type CourtHearing, type CourtOrder } from "@/lib/portal/api";
 import { formatDate, formatDateTime } from "@/lib/portal/format";
 import { Badge, Button, Card, CardHeader, EmptyState, ErrorNote, Modal, Table, Td, Th } from "@/components/portal/ui";
 
@@ -265,6 +265,52 @@ function CourtDocumentsDialog({ record, onSynced, onClose }: { record: CaseDetai
 }
 
 /** The full court record: hearing history and orders. */
+type TimelineEntry = { key: string; date: string; hearing: CourtHearing | null; orders: CourtOrder[] };
+
+/** Day key in UTC — the court's dates carry no time. */
+const dayOf = (value: string) => value.slice(0, 10);
+
+/**
+ * Hearings and orders as one list, newest first. Each order joins the hearing
+ * held on its date; an order from a day with no listed hearing gets a row of its own.
+ */
+function buildTimeline(record: CaseDetail): TimelineEntry[] {
+  const byDay = new Map<string, TimelineEntry>();
+  for (const hearing of record.hearings) {
+    const day = dayOf(hearing.hearingDate);
+    if (!byDay.has(day)) byDay.set(day, { key: `h-${hearing.id}`, date: hearing.hearingDate, hearing, orders: [] });
+  }
+  for (const order of record.orders) {
+    const day = dayOf(order.orderDate);
+    const entry = byDay.get(day) ?? { key: `o-${order.id}`, date: order.orderDate, hearing: null, orders: [] };
+    entry.orders.push(order);
+    byDay.set(day, entry);
+  }
+  return [...byDay.entries()].sort(([a], [b]) => (a < b ? 1 : a > b ? -1 : 0)).map(([, entry]) => entry);
+}
+
+function OrderLine({ order }: { order: CourtOrder }) {
+  return (
+    <div className="mt-1.5 flex flex-wrap items-center gap-x-3 gap-y-1 rounded-md border border-line bg-paper-warm/60 px-2.5 py-1.5 text-xs">
+      <Badge tone="gold">Order</Badge>
+      <span className="font-semibold text-ink">{order.orderType}</span>
+      {order.documentReference ? (
+        <a
+          href={downloadUrl(order.documentReference, { inline: true })}
+          target="_blank"
+          rel="noreferrer"
+          className="font-semibold text-gold-deep underline underline-offset-2"
+        >
+          Open PDF
+        </a>
+      ) : (
+        <span className="text-slate">PDF not saved yet</span>
+      )}
+      {order.summary && <p className="basis-full leading-relaxed text-ink-soft">{order.summary}</p>}
+    </div>
+  );
+}
+
 export function CourtRecordPanel({ record, onSynced }: { record: CaseDetail; onSynced: OnSynced }) {
   const { sync, rebuild, syncing, error } = useCourtSync(record, onSynced);
   const [fetching, setFetching] = useState(false);
@@ -284,6 +330,7 @@ export function CourtRecordPanel({ record, onSynced }: { record: CaseDetail; onS
   }
 
   const savedOrders = record.orders.filter((order) => order.documentReference).length;
+  const timeline = buildTimeline(record);
 
   return (
     <div className="space-y-6">
@@ -350,75 +397,49 @@ export function CourtRecordPanel({ record, onSynced }: { record: CaseDetail; onS
 
       <Card>
         <CardHeader
-          title="Hearing history"
-          description={`Each date the case was listed, as the court recorded it${record.hearings.length ? ` — ${record.hearings.length} in all` : ""}.`}
+          title="Hearings and orders"
+          description={
+            timeline.length === 0
+              ? undefined
+              : [
+                  `${record.hearings.length} hearing${record.hearings.length === 1 ? "" : "s"}`,
+                  `${record.orders.length} order${record.orders.length === 1 ? "" : "s"}${
+                    record.orders.length
+                      ? ` (${savedOrders} saved to Documents${savedOrders < record.orders.length ? " — use Get court documents for the rest" : ""})`
+                      : ""
+                  }`,
+                ].join(" · ") + ". An order appears on the hearing of the same date."
+          }
         />
-        {record.hearings.length === 0 ? (
-          <EmptyState title="No hearings on the court's record yet" />
+        {timeline.length === 0 ? (
+          <EmptyState title="No hearings or orders on the court's record yet" />
         ) : (
           <Table>
             <thead>
               <tr>
                 <Th>Date</Th>
-                <Th>Listed for · what happened</Th>
+                <Th>Listed for · what happened · orders</Th>
                 <Th>Judge</Th>
                 <Th>Next date</Th>
               </tr>
             </thead>
             <tbody>
-              {record.hearings.map((hearing) => (
-                <tr key={hearing.id}>
-                  <Td className="whitespace-nowrap font-semibold">{formatDate(hearing.hearingDate)}</Td>
+              {timeline.map((entry) => (
+                <tr key={entry.key}>
+                  <Td className="whitespace-nowrap font-semibold">{formatDate(entry.date)}</Td>
                   <Td>
-                    {hearing.purpose ?? "—"}
-                    {hearing.business && <p className="mt-0.5 text-xs text-slate">{hearing.business}</p>}
+                    {entry.hearing ? (entry.hearing.purpose ?? "—") : <span className="text-xs text-slate">Order passed (not a listed hearing)</span>}
+                    {entry.hearing?.business && <p className="mt-0.5 text-xs text-slate">{entry.hearing.business}</p>}
+                    {entry.orders.map((order) => (
+                      <OrderLine key={order.id} order={order} />
+                    ))}
                   </Td>
-                  <Td className="text-xs">{hearing.judge ?? "—"}</Td>
-                  <Td className="whitespace-nowrap text-xs">{hearing.nextDate ? formatDate(hearing.nextDate) : "—"}</Td>
+                  <Td className="text-xs">{entry.hearing?.judge ?? "—"}</Td>
+                  <Td className="whitespace-nowrap text-xs">{entry.hearing?.nextDate ? formatDate(entry.hearing.nextDate) : "—"}</Td>
                 </tr>
               ))}
             </tbody>
           </Table>
-        )}
-      </Card>
-
-      <Card>
-        <CardHeader
-          title="Orders and judgments"
-          description={
-            record.orders.length
-              ? `${record.orders.length} on the court's record · ${savedOrders} saved to Documents${savedOrders < record.orders.length ? " — use Get court documents for the rest" : ""}.`
-              : undefined
-          }
-        />
-        {record.orders.length === 0 ? (
-          <EmptyState title="No orders on the court's record yet" />
-        ) : (
-          <ul className="divide-y divide-line">
-            {record.orders.map((order) => (
-              <li key={order.id} className="flex flex-wrap items-center justify-between gap-2 px-5 py-3">
-                <div className="min-w-0">
-                  <p className="text-sm font-semibold text-ink">{order.orderType}</p>
-                  {order.summary && <p className="mt-0.5 text-xs leading-relaxed text-ink-soft">{order.summary}</p>}
-                </div>
-                <div className="flex items-center gap-3">
-                  {order.documentReference ? (
-                    <a
-                      href={downloadUrl(order.documentReference, { inline: true })}
-                      target="_blank"
-                      rel="noreferrer"
-                      className="text-xs font-semibold text-gold-deep underline underline-offset-2"
-                    >
-                      Open PDF
-                    </a>
-                  ) : (
-                    <span className="text-xs text-slate">Not saved yet</span>
-                  )}
-                  <Badge>{formatDate(order.orderDate)}</Badge>
-                </div>
-              </li>
-            ))}
-          </ul>
         )}
       </Card>
 

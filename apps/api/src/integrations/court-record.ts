@@ -209,9 +209,23 @@ const HIGH_COURT_BY_PREFIX: Record<string, { name: string; state: string }> = {
 const HIGH_COURT_PREFIXES = new Set(Object.keys(HIGH_COURT_BY_PREFIX));
 
 export function isHighCourtCase(cnr: string, courtName?: string | null) {
-  if (courtName && courtName.trim()) return /high\s*court/i.test(courtName);
   const prefix = cnr.slice(0, 4).toUpperCase();
-  return HIGH_COURT_PREFIXES.has(prefix) || prefix.startsWith("HC");
+  if (HIGH_COURT_PREFIXES.has(prefix)) return true;
+  // A real name, not just the establishment code ("HBHC") some records carry.
+  const name = courtName?.trim() ?? "";
+  if (name && !isCourtCode(name)) return /high\s*court/i.test(name);
+  return prefix.startsWith("HC");
+}
+
+/** The court's name, preferring a known High Court's full name over a bare code. */
+function courtNameFrom(raw: string | null, known: string | undefined) {
+  if (raw && !isCourtCode(raw)) return raw;
+  return known ?? raw;
+}
+
+/** "HBHC", "TSHC01" — an establishment code standing in for the court's name. */
+export function isCourtCode(value: string) {
+  return /^[A-Z]{4}\d{0,2}$/.test(value.trim());
 }
 
 export function splitCaseType(raw: string | null): { code: string | null; name: string | null } {
@@ -379,7 +393,7 @@ export function readCourtRecord(cnr: string, data: unknown): CourtRecord {
 
   return {
     courtLevel,
-    courtName: text(get("courtName", "courtEstablishment", "establishmentName", "court"), 200) ?? knownHc?.name ?? null,
+    courtName: courtNameFrom(text(get("courtName", "courtEstablishment", "establishmentName", "court"), 200), knownHc?.name),
     state: stateName(text(get("stateName", "state"), 100)) ?? knownHc?.state ?? null,
     district: text(get("districtName", "district"), 100),
     courtHall: text(get("courtNumber", "courtNo", "courtHall", "courtRoom"), 60),
@@ -648,7 +662,8 @@ export async function applyCourtRecord(
 
   const data: Prisma.CaseUpdateInput = {
     // Identity: the firm's entry wins when it has one.
-    courtName: fillIfEmpty(current.courtName, record.courtName),
+    // A bare code ("HBHC") saved earlier gives way to the court's full name.
+    courtName: fillIfEmpty(current.courtName && isCourtCode(current.courtName) ? null : current.courtName, record.courtName),
     state: fillIfEmpty(current.state, record.state),
     district: fillIfEmpty(current.district, record.district),
     caseTypeCode: fillIfEmpty(current.caseTypeCode, record.caseTypeCode),
