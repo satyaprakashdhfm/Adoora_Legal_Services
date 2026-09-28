@@ -268,6 +268,15 @@ export async function submitPortalCaptcha(sessionId: string, caseId: string, own
 
 /** Downloads one order's PDF within the session. Returns null if the court sends something else. */
 /**
+ * The PDF in a reply, or null. The High Court's PHP puts a byte-order mark
+ * (or stray whitespace) before "%PDF", so the header is looked for near the start.
+ */
+function asPdf(bytes: Buffer): Buffer | null {
+  const at = bytes.subarray(0, 1024).indexOf("%PDF");
+  return at < 0 ? null : bytes.subarray(at);
+}
+
+/**
  * One order's PDF. "not_uploaded" when the court lists the order but has not
  * put its PDF online ("Orders is not uploaded for case number …").
  */
@@ -285,14 +294,15 @@ export async function downloadPortalOrder(session: Session, order: PortalOrder):
 
   let bytes = Buffer.from(await (await request(session, url)).arrayBuffer());
   // The High Court sometimes wraps the PDF in a page with an <object>/<iframe>.
-  if (bytes.subarray(0, 4).toString() !== "%PDF") {
+  if (!asPdf(bytes)) {
     const inner = bytes.toString("latin1").match(/(?:data|src)=['"]([^'"]+\.pdf[^'"]*)['"]/i)?.[1];
     if (inner) {
       const base = session.portal === "hc" ? `${HIGH_COURT}/cases/` : `${DISTRICT}/`;
       bytes = Buffer.from(await (await request(session, inner.startsWith("http") ? inner : base + inner)).arrayBuffer());
     }
   }
-  if (bytes.subarray(0, 4).toString() === "%PDF") return bytes;
+  const pdf = asPdf(bytes);
+  if (pdf) return pdf;
   const reply = clean(bytes.toString("utf8").replace(/<[^>]+>/g, " ")).slice(0, 200);
   if (/not\s+(been\s+)?uploaded|not\s+available/i.test(reply)) return "not_uploaded";
   logger.warn({ portal: session.portal, reply }, "Court portal: an order link did not return a PDF");
