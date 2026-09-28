@@ -199,6 +199,21 @@ const HIGH_COURT_BY_PREFIX: Record<string, { name: string; state: string }> = {
   DLHC: { name: "High Court of Delhi", state: "Delhi" },
 };
 
+/**
+ * High Court or not. The court's own name settles it; without one, the CNR's
+ * first four letters, trusted only for the prefixes we know (and "HC…", as in
+ * Bombay's HCBM…).
+ * "HC" alone proves nothing: TSHC… is Hyderabad's City Civil Courts, a
+ * district court, while Telangana's High Court is HBHC….
+ */
+const HIGH_COURT_PREFIXES = new Set(Object.keys(HIGH_COURT_BY_PREFIX));
+
+export function isHighCourtCase(cnr: string, courtName?: string | null) {
+  if (courtName && courtName.trim()) return /high\s*court/i.test(courtName);
+  const prefix = cnr.slice(0, 4).toUpperCase();
+  return HIGH_COURT_PREFIXES.has(prefix) || prefix.startsWith("HC");
+}
+
 export function splitCaseType(raw: string | null): { code: string | null; name: string | null } {
   if (!raw) return { code: null, name: null };
   // "WP - WRIT PETITION", "W.P.(C) - Writ Petition (Civil)"
@@ -244,7 +259,7 @@ export function readCourtRecord(cnr: string, data: unknown): CourtRecord {
     code ? text(asObj(lookup?.[field])?.[code], 200) : null;
 
   const prefix = cnr.slice(0, 4);
-  const isHighCourt = prefix.slice(2) === "HC" || prefix.startsWith("HC");
+  const isHighCourt = isHighCourtCase(cnr, text(get("courtName", "courtEstablishment", "establishmentName", "court"), 200));
   const courtLevel: CourtRecord["courtLevel"] = cnr.startsWith("SCIN")
     ? "SUPREME_COURT"
     : tribunal

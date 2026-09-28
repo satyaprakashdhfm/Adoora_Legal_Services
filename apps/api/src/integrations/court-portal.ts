@@ -2,7 +2,7 @@ import { randomUUID } from "node:crypto";
 import { parse, type HTMLElement } from "node-html-parser";
 import { logger } from "../logger.js";
 import { HttpError } from "../lib/http.js";
-import { date, partyName, splitCaseType, splitRegistration, text, type CourtRecord } from "./court-record.js";
+import { date, isHighCourtCase, partyName, splitCaseType, splitRegistration, text, type CourtRecord } from "./court-record.js";
 
 /**
  * The court's own website — eCourts' district portal and High Court portal —
@@ -30,9 +30,9 @@ const SESSION_TTL_MS = 5 * 60 * 1000;
 
 export type Portal = "district" | "hc";
 
-/** A CNR's first four letters name the establishment; "HC" in them is a High Court. */
-export function portalFor(cnr: string): Portal {
-  return cnr.slice(2, 4) === "HC" ? "hc" : "district";
+/** The High Court website or the district courts' one — see isHighCourtCase. */
+export function portalFor(cnr: string, courtName?: string | null): Portal {
+  return isHighCourtCase(cnr, courtName) ? "hc" : "district";
 }
 
 // ---------------------------------------------------------------------------
@@ -171,9 +171,9 @@ async function captchaImage(session: Session): Promise<string> {
 // ---------------------------------------------------------------------------
 
 /** Opens a court-website session for a CNR and returns its captcha image. */
-export async function startPortalLookup(cnr: string, caseId: string, owner: string) {
+export async function startPortalLookup(cnr: string, caseId: string, owner: string, courtName?: string | null) {
   sweep();
-  const portal = portalFor(cnr);
+  const portal = portalFor(cnr, courtName);
   const session: Session = {
     id: randomUUID(),
     portal,

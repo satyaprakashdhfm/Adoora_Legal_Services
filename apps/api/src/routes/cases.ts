@@ -558,7 +558,7 @@ casesRouter.post("/:reference/portal/start", portalLimiter, async (req, res) => 
     );
   }
   res.set("Cache-Control", "no-store");
-  res.json(await startPortalLookup(found.cnrNumber, found.id, principal.id));
+  res.json(await startPortalLookup(found.cnrNumber, found.id, principal.id, found.courtName));
 });
 
 /** POST /api/cases/:reference/portal/captcha — a new image, when the first cannot be read. */

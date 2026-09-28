@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { api, type ArticleRow, type ArticleStatus } from "@/lib/portal/api";
-import { formatDate } from "@/lib/portal/format";
+import { formatDate, formatDateTime } from "@/lib/portal/format";
 import { STATUS_LABEL } from "@/components/portal/article-editor";
 import { TrendingLeads, UrgentBanner, usePipeline, WriteNowDialog } from "@/components/portal/trending";
 import { Badge, Button, Card, EmptyState, ErrorNote, Input, PageTitle, Spinner, Table, Td, Th } from "@/components/portal/ui";
@@ -51,6 +51,17 @@ export default function AdminArticles() {
     } catch (cause) {
       setError((cause as Error).message);
       setCreating(false);
+    }
+  }
+
+  async function remove(row: ArticleRow) {
+    if (!window.confirm(`Delete “${row.title}”? This cannot be undone.`)) return;
+    setError(null);
+    try {
+      await api(`/admin/articles/${row.id}`, { method: "DELETE" });
+      setRows((current) => (current ?? []).filter((item) => item.id !== row.id));
+    } catch (cause) {
+      setError((cause as Error).message);
     }
   }
 
@@ -148,6 +159,9 @@ export default function AdminArticles() {
                 <Th>Keywords</Th>
                 <Th>Status</Th>
                 <Th>Updated</Th>
+                <Th>
+                  <span className="sr-only">Actions</span>
+                </Th>
               </tr>
             </thead>
             <tbody>
@@ -177,9 +191,18 @@ export default function AdminArticles() {
                   </Td>
                   <Td>
                     <Badge tone={TONE[row.status]}>{STATUS_LABEL[row.status]}</Badge>
-                    {row.publishedAt && <p className="mt-1 text-xs text-slate">{formatDate(row.publishedAt)}</p>}
+                    {row.publishedAt ? (
+                      <p className="mt-1 text-xs text-slate">{formatDate(row.publishedAt)}</p>
+                    ) : (
+                      row.source === "PIPELINE" && <p className="mt-1 whitespace-nowrap text-xs text-slate">AI draft · {formatDateTime(row.createdAt)}</p>
+                    )}
                   </Td>
-                  <Td className="whitespace-nowrap text-xs text-slate">{formatDate(row.updatedAt)}</Td>
+                  <Td className="whitespace-nowrap text-xs text-slate">{formatDateTime(row.updatedAt)}</Td>
+                  <Td className="text-right">
+                    <Button size="sm" tone="danger" onClick={() => void remove(row)}>
+                      Delete
+                    </Button>
+                  </Td>
                 </tr>
               ))}
             </tbody>
