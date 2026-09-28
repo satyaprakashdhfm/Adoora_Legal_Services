@@ -12,41 +12,40 @@ import { Button, Card, EmptyState, ErrorNote, Input, Modal, Spinner, StatusBadge
  * Documents as a drive: folders, not one long list.
  *
  *   Documents
- *   ├── Team shared            staff only — templates, precedents, forms
+ *   ├── Team shared              staff only — templates, precedents, forms
  *   └── <one folder per case>
- *       ├── From the client    what the client uploaded
- *       ├── Shared with client what the firm filed for the client to see
- *       └── Internal           the firm's working papers (staff only)
+ *       ├── Client access        everything the client sees: court orders,
+ *       │   └── <firm folders>   their own uploads, what the firm shares
+ *       └── Internal — team only the firm's working papers
+ *           └── <firm folders>
  *
- * The folders are views over each document's uploader and visibility, so
- * the admin console, a lawyer's dashboard and the client's dashboard all
- * read the same files — an upload from any of them appears in the others.
- * Uploading inside a folder files the document there.
+ * The two sides are the documents' visibility, so the admin console, a
+ * lawyer's dashboard and the client's dashboard all read the same files.
+ * The firm can make folders inside either side; a file moved into one takes
+ * that side's visibility. Clients see only Client access.
  */
 
-type FolderId = "court" | "client" | "firm" | "internal";
-type Location = { kind: "root" } | { kind: "team" } | { kind: "case"; case: CaseSummary; folder?: FolderId };
+type Side = "CLIENT" | "INTERNAL";
+type Folder = { id: string; name: string; visibility: Side };
+type Location =
+  | { kind: "root" }
+  | { kind: "team" }
+  | { kind: "case"; case: CaseSummary; side?: Side; folder?: Folder };
 
 const FOLDER_ICON = "M2.5 5.5a1 1 0 011-1h4l1.5 1.5h7.5a1 1 0 011 1v8.5a1 1 0 01-1 1h-13a1 1 0 01-1-1z";
 
-function folderLabel(folder: FolderId, staff: boolean) {
-  if (folder === "court") return "From the court";
-  if (folder === "client") return staff ? "From the client" : "My uploads";
-  if (folder === "firm") return staff ? "Shared with client" : "From the firm";
-  return "Internal — team only";
+const SIDE_LABEL: Record<Side, string> = { CLIENT: "Client access", INTERNAL: "Internal — team only" };
+
+function sideHint(side: Side, staff: boolean) {
+  if (side === "INTERNAL") return "Working papers the client does not see";
+  return staff ? "Court orders, the client's uploads and what the firm shares" : "Court orders, your uploads and what the firm shares with you";
 }
 
-function folderHint(folder: FolderId, staff: boolean) {
-  if (folder === "court") return "Orders and judgments saved from the court's website";
-  if (folder === "client") return staff ? "Uploaded by the client" : "Documents you have sent to the firm";
-  if (folder === "firm") return staff ? "Filed by the firm, visible to the client" : "Documents your lawyers have shared with you";
-  return "Working papers the client does not see";
-}
-
-function folderOf(doc: DocumentRecord): FolderId {
-  if (doc.fromCourt) return "court";
-  if (doc.uploadedByClientId || (doc.uploadedByClient && !doc.uploadedByUser)) return "client";
-  return doc.visibility === "INTERNAL" ? "internal" : "firm";
+/** Where a file came from, shown on its row. */
+function sourceOf(doc: DocumentRecord): { label: string; tone: string } {
+  if (doc.fromCourt) return { label: "From the court", tone: "bg-sky-50 text-sky-800" };
+  if (doc.uploadedByClientId || (doc.uploadedByClient && !doc.uploadedByUser)) return { label: "From the client", tone: "bg-amber-50 text-amber-800" };
+  return { label: "Firm", tone: "bg-paper-tint text-ink-soft" };
 }
 
 function FolderTile({
@@ -93,47 +92,100 @@ function FileIcon({ filename }: { filename?: string }) {
   return <span className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-md text-[0.6rem] font-bold tracking-wide ${colour}`}>{kind}</span>;
 }
 
-function FileList({ documents, staff }: { documents: DocumentRecord[]; staff: boolean }) {
+function FileList({
+  documents,
+  staff,
+  folders,
+  onMoved,
+}: {
+  documents: DocumentRecord[];
+  staff: boolean;
+  folders?: Folder[];
+  onMoved?: () => void;
+}) {
+  const [error, setError] = useState<string | null>(null);
   if (documents.length === 0) {
-    return <EmptyState title="This folder is empty" />;
+    return <EmptyState title="No files here yet" />;
   }
+
+  async function move(doc: DocumentRecord, target: string) {
+    setError(null);
+    const [kind, value] = target.split(":");
+    const body = kind === "folder" ? { folderId: value } : { folderId: null, visibility: value };
+    try {
+      await api(`/documents/${encodeURIComponent(doc.reference)}`, { method: "PATCH", body });
+      onMoved?.();
+    } catch (cause) {
+      setError((cause as Error).message);
+    }
+  }
+
   return (
-    <ul className="divide-y divide-line">
-      {documents.map((doc) => {
-        const latest = doc.versions[0];
-        const viewable = latest && /^(application\/pdf|image\/(png|jpeg|webp))$/.test(latest.mimeType);
-        return (
-          <li key={doc.id} className="flex flex-wrap items-center gap-3 px-5 py-3">
-            <FileIcon filename={latest?.filename} />
-            <div className="min-w-0 flex-1">
-              <p className="truncate text-sm font-semibold text-ink">
-                {doc.title}
-                {doc.currentVersion > 1 && <span className="ml-2 text-xs font-normal text-gold-deep">v{doc.currentVersion}</span>}
-              </p>
-              <p className="truncate text-xs text-slate">
-                {[
-                  labelFor(DOCUMENT_CATEGORIES, doc.category),
-                  doc.uploadedByUser?.name ?? doc.uploadedByClient?.name,
-                  formatDate(doc.createdAt),
-                  latest && formatBytes(latest.sizeBytes),
-                  staff ? doc.reference : null,
-                ]
-                  .filter(Boolean)
-                  .join(" · ")}
-              </p>
-            </div>
-            <div className="flex shrink-0 gap-3 text-xs font-semibold">
-              {viewable && (
-                <a href={downloadUrl(doc.reference, { inline: true })} target="_blank" rel="noopener" className="text-gold-deep hover:underline">
-                  View
-                </a>
-              )}
-              <a href={downloadUrl(doc.reference)} className="text-gold-deep hover:underline">Download</a>
-            </div>
-          </li>
-        );
-      })}
-    </ul>
+    <>
+      {error && <div className="px-5 pt-3"><ErrorNote>{error}</ErrorNote></div>}
+      <ul className="divide-y divide-line">
+        {documents.map((doc) => {
+          const latest = doc.versions[0];
+          const viewable = latest && /^(application\/pdf|image\/(png|jpeg|webp))$/.test(latest.mimeType);
+          const source = sourceOf(doc);
+          const here = doc.folderId ? `folder:${doc.folderId}` : `side:${doc.visibility}`;
+          return (
+            <li key={doc.id} className="flex flex-wrap items-center gap-3 px-5 py-3">
+              <FileIcon filename={latest?.filename} />
+              <div className="min-w-0 flex-1">
+                <p className="truncate text-sm font-semibold text-ink">
+                  {doc.title}
+                  {doc.currentVersion > 1 && <span className="ml-2 text-xs font-normal text-gold-deep">v{doc.currentVersion}</span>}
+                </p>
+                <p className="flex flex-wrap items-center gap-x-2 text-xs text-slate">
+                  <span className={`rounded px-1.5 py-0.5 text-[0.65rem] font-semibold ${source.tone}`}>{source.label}</span>
+                  <span className="truncate">
+                    {[
+                      labelFor(DOCUMENT_CATEGORIES, doc.category),
+                      doc.uploadedByUser?.name ?? doc.uploadedByClient?.name,
+                      formatDate(doc.createdAt),
+                      latest && formatBytes(latest.sizeBytes),
+                      staff ? doc.reference : null,
+                    ]
+                      .filter(Boolean)
+                      .join(" · ")}
+                  </span>
+                </p>
+              </div>
+              <div className="flex shrink-0 items-center gap-3 text-xs font-semibold">
+                {staff && folders && (
+                  <select
+                    aria-label="Move to"
+                    value={here}
+                    onChange={(event) => void move(doc, event.target.value)}
+                    className="max-w-[11rem] rounded-md border border-line bg-white px-2 py-1 text-xs font-normal text-ink-soft"
+                  >
+                    {(["CLIENT", "INTERNAL"] as Side[]).map((side) => (
+                      <optgroup key={side} label={SIDE_LABEL[side]}>
+                        <option value={`side:${side}`}>{SIDE_LABEL[side]} (top)</option>
+                        {folders
+                          .filter((folder) => folder.visibility === side)
+                          .map((folder) => (
+                            <option key={folder.id} value={`folder:${folder.id}`}>
+                              {folder.name}
+                            </option>
+                          ))}
+                      </optgroup>
+                    ))}
+                  </select>
+                )}
+                {viewable && (
+                  <a href={downloadUrl(doc.reference, { inline: true })} target="_blank" rel="noopener" className="text-gold-deep hover:underline">
+                    View
+                  </a>
+                )}
+                <a href={downloadUrl(doc.reference)} className="text-gold-deep hover:underline">Download</a>
+              </div>
+            </li>
+          );
+        })}
+      </ul>
+    </>
   );
 }
 
@@ -211,26 +263,80 @@ export function DocumentDrive({ basePath, staff }: { basePath: string; staff: bo
 
   const files = loaded && loaded.key === `${sourceKey}#${version}` ? loaded.files : null;
 
-  const byFolder = useMemo(() => {
-    const groups: Record<FolderId, DocumentRecord[]> = { court: [], client: [], firm: [], internal: [] };
-    for (const doc of files ?? []) groups[folderOf(doc)].push(doc);
+  // The case's own folders, for the case being looked at.
+  const caseRef = location.kind === "case" ? location.case.reference : null;
+  const [folders, setFolders] = useState<{ key: string; list: Folder[] } | null>(null);
+  useEffect(() => {
+    if (!caseRef) return;
+    const controller = new AbortController();
+    api<{ data: Folder[] }>(`/cases/${encodeURIComponent(caseRef)}/folders`, { signal: controller.signal })
+      .then((result) => setFolders({ key: `${caseRef}#${version}`, list: result.data }))
+      .catch((cause: Error) => cause.name !== "AbortError" && setError(cause.message));
+    return () => controller.abort();
+  }, [caseRef, version]);
+  const caseFolders = folders && folders.key === `${caseRef}#${version}` ? folders.list : null;
+
+  const bySide = useMemo(() => {
+    const groups: Record<Side, DocumentRecord[]> = { CLIENT: [], INTERNAL: [] };
+    for (const doc of files ?? []) groups[doc.visibility === "INTERNAL" ? "INTERNAL" : "CLIENT"].push(doc);
     return groups;
   }, [files]);
 
-  const folders: FolderId[] = staff ? ["court", "client", "firm", "internal"] : ["court", "firm", "client"];
   const goRoot = () => setLocation({ kind: "root" });
+  // A client has one side only, so a case opens straight into it.
+  const openCase = (c: CaseSummary) => setLocation(staff ? { kind: "case", case: c } : { kind: "case", case: c, side: "CLIENT" });
 
-  // Where an upload goes, from where you are.
+  const [naming, setNaming] = useState<{ mode: "new" | "rename"; name: string } | null>(null);
+  const [folderError, setFolderError] = useState<string | null>(null);
+
+  async function saveFolder(event: React.FormEvent) {
+    event.preventDefault();
+    if (location.kind !== "case" || !location.side || !naming) return;
+    setFolderError(null);
+    const base = `/cases/${encodeURIComponent(location.case.reference)}/folders`;
+    try {
+      if (naming.mode === "new") {
+        await api<Folder>(base, { method: "POST", body: { name: naming.name, visibility: location.side } });
+      } else if (location.folder) {
+        const renamed = await api<Folder>(`${base}/${location.folder.id}`, { method: "PATCH", body: { name: naming.name } });
+        setLocation({ ...location, folder: renamed });
+      }
+      setNaming(null);
+      refresh();
+    } catch (cause) {
+      setFolderError((cause as Error).message);
+    }
+  }
+
+  async function deleteFolder() {
+    if (location.kind !== "case" || !location.folder) return;
+    if (!window.confirm(`Delete the folder “${location.folder.name}”? Its files are kept and move up to ${SIDE_LABEL[location.folder.visibility]}.`)) return;
+    try {
+      await api(`/cases/${encodeURIComponent(location.case.reference)}/folders/${location.folder.id}`, { method: "DELETE" });
+      setLocation({ kind: "case", case: location.case, side: location.folder.visibility });
+      refresh();
+    } catch (cause) {
+      setError((cause as Error).message);
+    }
+  }
+
+  // Where an upload goes, from where you are. Clients upload into Client access only.
   const upload =
     location.kind === "team"
-      ? { action: "/api/documents/team", visibility: "INTERNAL" as const, label: "Team shared" }
-      : location.kind === "case" && location.folder && location.folder !== "court" && (staff ? location.folder !== "client" : location.folder === "client")
+      ? { action: "/api/documents/team", visibility: "INTERNAL" as const, label: "Team shared", folderId: undefined }
+      : location.kind === "case" && location.side && (staff || location.side === "CLIENT")
         ? {
             action: `/api/cases/${encodeURIComponent(location.case.reference)}/documents`,
-            visibility: location.folder === "internal" ? ("INTERNAL" as const) : ("CLIENT" as const),
-            label: folderLabel(location.folder, staff),
+            visibility: location.side,
+            label: location.folder?.name ?? SIDE_LABEL[location.side],
+            folderId: location.folder?.id,
           }
         : null;
+
+  const shownFiles =
+    location.kind === "case" && location.side
+      ? bySide[location.side].filter((doc) => (location.folder ? doc.folderId === location.folder.id : !doc.folderId || !caseFolders?.some((f) => f.id === doc.folderId)))
+      : [];
 
   return (
     <Card>
@@ -243,18 +349,40 @@ export function DocumentDrive({ basePath, staff }: { basePath: string; staff: bo
                 ? [{ label: "Documents", onClick: goRoot }, { label: "Team shared" }]
                 : [
                     { label: "Documents", onClick: goRoot },
-                    location.folder
+                    location.side && staff
                       ? { label: location.case.reference, onClick: () => setLocation({ kind: "case", case: location.case }) }
                       : { label: location.case.reference },
-                    ...(location.folder ? [{ label: folderLabel(location.folder, staff) }] : []),
+                    ...(location.side && staff
+                      ? [
+                          location.folder
+                            ? { label: SIDE_LABEL[location.side], onClick: () => setLocation({ kind: "case", case: location.case, side: location.side }) }
+                            : { label: SIDE_LABEL[location.side] },
+                        ]
+                      : []),
+                    ...(location.folder ? [{ label: location.folder.name }] : []),
                   ]
           }
         />
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2">
           {location.kind === "case" && (
             <Link href={`${basePath}/cases/${location.case.reference}`} className="text-xs font-semibold text-slate hover:text-ink">
               Open case →
             </Link>
+          )}
+          {staff && location.kind === "case" && location.side && location.folder && (
+            <>
+              <Button size="sm" tone="ghost" onClick={() => setNaming({ mode: "rename", name: location.folder!.name })}>
+                Rename
+              </Button>
+              <Button size="sm" tone="ghost" onClick={() => void deleteFolder()}>
+                Delete folder
+              </Button>
+            </>
+          )}
+          {staff && location.kind === "case" && location.side && !location.folder && (
+            <Button size="sm" tone="secondary" onClick={() => setNaming({ mode: "new", name: "" })}>
+              New folder
+            </Button>
           )}
           {upload && <Button size="sm" onClick={() => setUploading(true)}>Upload here</Button>}
         </div>
@@ -290,18 +418,16 @@ export function DocumentDrive({ basePath, staff }: { basePath: string; staff: bo
                   title={c.title}
                   subtitle={[c.reference, courtNumber(c)].filter(Boolean).join(" · ")}
                   count={c._count.documents}
-                  onOpen={() => setLocation({ kind: "case", case: c })}
+                  onOpen={() => openCase(c)}
                 />
               ))}
-              {cases.length === 0 && (
-                <p className="text-sm text-slate sm:col-span-2">{query ? "No matching case." : staff ? "No cases yet." : "No cases yet."}</p>
-              )}
+              {cases.length === 0 && <p className="text-sm text-slate sm:col-span-2">{query ? "No matching case." : "No cases yet."}</p>}
             </div>
           )}
         </div>
       )}
 
-      {location.kind === "case" && !location.folder && (
+      {location.kind === "case" && !location.side && (
         <div className="space-y-4 p-5">
           <div className="flex flex-wrap items-center gap-2 text-sm">
             <StatusBadge status={location.case.status} />
@@ -310,15 +436,15 @@ export function DocumentDrive({ basePath, staff }: { basePath: string; staff: bo
           {!files ? (
             <Spinner />
           ) : (
-            <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
-              {folders.map((folder) => (
+            <div className="grid gap-3 sm:grid-cols-2">
+              {(["CLIENT", "INTERNAL"] as Side[]).map((side) => (
                 <FolderTile
-                  key={folder}
-                  title={folderLabel(folder, staff)}
-                  subtitle={folderHint(folder, staff)}
-                  count={byFolder[folder].length}
-                  tone={folder === "internal" ? "slate" : "gold"}
-                  onOpen={() => setLocation({ kind: "case", case: location.case, folder })}
+                  key={side}
+                  title={SIDE_LABEL[side]}
+                  subtitle={sideHint(side, staff)}
+                  count={bySide[side].length}
+                  tone={side === "INTERNAL" ? "slate" : "gold"}
+                  onOpen={() => setLocation({ kind: "case", case: location.case, side })}
                 />
               ))}
             </div>
@@ -326,7 +452,30 @@ export function DocumentDrive({ basePath, staff }: { basePath: string; staff: bo
         </div>
       )}
 
-      {location.kind === "case" && location.folder && (files ? <FileList documents={byFolder[location.folder]} staff={staff} /> : <Spinner />)}
+      {location.kind === "case" && location.side && (
+        !files || !caseFolders ? (
+          <Spinner />
+        ) : (
+          <>
+            {!location.folder && caseFolders.some((f) => f.visibility === location.side) && (
+              <div className="grid gap-3 border-b border-line p-5 sm:grid-cols-2 xl:grid-cols-3">
+                {caseFolders
+                  .filter((folder) => folder.visibility === location.side)
+                  .map((folder) => (
+                    <FolderTile
+                      key={folder.id}
+                      title={folder.name}
+                      count={bySide[location.side!].filter((doc) => doc.folderId === folder.id).length}
+                      tone={location.side === "INTERNAL" ? "slate" : "gold"}
+                      onOpen={() => setLocation({ kind: "case", case: location.case, side: location.side, folder })}
+                    />
+                  ))}
+              </div>
+            )}
+            <FileList documents={shownFiles} staff={staff} folders={staff ? caseFolders : undefined} onMoved={refresh} />
+          </>
+        )
+      )}
       {location.kind === "team" && (files ? <FileList documents={files} staff={staff} /> : <Spinner />)}
 
       <Modal open={uploading} onClose={() => setUploading(false)} title={upload ? `Upload to ${upload.label}` : "Upload"}>
@@ -335,11 +484,30 @@ export function DocumentDrive({ basePath, staff }: { basePath: string; staff: bo
             action={upload.action}
             staff={staff}
             fixedVisibility={upload.visibility}
+            folderId={upload.folderId}
             onDone={() => {
               setUploading(false);
               refresh();
             }}
           />
+        )}
+      </Modal>
+
+      <Modal open={naming !== null} onClose={() => setNaming(null)} title={naming?.mode === "rename" ? "Rename folder" : "New folder"}>
+        {naming && (
+          <form onSubmit={saveFolder} className="space-y-4">
+            {location.kind === "case" && location.side && naming.mode === "new" && (
+              <p className="text-sm text-ink-soft">
+                Inside <span className="font-semibold">{SIDE_LABEL[location.side]}</span>
+                {location.side === "CLIENT" ? " — the client can see it and its files." : " — the client never sees it."}
+              </p>
+            )}
+            <Input autoFocus maxLength={80} value={naming.name} onChange={(e) => setNaming({ ...naming, name: e.target.value })} placeholder="e.g. Pleadings, Evidence, Correspondence" />
+            <ErrorNote>{folderError}</ErrorNote>
+            <Button type="submit" disabled={!naming.name.trim()}>
+              {naming.mode === "rename" ? "Rename" : "Create folder"}
+            </Button>
+          </form>
         )}
       </Modal>
     </Card>

@@ -55,6 +55,7 @@ model User {
   casesCreated    Case[]            @relation("CaseCreatedByUser")
   updatesAuthored CaseUpdate[]      @relation("UpdateAuthorUser")
   documentsAdded  Document[]        @relation("DocumentUploadedByUser")
+  foldersCreated  DocumentFolder[]
   versionsAdded   DocumentVersion[] @relation("VersionUploadedByUser")
   queriesAnswered ClientQuery[]     @relation("QueryAnsweredBy")
   /// The lawyer's public profile on the website, when they have one.
@@ -286,6 +287,7 @@ model Case {
   assignments CaseAssignment[]
   updates     CaseUpdate[]
   documents   Document[]
+  folders     DocumentFolder[]
   hearings    CourtHearing[]
   orders      CourtOrder[]
   snapshots   CourtSnapshot[]
@@ -563,9 +565,30 @@ model Document {
   fromCourt  Boolean     @default(false)
   courtOrder CourtOrder?
 
+  /// A folder the firm made inside "Client access" or "Internal"; none = the
+  /// top of it. The document's visibility always matches its folder's.
+  folderId String?         @db.Uuid
+  folder   DocumentFolder? @relation(fields: [folderId], references: [id], onDelete: SetNull)
+
   @@unique([caseId, seq])
   @@index([caseId, deletedAt])
   @@index([createdAt])
+}
+
+/// A folder inside a case's "Client access" (CLIENT) or "Internal — team
+/// only" (INTERNAL). Made by the firm; clients see the CLIENT ones.
+model DocumentFolder {
+  id          String     @id @default(uuid()) @db.Uuid
+  caseId      String     @db.Uuid
+  case        Case       @relation(fields: [caseId], references: [id], onDelete: Cascade)
+  name        String
+  visibility  Visibility
+  createdById String?    @db.Uuid
+  createdBy   User?      @relation(fields: [createdById], references: [id], onDelete: SetNull)
+  createdAt   DateTime   @default(now())
+  documents   Document[]
+
+  @@unique([caseId, visibility, name])
 }
 
 model DocumentVersion {

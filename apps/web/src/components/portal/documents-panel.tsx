@@ -53,6 +53,7 @@ export function UploadForm({
   newVersionOf,
   onDone,
   fixedVisibility,
+  folderId,
 }: {
   action: string;
   staff: boolean;
@@ -60,6 +61,8 @@ export function UploadForm({
   onDone: () => void;
   /** Set by the folder being uploaded into; hides the "Who can see it" choice. */
   fixedVisibility?: "CLIENT" | "INTERNAL";
+  /** A folder the firm made inside the case; the upload is filed in it. */
+  folderId?: string;
 }) {
   const fileRef = useRef<HTMLInputElement>(null);
   const [file, setFile] = useState<File | null>(null);
@@ -134,6 +137,7 @@ export function UploadForm({
             <Textarea name="description" rows={2} maxLength={2000} />
           </Field>
           {fixedVisibility && <input type="hidden" name="visibility" value={fixedVisibility} />}
+          {folderId && <input type="hidden" name="folderId" value={folderId} />}
           {staff && !fixedVisibility && (
             <Field label="Who can see it" className="sm:col-span-2">
               <Select

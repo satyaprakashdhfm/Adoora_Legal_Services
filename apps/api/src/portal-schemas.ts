@@ -196,6 +196,8 @@ export const documentUploadSchema = z.object({
   category: documentCategory.default("OTHER"),
   description: optionalText(2000),
   visibility: visibility.default("CLIENT"),
+  /** A folder of the case; the document takes the folder's visibility. */
+  folderId: z.string().uuid().optional().or(z.literal("").transform(() => undefined)),
 });
 
 export const documentPatchSchema = z.object({
@@ -203,6 +205,17 @@ export const documentPatchSchema = z.object({
   category: documentCategory.optional(),
   description: optionalText(2000),
   visibility: visibility.optional(),
+  /** Move into a folder (its visibility follows), or null for the top. */
+  folderId: z.string().uuid().nullable().optional(),
+});
+
+export const folderSchema = z.object({
+  name: z.string().trim().min(1, "Give the folder a name.").max(80),
+  visibility: visibility,
+});
+
+export const folderRenameSchema = z.object({
+  name: z.string().trim().min(1, "Give the folder a name.").max(80),
 });
 
 export const documentListSchema = z.object({

@@ -161,6 +161,8 @@ export type DocumentRecord = {
   uploadedByClientId?: string | null;
   /** Saved from the court's website — the "From the court" folder. */
   fromCourt?: boolean;
+  /** A folder the firm made inside Client access / Internal; null = the top. */
+  folderId?: string | null;
   createdAt: string;
   updatedAt: string;
   uploadedByUser: { name: string } | null;

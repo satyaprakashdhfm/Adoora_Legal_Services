@@ -106,8 +106,15 @@ export async function uploadDocument(
   const fields = documentUploadSchema.parse(req.body ?? {});
   const stored = await storeFile(req, target.id);
 
-  // Clients' uploads are always visible to them; only staff can file internally.
-  const visibility = principal.kind === "client" ? "CLIENT" : fields.visibility;
+  // A folder decides where it goes; clients' uploads are always visible to them.
+  const folder = fields.folderId
+    ? await prisma.documentFolder.findFirst({ where: { id: fields.folderId, caseId: target.id }, select: { id: true, visibility: true } })
+    : null;
+  if (fields.folderId && (!folder || (principal.kind === "client" && folder.visibility !== "CLIENT"))) {
+    await discard(stored.storageKey);
+    throw new HttpError(400, "That folder is not part of this case.", "bad_folder");
+  }
+  const visibility = principal.kind === "client" ? "CLIENT" : (folder?.visibility ?? fields.visibility);
   const title = fields.title ?? stored.filename.replace(/\.[^.]+$/, "");
 
   try {
@@ -128,6 +135,7 @@ export async function uploadDocument(
           category: fields.category,
           description: fields.description ?? null,
           visibility,
+          folderId: folder?.id ?? null,
           ...uploader(principal),
           versions: { create: { version: 1, ...stored, ...uploader(principal) } },
         },
@@ -362,10 +370,24 @@ documentsRouter.patch("/:reference", async (req, res) => {
   const principal = req.principal!;
   if (!isCaseStaff(principal)) throw notFound("document");
   const found = await findVisibleDocument(principal, String(req.params.reference));
-  const input = documentPatchSchema.parse(req.body);
+  const { folderId, ...input } = documentPatchSchema.parse(req.body);
 
-  const updated = await prisma.document.update({ where: { id: found.id }, data: input });
-  await audit(req, "document.update", "Document", found.id, { reference: found.reference, changes: Object.keys(input) });
+  // Moving into a folder: the folder's visibility comes with it. A change of
+  // visibility on its own takes the document to the top of the other side.
+  const data: Prisma.DocumentUncheckedUpdateInput = { ...input };
+  if (folderId) {
+    const folder = await prisma.documentFolder.findFirst({ where: { id: folderId, caseId: found.caseId ?? undefined }, select: { visibility: true } });
+    if (!found.caseId || !folder) throw new HttpError(400, "That folder is not part of this document's case.", "bad_folder");
+    data.folderId = folderId;
+    data.visibility = folder.visibility;
+  } else if (folderId === null) {
+    data.folderId = null;
+  } else if (input.visibility && input.visibility !== found.visibility) {
+    data.folderId = null;
+  }
+
+  const updated = await prisma.document.update({ where: { id: found.id }, data });
+  await audit(req, "document.update", "Document", found.id, { reference: found.reference, changes: Object.keys(data) });
   res.json(updated);
 });
 

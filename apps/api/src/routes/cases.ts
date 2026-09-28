@@ -27,6 +27,8 @@ import {
   caseUpdateEntrySchema,
   caseUpdateSchema,
   clientCaseSchema,
+  folderRenameSchema,
+  folderSchema,
 } from "../portal-schemas.js";
 import { uploadDocument, uploadMiddleware } from "./documents.js";
 import type { Principal } from "../auth/session.js";
@@ -879,4 +881,65 @@ casesRouter.post("/:reference/documents", uploadMiddleware, async (req, res) => 
   const found = await findVisibleCase(principal, String(req.params.reference));
   const document = await uploadDocument(req, principal, found);
   res.status(201).json(document);
+});
+
+// ---------------------------------------------------------------------------
+// Folders inside a case's "Client access" and "Internal — team only"
+// ---------------------------------------------------------------------------
+
+/** GET /api/cases/:reference/folders — clients get the Client access ones. */
+casesRouter.get("/:reference/folders", async (req, res) => {
+  const principal = req.principal!;
+  const found = await findVisibleCase(principal, String(req.params.reference));
+  const folders = await prisma.documentFolder.findMany({
+    where: { caseId: found.id, ...(isCaseStaff(principal) ? {} : { visibility: "CLIENT" as const }) },
+    orderBy: { name: "asc" },
+    select: { id: true, name: true, visibility: true, createdAt: true },
+  });
+  res.set("Cache-Control", "no-store");
+  res.json({ data: folders });
+});
+
+const folderTaken = (error: unknown) =>
+  (error as { code?: string }).code === "P2002" ? new HttpError(409, "There is already a folder with that name here.", "folder_exists") : error;
+
+/** POST /api/cases/:reference/folders {name, visibility} — staff. */
+casesRouter.post("/:reference/folders", async (req, res) => {
+  const principal = req.principal!;
+  const found = await findEditableCase(principal, String(req.params.reference));
+  const input = folderSchema.parse(req.body);
+  const folder = await prisma.documentFolder
+    .create({ data: { caseId: found.id, name: input.name, visibility: input.visibility, createdById: principal.id }, select: { id: true, name: true, visibility: true, createdAt: true } })
+    .catch((error: unknown) => {
+      throw folderTaken(error);
+    });
+  await audit(req, "folder.create", "DocumentFolder", folder.id, { reference: found.reference, name: folder.name, visibility: folder.visibility });
+  res.status(201).json(folder);
+});
+
+/** PATCH /api/cases/:reference/folders/:id {name} — staff. */
+casesRouter.patch("/:reference/folders/:id", async (req, res) => {
+  const principal = req.principal!;
+  const found = await findEditableCase(principal, String(req.params.reference));
+  const { name } = folderRenameSchema.parse(req.body);
+  const existing = await prisma.documentFolder.findFirst({ where: { id: String(req.params.id), caseId: found.id }, select: { id: true } });
+  if (!existing) throw new HttpError(404, "Folder not found.", "not_found");
+  const folder = await prisma.documentFolder
+    .update({ where: { id: existing.id }, data: { name }, select: { id: true, name: true, visibility: true, createdAt: true } })
+    .catch((error: unknown) => {
+      throw folderTaken(error);
+    });
+  await audit(req, "folder.rename", "DocumentFolder", folder.id, { reference: found.reference, name });
+  res.json(folder);
+});
+
+/** DELETE /api/cases/:reference/folders/:id — staff. Its files move to the top; none is deleted. */
+casesRouter.delete("/:reference/folders/:id", async (req, res) => {
+  const principal = req.principal!;
+  const found = await findEditableCase(principal, String(req.params.reference));
+  const existing = await prisma.documentFolder.findFirst({ where: { id: String(req.params.id), caseId: found.id }, select: { id: true, name: true } });
+  if (!existing) throw new HttpError(404, "Folder not found.", "not_found");
+  await prisma.documentFolder.delete({ where: { id: existing.id } });
+  await audit(req, "folder.delete", "DocumentFolder", existing.id, { reference: found.reference, name: existing.name });
+  res.status(204).end();
 });

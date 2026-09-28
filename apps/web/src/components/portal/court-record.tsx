@@ -124,7 +124,7 @@ function summaryMessage(s: Summary) {
     s.remaining ? `${s.remaining} more on the next update` : null,
     `${s.hearings} hearing${s.hearings === 1 ? "" : "s"} on record`,
   ].filter(Boolean);
-  return `Updated from the court's website: ${parts.join(" · ")}.${changed} Documents are in Documents → From the court.`;
+  return `Updated from the court's website: ${parts.join(" · ")}.${changed} Documents are in Documents → Client access.`;
 }
 
 /**
