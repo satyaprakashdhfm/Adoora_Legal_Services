@@ -267,7 +267,11 @@ export async function submitPortalCaptcha(sessionId: string, caseId: string, own
 }
 
 /** Downloads one order's PDF within the session. Returns null if the court sends something else. */
-export async function downloadPortalOrder(session: Session, order: PortalOrder): Promise<Buffer | null> {
+/**
+ * One order's PDF. "not_uploaded" when the court lists the order but has not
+ * put its PDF online ("Orders is not uploaded for case number …").
+ */
+export async function downloadPortalOrder(session: Session, order: PortalOrder): Promise<Buffer | "not_uploaded" | null> {
   let url: string;
   if (order.fetch.kind === "district") {
     const [normal_v = "", case_val = "", court_code = "", filename = "", appFlag = ""] = order.fetch.args;
@@ -288,7 +292,11 @@ export async function downloadPortalOrder(session: Session, order: PortalOrder):
       bytes = Buffer.from(await (await request(session, inner.startsWith("http") ? inner : base + inner)).arrayBuffer());
     }
   }
-  return bytes.subarray(0, 4).toString() === "%PDF" ? bytes : null;
+  if (bytes.subarray(0, 4).toString() === "%PDF") return bytes;
+  const reply = clean(bytes.toString("utf8").replace(/<[^>]+>/g, " ")).slice(0, 200);
+  if (/not\s+(been\s+)?uploaded|not\s+available/i.test(reply)) return "not_uploaded";
+  logger.warn({ portal: session.portal, reply }, "Court portal: an order link did not return a PDF");
+  return null;
 }
 
 export function endPortalSession(sessionId: string) {
@@ -302,10 +310,17 @@ export function endPortalSession(sessionId: string) {
 const clean = (value: string) => value.replace(/ /g, " ").replace(/\s+/g, " ").trim();
 
 /** Label → value from the page's two-column tables ("Case Type | CC - Ct Cases | Filing Number | …"). */
-function labelValues(root: HTMLElement): Map<string, string> {
+/** The cells of each <tr>, read from the raw HTML: the High Court's <label>s span cells, which confuses a DOM parser. */
+function rawRows(html: string): string[][] {
+  const strip = (cell: string) => clean(cell.replace(/<[^>]+>/g, " ").replace(/&nbsp;/g, " ").replace(/&amp;/g, "&"));
+  return [...html.matchAll(/<tr[^>]*>([\s\S]*?)(?=<tr[\s>]|<\/table>|$)/gi)].map((row) =>
+    [...row[1]!.matchAll(/<t[dh](?:\s[^>]*)?>([\s\S]*?)(?=<t[dh][\s>]|<\/tr>|$)/gi)].map((cell) => strip(cell[1]!)),
+  );
+}
+
+function labelValues(root: HTMLElement, html: string): Map<string, string> {
   const map = new Map<string, string>();
-  for (const row of root.querySelectorAll("tr")) {
-    const cells = row.querySelectorAll("th, td").map((cell) => clean(cell.text));
+  for (const cells of rawRows(html)) {
     for (let i = 0; i + 1 < cells.length; i += 2) {
       const label = cells[i]!.replace(/[:\s]+$/, "").toLowerCase();
       if (label && label.length < 40 && cells[i + 1] && !map.has(label)) map.set(label, cells[i + 1]!);
@@ -375,7 +390,7 @@ function tableParts(table: HTMLElement) {
 
 export function readCasePage(html: string, portal: Portal): CourtRecord {
   const root = parse(html);
-  const fields = labelValues(root);
+  const fields = labelValues(root, html);
 
   const type = splitCaseType(text(first(fields, "case type"), 120));
   const registration = splitRegistration(text(first(fields, "registration number", "registration no"), 80));
@@ -492,7 +507,8 @@ export function readOrders(html: string, portal: Portal): PortalOrder[] {
 
     orders.push({
       orderDate,
-      title: text(clean(link.text), 120) ?? (final ? "Final order" : "Order"),
+      // The link often just says "View".
+      title: text(clean(link.text).replace(/^view$/i, ""), 120) ?? (final ? "Final order" : "Order"),
       final,
       fileKey: fileKey.slice(0, 300),
       fetch,

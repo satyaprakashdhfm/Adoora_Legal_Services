@@ -84,8 +84,16 @@ export async function rereadCase(caseId: string, author: { userId?: string | nul
 }
 
 export async function recentPortalLookup(caseId: string) {
+  // An order still without its PDF lifts the pause — unless the court itself
+  // has not uploaded it, which the last update found (see storePortalResult).
+  const last = await prisma.courtSnapshot.findFirst({
+    where: { caseId, requestId: PORTAL_REQUEST_ID },
+    orderBy: { fetchedAt: "desc" },
+    select: { payload: true },
+  });
+  const failedLastTime = Number((last?.payload as { failed?: number } | null)?.failed ?? 0);
   const missing = await prisma.courtOrder.count({ where: { caseId, documentId: null } });
-  if (missing) return null;
+  if (failedLastTime > 0 || (missing > 0 && !last)) return null;
   return prisma.courtSnapshot.findFirst({
     where: { caseId, requestId: PORTAL_REQUEST_ID, fetchedAt: { gte: new Date(Date.now() - PORTAL_COOLDOWN_MS) } },
     orderBy: { fetchedAt: "desc" },
@@ -102,7 +110,7 @@ export async function storePortalResult(
   const author = { userId: principal.kind === "staff" ? principal.id : null, clientId: principal.kind === "client" ? principal.id : null };
 
   const hash = createHash("sha256").update(result.html).digest("hex");
-  await prisma.courtSnapshot.create({
+  const snapshot = await prisma.courtSnapshot.create({
     data: {
       cnr: target.cnrNumber,
       caseId: target.id,
@@ -128,6 +136,7 @@ export async function storePortalResult(
   let alreadySaved = 0;
   let failed = 0;
   let remaining = 0;
+  let notUploaded = 0;
 
   for (const order of result.orders) {
     let row =
@@ -157,6 +166,10 @@ export async function storePortalResult(
         await new Promise((resolve) => setTimeout(resolve, 2_000));
         return downloadPortalOrder(result.session, order);
       });
+      if (pdf === "not_uploaded") {
+        notUploaded++;
+        continue;
+      }
       if (!pdf) {
         failed++;
         continue;
@@ -178,6 +191,11 @@ export async function storePortalResult(
   }
 
   endPortalSession(result.session.id);
+  // Remembered for the pause between updates (recentPortalLookup).
+  await prisma.courtSnapshot.update({
+    where: { id: snapshot.id },
+    data: { payload: { source: "ecourts-portal", portal: result.session.portal, html: result.html, failed, notUploaded } as Prisma.InputJsonValue },
+  });
 
   if (saved) {
     await prisma.caseUpdate.create({
@@ -200,6 +218,7 @@ export async function storePortalResult(
     alreadySaved,
     failed,
     remaining,
+    notUploaded,
     changes: applied.changes,
   };
 }

@@ -99,7 +99,17 @@ function BackupButton({ record, onSynced }: { record: CaseDetail; onSynced: OnSy
 // Update from court: the court's own website (captcha typed by a person)
 // ---------------------------------------------------------------------------
 
-type Summary = { hearings: number; orders: number; saved: number; alreadySaved: number; failed: number; remaining: number; changes: string[] };
+type Summary = {
+  hearings: number;
+  orders: number;
+  saved: number;
+  alreadySaved: number;
+  failed: number;
+  remaining: number;
+  /** Listed by the court, but it has not put the PDF online. */
+  notUploaded?: number;
+  changes: string[];
+};
 
 function summaryMessage(s: Summary) {
   const changed = s.changes.length ? ` ${s.changes.join(" · ")}.` : "";
@@ -109,6 +119,7 @@ function summaryMessage(s: Summary) {
   const parts = [
     s.saved ? `${s.saved} new document${s.saved === 1 ? "" : "s"} saved` : "No new documents",
     s.alreadySaved ? `${s.alreadySaved} already saved` : null,
+    s.notUploaded ? `${s.notUploaded} listed by the court but its PDF is not uploaded yet` : null,
     s.failed ? `${s.failed} could not be downloaded — try again later` : null,
     s.remaining ? `${s.remaining} more on the next update` : null,
     `${s.hearings} hearing${s.hearings === 1 ? "" : "s"} on record`,

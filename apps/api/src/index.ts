@@ -12,17 +12,6 @@ const server = app.listen(env.PORT, () => {
     "ADOORA API listening",
   );
   startScheduler();
-  // TEMPORARY: prints a case's last page from the court's website, to fix its reader.
-  const debugCase = process.env.PORTAL_DEBUG_CASE;
-  if (debugCase) {
-    void prisma.courtSnapshot
-      .findFirst({ where: { requestId: "portal", case: { reference: debugCase } }, orderBy: { fetchedAt: "desc" } })
-      .then((row) => {
-        const html = String((row?.payload as { html?: string } | null)?.html ?? "");
-        console.log(`PORTAL_DEBUG length ${html.length}`);
-        for (let i = 0; i < html.length && i < 90_000; i += 3_000) console.log(`PORTAL_DEBUG ${i} ${html.slice(i, i + 3_000).replace(/\s+/g, " ")}`);
-      });
-  }
 });
 
 /**
