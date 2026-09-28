@@ -438,6 +438,8 @@ adminRouter.get(
         lastLoginAt: true,
         createdAt: true,
         googleSub: true,
+        emailVerifiedAt: true,
+        phoneVerifiedAt: true,
         cases: {
           select: { case: { select: { id: true, reference: true, title: true, status: true } } },
         },
@@ -474,6 +476,7 @@ adminRouter.post(
     const client = await prisma.client.create({
       data: {
         ...fields,
+        emailVerifiedAt: new Date(),
         cases: caseIds.length
           ? { createMany: { data: [...new Set(caseIds)].map((caseId) => ({ caseId })) } }
           : undefined,
@@ -495,7 +498,12 @@ adminRouter.patch(
     const { caseIds, ...fields } = input;
     if (caseIds) await assertCasesExist(caseIds);
 
-    const updated = await prisma.client.update({ where: { id }, data: fields }).catch(() => null);
+    // A number the firm types in is not one the client has proven by OTP.
+    const before = fields.phone !== undefined ? await prisma.client.findUnique({ where: { id }, select: { phone: true } }) : null;
+    const phoneChanged = before !== null && (before.phone ?? "") !== (fields.phone ?? "");
+    const updated = await prisma.client
+      .update({ where: { id }, data: { ...fields, ...(phoneChanged ? { phoneVerifiedAt: null } : {}) } })
+      .catch(() => null);
     if (!updated) throw new HttpError(404, "Client not found.", "not_found");
     if (caseIds) {
       await prisma.$transaction([

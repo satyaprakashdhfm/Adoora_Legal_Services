@@ -103,6 +103,8 @@ export type SessionUser = {
   name: string;
   avatarUrl: string | null;
   role: StaffRole | null;
+  /** Clients only: their mobile, or null when they have not given one. */
+  phone?: string | null;
 };
 
 export type CaseStatus = "INTAKE" | "ACTIVE" | "ON_HOLD" | "DISPOSED" | "CLOSED" | "WITHDRAWN";

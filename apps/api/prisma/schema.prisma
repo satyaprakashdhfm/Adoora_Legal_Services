@@ -109,6 +109,11 @@ model Client {
   organisation String?
   phone        String?
   address      String?    @db.Text
+  /// Set when the email is proven: a Google sign-in, or entered by the firm.
+  /// A client who signed up with mobile OTP typed their email, unproven.
+  emailVerifiedAt DateTime?
+  /// Set when the phone is proven by an OTP.
+  phoneVerifiedAt DateTime?
   googleSub    String?    @unique
   avatarUrl    String?
   isActive     Boolean    @default(true)

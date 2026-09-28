@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import type { ReactNode } from "react";
 import { RequireSession } from "@/components/portal/guard";
+import { PhonePrompt } from "@/components/portal/client-sign-in";
 import { Avatar } from "@/components/portal/ui";
 import { isFirmAdmin, signOut } from "@/lib/portal/session";
 
@@ -30,6 +31,8 @@ export function DashboardShell({ children }: { children: ReactNode }) {
 
         return (
           <div className="min-h-[70vh] bg-paper-warm">
+            {/* A client who signed in with Google has no verified mobile yet. */}
+            {user.kind === "client" && !user.phone && <PhonePrompt />}
             <div className="border-b border-line bg-white">
               <div className="container-page flex flex-wrap items-center justify-between gap-4 pt-6">
                 <div className="flex items-center gap-3">

@@ -38,6 +38,8 @@ type ClientRow = {
   lastLoginAt: string | null;
   createdAt: string;
   googleLinked: boolean;
+  emailVerifiedAt: string | null;
+  phoneVerifiedAt: string | null;
   cases: { id: string; reference: string; title: string; status: string }[];
 };
 
@@ -224,7 +226,18 @@ export default function AdminClients() {
                   </Td>
                   <Td className="text-xs">
                     {row.email}
-                    {row.phone && <><br />{row.phone}</>}
+                    {!row.emailVerifiedAt && (
+                      <span className="ml-1.5" title="Signed up with mobile OTP; the email was typed, not proven. It is verified the first time they sign in with Google.">
+                        <Badge tone="gold">unverified</Badge>
+                      </span>
+                    )}
+                    {row.phone && (
+                      <>
+                        <br />
+                        {row.phone}
+                        {row.phoneVerifiedAt && <span className="ml-1.5 text-emerald-700" title="Proven by OTP">✓ OTP</span>}
+                      </>
+                    )}
                   </Td>
                   <Td className="text-xs">
                     {row.cases.length === 0 ? (

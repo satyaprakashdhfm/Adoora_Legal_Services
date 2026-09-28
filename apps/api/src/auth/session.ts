@@ -24,6 +24,8 @@ export type Principal =
       name: string;
       avatarUrl: string | null;
       sessionId: string;
+      /** The client's mobile, if they have given one — the dashboard asks for it otherwise. */
+      phone?: string | null;
     };
 
 /**
@@ -102,6 +104,7 @@ export async function readSession(req: Request): Promise<Principal | null> {
       name: session.client.name,
       avatarUrl: session.client.avatarUrl,
       sessionId: session.id,
+      phone: session.client.phone,
     };
   }
 
