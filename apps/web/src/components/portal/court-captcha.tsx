@@ -1,6 +1,7 @@
 "use client";
 
 /* eslint-disable @next/next/no-img-element -- the captcha arrives as a data: URL from the API */
+import Link from "next/link";
 import { useState } from "react";
 import { api, ApiError } from "@/lib/portal/api";
 import { Button, ErrorNote } from "@/components/portal/ui";
@@ -26,11 +27,14 @@ export function CourtCaptcha<T>({
   startBody,
   submitLabel,
   onResult,
+  caseHref,
 }: {
   base: string;
   startBody?: Record<string, unknown>;
   submitLabel: string;
   onResult: (result: T) => void;
+  /** Where a case already on file with this CNR opens, when the API says so. */
+  caseHref?: (reference: string) => string;
 }) {
   const [session, setSession] = useState<Session | null>(null);
   const [code, setCode] = useState("");
@@ -38,6 +42,7 @@ export function CourtCaptcha<T>({
   const [error, setError] = useState<string | null>(null);
   const [note, setNote] = useState<string | null>(null);
   const [notFoundOn, setNotFoundOn] = useState<Portal | null>(null);
+  const [duplicate, setDuplicate] = useState<string | null>(null);
 
   async function start(portal?: Portal) {
     setBusy("start");
@@ -48,6 +53,7 @@ export function CourtCaptcha<T>({
       setSession(await api<Session>(`${base}/start`, { method: "POST", body: { ...startBody, portal } }));
     } catch (cause) {
       setError((cause as Error).message);
+      if (cause instanceof ApiError && cause.code === "duplicate_case") setDuplicate(cause.message.match(/ALS-[A-Z0-9-]+/)?.[0] ?? null);
     } finally {
       setBusy(null);
     }
@@ -103,6 +109,11 @@ export function CourtCaptcha<T>({
         <span className="font-semibold">Why a captcha?</span> The court&apos;s website asks for this code to check a person is asking. We pass it straight to the court.
       </p>
       <ErrorNote>{error}</ErrorNote>
+      {duplicate && caseHref && (
+        <Link href={caseHref(duplicate)} className="inline-block text-sm font-semibold text-gold-deep underline underline-offset-2">
+          Open {duplicate} →
+        </Link>
+      )}
       {note && <p className="text-sm text-amber-800">{note}</p>}
 
       {!session ? (

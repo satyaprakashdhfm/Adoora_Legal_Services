@@ -138,6 +138,7 @@ function NewCaseFlow({ admin, onDone }: { admin: boolean; onDone: (reference: st
           startBody={{ cnr: asking }}
           submitLabel="Fetch case details"
           onResult={setLookup}
+          caseHref={(reference) => `${admin ? "/admin" : "/dashboard"}/cases/${reference}`}
         />
         <div className="flex flex-wrap items-center gap-4 border-t border-line pt-4">
           <button type="button" onClick={() => setAsking(null)} className="text-xs font-semibold text-slate hover:text-ink">

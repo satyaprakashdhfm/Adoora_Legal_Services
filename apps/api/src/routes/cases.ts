@@ -153,12 +153,42 @@ casesRouter.get("/", async (req, res) => {
   });
 });
 
+/**
+ * One case per CNR. Staff are refused a second one outright. A client who is
+ * already on the case is sent to it; a client adding a case the firm holds
+ * for someone else gets an intake and the firm a note to link them instead —
+ * a client is never told about a case they are not on.
+ */
+async function findDuplicate(cnr: string | null | undefined, exceptId?: string) {
+  if (!cnr) return null;
+  return prisma.case.findFirst({
+    where: { cnrNumber: { equals: normaliseCnr(cnr), mode: "insensitive" }, ...(exceptId ? { id: { not: exceptId } } : {}) },
+    orderBy: { createdAt: "asc" },
+    select: { id: true, reference: true, clients: { select: { clientId: true } } },
+  });
+}
+
+const duplicateError = (reference: string) =>
+  new HttpError(409, `This case is already on file as ${reference}. Open it from Cases instead of adding it again.`, "duplicate_case");
+
+/** The duplicate a principal may be told about, or null. */
+async function visibleDuplicate(principal: Principal, cnr: string | null | undefined, exceptId?: string) {
+  const found = await findDuplicate(cnr, exceptId);
+  if (!found) return null;
+  if (principal.kind === "client" && !found.clients.some((c) => c.clientId === principal.id)) return null;
+  return found;
+}
+
 casesRouter.post("/", async (req, res) => {
   const principal = req.principal!;
 
   if (principal.kind === "client") {
     const input = clientCaseSchema.parse(req.body);
     const { parties, ...fields } = input;
+    const own = await visibleDuplicate(principal, fields.cnrNumber);
+    if (own) throw duplicateError(own.reference);
+    // Held by the firm for someone else: an intake, flagged for the firm.
+    const held = await findDuplicate(fields.cnrNumber);
 
     const created = await withFreshReference((reference) =>
       prisma.case.create({
@@ -184,7 +214,19 @@ casesRouter.post("/", async (req, res) => {
       }),
     );
 
-    if (!(await attachHeldLookup(req, { ...created, cnrNumber: fields.cnrNumber }))) {
+    if (held) {
+      // Same court case as one on file: no second copy of its record or PDFs.
+      await prisma.caseUpdate.create({
+        data: {
+          caseId: created.id,
+          kind: "NOTE",
+          title: `Same CNR as ${held.reference}`,
+          body: `This is probably the case already on file as ${held.reference}. Add this client to ${held.reference} and close this intake, rather than keeping two copies.`,
+          visibility: "INTERNAL",
+          authorClientId: principal.id,
+        },
+      });
+    } else if (!(await attachHeldLookup(req, { ...created, cnrNumber: fields.cnrNumber }))) {
       await attachCourtRecord(created.id, fields.cnrNumber, { clientId: principal.id });
     }
     await audit(req, "case.create", "Case", created.id, { reference: created.reference, by: "client" });
@@ -198,6 +240,8 @@ casesRouter.post("/", async (req, res) => {
 
   const input = caseCreateSchema.parse(req.body);
   const { parties, clientIds, assignments, ...fields } = input;
+  const duplicate = await findDuplicate(fields.cnrNumber);
+  if (duplicate) throw duplicateError(duplicate.reference);
 
   // Only admins decide who sees a case. A lawyer opening a matter is put on
   // it as lead, so it does not vanish from their own list.
@@ -569,6 +613,9 @@ casesRouter.post("/cnr-lookup/start", portalLimiter, async (req, res) => {
   if (!isCaseStaff(principal) && principal.kind !== "client") throw notFound();
   const cnr = normaliseCnr(String(req.body?.cnr ?? ""));
   if (!CNR_PATTERN.test(cnr)) throw new HttpError(400, "A CNR is 16 letters and digits, e.g. TSHC010025912022.", "bad_cnr");
+  // Before any captcha: staff learn of any case with this CNR, a client of their own.
+  const duplicate = isCaseStaff(principal) ? await findDuplicate(cnr) : await visibleDuplicate(principal, cnr);
+  if (duplicate) throw duplicateError(duplicate.reference);
   res.set("Cache-Control", "no-store");
   res.json({ cnr, ...(await startPortalLookup(cnr, NEW_CASE, principal.id, null, chosenPortal(req.body))) });
 });
@@ -634,7 +681,7 @@ casesRouter.post("/:reference/portal/start", portalLimiter, async (req, res) => 
     const wait = Math.max(1, Math.round(PORTAL_COOLDOWN_MS / 60000) - minutes);
     throw new HttpError(
       429,
-      `Checked on the court's website ${minutes} minute${minutes === 1 ? "" : "s"} ago and the documents are saved. You can check again in ${wait} minute${wait === 1 ? "" : "s"}.`,
+      `Updated from the court ${minutes} minute${minutes === 1 ? "" : "s"} ago and every PDF is saved. You can update again in ${wait} minute${wait === 1 ? "" : "s"}.`,
       "portal_recent",
     );
   }
@@ -693,6 +740,10 @@ casesRouter.patch("/:reference", async (req, res) => {
   const found = await findEditableCase(principal, String(req.params.reference));
   const input = caseUpdateSchema.parse(req.body);
   const { parties, ...fields } = input;
+  if (fields.cnrNumber && fields.cnrNumber !== found.cnrNumber) {
+    const duplicate = await findDuplicate(fields.cnrNumber, found.id);
+    if (duplicate) throw duplicateError(duplicate.reference);
+  }
 
   // Automatic timeline entries for the changes a client cares about.
   const timeline: Prisma.CaseUpdateCreateManyCaseInput[] = [];

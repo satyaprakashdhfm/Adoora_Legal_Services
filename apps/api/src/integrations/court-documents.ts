@@ -20,8 +20,11 @@ import type { Prisma } from "../../generated/prisma/client.js";
 /** Marks court-website snapshots, so the eCourtsIndia reader never mistakes one for its own. */
 export const PORTAL_REQUEST_ID = "portal";
 
-/** How long after a lookup another is refused: nothing changes that fast in a court record. */
-export const PORTAL_COOLDOWN_MS = 30 * 60 * 1000;
+/**
+ * Our own pause between updates of one case (not the court's): nothing in a
+ * court record changes that fast. Skipped while any order still lacks its PDF.
+ */
+export const PORTAL_COOLDOWN_MS = 10 * 60 * 1000;
 
 /** Enough for any case in one sitting; the rest come on the next lookup. */
 const MAX_DOWNLOADS = 30;
@@ -53,7 +56,8 @@ export async function attachHeldLookup(req: Request, target: { id: string; refer
   if (!held || Date.now() - held.at > LOOKUP_KEEP_MS) return false;
   heldLookups.delete(key);
   try {
-    await storePortalResult(req, { id: target.id, reference: target.reference, cnrNumber: target.cnrNumber }, held.result);
+    const summary = await storePortalResult(req, { id: target.id, reference: target.reference, cnrNumber: target.cnrNumber }, held.result);
+    logger.info({ case: target.reference, ...summary }, "Court portal: lookup attached to the new case");
   } catch (error) {
     logger.warn({ err: error, case: target.reference }, "Court portal: could not attach the lookup to the new case");
   }
@@ -80,6 +84,8 @@ export async function rereadCase(caseId: string, author: { userId?: string | nul
 }
 
 export async function recentPortalLookup(caseId: string) {
+  const missing = await prisma.courtOrder.count({ where: { caseId, documentId: null } });
+  if (missing) return null;
   return prisma.courtSnapshot.findFirst({
     where: { caseId, requestId: PORTAL_REQUEST_ID, fetchedAt: { gte: new Date(Date.now() - PORTAL_COOLDOWN_MS) } },
     orderBy: { fetchedAt: "desc" },
