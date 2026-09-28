@@ -214,15 +214,40 @@ function CheckList({ options, value, onChange }: { options: { value: string; lab
   );
 }
 
-function Panel({ title, children, defaultOpen = true }: { title: string; children: React.ReactNode; defaultOpen?: boolean }) {
+/**
+ * A side-panel section. The panels work as an accordion: all start closed,
+ * and opening one closes whichever was open, so the column stays short.
+ */
+function Panel({
+  title,
+  summary,
+  open,
+  onToggle,
+  children,
+}: {
+  title: string;
+  /** A one-line status shown on the closed header, e.g. the SEO score. */
+  summary?: React.ReactNode;
+  open: boolean;
+  onToggle: () => void;
+  children: React.ReactNode;
+}) {
   return (
-    <details open={defaultOpen} className="group rounded-xl border border-line bg-white">
-      <summary className="flex cursor-pointer list-none items-center justify-between px-4 py-3 text-sm font-semibold text-ink">
-        {title}
-        <span className="text-slate transition group-open:rotate-180">⌄</span>
-      </summary>
-      <div className="space-y-4 border-t border-line px-4 py-4">{children}</div>
-    </details>
+    <div className="rounded-xl border border-line bg-white">
+      <button
+        type="button"
+        onClick={onToggle}
+        aria-expanded={open}
+        className="flex w-full items-center justify-between gap-3 px-4 py-3 text-left text-sm font-semibold text-ink"
+      >
+        <span>{title}</span>
+        <span className="flex items-center gap-2 text-xs font-normal text-slate">
+          {summary}
+          <span className={`transition ${open ? "rotate-180" : ""}`} aria-hidden="true">⌄</span>
+        </span>
+      </button>
+      {open && <div className="space-y-4 border-t border-line px-4 py-4">{children}</div>}
+    </div>
   );
 }
 
@@ -264,6 +289,9 @@ export function ArticleEditor({ article, onReload }: { article: ArticleDetail; o
   const [error, setError] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
   const [uploading, setUploading] = useState(false);
+  /** The one open side-panel section, or none. */
+  const [panel, setPanel] = useState<string | null>(null);
+  const toggle = (name: string) => setPanel((current) => (current === name ? null : name));
   const [profiles, setProfiles] = useState<LawyerProfile[]>([]);
   const imageInput = useRef<HTMLInputElement>(null);
   const coverInput = useRef<HTMLInputElement>(null);
@@ -642,8 +670,25 @@ export function ArticleEditor({ article, onReload }: { article: ArticleDetail; o
         )}
 
         {/* ---------------- Side panel ---------------- */}
-        <aside className="space-y-4 xl:sticky xl:top-20 xl:max-h-[calc(100vh-6rem)] xl:self-start xl:overflow-y-auto">
-          <Panel title="SEO">
+        <aside className="space-y-3 xl:sticky xl:top-20 xl:max-h-[calc(100vh-6rem)] xl:self-start xl:overflow-y-auto">
+          <button
+            type="button"
+            onClick={() => void removeArticle()}
+            className="flex w-full items-center justify-center gap-2 rounded-xl border border-red-200 bg-white px-3 py-2.5 text-sm font-semibold text-red-700 transition hover:bg-red-50"
+          >
+            Delete article
+          </button>
+
+          <Panel
+            title="SEO"
+            open={panel === "seo"}
+            onToggle={() => toggle("seo")}
+            summary={
+              <span className={`rounded-full px-2 py-0.5 font-semibold ${seo.score >= 80 ? "bg-emerald-50 text-emerald-800" : seo.score >= 50 ? "bg-amber-50 text-amber-800" : "bg-red-50 text-red-800"}`}>
+                {seo.score}/100
+              </span>
+            }
+          >
             <div className="flex items-center gap-3">
               <ScoreRing score={seo.score} />
               <div className="text-sm">
@@ -691,7 +736,7 @@ export function ArticleEditor({ article, onReload }: { article: ArticleDetail; o
             </p>
           </Panel>
 
-          <Panel title="Publishing">
+          <Panel title="Publishing" open={panel === "publishing"} onToggle={() => toggle("publishing")} summary={draft.category}>
             <Field label="Category">
               <Select value={draft.category} onChange={(event) => set("category", event.target.value)} options={insightCategories.map((c) => ({ value: c, label: c }))} />
             </Field>
@@ -724,7 +769,12 @@ export function ArticleEditor({ article, onReload }: { article: ArticleDetail; o
             </div>
           </Panel>
 
-          <Panel title="Filed under" defaultOpen={false}>
+          <Panel
+            title="Filed under"
+            open={panel === "filed"}
+            onToggle={() => toggle("filed")}
+            summary={draft.practices.length + draft.industries.length ? `${draft.practices.length + draft.industries.length} selected` : undefined}
+          >
             <Field label="Practice areas">
               <CheckList options={practiceAreas.map((a) => ({ value: a.slug, label: a.name }))} value={draft.practices} onChange={(value) => set("practices", value)} />
             </Field>
@@ -737,7 +787,7 @@ export function ArticleEditor({ article, onReload }: { article: ArticleDetail; o
           </Panel>
 
           {article.sourceMeta && (
-            <Panel title="Source (pipeline)" defaultOpen>
+            <Panel title="Source (pipeline)" open={panel === "source"} onToggle={() => toggle("source")}>
               <dl className="space-y-1.5 text-xs">
                 {Object.entries(article.sourceMeta).map(([k, v]) => (
                   <div key={k}>
@@ -749,9 +799,6 @@ export function ArticleEditor({ article, onReload }: { article: ArticleDetail; o
             </Panel>
           )}
 
-          <button type="button" onClick={() => void removeArticle()} className="w-full rounded-lg px-3 py-2 text-xs font-semibold text-red-700 hover:bg-red-50">
-            Delete article
-          </button>
         </aside>
       </div>
     </div>
