@@ -2,6 +2,7 @@ import { createApp } from "./app.js";
 import { env } from "./env.js";
 import { logger } from "./logger.js";
 import { prisma } from "./db.js";
+import { startScheduler } from "./jobs/scheduler.js";
 
 const app = createApp();
 
@@ -10,6 +11,7 @@ const server = app.listen(env.PORT, () => {
     { port: env.PORT, env: env.NODE_ENV },
     "ADOORA API listening",
   );
+  startScheduler();
 });
 
 /**

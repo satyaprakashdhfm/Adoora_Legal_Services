@@ -32,6 +32,11 @@ Deployed from `dev` at <https://adoora-api-production.up.railway.app>.
 | GET | `/api/cases/:cnr` | Staff (not EDITOR), clients | eCourtsIndia record by 16-character CNR, returned as a case-form `draft`. The response is stored. 20/min per account; clients also 15/hour. Audited. |
 | POST | `/api/cases/:ref/court-sync` | Session | "Check court status": queue an eCourts re-scrape (`POST /api/partner/case/{cnr}/refresh`), wait ~10 s, then fetch the case and apply it. Same limits. |
 | POST | `/api/cases/:ref/court-rebuild` | Case staff | Re-read the latest stored eCourts response (no eCourts call, no credit) and rebuild the hearings and orders from it. |
+| POST | `/api/cases/:ref/portal/start` | Session (case) | Opens the court's own website (district or High Court portal) for the CNR and returns its captcha image. Free; 30-minute cooldown after a lookup. |
+| POST | `/api/cases/:ref/portal/captcha` | Session (case) | A new captcha image for the same session. |
+| POST | `/api/cases/:ref/portal/submit` | Session (case) | The typed captcha: fetches the case page, applies hearings/status, saves each order PDF to Documents → From the court (never twice). |
+| GET | `/api/admin/leads` | Admin | Trending judgments of the last 72 hours, urgent first. `PATCH /api/admin/leads/:id` shortlists or rejects; `POST /api/admin/leads/refresh` reads the feeds now. |
+| POST | `/api/admin/articles/draft` | Admin | "Write now": `{ topic, leadId? }` → Gemini draft saved In review. `GET /api/admin/pipeline` reports setup and today's runs. |
 | POST | `/api/cases/:ref/updates` | Session | Timeline entry. |
 | PUT | `/api/cases/:ref/assignments` · `/clients` | Admin | Lawyers on the case; client accounts that can see it. |
 | POST | `/api/cases/:ref/documents` | Session | Multipart upload (`file`), encrypted and stored. |

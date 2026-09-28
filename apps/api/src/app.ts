@@ -16,6 +16,7 @@ import { documentsRouter } from "./routes/documents.js";
 import { queriesRouter } from "./routes/queries.js";
 import { websiteAdminRouter, websitePublicRouter } from "./routes/website.js";
 import { articlesAdminRouter, articlesPublicRouter } from "./routes/articles.js";
+import { leadsRouter } from "./routes/leads.js";
 import { authenticate } from "./middleware/auth.js";
 import { errorHandler, notFound } from "./middleware/error.js";
 
@@ -106,6 +107,7 @@ export function createApp() {
   app.use("/api/admin", adminRouter);
   app.use("/api/admin", websiteAdminRouter);
   app.use("/api/admin", articlesAdminRouter);
+  app.use("/api/admin", leadsRouter);
   app.use("/api/cases", casesRouter);
   app.use("/api/documents", documentsRouter);
   app.use("/api/queries", queriesRouter);

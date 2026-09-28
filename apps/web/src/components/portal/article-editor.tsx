@@ -505,6 +505,18 @@ export function ArticleEditor({ article, onReload }: { article: ArticleDetail; o
 
       <div className="space-y-3">
         <ErrorNote>{error}</ErrorNote>
+        {article.source === "PIPELINE" && (
+          <div className="rounded-md border border-amber-200 bg-amber-50 px-3.5 py-2.5 text-sm text-amber-900">
+            <span className="font-semibold">Written by AI — a lawyer must check it before publishing.</span> Verify the facts, the citation and the date
+            against the sources in the side panel.
+            {Array.isArray(article.sourceMeta?.checks) &&
+              (article.sourceMeta.checks as string[]).map((check) => (
+                <span key={check} className="mt-1 block font-semibold">
+                  ⚠ {check}
+                </span>
+              ))}
+          </div>
+        )}
         {notice && !error && <p className="rounded-md border border-emerald-200 bg-emerald-50 px-3.5 py-2.5 text-sm text-emerald-800">{notice}</p>}
       </div>
 
@@ -787,14 +799,38 @@ export function ArticleEditor({ article, onReload }: { article: ArticleDetail; o
           </Panel>
 
           {article.sourceMeta && (
-            <Panel title="Source (pipeline)" open={panel === "source"} onToggle={() => toggle("source")}>
-              <dl className="space-y-1.5 text-xs">
-                {Object.entries(article.sourceMeta).map(([k, v]) => (
-                  <div key={k}>
-                    <dt className="font-semibold text-ink-soft">{k}</dt>
-                    <dd className="break-words text-slate">{typeof v === "string" ? v : JSON.stringify(v)}</dd>
-                  </div>
-                ))}
+            <Panel title="AI draft: sources" open={panel === "source"} onToggle={() => toggle("source")} summary="check before publishing">
+              <dl className="space-y-2.5 text-xs">
+                {Object.entries(article.sourceMeta)
+                  .filter(([, v]) => v !== null && v !== "" && !(Array.isArray(v) && v.length === 0))
+                  .map(([k, v]) => (
+                    <div key={k}>
+                      <dt className="font-semibold capitalize text-ink-soft">{k.replace(/([A-Z])/g, " $1")}</dt>
+                      <dd className="break-words text-slate">
+                        {Array.isArray(v) ? (
+                          <ul className="mt-0.5 list-disc space-y-0.5 pl-4">
+                            {v.map((item, i) => {
+                              const line = String(item);
+                              const url = line.match(/https?:\/\/\S+/)?.[0];
+                              return (
+                                <li key={i}>
+                                  {url ? (
+                                    <a href={url} target="_blank" rel="noreferrer" className="hover:text-gold-deep">
+                                      {line}
+                                    </a>
+                                  ) : (
+                                    line
+                                  )}
+                                </li>
+                              );
+                            })}
+                          </ul>
+                        ) : (
+                          String(v)
+                        )}
+                      </dd>
+                    </div>
+                  ))}
               </dl>
             </Panel>
           )}

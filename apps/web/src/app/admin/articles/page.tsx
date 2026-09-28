@@ -6,6 +6,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { api, type ArticleRow, type ArticleStatus } from "@/lib/portal/api";
 import { formatDate } from "@/lib/portal/format";
 import { STATUS_LABEL } from "@/components/portal/article-editor";
+import { TrendingLeads, UrgentBanner, usePipeline, WriteNowDialog } from "@/components/portal/trending";
 import { Badge, Button, Card, EmptyState, ErrorNote, Input, PageTitle, Spinner, Table, Td, Th } from "@/components/portal/ui";
 
 const TONE: Record<ArticleStatus, "gold" | "blue" | "green" | "grey"> = {
@@ -30,6 +31,9 @@ export default function AdminArticles() {
   const [filter, setFilter] = useState<ArticleStatus | "ALL">("ALL");
   const [query, setQuery] = useState("");
   const [creating, setCreating] = useState(false);
+  const [tab, setTab] = useState<"articles" | "trending">("articles");
+  const [writing, setWriting] = useState(false);
+  const pipeline = usePipeline();
 
   const load = useCallback(() => {
     api<{ data: ArticleRow[] }>("/admin/articles")
@@ -70,11 +74,43 @@ export default function AdminArticles() {
         title="Articles"
         description="Insights and judgment write-ups for the website. Drafts stay private until published; published articles appear on the Insights page and in Google."
         actions={
-          <Button onClick={() => void create()} disabled={creating}>
-            {creating ? "Creating…" : "New article"}
-          </Button>
+          <div className="flex flex-wrap gap-2">
+            <Button tone="secondary" onClick={() => void create()} disabled={creating}>
+              {creating ? "Creating…" : "Blank article"}
+            </Button>
+            <Button onClick={() => setWriting(true)}>Write now (AI)</Button>
+          </div>
         }
       />
+
+      <UrgentBanner count={pipeline?.urgent ?? 0} onOpen={() => setTab("trending")} />
+
+      <div className="flex gap-1 border-b border-line">
+        {(
+          [
+            ["articles", "Articles"],
+            ["trending", `Trending judgments${pipeline?.urgent ? ` (${pipeline.urgent} urgent)` : ""}`],
+          ] as const
+        ).map(([value, label]) => (
+          <button
+            key={value}
+            type="button"
+            onClick={() => setTab(value)}
+            className={`-mb-px border-b-2 px-4 py-2 text-sm font-semibold transition ${
+              tab === value ? "border-gold text-ink" : "border-transparent text-slate hover:text-ink"
+            }`}
+          >
+            {label}
+          </button>
+        ))}
+      </div>
+
+      <WriteNowDialog key={writing ? "open" : "closed"} open={writing} onClose={() => setWriting(false)} pipeline={pipeline} />
+
+      {tab === "trending" ? (
+        <TrendingLeads pipeline={pipeline} />
+      ) : (
+      <>
 
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div className="flex flex-wrap gap-1.5">
@@ -150,6 +186,8 @@ export default function AdminArticles() {
           </Table>
         )}
       </Card>
+      </>
+      )}
     </div>
   );
 }

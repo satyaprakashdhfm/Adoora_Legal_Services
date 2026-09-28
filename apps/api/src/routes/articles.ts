@@ -30,7 +30,7 @@ const adminOnly = [requireAuth, requireRole("OWNER", "ADMIN")];
 
 const line = (max: number) => z.string().trim().min(1).max(max);
 
-const blockSchema = z.discriminatedUnion("type", [
+export const blockSchema = z.discriminatedUnion("type", [
   z.object({ type: z.literal("p"), text: line(8000) }),
   z.object({ type: z.literal("h2"), text: line(200) }),
   z.object({ type: z.literal("h3"), text: line(200) }),
@@ -89,7 +89,7 @@ function slugify(value: string): string {
     .slice(0, 90);
 }
 
-async function freeSlug(base: string, exceptId?: string): Promise<string> {
+export async function freeSlug(base: string, exceptId?: string): Promise<string> {
   const root = slugify(base) || "article";
   for (let n = 1; n < 50; n++) {
     const candidate = n === 1 ? root : `${root}-${n}`;
@@ -107,7 +107,7 @@ function wordsIn(blocks: Block[]): number {
 }
 
 /** "6 min read", at 200 words a minute. */
-const readingTime = (blocks: Block[]) => `${Math.max(1, Math.round(wordsIn(blocks) / 200))} min read`;
+export const readingTime = (blocks: Block[]) => `${Math.max(1, Math.round(wordsIn(blocks) / 200))} min read`;
 
 const listSelect = {
   id: true,

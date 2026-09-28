@@ -877,3 +877,45 @@ model Article {
   @@index([status, publishedAt])
   @@index([slug])
 }
+
+// ---------------------------------------------------------------------------
+// Trending judgments — leads for articles
+// ---------------------------------------------------------------------------
+
+enum LeadStatus {
+  NEW // found, not looked at
+  URGENT // trending hard: write today
+  SHORTLISTED // someone wants it written
+  DRAFTED // an article draft exists (articleId)
+  REJECTED // not for us
+}
+
+/// One judgment or legal development being reported, gathered from the
+/// legal-news feeds. Items about the same story are grouped into one lead;
+/// the more outlets carry it, the higher it scores.
+model TrendingLead {
+  id          String     @id @default(uuid()) @db.Uuid
+  /// The grouping signature: the case's parties, or the headline's key words.
+  key         String     @unique
+  title       String
+  /// "Supreme Court", "Telangana High Court"… as named in the headlines.
+  court       String?
+  /// SC, HC or OTHER.
+  courtLevel  String     @default("OTHER")
+  /// [{ outlet, title, url, publishedAt }]
+  sources     Json
+  outlets     Int        @default(1)
+  score       Float      @default(0)
+  /// Practice-area slugs the story touches.
+  practices   String[]   @default([])
+  status      LeadStatus @default(NEW)
+  articleId   String?    @db.Uuid
+  firstSeenAt DateTime   @default(now())
+  lastSeenAt  DateTime   @default(now())
+  urgentAt    DateTime?
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+
+  @@index([status, score])
+  @@index([lastSeenAt])
+}

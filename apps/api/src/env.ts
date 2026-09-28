@@ -117,6 +117,15 @@ const schema = z.object({
    * shown to staff under "Check court status" (never to clients). Free text,
    * e.g. "₹2". Left out, the line says the price is not set.
    */
+  /**
+   * Google Gemini, for article drafts. Without a key the console's
+   * "Write now" and the morning drafts are switched off; trending still runs.
+   */
+  GEMINI_API_KEY: optionalString(z.string().min(10)),
+  GEMINI_MODEL: z.string().min(3).default("gemini-flash-latest"),
+  /** "false" stops the in-process jobs (feed reading, morning drafts). */
+  JOBS_ENABLED: z.enum(["true", "false"]).default("true"),
+
   ECOURTS_PRICE_DETAILS: optionalString(z.string().max(40)),
   ECOURTS_PRICE_REFRESH: optionalString(z.string().max(40)),
   /** OTP widget → the widget's id and its token (both public). */

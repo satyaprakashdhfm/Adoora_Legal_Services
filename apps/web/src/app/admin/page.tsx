@@ -1,10 +1,12 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { api } from "@/lib/portal/api";
 import { courtNumber, formatDate } from "@/lib/portal/format";
 import { NewCaseButton } from "@/components/portal/new-case-dialog";
+import { UrgentBanner, usePipeline } from "@/components/portal/trending";
 import { ButtonLink, Card, CardHeader, EmptyState, ErrorNote, PageTitle, Spinner, StatTile } from "@/components/portal/ui";
 
 type Stats = {
@@ -29,6 +31,8 @@ type Stats = {
 };
 
 export default function AdminOverview() {
+  const pipeline = usePipeline();
+  const router = useRouter();
   const [stats, setStats] = useState<Stats | null>(null);
   const [error, setError] = useState<string | null>(null);
 
@@ -43,6 +47,7 @@ export default function AdminOverview() {
 
   return (
     <div className="space-y-8">
+      <UrgentBanner count={pipeline?.urgent ?? 0} onOpen={() => router.push("/admin/articles")} />
       <PageTitle
         eyebrow="Overview"
         title="The firm at a glance"
