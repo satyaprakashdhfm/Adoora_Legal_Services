@@ -265,6 +265,9 @@ model Case {
   courtStage     String?
   /// Last successful eCourts check, whether or not anything had changed.
   courtCheckedAt DateTime?
+  /// When "Check court status" last queued an eCourtsIndia re-scrape; the
+  /// fresh record is read a few minutes later.
+  courtRefreshQueuedAt DateTime?
 
   /// Counter behind the document references, so they run D001, D002, ...
   /// within a case without revealing the firm's overall volume.
@@ -459,6 +462,10 @@ model CourtOrder {
   fileName  String   @default("")
   /// Short summary, where eCourtsIndia provides one.
   summary   String?  @db.Text
+  /// The PDF, once fetched from the court's website and saved to the case's
+  /// documents. Set means "have it" — it is never downloaded again.
+  documentId String?   @unique @db.Uuid
+  document   Document? @relation(fields: [documentId], references: [id], onDelete: SetNull)
   createdAt DateTime @default(now())
 
   @@unique([caseId, orderDate, orderType, fileName])
@@ -550,6 +557,11 @@ model Document {
   updatedAt DateTime  @updatedAt
 
   versions DocumentVersion[]
+
+  /// Fetched from the court's own website ("From the court" folder), not
+  /// uploaded by a person.
+  fromCourt  Boolean     @default(false)
+  courtOrder CourtOrder?
 
   @@unique([caseId, seq])
   @@index([caseId, deletedAt])

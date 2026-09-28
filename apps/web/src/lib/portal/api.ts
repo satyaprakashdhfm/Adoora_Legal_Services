@@ -159,6 +159,8 @@ export type DocumentRecord = {
   visibility: Visibility;
   currentVersion: number;
   uploadedByClientId?: string | null;
+  /** Saved from the court's website — the "From the court" folder. */
+  fromCourt?: boolean;
   createdAt: string;
   updatedAt: string;
   uploadedByUser: { name: string } | null;
@@ -200,6 +202,10 @@ export type CaseDetail = Omit<CaseSummary, "assignments" | "clients" | "_count">
   courtStatus: string | null;
   courtStage: string | null;
   courtCheckedAt: string | null;
+  /** A queued eCourtsIndia re-scrape whose result is read a few minutes later. */
+  courtRefreshQueuedAt: string | null;
+  /** Staff only: what eCourtsIndia charges per request. */
+  ecourtsPricing?: { details: string | null; refresh: string | null };
   hearings: CourtHearing[];
   orders: CourtOrder[];
   /** The rest of the court's record (FIR, category, tagged matters…), as label/value pairs. */
@@ -246,6 +252,8 @@ export type CourtOrder = {
   orderType: string;
   fileName: string;
   summary: string | null;
+  /** The saved PDF (Documents → From the court), once fetched. */
+  documentReference: string | null;
 };
 
 /** `GET /api/cases/:cnr` — the court's record, shaped for the case form. */

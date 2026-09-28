@@ -211,7 +211,7 @@ export const documentListSchema = z.object({
   case: z.string().trim().max(40).optional(),
   /** `1`: only the firm's "Team shared" folder. */
   team: z.enum(["1"]).optional(),
-  folder: z.enum(["client", "firm", "internal"]).optional(),
+  folder: z.enum(["client", "firm", "internal", "court"]).optional(),
   cursor: z.string().uuid().optional(),
   limit: z.coerce.number().int().min(1).max(100).default(50),
 });

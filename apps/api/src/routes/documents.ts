@@ -164,6 +164,71 @@ export async function uploadDocument(
 }
 
 /**
+ * Saves a PDF fetched from the court's website into the case's documents —
+ * the "From the court" folder, visible to the client. Nobody is recorded as
+ * its uploader (the court is the source); who fetched it goes in the audit
+ * log. Returns the new document's id.
+ */
+export async function saveCourtDocument(
+  req: Request,
+  target: { id: string; reference: string },
+  file: { buffer: Buffer; filename: string; title: string; category: "ORDER" | "JUDGMENT"; description: string | null },
+) {
+  const checked = checkUpload(file.filename, file.buffer);
+  if (!checked.ok) throw new HttpError(415, checked.reason, "file_rejected");
+
+  const encrypted = encryptDocument(file.buffer);
+  const storageKey = `cases/${target.id}/${randomUUID()}`;
+  await storage.put(storageKey, encrypted.ciphertext, "application/octet-stream");
+  const stored = {
+    storageKey,
+    storageDriver: storage.name,
+    filename: checked.filename,
+    mimeType: checked.mimeType,
+    sizeBytes: file.buffer.length,
+    sha256: sha256(file.buffer),
+    encKeyId: encrypted.encKeyId,
+    wrappedKey: encrypted.wrappedKey,
+    iv: encrypted.iv,
+    authTag: encrypted.authTag,
+  };
+
+  try {
+    const document = await prisma.$transaction(async (tx) => {
+      const { documentSeq } = await tx.case.update({
+        where: { id: target.id },
+        data: { documentSeq: { increment: 1 } },
+        select: { documentSeq: true },
+      });
+      return tx.document.create({
+        data: {
+          reference: makeDocumentReference(target.reference, documentSeq),
+          caseId: target.id,
+          seq: documentSeq,
+          title: file.title.slice(0, 200),
+          category: file.category,
+          description: file.description,
+          visibility: "CLIENT",
+          fromCourt: true,
+          versions: { create: { version: 1, ...stored } },
+        },
+        select: { id: true, reference: true },
+      });
+    });
+    await audit(req, "document.court_fetch", "Document", document.id, {
+      reference: document.reference,
+      case: target.reference,
+      sizeBytes: stored.sizeBytes,
+      sha256: stored.sha256,
+    });
+    return document.id;
+  } catch (error) {
+    await discard(stored.storageKey);
+    throw error;
+  }
+}
+
+/**
  * POST /api/documents/team — a document in the firm's "Team shared" folder:
  * templates, precedents, checklists. Not on any case, never visible to a
  * client, and always internal.
@@ -225,8 +290,9 @@ documentsRouter.get("/", async (req, res) => {
   if (query.team) filters.push({ caseId: null });
   // The folders a case's documents are shown in.
   if (query.folder === "client") filters.push({ uploadedByClientId: { not: null } });
-  if (query.folder === "firm") filters.push({ uploadedByClientId: null, visibility: "CLIENT" });
+  if (query.folder === "firm") filters.push({ uploadedByClientId: null, visibility: "CLIENT", fromCourt: false });
   if (query.folder === "internal") filters.push({ uploadedByClientId: null, visibility: "INTERNAL" });
+  if (query.folder === "court") filters.push({ fromCourt: true });
   if (query.q) {
     filters.push({
       OR: [

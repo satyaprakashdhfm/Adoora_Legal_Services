@@ -24,24 +24,27 @@ import { Button, Card, EmptyState, ErrorNote, Input, Modal, Spinner, StatusBadge
  * Uploading inside a folder files the document there.
  */
 
-type FolderId = "client" | "firm" | "internal";
+type FolderId = "court" | "client" | "firm" | "internal";
 type Location = { kind: "root" } | { kind: "team" } | { kind: "case"; case: CaseSummary; folder?: FolderId };
 
 const FOLDER_ICON = "M2.5 5.5a1 1 0 011-1h4l1.5 1.5h7.5a1 1 0 011 1v8.5a1 1 0 01-1 1h-13a1 1 0 01-1-1z";
 
 function folderLabel(folder: FolderId, staff: boolean) {
+  if (folder === "court") return "From the court";
   if (folder === "client") return staff ? "From the client" : "My uploads";
   if (folder === "firm") return staff ? "Shared with client" : "From the firm";
   return "Internal — team only";
 }
 
 function folderHint(folder: FolderId, staff: boolean) {
+  if (folder === "court") return "Orders and judgments saved from the court's website";
   if (folder === "client") return staff ? "Uploaded by the client" : "Documents you have sent to the firm";
   if (folder === "firm") return staff ? "Filed by the firm, visible to the client" : "Documents your lawyers have shared with you";
   return "Working papers the client does not see";
 }
 
 function folderOf(doc: DocumentRecord): FolderId {
+  if (doc.fromCourt) return "court";
   if (doc.uploadedByClientId || (doc.uploadedByClient && !doc.uploadedByUser)) return "client";
   return doc.visibility === "INTERNAL" ? "internal" : "firm";
 }
@@ -209,19 +212,19 @@ export function DocumentDrive({ basePath, staff }: { basePath: string; staff: bo
   const files = loaded && loaded.key === `${sourceKey}#${version}` ? loaded.files : null;
 
   const byFolder = useMemo(() => {
-    const groups: Record<FolderId, DocumentRecord[]> = { client: [], firm: [], internal: [] };
+    const groups: Record<FolderId, DocumentRecord[]> = { court: [], client: [], firm: [], internal: [] };
     for (const doc of files ?? []) groups[folderOf(doc)].push(doc);
     return groups;
   }, [files]);
 
-  const folders: FolderId[] = staff ? ["client", "firm", "internal"] : ["firm", "client"];
+  const folders: FolderId[] = staff ? ["court", "client", "firm", "internal"] : ["court", "firm", "client"];
   const goRoot = () => setLocation({ kind: "root" });
 
   // Where an upload goes, from where you are.
   const upload =
     location.kind === "team"
       ? { action: "/api/documents/team", visibility: "INTERNAL" as const, label: "Team shared" }
-      : location.kind === "case" && location.folder && (staff ? location.folder !== "client" : location.folder === "client")
+      : location.kind === "case" && location.folder && location.folder !== "court" && (staff ? location.folder !== "client" : location.folder === "client")
         ? {
             action: `/api/cases/${encodeURIComponent(location.case.reference)}/documents`,
             visibility: location.folder === "internal" ? ("INTERNAL" as const) : ("CLIENT" as const),

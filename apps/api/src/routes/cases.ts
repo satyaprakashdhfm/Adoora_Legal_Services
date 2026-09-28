@@ -2,7 +2,10 @@ import { Router } from "express";
 import rateLimit from "express-rate-limit";
 import { prisma } from "../db.js";
 import { CNR_PATTERN, normaliseCnr } from "../integrations/ecourts.js";
-import { attachCourtRecord, draftFromRecord, lookupCnr, readCourtRecord, rebuildFromSnapshot, syncCase } from "../integrations/court-record.js";
+import { attachCourtRecord, catchUpRefresh, draftFromRecord, ECOURTSINDIA_ONLY, lookupCnr, readCourtRecord, rebuildFromSnapshot, syncCase } from "../integrations/court-record.js";
+import { newPortalCaptcha, startPortalLookup, submitPortalCaptcha } from "../integrations/court-portal.js";
+import { PORTAL_COOLDOWN_MS, recentPortalLookup, storePortalResult } from "../integrations/court-documents.js";
+import { env } from "../env.js";
 import { HttpError } from "../lib/http.js";
 import { audit } from "../lib/audit.js";
 import { makeCaseReference } from "../lib/ids.js";
@@ -290,6 +293,12 @@ function serialiseCase(
     }),
     canEdit: isCaseStaff(principal),
     canManage: isFirmAdmin(principal),
+    // What eCourtsIndia charges — for the firm's eyes only.
+    ecourtsPricing: staff ? { details: env.ECOURTS_PRICE_DETAILS ?? null, refresh: env.ECOURTS_PRICE_REFRESH ?? null } : undefined,
+    orders: record.orders.map(({ document, ...order }) => ({
+      ...order,
+      documentReference: document && !document.deletedAt ? document.reference : null,
+    })),
   };
 }
 
@@ -353,9 +362,18 @@ async function loadCaseDetail(principal: Principal, id: string) {
       orders: {
         orderBy: { orderDate: "desc" },
         take: 300,
-        select: { id: true, orderDate: true, orderType: true, fileName: true, summary: true },
+        select: {
+          id: true,
+          orderDate: true,
+          orderType: true,
+          fileName: true,
+          summary: true,
+          // The saved PDF, if it has been fetched from the court's website.
+          document: { select: { reference: true, deletedAt: true } },
+        },
       },
       snapshots: {
+        where: ECOURTSINDIA_ONLY,
         orderBy: { fetchedAt: "desc" },
         take: 1,
         select: { cnr: true, payload: true },
@@ -478,6 +496,7 @@ casesRouter.post("/:reference/court-sync", ecourtsLimiter, clientEcourtsLimiter,
     changes: result?.changes ?? [],
     recordChanged: result?.recordChanged ?? false,
     refreshed: result?.refreshed ?? false,
+    pending: result?.pending ?? false,
     sourceUpdatedAt: result?.sourceUpdatedAt ?? null,
   });
 });
@@ -503,10 +522,85 @@ casesRouter.post("/:reference/court-rebuild", async (req, res) => {
   });
 });
 
+// ---------------------------------------------------------------------------
+// The court's own website: a person types the captcha, we fetch and save
+// ---------------------------------------------------------------------------
+
+/** A person types every captcha; this only stops a stuck page from hammering the court. */
+const portalLimiter = rateLimit({
+  windowMs: 60 * 60 * 1000,
+  limit: 30,
+  standardHeaders: "draft-7",
+  legacyHeaders: false,
+  keyGenerator: (req) => `portal:${req.principal?.id ?? "anonymous"}`,
+  message: { error: "rate_limited", message: "Too many court-website lookups this hour. Please try again later." },
+});
+
+/**
+ * POST /api/cases/:reference/portal/start — opens a session on the court's
+ * website for the case's CNR and returns its captcha image. Staff and the
+ * case's clients may use it; it is free.
+ */
+casesRouter.post("/:reference/portal/start", portalLimiter, async (req, res) => {
+  const principal = req.principal!;
+  const found = await findVisibleCase(principal, String(req.params.reference));
+  if (!found.cnrNumber) {
+    throw new HttpError(400, "Add the case's CNR number first — it is what the court's website looks the case up by.", "no_cnr");
+  }
+  const recent = await recentPortalLookup(found.id);
+  if (recent) {
+    const minutes = Math.max(1, Math.round((Date.now() - recent.fetchedAt.getTime()) / 60000));
+    const wait = Math.max(1, Math.round(PORTAL_COOLDOWN_MS / 60000) - minutes);
+    throw new HttpError(
+      429,
+      `Checked on the court's website ${minutes} minute${minutes === 1 ? "" : "s"} ago and the documents are saved. You can check again in ${wait} minute${wait === 1 ? "" : "s"}.`,
+      "portal_recent",
+    );
+  }
+  res.set("Cache-Control", "no-store");
+  res.json(await startPortalLookup(found.cnrNumber, found.id, principal.id));
+});
+
+/** POST /api/cases/:reference/portal/captcha — a new image, when the first cannot be read. */
+casesRouter.post("/:reference/portal/captcha", portalLimiter, async (req, res) => {
+  const principal = req.principal!;
+  const found = await findVisibleCase(principal, String(req.params.reference));
+  const sessionId = String(req.body?.sessionId ?? "");
+  res.set("Cache-Control", "no-store");
+  res.json(await newPortalCaptcha(sessionId, found.id, principal.id));
+});
+
+/**
+ * POST /api/cases/:reference/portal/submit — the typed captcha. Fetches the
+ * case page, stores the hearings, and saves each order's PDF to the case's
+ * documents unless it is already there.
+ */
+casesRouter.post("/:reference/portal/submit", async (req, res) => {
+  const principal = req.principal!;
+  const found = await findVisibleCase(principal, String(req.params.reference));
+  if (!found.cnrNumber) throw new HttpError(400, "This case has no CNR.", "no_cnr");
+  const sessionId = String(req.body?.sessionId ?? "");
+  const code = String(req.body?.code ?? "");
+  if (!code.trim()) throw new HttpError(400, "Please type the characters in the picture.", "portal_no_code");
+
+  const result = await submitPortalCaptcha(sessionId, found.id, principal.id, code);
+  if (!result.ok) {
+    res.set("Cache-Control", "no-store");
+    res.json({ retry: true, captcha: result.captcha });
+    return;
+  }
+
+  const summary = await storePortalResult(req, { id: found.id, reference: found.reference, cnrNumber: found.cnrNumber }, result);
+  await audit(req, "court_portal.lookup", "Case", found.id, { reference: found.reference, ...summary });
+  const record = await loadCaseDetail(principal, found.id);
+  res.json({ case: serialiseCase(principal, record), summary });
+});
+
 casesRouter.get("/:reference", async (req, res) => {
   const principal = req.principal!;
   const found = await findVisibleCase(principal, String(req.params.reference));
   const record = await loadCaseDetail(principal, found.id);
+  catchUpRefresh(record);
 
   await audit(req, "case.view", "Case", found.id, { reference: found.reference });
   res.set("Cache-Control", "no-store");

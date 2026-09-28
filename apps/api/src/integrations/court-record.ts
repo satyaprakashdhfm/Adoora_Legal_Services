@@ -1,5 +1,6 @@
 import { createHash } from "node:crypto";
 import { prisma } from "../db.js";
+import { logger } from "../logger.js";
 import { fetchCaseByCnr, queueCaseRefresh } from "./ecourts.js";
 import type { Principal } from "../auth/session.js";
 import type { Prisma } from "../../generated/prisma/client.js";
@@ -57,7 +58,7 @@ function pick(sources: (Obj | null)[], keys: string[]): unknown {
   return undefined;
 }
 
-function text(value: unknown, max = 300): string | null {
+export function text(value: unknown, max = 300): string | null {
   if (typeof value === "number") return String(value);
   if (typeof value === "string") {
     const cleaned = value.replace(/\s+/g, " ").trim();
@@ -82,7 +83,7 @@ const MONTHS: Record<string, number> = {
  * Court dates come as ISO, `DD-MM-YYYY`, `DD/MM/YYYY` or `20th September
  * 2024`. Returned as UTC midnight, matching the `@db.Date` columns.
  */
-function date(value: unknown): Date | null {
+export function date(value: unknown): Date | null {
   const raw = text(value, 60);
   if (!raw) return null;
   const utc = (y: number, m: number, d: number) => {
@@ -104,7 +105,7 @@ function date(value: unknown): Date | null {
 }
 
 /** "1) Ravi Kumar" / "2. State of Telangana" → the name alone. */
-function partyName(value: unknown): string | null {
+export function partyName(value: unknown): string | null {
   const name = text(value);
   return name ? name.replace(/^\(?\d+\s*[).:-]\s*/, "").trim() || null : null;
 }
@@ -198,7 +199,7 @@ const HIGH_COURT_BY_PREFIX: Record<string, { name: string; state: string }> = {
   DLHC: { name: "High Court of Delhi", state: "Delhi" },
 };
 
-function splitCaseType(raw: string | null): { code: string | null; name: string | null } {
+export function splitCaseType(raw: string | null): { code: string | null; name: string | null } {
   if (!raw) return { code: null, name: null };
   // "WP - WRIT PETITION", "W.P.(C) - Writ Petition (Civil)"
   const parts = raw.split(/\s+-\s+/);
@@ -208,7 +209,7 @@ function splitCaseType(raw: string | null): { code: string | null; name: string 
 }
 
 /** "WP/12345/2024", "12345/2024", "W.P. No. 1234 of 2024". */
-function splitRegistration(raw: string | null) {
+export function splitRegistration(raw: string | null) {
   if (!raw) return { code: null, number: null, year: null };
   const match = raw.match(/^(.*?)[\s/]*(?:No\.?\s*)?(\d+)\s*(?:\/|of)\s*(\d{4})$/i);
   if (!match) return { code: null, number: raw.slice(0, 40), year: null };
@@ -534,6 +535,12 @@ export function draftFromRecord(cnr: string, record: CourtRecord) {
 // Storing
 // ---------------------------------------------------------------------------
 
+/**
+ * Snapshots from eCourtsIndia, not pages from the court's own website (those
+ * carry requestId "portal" — see court-documents.ts — and hold HTML).
+ */
+export const ECOURTSINDIA_ONLY = { OR: [{ requestId: null }, { requestId: { not: "portal" } }] } satisfies Prisma.CourtSnapshotWhereInput;
+
 /** Keys that change on every scrape without the record changing. */
 const VOLATILE = new Set(["dateModified", "lastUpdated", "updatedAt", "fetchedAt", "scrapedAt", "lastSyncedAt", "requestId"]);
 
@@ -558,7 +565,7 @@ export function contentHash(data: unknown): string {
  * says the same thing. Returns the snapshot id either way.
  */
 async function storeSnapshot(
-  principal: Principal,
+  principal: Principal | null,
   cnr: string,
   caseId: string | null,
   data: unknown,
@@ -566,7 +573,7 @@ async function storeSnapshot(
 ) {
   const hash = contentHash(data);
   const latest = await prisma.courtSnapshot.findFirst({
-    where: { cnr, caseId },
+    where: { cnr, caseId, ...ECOURTSINDIA_ONLY },
     orderBy: { fetchedAt: "desc" },
     select: { id: true, contentHash: true },
   });
@@ -579,8 +586,8 @@ async function storeSnapshot(
       requestId,
       contentHash: hash,
       payload: data as Prisma.InputJsonValue,
-      fetchedByUserId: principal.kind === "staff" ? principal.id : null,
-      fetchedByClientId: principal.kind === "client" ? principal.id : null,
+      fetchedByUserId: principal?.kind === "staff" ? principal.id : null,
+      fetchedByClientId: principal?.kind === "client" ? principal.id : null,
     },
     select: { id: true },
   });
@@ -725,32 +732,78 @@ export async function applyCourtRecord(
 }
 
 /** eCourtsIndia says a queued refresh lands in 5–10 seconds. */
-const REFRESH_WAIT_MS = 10_000;
-
 /**
- * Fetches the court's record for a case and applies it. Used by "Check
- * court status" on either dashboard.
- *
- * The case detail call returns eCourtsIndia's stored copy, which may be days
- * old. So a check first queues a re-scrape from eCourts (the cheap refresh
- * call), waits for it, and then reads the case once — fresh data for the
- * price of a refresh plus one read. If the refresh cannot be queued, the
- * stored copy is read straight away.
+ * eCourtsIndia's guide: a queued re-scrape "typically takes 2–10 minutes".
+ * The read waits five, then takes whatever eCourtsIndia has.
  */
-export async function syncCase(principal: Principal, found: { id: string; cnrNumber: string | null }) {
-  if (!found.cnrNumber) return null;
-  const refreshed = await queueCaseRefresh(found.cnrNumber);
-  if (refreshed) await new Promise((resolve) => setTimeout(resolve, REFRESH_WAIT_MS));
+export const REFRESH_READ_AFTER_MS = 5 * 60 * 1000;
+
+/** Reads the case from eCourtsIndia (one billed call) and applies it. */
+async function readAndApply(principal: Principal | null, found: { id: string; cnrNumber: string }) {
   const result = await fetchCaseByCnr(found.cnrNumber);
   const snapshot = await storeSnapshot(principal, found.cnrNumber, found.id, result.data, result.requestId);
   const record = readCourtRecord(found.cnrNumber, result.data);
   const applied = await applyCourtRecord(found.id, record, {
-    userId: principal.kind === "staff" ? principal.id : null,
-    clientId: principal.kind === "client" ? principal.id : null,
+    userId: principal?.kind === "staff" ? principal.id : null,
+    clientId: principal?.kind === "client" ? principal.id : null,
   });
   // When eCourtsIndia last scraped the court's page, as it reports it.
   const sourceUpdatedAt = text(asObj(asObj(result.data)?.entityInfo)?.dateModified, 60);
-  return { requestId: result.requestId, recordChanged: snapshot.changed, refreshed, sourceUpdatedAt, ...applied };
+  return { requestId: result.requestId, recordChanged: snapshot.changed, sourceUpdatedAt, ...applied };
+}
+
+/** Reads due after a queued refresh, by case. In memory; `catchUpRefresh` covers a restart. */
+const pendingReads = new Map<string, NodeJS.Timeout>();
+
+function scheduleRead(principal: Principal | null, found: { id: string; cnrNumber: string }, delay: number) {
+  if (pendingReads.has(found.id)) return;
+  const timer = setTimeout(() => {
+    pendingReads.delete(found.id);
+    readAndApply(principal, found)
+      .catch((error: unknown) => logger.warn({ err: error, caseId: found.id }, "Reading the refreshed eCourts record failed"))
+      .finally(() => {
+        void prisma.case.update({ where: { id: found.id }, data: { courtRefreshQueuedAt: null } }).catch(() => undefined);
+      });
+  }, delay);
+  timer.unref();
+  pendingReads.set(found.id, timer);
+}
+
+/**
+ * "Check court status" on either dashboard.
+ *
+ * The case detail call returns eCourtsIndia's stored copy, which may be days
+ * old. So a check queues a re-scrape from eCourts and returns at once; the
+ * fresh record is read five minutes later, automatically — one refresh and
+ * one read per check. If the refresh cannot be queued, the stored copy is
+ * read straight away instead.
+ */
+export async function syncCase(principal: Principal, found: { id: string; cnrNumber: string | null; courtRefreshQueuedAt?: Date | null }) {
+  if (!found.cnrNumber) return null;
+  const target = { id: found.id, cnrNumber: found.cnrNumber };
+
+  // A refresh already on its way: do not pay for another.
+  if (found.courtRefreshQueuedAt && Date.now() - found.courtRefreshQueuedAt.getTime() < REFRESH_READ_AFTER_MS + 10 * 60 * 1000) {
+    return { requestId: null, recordChanged: false, refreshed: true, pending: true, sourceUpdatedAt: null, changes: [] as string[] };
+  }
+
+  const refreshed = await queueCaseRefresh(found.cnrNumber);
+  if (refreshed) {
+    await prisma.case.update({ where: { id: found.id }, data: { courtRefreshQueuedAt: new Date() } });
+    scheduleRead(principal, target, REFRESH_READ_AFTER_MS);
+    return { requestId: null, recordChanged: false, refreshed: true, pending: true, sourceUpdatedAt: null, changes: [] as string[] };
+  }
+  return { ...(await readAndApply(principal, target)), refreshed: false, pending: false };
+}
+
+/**
+ * On opening a case: a refresh queued before a restart, whose read never
+ * ran, is read now (in the background — the page does not wait).
+ */
+export function catchUpRefresh(found: { id: string; cnrNumber: string | null; courtRefreshQueuedAt: Date | null }) {
+  if (!found.cnrNumber || !found.courtRefreshQueuedAt || pendingReads.has(found.id)) return;
+  const due = found.courtRefreshQueuedAt.getTime() + REFRESH_READ_AFTER_MS;
+  scheduleRead(null, { id: found.id, cnrNumber: found.cnrNumber }, Math.max(0, due - Date.now()));
 }
 
 /**
@@ -782,7 +835,7 @@ export async function attachCourtRecord(
 export async function rebuildFromSnapshot(caseId: string, author: { userId?: string | null; clientId?: string | null }) {
   const found = await prisma.case.findUniqueOrThrow({ where: { id: caseId }, select: { cnrNumber: true } });
   const snapshot = await prisma.courtSnapshot.findFirst({
-    where: { caseId },
+    where: { caseId, ...ECOURTSINDIA_ONLY },
     orderBy: { fetchedAt: "desc" },
     select: { cnr: true, payload: true },
   });

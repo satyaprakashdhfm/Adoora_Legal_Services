@@ -111,6 +111,14 @@ const schema = z.object({
    */
   /** The account authkey (secret) — MSG91 dashboard → Authkey. */
   MSG91_TOKEN: optionalString(z.string().min(10)),
+
+  /**
+   * What eCourtsIndia charges per request, from the account's rate card —
+   * shown to staff under "Check court status" (never to clients). Free text,
+   * e.g. "₹2". Left out, the line says the price is not set.
+   */
+  ECOURTS_PRICE_DETAILS: optionalString(z.string().max(40)),
+  ECOURTS_PRICE_REFRESH: optionalString(z.string().max(40)),
   /** OTP widget → the widget's id and its token (both public). */
   MSG91_WIDGET_ID: optionalString(z.string().min(4)),
   MSG91_WIDGET_TOKEN: optionalString(z.string().min(4)),
