@@ -4,10 +4,11 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { api } from "@/lib/portal/api";
+import { useUser } from "@/lib/portal/session";
 import { courtNumber, formatDate } from "@/lib/portal/format";
 import { NewCaseButton } from "@/components/portal/new-case-dialog";
 import { UrgentBanner, usePipeline } from "@/components/portal/trending";
-import { ButtonLink, Card, CardHeader, EmptyState, ErrorNote, PageTitle, Spinner, StatTile } from "@/components/portal/ui";
+import { Button, ButtonLink, Card, CardHeader, EmptyState, ErrorNote, PageTitle, Spinner, StatTile } from "@/components/portal/ui";
 
 type Stats = {
   enquiries: { new: number; total: number };
@@ -31,6 +32,7 @@ type Stats = {
 };
 
 export default function AdminOverview() {
+  const user = useUser();
   const pipeline = usePipeline();
   const router = useRouter();
   const [stats, setStats] = useState<Stats | null>(null);
@@ -92,6 +94,77 @@ export default function AdminOverview() {
           </ul>
         )}
       </Card>
+
+      {user.role === "OWNER" && <SampleDataCard />}
     </div>
+  );
+}
+
+type SampleStatus = { cases: number; clients: number; staff: number; jobs: number; applications: number; enquiries: number; present: boolean };
+
+/**
+ * Owners only: fictional sample records (every name ends "(Demo)", every case
+ * title starts "[Demo]") for showing the system, and one button to take them
+ * all out before real work starts.
+ */
+function SampleDataCard() {
+  const [status, setStatus] = useState<SampleStatus | null>(null);
+  const [busy, setBusy] = useState(false);
+  const [message, setMessage] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
+
+  const load = () =>
+    api<SampleStatus>("/admin/sample-data")
+      .then(setStatus)
+      .catch((cause: Error) => setError(cause.message));
+  useEffect(() => {
+    void load();
+  }, []);
+
+  async function run(method: "POST" | "DELETE") {
+    if (method === "DELETE" && !window.confirm("Remove all sample data? Only records marked (Demo) / [Demo] are deleted; real records are not touched.")) return;
+    setBusy(true);
+    setError(null);
+    try {
+      const result = await api<{ message?: string }>("/admin/sample-data", { method });
+      setMessage(method === "DELETE" ? "Sample data removed." : (result.message ?? "Sample data added."));
+      await load();
+    } catch (cause) {
+      setError((cause as Error).message);
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  return (
+    <Card>
+      <CardHeader
+        title="Sample data"
+        description="Fictional records for showing the system: every name ends “(Demo)” and every case title starts “[Demo]”. Remove them before real work starts."
+      />
+      <div className="space-y-3 px-5 py-4 text-sm">
+        {status && (
+          <p className="text-ink-soft">
+            {status.present
+              ? `In the system now: ${status.cases} cases, ${status.clients} clients, ${status.staff} lawyers, ${status.enquiries} enquiries, ${status.jobs} job openings, ${status.applications} applications.`
+              : "No sample data in the system."}
+          </p>
+        )}
+        {message && <p className="text-emerald-800">{message}</p>}
+        <ErrorNote>{error}</ErrorNote>
+        <div className="flex flex-wrap gap-2">
+          {status && status.cases < 6 && (
+            <Button size="sm" tone="secondary" disabled={busy} onClick={() => void run("POST")}>
+              {busy ? "Working…" : "Add sample data"}
+            </Button>
+          )}
+          {status?.present && (
+            <Button size="sm" tone="danger" disabled={busy} onClick={() => void run("DELETE")}>
+              {busy ? "Working…" : "Remove all sample data"}
+            </Button>
+          )}
+        </div>
+      </div>
+    </Card>
   );
 }

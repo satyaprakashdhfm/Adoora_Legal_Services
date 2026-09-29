@@ -1,5 +1,6 @@
 "use client";
 
+import { SocialLinks, hasSocialLinks } from "@/components/social-links";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
@@ -200,6 +201,11 @@ export function SiteHeader() {
               <UtilityIcon path={icons.mail} />
               {firm.email}
             </a>
+            {hasSocialLinks && (
+              <div className="flex items-center border-l border-white/20 pl-5">
+                <SocialLinks variant="ribbon" />
+              </div>
+            )}
           </div>
         </div>
       </div>
@@ -442,6 +448,9 @@ export function SiteHeader() {
               <div className="mt-4 flex flex-col gap-1.5 text-sm text-white/75">
                 <a href={firm.phoneHref}>{firm.phone}</a>
                 <a href={firm.emailHref}>{firm.email}</a>
+              </div>
+              <div className="mt-4">
+                <SocialLinks variant="drawer" />
               </div>
             </div>
           </div>

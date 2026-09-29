@@ -1,3 +1,4 @@
+import { SocialLinks } from "@/components/social-links";
 import Link from "next/link";
 import { Wordmark } from "@/components/brand";
 import { footerNav } from "@/lib/nav";
@@ -52,19 +53,9 @@ export function SiteFooter() {
               </a>
             </div>
 
-            {firm.linkedin && (
-              <a
-                href={firm.linkedin}
-                target="_blank"
-                rel="noreferrer noopener"
-                className="mt-6 inline-flex h-10 w-10 items-center justify-center rounded-md border border-white/15 transition hover:border-gold hover:text-gold-bright"
-              >
-                <span className="sr-only">{firm.name} on LinkedIn</span>
-                <svg viewBox="0 0 20 20" aria-hidden="true" className="h-4 w-4" fill="currentColor">
-                  <path d="M4.6 7.4h2.7V17H4.6zM5.95 3a1.6 1.6 0 110 3.2 1.6 1.6 0 010-3.2zM9.2 7.4h2.6v1.3h.04c.36-.66 1.24-1.36 2.56-1.36 2.74 0 3.25 1.7 3.25 3.9V17h-2.7v-4.24c0-1.01-.02-2.31-1.45-2.31-1.45 0-1.67 1.1-1.67 2.24V17H9.2z" />
-                </svg>
-              </a>
-            )}
+            <div className="mt-6">
+              <SocialLinks variant="footer" />
+            </div>
           </div>
 
           <div className="grid grid-cols-2 gap-x-6 gap-y-10 lg:grid-cols-4">

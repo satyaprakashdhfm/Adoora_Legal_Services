@@ -12,6 +12,7 @@ import {
   type AuthClaims,
 } from "../middleware/auth.js";
 import { z } from "zod";
+import { addSampleData, removeSampleData, sampleDataStatus } from "../demo/sample-data.js";
 import { audit } from "../lib/audit.js";
 import { revokeAllSessions } from "../auth/session.js";
 import {
@@ -547,3 +548,23 @@ adminRouter.get(
     res.json({ data: page, nextCursor: hasMore ? page[page.length - 1]?.id : null });
   },
 );
+
+// ---------------------------------------------------------------------------
+// Sample data — fictional records for showing the system (owners only)
+// ---------------------------------------------------------------------------
+
+adminRouter.get("/sample-data", requireAuth, requireRole("OWNER"), async (_req, res) => {
+  res.json(await sampleDataStatus());
+});
+
+adminRouter.post("/sample-data", requireAuth, requireRole("OWNER"), async (req, res) => {
+  const result = await addSampleData(typeof req.body?.clientEmail === "string" ? req.body.clientEmail : undefined);
+  await audit(req, "sample_data.added", "SampleData", null, result);
+  res.status(result.added ? 201 : 200).json(result);
+});
+
+adminRouter.delete("/sample-data", requireAuth, requireRole("OWNER"), async (req, res) => {
+  const result = await removeSampleData();
+  await audit(req, "sample_data.removed", "SampleData", null, result);
+  res.json(result);
+});

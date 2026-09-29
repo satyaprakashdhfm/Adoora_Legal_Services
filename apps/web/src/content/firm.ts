@@ -32,8 +32,13 @@ export const firm = {
   ctaQuote: "Practical advice. Lasting impact.",
   signOff: "Sound counsel for what's next.",
 
-  /** Left empty until the firm confirms the handle; the footer hides it. */
+  /**
+   * Social profiles, shown in the header's top ribbon, the mobile menu and
+   * the footer. Paste each full address, e.g.
+   * "https://www.linkedin.com/company/…" — an empty one is not shown.
+   */
   linkedin: "",
+  instagram: "",
 } as const;
 
 /** The firm overview, as the brochure sets it out. */

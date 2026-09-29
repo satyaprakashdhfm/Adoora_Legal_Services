@@ -127,6 +127,8 @@ const schema = z.object({
   GEMINI_IMAGE_MODEL: z.string().min(3).default("gemini-3.1-flash-lite-image"),
   /** "false" stops the in-process jobs (feed reading, morning drafts). */
   JOBS_ENABLED: z.enum(["true", "false"]).default("true"),
+  /** "add" puts the fictional sample data in once, at start-up (see demo/sample-data.ts). */
+  SAMPLE_DATA: z.enum(["add", "off"]).default("off"),
 
   ECOURTS_PRICE_DETAILS: optionalString(z.string().max(40)),
   ECOURTS_PRICE_REFRESH: optionalString(z.string().max(40)),
