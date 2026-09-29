@@ -5,7 +5,7 @@ import { api, type CaseSummary, type Page } from "@/lib/portal/api";
 import { useUser } from "@/lib/portal/session";
 import { courtNumber } from "@/lib/portal/format";
 import { UploadForm } from "@/components/portal/documents-panel";
-import { NewCaseButton } from "@/components/portal/new-case-dialog";
+import { NoCaseYet } from "@/components/portal/no-case-yet";
 import { Button, EmptyState, Field, Modal, Select, Spinner } from "@/components/portal/ui";
 
 /**
@@ -69,14 +69,11 @@ export function UploadButton({
         ) : !cases ? (
           <Spinner />
         ) : cases.length === 0 ? (
-          <EmptyState
-            title={client ? "Add a case first" : "No open cases"}
-            action={client ? <NewCaseButton /> : undefined}
-          >
-            {client
-              ? "Documents are kept with the case they belong to, so only the lawyers on that case can see them. Tell us briefly what it is about, then upload."
-              : "Documents are uploaded to a case. You have no open cases assigned."}
-          </EmptyState>
+          client ? (
+            <NoCaseYet />
+          ) : (
+            <EmptyState title="No open cases">Documents are uploaded to a case. You have no open cases assigned.</EmptyState>
+          )
         ) : (
           <div className="space-y-5">
             <Field label={client ? "Which case is this for?" : "Case"} required>

@@ -102,6 +102,17 @@ const summarySelect = {
 // List and create
 // ---------------------------------------------------------------------------
 
+/**
+ * Cases are opened, linked and updated from the court by the firm. A client
+ * reads their cases, uploads documents, adds notes and raises queries — the
+ * rest answers 403, whatever the page shows.
+ */
+function firmOnly(principal: { kind: string }) {
+  if (principal.kind === "client") {
+    throw new HttpError(403, "The firm adds and updates cases. Please contact us to have a case linked to your account.", "firm_only");
+  }
+}
+
 casesRouter.get("/", async (req, res) => {
   const principal = req.principal!;
   const query = caseListSchema.parse(req.query);
@@ -183,6 +194,7 @@ async function visibleDuplicate(principal: Principal, cnr: string | null | undef
 
 casesRouter.post("/", async (req, res) => {
   const principal = req.principal!;
+  firmOnly(principal);
 
   if (principal.kind === "client") {
     const input = clientCaseSchema.parse(req.body);
@@ -612,6 +624,7 @@ const NEW_CASE = "new";
  */
 casesRouter.post("/cnr-lookup/start", portalLimiter, async (req, res) => {
   const principal = req.principal!;
+  firmOnly(principal);
   if (!isCaseStaff(principal) && principal.kind !== "client") throw notFound();
   const cnr = normaliseCnr(String(req.body?.cnr ?? ""));
   if (!CNR_PATTERN.test(cnr)) throw new HttpError(400, "A CNR is 16 letters and digits, e.g. TSHC010025912022.", "bad_cnr");
@@ -624,6 +637,7 @@ casesRouter.post("/cnr-lookup/start", portalLimiter, async (req, res) => {
 
 casesRouter.post("/cnr-lookup/captcha", portalLimiter, async (req, res) => {
   const principal = req.principal!;
+  firmOnly(principal);
   res.set("Cache-Control", "no-store");
   res.json(await newPortalCaptcha(String(req.body?.sessionId ?? ""), NEW_CASE, principal.id));
 });
@@ -635,6 +649,7 @@ casesRouter.post("/cnr-lookup/captcha", portalLimiter, async (req, res) => {
  */
 casesRouter.post("/cnr-lookup/submit", async (req, res) => {
   const principal = req.principal!;
+  firmOnly(principal);
   const code = String(req.body?.code ?? "");
   if (!code.trim()) throw new HttpError(400, "Please type the characters in the picture.", "portal_no_code");
   const result = await submitPortalCaptcha(String(req.body?.sessionId ?? ""), NEW_CASE, principal.id, code);
@@ -673,6 +688,7 @@ casesRouter.post("/cnr-lookup/submit", async (req, res) => {
  */
 casesRouter.post("/:reference/portal/start", portalLimiter, async (req, res) => {
   const principal = req.principal!;
+  firmOnly(principal);
   const found = await findVisibleCase(principal, String(req.params.reference));
   if (!found.cnrNumber) {
     throw new HttpError(400, "Add the case's CNR number first — it is what the court's website looks the case up by.", "no_cnr");
@@ -694,6 +710,7 @@ casesRouter.post("/:reference/portal/start", portalLimiter, async (req, res) => 
 /** POST /api/cases/:reference/portal/captcha — a new image, when the first cannot be read. */
 casesRouter.post("/:reference/portal/captcha", portalLimiter, async (req, res) => {
   const principal = req.principal!;
+  firmOnly(principal);
   const found = await findVisibleCase(principal, String(req.params.reference));
   const sessionId = String(req.body?.sessionId ?? "");
   res.set("Cache-Control", "no-store");
@@ -707,6 +724,7 @@ casesRouter.post("/:reference/portal/captcha", portalLimiter, async (req, res) =
  */
 casesRouter.post("/:reference/portal/submit", async (req, res) => {
   const principal = req.principal!;
+  firmOnly(principal);
   const found = await findVisibleCase(principal, String(req.params.reference));
   if (!found.cnrNumber) throw new HttpError(400, "This case has no CNR.", "no_cnr");
   const sessionId = String(req.body?.sessionId ?? "");

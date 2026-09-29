@@ -3,6 +3,7 @@
 import { useUser } from "@/lib/portal/session";
 import { CaseList } from "@/components/portal/case-list";
 import { NewCaseButton } from "@/components/portal/new-case-dialog";
+import { NoCaseYet } from "@/components/portal/no-case-yet";
 import { PageTitle } from "@/components/portal/ui";
 
 export default function DashboardCases() {
@@ -14,9 +15,10 @@ export default function DashboardCases() {
       <PageTitle
         title="My cases"
         description={client ? "Every case the firm handles for you." : "Cases you are assigned to."}
-        actions={<NewCaseButton />}
+        actions={client ? undefined : <NewCaseButton />}
       />
-      <CaseList basePath="/dashboard" staff={!client} />
+      {/* Clients do not add cases: the firm links them. */}
+      <CaseList basePath="/dashboard" staff={!client} emptyAction={client ? <NoCaseYet /> : undefined} />
     </div>
   );
 }

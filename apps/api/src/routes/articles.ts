@@ -5,6 +5,7 @@ import { prisma } from "../db.js";
 import { HttpError } from "../lib/http.js";
 import { audit } from "../lib/audit.js";
 import { requireAuth, requireRole } from "../middleware/auth.js";
+import { generateCoverImage, imageEstimate, suggestCoverPrompt } from "../pipeline/cover-image.js";
 import type { Prisma } from "../../generated/prisma/client.js";
 
 /**
@@ -178,6 +179,11 @@ articlesAdminRouter.get("/articles", ...adminOnly, async (_req, res) => {
   res.json({ data: rows });
 });
 
+/** Registered before /articles/:id, which would otherwise take the path. GET /api/admin/articles/cover-generator — is it set up, which model, what one image costs. */
+articlesAdminRouter.get("/articles/cover-generator", ...adminOnly, (_req, res) => {
+  res.json(imageEstimate());
+});
+
 articlesAdminRouter.get("/articles/:id", ...adminOnly, async (req, res) => {
   const id = z.string().uuid().parse(req.params.id);
   const found = await prisma.article.findUnique({
@@ -287,6 +293,45 @@ articlesAdminRouter.post("/articles/:id/images", ...adminOnly, imageMiddleware, 
     select: { id: true },
   });
   res.status(201).json({ id: image.id });
+});
+
+// ---------------------------------------------------------------------------
+// Cover images drawn by Gemini — only ever on an editor's click
+// ---------------------------------------------------------------------------
+
+const coverBriefSchema = z.object({
+  title: z.string().trim().min(3).max(300),
+  summary: z.string().trim().max(1000).optional(),
+  category: z.string().trim().max(60).optional(),
+  practices: z.array(z.string().trim().max(80)).max(12).optional(),
+  headings: z.array(z.string().trim().max(200)).max(30).optional(),
+  excerpt: z.string().trim().max(4000).optional(),
+});
+
+/** POST /api/admin/articles/:id/cover-prompt — the article (as it stands in the editor) → an image prompt. */
+articlesAdminRouter.post("/articles/:id/cover-prompt", ...adminOnly, async (req, res) => {
+  z.string().uuid().parse(req.params.id);
+  const prompt = await suggestCoverPrompt(coverBriefSchema.parse(req.body));
+  res.json({ prompt });
+});
+
+/** POST /api/admin/articles/:id/cover-generate {prompt} — draws it and files it with the article's images. */
+articlesAdminRouter.post("/articles/:id/cover-generate", ...adminOnly, async (req, res) => {
+  const id = z.string().uuid().parse(req.params.id);
+  const { prompt } = z.object({ prompt: z.string().trim().min(20, "Describe the picture in a sentence or two.").max(3000) }).parse(req.body);
+  const exists = await prisma.article.findUnique({ where: { id }, select: { id: true } });
+  if (!exists) throw new HttpError(404, "Article not found.", "not_found");
+
+  const image = await generateCoverImage(prompt);
+  if (image.data.length > MAX_IMAGE_MB * 1024 * 1024 || !imageType(image.data)) {
+    throw new HttpError(502, "The generated image could not be used. Please try again.", "bad_image");
+  }
+  const saved = await prisma.articleImage.create({
+    data: { articleId: id, data: new Uint8Array(image.data), mimeType: imageType(image.data)!, bytes: image.data.length },
+    select: { id: true },
+  });
+  await audit(req, "article.cover_generated", "Article", id, { imageId: saved.id, model: image.model, costUsd: image.costUsd });
+  res.status(201).json({ id: saved.id, model: image.model, costUsd: image.costUsd });
 });
 
 /** Images of any article, published or not — for the editor and its preview. */

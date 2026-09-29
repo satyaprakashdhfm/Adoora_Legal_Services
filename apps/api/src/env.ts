@@ -123,6 +123,8 @@ const schema = z.object({
    */
   GEMINI_API_KEY: optionalString(z.string().min(10)),
   GEMINI_MODEL: z.string().min(3).default("gemini-flash-latest"),
+  /** Article cover images, drawn only when an editor clicks "Generate". About $0.034 each on the default. */
+  GEMINI_IMAGE_MODEL: z.string().min(3).default("gemini-3.1-flash-lite-image"),
   /** "false" stops the in-process jobs (feed reading, morning drafts). */
   JOBS_ENABLED: z.enum(["true", "false"]).default("true"),
 

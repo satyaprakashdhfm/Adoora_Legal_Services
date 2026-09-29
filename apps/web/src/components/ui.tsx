@@ -375,6 +375,7 @@ export function PageHero({
   lead,
   trail,
   image = false,
+  aside,
   children,
 }: {
   eyebrow?: string;
@@ -382,6 +383,8 @@ export function PageHero({
   lead?: string;
   trail?: { label: string; href?: string }[];
   image?: boolean;
+  /** Shown to the right of the title on wide screens (below it on phones), e.g. an article's cover. */
+  aside?: ReactNode;
   children?: ReactNode;
 }) {
   const heroBg = image ? publicImage("hero-bg") : null;
@@ -401,7 +404,8 @@ export function PageHero({
           className="object-cover object-right"
         />
       )}
-      <div className="container-page relative py-12 sm:py-14">
+      <div className={`container-page relative py-12 sm:py-14 ${aside ? "grid items-center gap-8 lg:grid-cols-[minmax(0,1fr)_minmax(0,26rem)] lg:gap-12 xl:grid-cols-[minmax(0,1fr)_minmax(0,30rem)]" : ""}`}>
+        <div className="min-w-0">
         {trail && <Breadcrumbs trail={trail} />}
         {eyebrow && (
           <p className="eyebrow mt-6 inline-flex items-center gap-2.5 text-gold-deep">
@@ -418,8 +422,35 @@ export function PageHero({
           </p>
         )}
         {children}
+        </div>
+        {aside}
       </div>
     </section>
+  );
+}
+
+/**
+ * An article's picture, exactly as its Insights card shows it: the uploaded
+ * cover, else the bundled photograph, else the drawn artwork for its subject.
+ */
+export function InsightCover({ insight, sizes, className = "" }: { insight: Insight; sizes: string; className?: string }) {
+  const image = insight.coverUrl ?? (insight.imageBase ? publicImage(insight.imageBase) : null);
+  return (
+    <div className={`relative aspect-[16/9] overflow-hidden bg-ink ${className}`}>
+      {image ? (
+        <Image
+          src={image}
+          alt=""
+          fill
+          sizes={sizes}
+          unoptimized={Boolean(insight.coverUrl)}
+          style={insight.imageFocus ? { objectPosition: insight.imageFocus } : undefined}
+          className="object-cover"
+        />
+      ) : (
+        <InsightArtwork artwork={insight.artwork} className="h-full w-full" />
+      )}
+    </div>
   );
 }
 

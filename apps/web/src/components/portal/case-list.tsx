@@ -90,7 +90,7 @@ export function CaseList({
         <Spinner />
       ) : cases.length === 0 ? (
         <EmptyState title={query || status || court ? "No matching cases" : "No cases yet"} action={emptyAction}>
-          {!staff && !query && !status && "When the firm opens a case for you, or you add one here, it appears in this list."}
+          {!staff && !query && !status && !emptyAction && "When the firm links a case to your account, it appears in this list."}
         </EmptyState>
       ) : (
         <ul className="divide-y divide-line">

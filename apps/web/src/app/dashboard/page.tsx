@@ -9,6 +9,7 @@ import { CaseList } from "@/components/portal/case-list";
 import { DocumentList } from "@/components/portal/document-list";
 import { UploadButton } from "@/components/portal/upload-button";
 import { NewCaseButton } from "@/components/portal/new-case-dialog";
+import { NoCaseYet } from "@/components/portal/no-case-yet";
 import { Card, CardHeader, PageTitle, StatTile } from "@/components/portal/ui";
 
 export default function DashboardOverview() {
@@ -40,13 +41,13 @@ export default function DashboardOverview() {
         title={`Welcome, ${firstName(user.name)}`}
         description={
           client
-            ? "Follow your cases, upload documents for your lawyers, and see every hearing and order as the firm records it."
+            ? "Follow your cases, upload documents for your lawyers, and see every hearing and order as the firm records it. Questions go to the firm under Queries."
             : "The cases assigned to you, with the client's documents and the full timeline."
         }
         actions={
           <>
-            <UploadButton onUploaded={() => setRefresh((n) => n + 1)} />
-            <NewCaseButton tone="secondary" />
+            {(!client || (cases?.length ?? 0) > 0) && <UploadButton onUploaded={() => setRefresh((n) => n + 1)} />}
+            {!client && <NewCaseButton tone="secondary" />}
           </>
         }
       />
@@ -90,7 +91,7 @@ export default function DashboardOverview() {
           key={refresh}
           basePath="/dashboard"
           staff={!client}
-          emptyAction={<NewCaseButton />}
+          emptyAction={client ? <NoCaseYet /> : <NewCaseButton />}
         />
       </div>
 
@@ -102,12 +103,6 @@ export default function DashboardOverview() {
         <DocumentList basePath="/dashboard" staff={!client} compact limit={5} refreshKey={refresh} />
       </div>
 
-      {client && (
-        <p className="text-xs leading-relaxed text-slate">
-          Adding a case here does not by itself create a lawyer–client relationship. The firm first
-          runs a conflicts check and confirms any engagement in writing.
-        </p>
-      )}
     </div>
   );
 }

@@ -206,10 +206,13 @@ export function CourtStatusCard({ record, onSynced }: { record: CaseDetail; onSy
         )}
         {record.courtCheckedAt && <p className="text-xs text-slate">Last updated {formatDateTime(record.courtCheckedAt)}</p>}
         <PendingNote record={record} />
-        <div className="flex flex-wrap gap-2">
-          <UpdateFromCourtButton record={record} onSynced={onSynced} size="sm" tone="secondary" />
-          <BackupButton record={record} onSynced={onSynced} />
-        </div>
+        {/* Updating from the court is the firm's job; clients see the result. */}
+        {record.canEdit && (
+          <div className="flex flex-wrap gap-2">
+            <UpdateFromCourtButton record={record} onSynced={onSynced} size="sm" tone="secondary" />
+            <BackupButton record={record} onSynced={onSynced} />
+          </div>
+        )}
         <PriceLine record={record} />
       </div>
     </Card>
@@ -308,17 +311,25 @@ export function CourtRecordPanel({ record, onSynced }: { record: CaseDetail; onS
                   {syncing === "rebuild" ? "Re-reading…" : "Re-read saved record"}
                 </Button>
               )}
-              <BackupButton record={record} onSynced={onSynced} />
-              <UpdateFromCourtButton record={record} onSynced={onSynced} size="sm" />
+              {record.canEdit && (
+                <>
+                  <BackupButton record={record} onSynced={onSynced} />
+                  <UpdateFromCourtButton record={record} onSynced={onSynced} size="sm" />
+                </>
+              )}
             </div>
           </div>
           <div className="space-y-2 px-5 pb-4">
             <PendingNote record={record} />
             {error && <ErrorNote>{error}</ErrorNote>}
-            <p className="text-xs text-slate">
-              <span className="font-semibold text-ink-soft">Update from court</span> reads the court&apos;s own website — status, hearings and order PDFs.
-              You type its captcha; it is free.
-            </p>
+            {record.canEdit ? (
+              <p className="text-xs text-slate">
+                <span className="font-semibold text-ink-soft">Update from court</span> reads the court&apos;s own website — status, hearings and order PDFs.
+                You type its captcha; it is free.
+              </p>
+            ) : (
+              <p className="text-xs text-slate">Your lawyers update this from the court&apos;s own record; order PDFs are in Documents → Case files.</p>
+            )}
             <PriceLine record={record} />
           </div>
         </Card>

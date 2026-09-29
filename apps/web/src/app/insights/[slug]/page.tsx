@@ -1,8 +1,8 @@
 import Link from "next/link";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import { InsightCard, PageHero, formatDate } from "@/components/ui";
-/* eslint-disable @next/next/no-img-element -- cover images are served by the API */
+import { InsightCard, InsightCover, PageHero, formatDate } from "@/components/ui";
+import { ArticleToc } from "@/components/article-toc";
 import { anchorFor } from "@/lib/anchor";
 import { insights, type Block } from "@/content/insights";
 import { ArticleBody } from "@/components/article-body";
@@ -91,6 +91,13 @@ export default async function InsightPage(
           { label: "Insights", href: "/insights" },
           { label: insight.category },
         ]}
+        aside={
+          <InsightCover
+            insight={insight}
+            sizes="(min-width: 1280px) 30rem, (min-width: 1024px) 26rem, 100vw"
+            className="rounded-xl border border-line shadow-xl shadow-ink/10"
+          />
+        }
       >
         <div className="mt-8 flex flex-wrap items-center gap-x-6 gap-y-2 text-sm text-slate">
           {author && (
@@ -119,9 +126,6 @@ export default async function InsightPage(
             only once there is a second column to put it in. */}
         <div className="grid gap-12 lg:grid-cols-[15rem_1fr] lg:gap-14">
           <article className="min-w-0">
-            {insight.coverUrl && (
-              <img src={insight.coverUrl} alt="" className="mb-10 aspect-[16/9] w-full rounded-xl border border-line object-cover" />
-            )}
             <p className="border-l-2 border-gold pl-6 text-lg leading-relaxed text-ink">
               {insight.summary}
             </p>
@@ -162,27 +166,12 @@ export default async function InsightPage(
             )}
           </article>
 
-          {/* On-this-page rail: the article's own h2 subheadings, then the
-              author. Sticky and clear of the header at whatever height it
-              currently is. */}
-          <aside className="lg:sticky lg:top-[calc(var(--header-h,4.5rem)+1.5rem)] lg:order-first lg:self-start">
-            {toc.length > 0 && (
-              <nav aria-label="On this page">
-                <h2 className="eyebrow text-gold-deep">On this page</h2>
-                <ul className="mt-4 space-y-2.5 border-l border-line text-sm">
-                  {toc.map((item) => (
-                    <li key={item.id}>
-                      <a
-                        href={`#${item.id}`}
-                        className="-ml-px block border-l-2 border-transparent py-0.5 pl-4 leading-snug text-ink-soft transition hover:border-gold/50 hover:text-gold-deep"
-                      >
-                        {item.text}
-                      </a>
-                    </li>
-                  ))}
-                </ul>
-              </nav>
-            )}
+          {/* On-this-page rail: the article's own h2 subheadings, the one
+              being read in gold, then the author. Sticky, riding in the
+              middle of the screen (never under the header) as the article
+              scrolls. */}
+          <aside className="lg:sticky lg:top-[max(calc(var(--header-h,4.5rem)+1.5rem),calc(50vh-12rem))] lg:order-first lg:self-start">
+            <ArticleToc items={toc} />
 
             {author && (
               <div className={toc.length > 0 ? "mt-8 border-t border-line pt-6" : undefined}>

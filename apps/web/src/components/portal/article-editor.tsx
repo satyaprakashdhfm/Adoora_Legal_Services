@@ -19,6 +19,7 @@ import { practiceAreas } from "@/content/practice-areas";
 import { industries } from "@/content/industries";
 import { insightCategories, type Block } from "@/content/insights";
 import { ArticleBody } from "@/components/article-body";
+import { CoverGenerator } from "@/components/portal/cover-generator";
 import { Badge, Button, ErrorNote, Field, Input, Select, Textarea } from "@/components/portal/ui";
 
 // ---------------------------------------------------------------------------
@@ -290,7 +291,7 @@ export function ArticleEditor({ article, onReload }: { article: ArticleDetail; o
   const [notice, setNotice] = useState<string | null>(null);
   const [uploading, setUploading] = useState(false);
   /** The one open side-panel section, or none. */
-  const [panel, setPanel] = useState<string | null>(null);
+  const [panel, setPanel] = useState<string | null>(() => (article.coverImageId ? null : "cover"));
   const toggle = (name: string) => setPanel((current) => (current === name ? null : name));
   const [profiles, setProfiles] = useState<LawyerProfile[]>([]);
   const imageInput = useRef<HTMLInputElement>(null);
@@ -655,18 +656,21 @@ export function ArticleEditor({ article, onReload }: { article: ArticleDetail; o
           </div>
         ) : (
           <div className="overflow-hidden rounded-xl border border-line bg-paper">
-            <div className="bg-paper-tint px-6 py-10 sm:px-12">
-              <p className="eyebrow text-gold-deep">{draft.category}</p>
-              <h1 className="mt-4 max-w-4xl font-serif text-3xl font-semibold leading-tight tracking-tight text-ink sm:text-4xl">{draft.title}</h1>
-              <p className="mt-5 text-sm text-slate">
-                {author ? `By ${author.name}, ${author.designation} · ` : ""}
-                {article.publishedAt ? formatDateTime(article.publishedAt) : "Not yet published"} · {Math.max(1, Math.round(seo.words / 200))} min read
-              </p>
+            {/* As on the website: the cover beside the title. */}
+            <div className={`bg-paper-tint px-6 py-10 sm:px-12 ${draft.coverImageId ? "grid items-center gap-8 lg:grid-cols-[minmax(0,1fr)_minmax(0,24rem)]" : ""}`}>
+              <div>
+                <p className="eyebrow text-gold-deep">{draft.category}</p>
+                <h1 className="mt-4 max-w-4xl font-serif text-3xl font-semibold leading-tight tracking-tight text-ink sm:text-4xl">{draft.title}</h1>
+                <p className="mt-5 text-sm text-slate">
+                  {author ? `By ${author.name}, ${author.designation} · ` : ""}
+                  {article.publishedAt ? formatDateTime(article.publishedAt) : "Not yet published"} · {Math.max(1, Math.round(seo.words / 200))} min read
+                </p>
+              </div>
+              {draft.coverImageId && (
+                <img src={articleImageUrl(article.id, draft.coverImageId)} alt="" className="aspect-[16/9] w-full rounded-xl border border-line object-cover shadow-lg shadow-ink/10" />
+              )}
             </div>
             <div className="mx-auto max-w-3xl px-6 py-10 sm:px-12">
-              {draft.coverImageId && (
-                <img src={articleImageUrl(article.id, draft.coverImageId)} alt="" className="mb-10 aspect-[16/9] w-full rounded-xl border border-line object-cover" />
-              )}
               <p className="border-l-2 border-gold pl-6 text-lg leading-relaxed text-ink">{draft.summary}</p>
               <div className="prose-adoora mt-10 max-w-none">
                 <ArticleBody blocks={previewBlocks} />
@@ -748,6 +752,53 @@ export function ArticleEditor({ article, onReload }: { article: ArticleDetail; o
             </p>
           </Panel>
 
+          {/* The picture on the Insights cards, beside the title on the
+              article, and in link previews. Upload one, or have Gemini draw
+              one from the article — only on a click, with the cost shown. */}
+          <Panel
+            title="Cover image"
+            open={panel === "cover"}
+            onToggle={() => toggle("cover")}
+            summary={draft.coverImageId ? "Set" : <span className="font-semibold text-amber-700">Missing</span>}
+          >
+            {draft.coverImageId ? (
+              <div>
+                <img src={articleImageUrl(article.id, draft.coverImageId)} alt="" className="aspect-[16/9] w-full rounded-lg border border-line object-cover" />
+                <div className="mt-2 flex gap-2">
+                  <Button size="sm" tone="secondary" onClick={() => coverInput.current?.click()} disabled={uploading}>
+                    {uploading ? "Uploading…" : "Upload a different one"}
+                  </Button>
+                  <Button size="sm" tone="ghost" onClick={() => set("coverImageId", null)}>Remove</Button>
+                </div>
+              </div>
+            ) : (
+              <div>
+                <p className="text-xs text-slate">Shown on the Insights cards, beside the title on the article, and when the link is shared. 16:9 works best.</p>
+                <Button size="sm" tone="secondary" className="mt-2" onClick={() => coverInput.current?.click()} disabled={uploading}>
+                  {uploading ? "Uploading…" : "Upload an image"}
+                </Button>
+              </div>
+            )}
+            <CoverGenerator
+              articleId={article.id}
+              brief={() => {
+                const blocks = cleanBlocks(draft.blocks);
+                return {
+                  title: draft.title,
+                  summary: draft.summary,
+                  category: draft.category,
+                  practices: draft.practices,
+                  headings: blocks.flatMap((block) => (block.type === "h2" ? [block.text] : [])),
+                  excerpt: blocks
+                    .flatMap((block) => (block.type === "p" ? [block.text] : []))
+                    .slice(0, 3)
+                    .join("\n\n"),
+                };
+              }}
+              onCreated={(imageId) => set("coverImageId", imageId)}
+            />
+          </Panel>
+
           <Panel title="Publishing" open={panel === "publishing"} onToggle={() => toggle("publishing")} summary={draft.category}>
             <Field label="Category">
               <Select value={draft.category} onChange={(event) => set("category", event.target.value)} options={insightCategories.map((c) => ({ value: c, label: c }))} />
@@ -763,22 +814,6 @@ export function ArticleEditor({ article, onReload }: { article: ArticleDetail; o
             <Field label="Web address" hint={`/insights/${draft.slug || "…"}`}>
               <Input value={draft.slug} onChange={(event) => set("slug", event.target.value.toLowerCase().replace(/[^a-z0-9-]+/g, "-"))} />
             </Field>
-            <div>
-              <p className="text-xs font-semibold uppercase tracking-wide text-ink-soft">Cover image</p>
-              {draft.coverImageId ? (
-                <div className="mt-2">
-                  <img src={articleImageUrl(article.id, draft.coverImageId)} alt="" className="aspect-[16/9] w-full rounded-lg border border-line object-cover" />
-                  <div className="mt-2 flex gap-2">
-                    <Button size="sm" tone="secondary" onClick={() => coverInput.current?.click()} disabled={uploading}>Replace</Button>
-                    <Button size="sm" tone="ghost" onClick={() => set("coverImageId", null)}>Remove</Button>
-                  </div>
-                </div>
-              ) : (
-                <Button size="sm" tone="secondary" className="mt-2" onClick={() => coverInput.current?.click()} disabled={uploading}>
-                  {uploading ? "Uploading…" : "Upload cover image"}
-                </Button>
-              )}
-            </div>
           </Panel>
 
           <Panel
