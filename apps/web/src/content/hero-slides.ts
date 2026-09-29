@@ -31,6 +31,11 @@ export type HeroSlide = {
    * the faces), with the copy on a panel of its own instead.
    */
   people?: boolean;
+  /**
+   * The photograph's width / height, e.g. "2125 / 740". The team photograph
+   * is shown whole at these proportions, so update it with the picture.
+   */
+  imageAspect?: string;
 };
 
 /**
@@ -47,6 +52,7 @@ export const heroSlides: HeroSlide[] = [
     imageBase: "hero-team",
     imageNote: "The team: six lawyers in a row, head-and-shoulders, against a navy backdrop.",
     people: true,
+    imageAspect: "2125 / 740",
   },
   {
     eyebrow: "Our services",

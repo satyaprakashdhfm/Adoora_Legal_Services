@@ -120,11 +120,27 @@ export function Hero({ images }: { images: (string | null)[] }) {
     >
       {/* One photograph per slide, cross-fading with the copy. The navy wash
           sits above all of them, so the left-hand column reads identically
-          whichever frame is showing. */}
+          whichever frame is showing — except the team photograph, which is
+          never washed over (see below). */}
       <div aria-hidden="true" className="absolute inset-0 -z-10">
         {heroSlides.map((slide, slideIndex) => {
           const src = images[slideIndex];
           if (!src) return null;
+
+          const image = (
+            <Image
+              src={src}
+              alt=""
+              fill
+              sizes="100vw"
+              className={`object-cover ${slide.people ? "object-top" : "object-right"}`}
+              /* The first frame is the LCP element; the others only need
+                 to be in hand before the rotation reaches them. */
+              {...(slideIndex === 0
+                ? { preload: true }
+                : { loading: "eager" as const, fetchPriority: "low" as const })}
+            />
+          );
 
           return (
             <div
@@ -133,25 +149,26 @@ export function Hero({ images }: { images: (string | null)[] }) {
                 slideIndex === index ? "opacity-100" : "opacity-0"
               }`}
             >
-              <Image
-                src={src}
-                alt=""
-                fill
-                sizes="100vw"
-                className={`object-cover ${slide.people ? "object-center" : "object-right"}`}
-                /* The first frame is the LCP element; the others only need
-                   to be in hand before the rotation reaches them. */
-                {...(slideIndex === 0
-                  ? { preload: true }
-                  : { loading: "eager" as const, fetchPriority: "low" as const })}
-              />
+              {slide.people ? (
+                /* The team at its own proportions across the full width,
+                   pinned to the top: nobody is cut off at the sides, and the
+                   faces sit in the upper half, clear of the copy band. Below
+                   the photograph (on tall, narrow screens) the navy of the
+                   section carries on, faded into the photograph's own. On a
+                   phone the whole row would be a thin strip, so there it fills
+                   the top half instead, centred on the middle of the team. */
+                <div
+                  className="absolute inset-x-0 top-0 h-1/2 sm:h-auto sm:[aspect-ratio:var(--hero-aspect)]"
+                  style={{ "--hero-aspect": slide.imageAspect } as React.CSSProperties}
+                >
+                  {image}
+                  <div className="absolute inset-x-0 bottom-0 h-1/4 bg-gradient-to-t from-ink-mid to-transparent" />
+                </div>
+              ) : (
+                image
+              )}
               {slide.bright && (
                 <div className="hero-bright-lift absolute inset-0" />
-              )}
-              {/* The team photograph keeps the faces clear: only a shallow
-                  lift at the foot for the controls. */}
-              {slide.people && (
-                <div className="absolute inset-0 bg-gradient-to-t from-ink-deep/80 via-ink-deep/10 to-transparent" />
               )}
             </div>
           );
@@ -164,12 +181,14 @@ export function Hero({ images }: { images: (string | null)[] }) {
         />
       </div>
 
-      <div className="container-page relative flex flex-col justify-center py-16 sm:py-20 lg:min-h-[min(calc(100svh-7.5rem),46rem)] lg:py-16">
+      <div className="container-page relative flex flex-col justify-center pb-28 pt-16 sm:pt-20 lg:min-h-[min(calc(100svh-7.5rem),46rem)] lg:pt-16">
         <div className="max-w-3xl">
           {/* Slides are stacked so the container height does not jump between
-              headings of different lengths. */}
+              headings of different lengths. The team slide is not among them:
+              its copy is the band along the foot, below. */}
           <div className="grid">
             {heroSlides.map((slide, slideIndex) => {
+              if (slide.people) return null;
               const isActive = slideIndex === index;
 
               return (
@@ -177,12 +196,6 @@ export function Hero({ images }: { images: (string | null)[] }) {
                   key={slide.eyebrow}
                   className={`hero-copy col-start-1 row-start-1 ${
                     isActive ? "opacity-100" : "pointer-events-none opacity-0"
-                  } ${
-                    /* Over the team photograph the copy sits on its own
-                       panel, so no face is washed out to make it legible. */
-                    slide.people
-                      ? "self-end rounded-xl bg-ink-deep/85 p-6 shadow-2xl shadow-ink-deep/40 backdrop-blur-sm sm:max-w-xl sm:p-8"
-                      : ""
                   }`}
                   aria-hidden={!isActive}
                 >
@@ -216,72 +229,120 @@ export function Hero({ images }: { images: (string | null)[] }) {
               );
             })}
           </div>
-
-          {/* Slide controls: a rule per slide, filling gold when active. */}
-          <div className="mt-10 flex items-center gap-3">
-            {heroSlides.map((slide, slideIndex) => {
-              const isActive = slideIndex === index;
-
-              return (
-                <button
-                  key={slide.eyebrow}
-                  type="button"
-                  onClick={() => setIndex(slideIndex)}
-                  aria-label={`Show slide ${slideIndex + 1}: ${slide.eyebrow}`}
-                  aria-current={isActive}
-                  className="group flex h-11 items-center"
-                >
-                  <span
-                    aria-hidden="true"
-                    className={`block h-0.5 transition-all ${
-                      isActive
-                        ? "w-12 bg-gold"
-                        : "w-8 bg-white/25 group-hover:bg-white/50"
-                    }`}
-                  />
-                </button>
-              );
-            })}
-            <span className="sr-only" aria-live="polite">
-              {active.eyebrow}
-            </span>
-          </div>
         </div>
 
-        {/* Standing line from the firm's own collateral. */}
-        <p className="mt-12 max-w-[13rem] font-serif text-sm italic leading-relaxed text-white/75 lg:absolute lg:bottom-10 lg:right-10 lg:mt-0 lg:text-right 2xl:right-16">
+        {/* Standing line from the firm's own collateral. Stood down on the
+            team slide, whose copy band runs the full width. */}
+        <p
+          className={`hero-copy mt-12 max-w-[13rem] font-serif text-sm italic leading-relaxed text-white/75 lg:absolute lg:bottom-10 lg:right-10 lg:mt-0 lg:text-right 2xl:right-16 ${
+            active.people ? "opacity-0" : ""
+          }`}
+        >
           &ldquo;{firm.heroQuote}&rdquo;
         </p>
       </div>
 
-      {/* Prev/next controls — the explicit way to move the slideshow now that
-          neither tapping the photograph nor moving the cursor over it does.
-          Direct children of the section so they sit above the photograph and
-          the copy alike. Anchored to a fixed distance from the bottom rather
-          than vertically centred: centring on the whole hero put the button
-          over the paragraph text on wide screens, since the copy runs to
-          roughly mid-height there. Below the position dots there is nothing
-          but photograph on both sides. */}
-      {heroSlides.length > 1 && (
-        <>
-          <button
-            type="button"
-            onClick={goPrev}
-            aria-label="Previous slide"
-            className="absolute bottom-28 left-2 top-auto z-20 flex h-10 w-10 items-center justify-center rounded-full border border-white/25 bg-ink/40 text-white backdrop-blur-sm transition hover:border-gold hover:bg-gold hover:text-ink-deep sm:left-4 sm:h-12 sm:w-12 lg:left-6"
+      {/* The team slide's copy: a low band across the foot of the hero, over
+          the jackets rather than the faces — heading on the left, the rest on
+          the right on wide screens. */}
+      {heroSlides.map((slide, slideIndex) => {
+        if (!slide.people) return null;
+        const isActive = slideIndex === index;
+
+        return (
+          <div
+            key={slide.eyebrow}
+            className={`hero-copy absolute inset-x-0 bottom-0 bg-gradient-to-t from-ink-deep via-ink-deep/90 to-transparent pb-24 pt-12 ${
+              isActive ? "opacity-100" : "pointer-events-none opacity-0"
+            }`}
+            aria-hidden={!isActive}
           >
-            <Arrow className="-scale-x-100" />
-          </button>
-          <button
-            type="button"
-            onClick={goNext}
-            aria-label="Next slide"
-            className="absolute bottom-28 right-2 top-auto z-20 flex h-10 w-10 items-center justify-center rounded-full border border-white/25 bg-ink/40 text-white backdrop-blur-sm transition hover:border-gold hover:bg-gold hover:text-ink-deep sm:right-4 sm:h-12 sm:w-12 lg:right-6"
-          >
-            <Arrow />
-          </button>
-        </>
-      )}
+            <div className="container-page grid gap-4 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)] lg:items-end lg:gap-12">
+              <div>
+                <p className="eyebrow text-gold-bright">{slide.eyebrow}</p>
+                <h1 className="mt-3 font-serif text-2xl font-semibold leading-[1.15] tracking-tight text-balance sm:text-3xl xl:text-[2.4rem]">
+                  {slide.heading}{" "}
+                  <span className="text-gold-bright">{slide.accent}</span>
+                </h1>
+              </div>
+              <div>
+                <p className="text-sm leading-relaxed text-white/85 sm:text-base">{slide.body}</p>
+                <div className="mt-5 flex flex-wrap gap-3">
+                  <Link
+                    href={slide.href}
+                    className="inline-flex items-center justify-center gap-2 rounded-md bg-gold px-6 py-3 text-sm font-semibold text-ink-deep transition hover:bg-gold-bright"
+                  >
+                    {slide.cta}
+                    <Arrow />
+                  </Link>
+                  <Link
+                    href="/contact"
+                    className="inline-flex items-center justify-center rounded-md border border-white/30 px-6 py-3 text-sm font-semibold text-white transition hover:border-white hover:bg-white/5"
+                  >
+                    Request information
+                  </Link>
+                </div>
+              </div>
+            </div>
+          </div>
+        );
+      })}
+
+      {/* Slide controls along the foot, for every slide: previous, a rule per
+          slide (gold when active), next. The explicit way to move the
+          slideshow, since neither tapping the photograph nor moving the cursor
+          over it does; kept together at the bottom so they never sit over a
+          heading or a face. */}
+      <div className="absolute inset-x-0 bottom-0 z-20">
+        <div className="container-page flex items-center gap-3 pb-6">
+          {heroSlides.length > 1 && (
+            <button
+              type="button"
+              onClick={goPrev}
+              aria-label="Previous slide"
+              className="mr-1 flex h-10 w-10 items-center justify-center rounded-full border border-white/25 bg-ink/40 text-white backdrop-blur-sm transition hover:border-gold hover:bg-gold hover:text-ink-deep"
+            >
+              <Arrow className="-scale-x-100" />
+            </button>
+          )}
+          {heroSlides.map((slide, slideIndex) => {
+            const isActive = slideIndex === index;
+
+            return (
+              <button
+                key={slide.eyebrow}
+                type="button"
+                onClick={() => setIndex(slideIndex)}
+                aria-label={`Show slide ${slideIndex + 1}: ${slide.eyebrow}`}
+                aria-current={isActive}
+                className="group flex h-11 items-center"
+              >
+                <span
+                  aria-hidden="true"
+                  className={`block h-0.5 transition-all ${
+                    isActive
+                      ? "w-12 bg-gold"
+                      : "w-8 bg-white/25 group-hover:bg-white/50"
+                  }`}
+                />
+              </button>
+            );
+          })}
+          {heroSlides.length > 1 && (
+            <button
+              type="button"
+              onClick={goNext}
+              aria-label="Next slide"
+              className="ml-1 flex h-10 w-10 items-center justify-center rounded-full border border-white/25 bg-ink/40 text-white backdrop-blur-sm transition hover:border-gold hover:bg-gold hover:text-ink-deep"
+            >
+              <Arrow />
+            </button>
+          )}
+          <span className="sr-only" aria-live="polite">
+            {active.eyebrow}
+          </span>
+        </div>
+      </div>
     </section>
   );
 }
