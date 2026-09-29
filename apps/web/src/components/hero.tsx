@@ -4,6 +4,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useRef, useState, type PointerEvent as ReactPointerEvent } from "react";
 import { heroSlides } from "@/content/hero-slides";
+import { firm } from "@/content/firm";
 
 const ROTATE_MS = 7000;
 
@@ -117,9 +118,10 @@ export function Hero({ images }: { images: (string | null)[] }) {
       aria-roledescription="carousel"
       aria-label="About the firm"
     >
-      {/* One photograph per slide, cross-fading. Every slide is laid out
-          the same way: the photograph shown clearly, not washed over, with
-          the copy in a band along the foot (below). */}
+      {/* One photograph per slide, cross-fading with the copy. The navy wash
+          sits above all of them, so the left-hand column reads identically
+          whichever frame is showing — except the team photograph, which is
+          never washed over (see below). */}
       <div aria-hidden="true" className="absolute inset-0 -z-10">
         {heroSlides.map((slide, slideIndex) => {
           const src = images[slideIndex];
@@ -131,7 +133,7 @@ export function Hero({ images }: { images: (string | null)[] }) {
               alt=""
               fill
               sizes="100vw"
-              className={`object-cover ${slide.people ? "object-top" : "object-right sm:object-center"}`}
+              className={`object-cover ${slide.people ? "object-top" : "object-right"}`}
               /* The first frame is the LCP element; the others only need
                  to be in hand before the rotation reaches them. */
               {...(slideIndex === 0
@@ -165,40 +167,107 @@ export function Hero({ images }: { images: (string | null)[] }) {
               ) : (
                 image
               )}
-              {/* A bright photograph is toned down a little so it sits with
-                  the navy band and the header. */}
-              {slide.bright && <div className="absolute inset-0 bg-ink-deep/25" />}
+              {slide.bright && (
+                <div className="hero-bright-lift absolute inset-0" />
+              )}
             </div>
           );
         })}
+
+        <div
+          className={`hero-scrim hero-slide absolute inset-0 ${
+            active.people ? "opacity-0" : "opacity-100"
+          }`}
+        />
       </div>
 
-      {/* Holds the hero's height; the copy itself is the band below. */}
-      <div aria-hidden="true" className="min-h-[44rem] sm:min-h-[36rem] lg:min-h-[min(calc(100svh-7.5rem),46rem)]" />
+      <div className="container-page relative flex flex-col justify-center pb-28 pt-16 sm:pt-20 lg:min-h-[min(calc(100svh-7.5rem),46rem)] lg:pt-16">
+        <div className="max-w-3xl">
+          {/* Slides are stacked so the container height does not jump between
+              headings of different lengths. The team slide is not among them:
+              its copy is the band along the foot, below. */}
+          <div className="grid">
+            {heroSlides.map((slide, slideIndex) => {
+              if (slide.people) return null;
+              const isActive = slideIndex === index;
 
-      {/* The copy for each slide, on the left only, anchored low: section,
-          heading, description, buttons. A navy fade from the bottom-left
-          corner keeps it legible and leaves the rest of the photograph clear. */}
+              return (
+                <div
+                  key={slide.eyebrow}
+                  className={`hero-copy col-start-1 row-start-1 ${
+                    isActive ? "opacity-100" : "pointer-events-none opacity-0"
+                  }`}
+                  aria-hidden={!isActive}
+                >
+                  <p className="eyebrow text-gold-bright">{slide.eyebrow}</p>
+
+                  <h1 className="mt-4 font-serif text-[1.7rem] font-semibold leading-[1.15] tracking-tight text-balance sm:text-4xl lg:text-[2.75rem] xl:text-[3.15rem]">
+                    {slide.heading}{" "}
+                    <span className="text-gold-bright">{slide.accent}</span>
+                  </h1>
+
+                  <p className="mt-5 max-w-xl text-sm leading-relaxed text-white/85 sm:text-base">
+                    {slide.body}
+                  </p>
+
+                  <div className="mt-8 flex flex-col gap-3 sm:flex-row">
+                    <Link
+                      href={slide.href}
+                      className="inline-flex items-center justify-center gap-2 rounded-md bg-gold px-6 py-3 text-sm font-semibold sm:px-7 sm:py-3.5 text-ink-deep transition hover:bg-gold-bright"
+                    >
+                      {slide.cta}
+                      <Arrow />
+                    </Link>
+                    <Link
+                      href="/contact"
+                      className="inline-flex items-center justify-center rounded-md border border-white/30 px-6 py-3 text-sm font-semibold sm:px-7 sm:py-3.5 text-white transition hover:border-white hover:bg-white/5"
+                    >
+                      Request information
+                    </Link>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* Standing line from the firm's own collateral. Stood down on the
+            team slide, whose copy band runs the full width. */}
+        <p
+          className={`hero-copy mt-12 max-w-[13rem] font-serif text-sm italic leading-relaxed text-white/75 lg:absolute lg:bottom-10 lg:right-10 lg:mt-0 lg:text-right 2xl:right-16 ${
+            active.people ? "opacity-0" : ""
+          }`}
+        >
+          &ldquo;{firm.heroQuote}&rdquo;
+        </p>
+      </div>
+
+      {/* The team slide's copy: a low band across the foot of the hero, over
+          the jackets rather than the faces — heading on the left, the rest on
+          the right on wide screens. */}
       {heroSlides.map((slide, slideIndex) => {
+        if (!slide.people) return null;
         const isActive = slideIndex === index;
 
         return (
           <div
             key={slide.eyebrow}
-            className={`hero-copy hero-copy-fade absolute inset-x-0 bottom-0 pb-24 pt-24 ${
+            className={`hero-copy absolute inset-x-0 bottom-0 bg-gradient-to-t from-ink-deep via-ink-deep/90 to-transparent pb-24 pt-12 ${
               isActive ? "opacity-100" : "pointer-events-none opacity-0"
             }`}
             aria-hidden={!isActive}
           >
-            <div className="container-page">
-              <div className="max-w-xl">
+            <div className="container-page grid gap-4 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)] lg:items-end lg:gap-12">
+              <div>
                 <p className="eyebrow text-gold-bright">{slide.eyebrow}</p>
                 <h1 className="mt-3 font-serif text-2xl font-semibold leading-[1.15] tracking-tight text-balance sm:text-3xl xl:text-[2.4rem]">
                   {slide.heading}{" "}
                   <span className="text-gold-bright">{slide.accent}</span>
                 </h1>
-                <p className="mt-4 text-sm leading-relaxed text-white/85 sm:text-[0.95rem]">{slide.body}</p>
-                <div className="mt-6 flex flex-wrap gap-3">
+              </div>
+              <div>
+                <p className="text-sm leading-relaxed text-white/85 sm:text-base">{slide.body}</p>
+                <div className="mt-5 flex flex-wrap gap-3">
                   <Link
                     href={slide.href}
                     className="inline-flex items-center justify-center gap-2 rounded-md bg-gold px-6 py-3 text-sm font-semibold text-ink-deep transition hover:bg-gold-bright"
