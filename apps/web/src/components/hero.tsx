@@ -176,31 +176,29 @@ export function Hero({ images }: { images: (string | null)[] }) {
       {/* Holds the hero's height; the copy itself is the band below. */}
       <div aria-hidden="true" className="min-h-[44rem] sm:min-h-[36rem] lg:min-h-[min(calc(100svh-7.5rem),46rem)]" />
 
-      {/* The copy for each slide: a low band across the foot of the hero,
-          heading on the left and the rest on the right on wide screens, over
-          a navy fade so it reads on any photograph. */}
+      {/* The copy for each slide, on the left only, anchored low: section,
+          heading, description, buttons. A navy fade from the bottom-left
+          corner keeps it legible and leaves the rest of the photograph clear. */}
       {heroSlides.map((slide, slideIndex) => {
         const isActive = slideIndex === index;
 
         return (
           <div
             key={slide.eyebrow}
-            className={`hero-copy absolute inset-x-0 bottom-0 bg-gradient-to-t from-ink-deep via-ink-deep/90 to-transparent pb-24 pt-16 ${
+            className={`hero-copy hero-copy-fade absolute inset-x-0 bottom-0 pb-24 pt-24 ${
               isActive ? "opacity-100" : "pointer-events-none opacity-0"
             }`}
             aria-hidden={!isActive}
           >
-            <div className="container-page grid gap-4 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)] lg:items-end lg:gap-12">
-              <div>
+            <div className="container-page">
+              <div className="max-w-xl">
                 <p className="eyebrow text-gold-bright">{slide.eyebrow}</p>
                 <h1 className="mt-3 font-serif text-2xl font-semibold leading-[1.15] tracking-tight text-balance sm:text-3xl xl:text-[2.4rem]">
                   {slide.heading}{" "}
                   <span className="text-gold-bright">{slide.accent}</span>
                 </h1>
-              </div>
-              <div>
-                <p className="text-sm leading-relaxed text-white/85 sm:text-base">{slide.body}</p>
-                <div className="mt-5 flex flex-wrap gap-3">
+                <p className="mt-4 text-sm leading-relaxed text-white/85 sm:text-[0.95rem]">{slide.body}</p>
+                <div className="mt-6 flex flex-wrap gap-3">
                   <Link
                     href={slide.href}
                     className="inline-flex items-center justify-center gap-2 rounded-md bg-gold px-6 py-3 text-sm font-semibold text-ink-deep transition hover:bg-gold-bright"

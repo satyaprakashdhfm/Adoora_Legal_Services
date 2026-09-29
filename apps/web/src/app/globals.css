@@ -286,6 +286,38 @@ figcaption {
  * right-hand side, and it lives inside the slide rather than above the stack so
  * it cross-fades with its own frame.
  */
+/* The hero copy's backdrop: darkest in the bottom-left corner under the
+   text, gone by the right-hand side and the top, so the photograph reads.
+   On a layer of its own, so the fade never dims the text itself. */
+.hero-copy-fade::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background:
+    linear-gradient(
+      to right,
+      color-mix(in oklab, var(--color-ink-deep) 88%, transparent) 0%,
+      color-mix(in oklab, var(--color-ink-deep) 55%, transparent) 38%,
+      transparent 62%
+    ),
+    linear-gradient(
+      to top,
+      color-mix(in oklab, var(--color-ink-deep) 70%, transparent) 0%,
+      transparent 100%
+    );
+  -webkit-mask-image: linear-gradient(to top, #000 55%, transparent 100%);
+  mask-image: linear-gradient(to top, #000 55%, transparent 100%);
+}
+
+@media (max-width: 1023px) {
+  /* One column on narrower screens: the copy spans the width, so the fade
+     runs bottom-up across all of it. */
+  .hero-copy-fade::before {
+    background: linear-gradient(to top, var(--color-ink-deep) 0%, color-mix(in oklab, var(--color-ink-deep) 88%, transparent) 60%, transparent 100%);
+  }
+}
+
 .hero-bright-lift {
   background: linear-gradient(
     to right,
