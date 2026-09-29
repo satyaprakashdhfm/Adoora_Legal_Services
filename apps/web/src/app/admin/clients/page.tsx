@@ -45,7 +45,7 @@ type ClientRow = {
 
 /**
  * Which cases the client can see. Picking a case here is the same link as
- * "Client access" on the case page — the client's dashboard shows it from
+ * "Client accounts" on the case page — the client's dashboard shows it from
  * their next visit. A client who has none yet can still sign in and open
  * their own matter from its CNR; it arrives here as Intake.
  */

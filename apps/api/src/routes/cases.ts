@@ -884,10 +884,10 @@ casesRouter.post("/:reference/documents", uploadMiddleware, async (req, res) => 
 });
 
 // ---------------------------------------------------------------------------
-// Folders inside a case's "Client access" and "Internal — team only"
+// Folders inside a case's "Case files" and "Internal"
 // ---------------------------------------------------------------------------
 
-/** GET /api/cases/:reference/folders — clients get the Client access ones. */
+/** GET /api/cases/:reference/folders — clients get the Case files ones. */
 casesRouter.get("/:reference/folders", async (req, res) => {
   const principal = req.principal!;
   const found = await findVisibleCase(principal, String(req.params.reference));

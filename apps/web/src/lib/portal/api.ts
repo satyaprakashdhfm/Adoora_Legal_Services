@@ -159,9 +159,9 @@ export type DocumentRecord = {
   visibility: Visibility;
   currentVersion: number;
   uploadedByClientId?: string | null;
-  /** Saved from the court's website — the "From the court" folder. */
+  /** Saved from the court's website — tagged "From the court". */
   fromCourt?: boolean;
-  /** A folder the firm made inside Client access / Internal; null = the top. */
+  /** A folder the firm made inside Case files / Internal; null = the top. */
   folderId?: string | null;
   createdAt: string;
   updatedAt: string;

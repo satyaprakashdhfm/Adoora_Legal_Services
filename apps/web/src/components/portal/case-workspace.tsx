@@ -222,20 +222,27 @@ export function CaseWorkspace({ reference, user, basePath }: { reference: string
       )}
 
       {tab === "edit" && record.canEdit && (
-        <Card className="p-5 sm:p-7">
-          <CaseForm
-            key={record.updatedAt}
-            mode="staff"
-            initial={record}
-            submitLabel="Save changes"
-            onSubmit={async (payload) => {
-              const updated = await api<CaseDetail>(`/cases/${encodeURIComponent(record.reference)}`, { method: "PATCH", body: payload });
-              setRecord(updated);
-              setTab("overview");
-              setSaved("Case details saved. Status, stage and hearing changes have been added to the timeline.");
-            }}
-          />
-        </Card>
+        <div className="grid items-start gap-6 xl:grid-cols-[1fr_22rem]">
+          <Card className="p-5 sm:p-7">
+            <CaseForm
+              key={record.updatedAt}
+              mode="staff"
+              initial={record}
+              submitLabel="Save changes"
+              onSubmit={async (payload) => {
+                const updated = await api<CaseDetail>(`/cases/${encodeURIComponent(record.reference)}`, { method: "PATCH", body: payload });
+                setRecord(updated);
+                setTab("overview");
+                setSaved("Case details saved. Status, stage and hearing changes have been added to the timeline.");
+              }}
+            />
+          </Card>
+          {/* Who handles the case and which client accounts see it — the same cards as Overview. */}
+          <div className="space-y-6">
+            <TeamCard record={record} onChange={load} />
+            {record.canManage && <ClientsCard record={record} onChange={load} />}
+          </div>
+        </div>
       )}
     </div>
   );
@@ -360,7 +367,7 @@ function ClientsCard({ record, onChange }: { record: CaseDetail; onChange: () =>
   return (
     <Card>
       <CardHeader
-        title="Client access"
+        title="Client accounts"
         description="Accounts that see this case on their dashboard."
         action={!editing ? <Button tone="secondary" size="sm" onClick={() => setEditing(true)}>Change</Button> : undefined}
       />

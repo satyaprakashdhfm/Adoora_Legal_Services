@@ -6,6 +6,7 @@ import { api, downloadUrl, type CaseSummary, type DocumentRecord, type Page } fr
 import { DOCUMENT_CATEGORIES, labelFor } from "@/lib/portal/legal";
 import { courtNumber, formatBytes, formatDate } from "@/lib/portal/format";
 import { UploadForm } from "@/components/portal/documents-panel";
+import { Breadcrumbs, FolderTile, MoveSelect, SIDE_LABEL, SIDES, SourceTag, sideHint, type Folder, type Side } from "@/components/portal/document-folders";
 import { Button, Card, EmptyState, ErrorNote, Input, Modal, Spinner, StatusBadge } from "@/components/portal/ui";
 
 /**
@@ -14,75 +15,22 @@ import { Button, Card, EmptyState, ErrorNote, Input, Modal, Spinner, StatusBadge
  *   Documents
  *   ├── Team shared              staff only — templates, precedents, forms
  *   └── <one folder per case>
- *       ├── Client access        everything the client sees: court orders,
+ *       ├── Case files           everything the client sees: court orders,
  *       │   └── <firm folders>   their own uploads, what the firm shares
- *       └── Internal — team only the firm's working papers
+ *       └── Internal             the firm's working papers
  *           └── <firm folders>
  *
  * The two sides are the documents' visibility, so the admin console, a
  * lawyer's dashboard and the client's dashboard all read the same files.
  * The firm can make folders inside either side; a file moved into one takes
- * that side's visibility. Clients see only Client access.
+ * that side's visibility. Clients see only Case files. Each file is tagged
+ * with where it came from: the court, the client or the firm.
  */
 
-type Side = "CLIENT" | "INTERNAL";
-type Folder = { id: string; name: string; visibility: Side };
 type Location =
   | { kind: "root" }
   | { kind: "team" }
   | { kind: "case"; case: CaseSummary; side?: Side; folder?: Folder };
-
-const FOLDER_ICON = "M2.5 5.5a1 1 0 011-1h4l1.5 1.5h7.5a1 1 0 011 1v8.5a1 1 0 01-1 1h-13a1 1 0 01-1-1z";
-
-const SIDE_LABEL: Record<Side, string> = { CLIENT: "Client access", INTERNAL: "Internal — team only" };
-
-function sideHint(side: Side, staff: boolean) {
-  if (side === "INTERNAL") return "Working papers the client does not see";
-  return staff ? "Court orders, the client's uploads and what the firm shares" : "Court orders, your uploads and what the firm shares with you";
-}
-
-/** Where a file came from, shown on its row. */
-function sourceOf(doc: DocumentRecord): { label: string; tone: string } {
-  if (doc.fromCourt) return { label: "From the court", tone: "bg-sky-50 text-sky-800" };
-  if (doc.uploadedByClientId || (doc.uploadedByClient && !doc.uploadedByUser)) return { label: "From the client", tone: "bg-amber-50 text-amber-800" };
-  return { label: "Firm", tone: "bg-paper-tint text-ink-soft" };
-}
-
-function FolderTile({
-  title,
-  subtitle,
-  count,
-  onOpen,
-  tone = "gold",
-}: {
-  title: string;
-  subtitle?: string;
-  count?: number;
-  onOpen: () => void;
-  tone?: "gold" | "ink" | "slate";
-}) {
-  const colour = tone === "ink" ? "text-ink" : tone === "slate" ? "text-slate" : "text-gold";
-  return (
-    <button
-      type="button"
-      onClick={onOpen}
-      className="group flex w-full items-start gap-3 rounded-xl border border-line bg-white p-4 text-left transition hover:border-gold hover:shadow-md hover:shadow-ink/5"
-    >
-      <svg viewBox="0 0 20 20" aria-hidden="true" className={`mt-0.5 h-8 w-8 shrink-0 ${colour}`}>
-        <path d={FOLDER_ICON} fill="currentColor" fillOpacity={0.18} stroke="currentColor" strokeWidth={1.2} strokeLinejoin="round" />
-      </svg>
-      <span className="min-w-0 flex-1">
-        <span className="block truncate text-sm font-semibold text-ink group-hover:text-gold-deep">{title}</span>
-        {subtitle && <span className="mt-0.5 block truncate text-xs text-slate">{subtitle}</span>}
-        {count !== undefined && (
-          <span className="mt-1.5 block text-xs font-semibold text-ink-soft">
-            {count === 0 ? "Empty" : `${count} file${count === 1 ? "" : "s"}`}
-          </span>
-        )}
-      </span>
-    </button>
-  );
-}
 
 /** A file-type badge from the extension: PDF, DOC, XLS, IMG, TXT. */
 function FileIcon({ filename }: { filename?: string }) {
@@ -108,10 +56,8 @@ function FileList({
     return <EmptyState title="No files here yet" />;
   }
 
-  async function move(doc: DocumentRecord, target: string) {
+  async function move(doc: DocumentRecord, body: { folderId: string | null; visibility?: Side }) {
     setError(null);
-    const [kind, value] = target.split(":");
-    const body = kind === "folder" ? { folderId: value } : { folderId: null, visibility: value };
     try {
       await api(`/documents/${encodeURIComponent(doc.reference)}`, { method: "PATCH", body });
       onMoved?.();
@@ -127,8 +73,6 @@ function FileList({
         {documents.map((doc) => {
           const latest = doc.versions[0];
           const viewable = latest && /^(application\/pdf|image\/(png|jpeg|webp))$/.test(latest.mimeType);
-          const source = sourceOf(doc);
-          const here = doc.folderId ? `folder:${doc.folderId}` : `side:${doc.visibility}`;
           return (
             <li key={doc.id} className="flex flex-wrap items-center gap-3 px-5 py-3">
               <FileIcon filename={latest?.filename} />
@@ -138,7 +82,7 @@ function FileList({
                   {doc.currentVersion > 1 && <span className="ml-2 text-xs font-normal text-gold-deep">v{doc.currentVersion}</span>}
                 </p>
                 <p className="flex flex-wrap items-center gap-x-2 text-xs text-slate">
-                  <span className={`rounded px-1.5 py-0.5 text-[0.65rem] font-semibold ${source.tone}`}>{source.label}</span>
+                  <SourceTag doc={doc} />
                   <span className="truncate">
                     {[
                       labelFor(DOCUMENT_CATEGORIES, doc.category),
@@ -153,27 +97,7 @@ function FileList({
                 </p>
               </div>
               <div className="flex shrink-0 items-center gap-3 text-xs font-semibold">
-                {staff && folders && (
-                  <select
-                    aria-label="Move to"
-                    value={here}
-                    onChange={(event) => void move(doc, event.target.value)}
-                    className="max-w-[11rem] rounded-md border border-line bg-white px-2 py-1 text-xs font-normal text-ink-soft"
-                  >
-                    {(["CLIENT", "INTERNAL"] as Side[]).map((side) => (
-                      <optgroup key={side} label={SIDE_LABEL[side]}>
-                        <option value={`side:${side}`}>{SIDE_LABEL[side]} (top)</option>
-                        {folders
-                          .filter((folder) => folder.visibility === side)
-                          .map((folder) => (
-                            <option key={folder.id} value={`folder:${folder.id}`}>
-                              {folder.name}
-                            </option>
-                          ))}
-                      </optgroup>
-                    ))}
-                  </select>
-                )}
+                {staff && folders && <MoveSelect doc={doc} folders={folders} onMove={(body) => void move(doc, body)} />}
                 {viewable && (
                   <a href={downloadUrl(doc.reference, { inline: true })} target="_blank" rel="noopener" className="text-gold-deep hover:underline">
                     View
@@ -186,25 +110,6 @@ function FileList({
         })}
       </ul>
     </>
-  );
-}
-
-function Breadcrumbs({ trail }: { trail: { label: string; onClick?: () => void }[] }) {
-  return (
-    <nav aria-label="Folder" className="flex flex-wrap items-center gap-1.5 text-sm">
-      {trail.map((crumb, index) => (
-        <span key={`${crumb.label}-${index}`} className="flex items-center gap-1.5">
-          {index > 0 && <span className="text-slate">/</span>}
-          {crumb.onClick ? (
-            <button type="button" onClick={crumb.onClick} className="font-semibold text-gold-deep hover:underline">
-              {crumb.label}
-            </button>
-          ) : (
-            <span className="font-semibold text-ink">{crumb.label}</span>
-          )}
-        </span>
-      ))}
-    </nav>
   );
 }
 
@@ -320,7 +225,7 @@ export function DocumentDrive({ basePath, staff }: { basePath: string; staff: bo
     }
   }
 
-  // Where an upload goes, from where you are. Clients upload into Client access only.
+  // Where an upload goes, from where you are. Clients upload into Case files only.
   const upload =
     location.kind === "team"
       ? { action: "/api/documents/team", visibility: "INTERNAL" as const, label: "Team shared", folderId: undefined }
@@ -437,7 +342,7 @@ export function DocumentDrive({ basePath, staff }: { basePath: string; staff: bo
             <Spinner />
           ) : (
             <div className="grid gap-3 sm:grid-cols-2">
-              {(["CLIENT", "INTERNAL"] as Side[]).map((side) => (
+              {SIDES.map((side) => (
                 <FolderTile
                   key={side}
                   title={SIDE_LABEL[side]}
