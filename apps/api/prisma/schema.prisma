@@ -658,6 +658,8 @@ model LawyerProfile {
   bio           String[]     @default([])
   memberships   String[]     @default([])
   email         String?
+  /// For the firm's records; never sent to the public website.
+  phone         String?
   /// Home page introduction.
   summary       String?      @db.Text
 

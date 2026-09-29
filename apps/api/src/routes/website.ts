@@ -79,6 +79,7 @@ const profileSchema = z.object({
     .union([z.string().trim().toLowerCase().email("Please enter a valid email."), z.literal(""), z.null()])
     .optional()
     .transform((value) => (value === "" ? null : value)),
+  phone: text(32),
   summary: text(1200),
   photo: text(120),
   featured: z.boolean().optional(),
@@ -104,6 +105,7 @@ const profileSelect = {
   bio: true,
   memberships: true,
   email: true,
+  phone: true,
   summary: true,
   photo: true,
   photoType: true,
@@ -137,7 +139,7 @@ websitePublicRouter.get("/public/people", async (_req, res) => {
   res.set("Cache-Control", "public, max-age=60, stale-while-revalidate=300");
   res.json({
     data: rows.map((row) => {
-      const { userId: _user, published: _p, ...profile } = serialiseProfile(row);
+      const { userId: _user, published: _p, phone: _phone, ...profile } = serialiseProfile(row);
       return profile;
     }),
   });

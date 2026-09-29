@@ -43,7 +43,7 @@ function jobMeta(job: Job) {
 }
 
 /**
- * Roles are posted from the admin console (Website → Job openings). If the
+ * Roles are posted from the admin console (Website → Jobs). If the
  * API cannot be reached the page falls back to the roles bundled in
  * careers.ts rather than claiming there are none.
  */

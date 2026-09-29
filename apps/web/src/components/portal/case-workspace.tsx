@@ -324,6 +324,7 @@ function TeamCard({ record, onChange }: { record: CaseDetail; onChange: () => vo
               value=""
               onChange={(e) => e.target.value && setDraft([...draft, { userId: e.target.value, role: draft.length ? "ASSOCIATE" : "LEAD" }])}
               placeholder="+ Add a lawyer"
+              promptOnly
               options={available.map((s) => ({ value: s.id, label: `${s.name} (${s.role.toLowerCase()})` }))}
             />
           )}
@@ -400,9 +401,10 @@ function ClientsCard({ record, onChange }: { record: CaseDetail; onChange: () =>
             value=""
             onChange={(e) => e.target.value && setDraft([...draft, e.target.value])}
             placeholder="+ Link a client account"
+            promptOnly
             options={options.filter((o) => o.isActive && !draft.includes(o.id)).map((o) => ({ value: o.id, label: `${o.name} — ${o.email}` }))}
           />
-          <p className="text-xs text-slate">Not listed? Add the client under Clients first, using the Google email they will sign in with.</p>
+          <p className="text-xs text-slate">Not listed? Add the client under Clients first, using the email they will sign in with.</p>
           <ErrorNote>{error}</ErrorNote>
           <div className="flex gap-2">
             <Button size="sm" onClick={() => void save()}>Save access</Button>

@@ -67,7 +67,7 @@ export default function AdminOverview() {
         <StatTile label="Clients" value={stats.clients} hint="Active client accounts" href="/admin/clients" />
         <StatTile label="Lawyers" value={stats.lawyers} hint="Active lawyer accounts" href="/admin/staff" />
         <StatTile label="Website enquiries" value={stats.enquiries.new} hint={`New · ${stats.enquiries.total} in total`} href="/admin/enquiries" />
-        <StatTile label="Career applications" value={stats.applications.new} hint="New, not yet reviewed" href="/admin/applications" />
+        <StatTile label="Career applications" value={stats.applications.new} hint="New, not yet reviewed" href="/admin/jobs?tab=applications" />
       </div>
 
       <Card>

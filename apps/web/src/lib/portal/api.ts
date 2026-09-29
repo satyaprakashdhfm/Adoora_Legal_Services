@@ -307,6 +307,7 @@ export type LawyerProfile = {
   bio: string[];
   memberships: string[];
   email: string | null;
+  phone?: string | null;
   summary: string | null;
   photo: string | null;
   photoUrl: string | null;

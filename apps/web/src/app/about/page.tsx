@@ -21,7 +21,7 @@ export const metadata: Metadata = {
 
 /**
  * The roster comes from the lawyer profiles maintained in the admin console
- * (Website → Lawyer profiles), so a change in the team shows here without a
+ * (Team (Lawyers), shown under Website → Lawyer profiles), so a change in the team shows here without a
  * code change.
  */
 export default async function AboutPage() {

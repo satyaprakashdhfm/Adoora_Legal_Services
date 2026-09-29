@@ -207,14 +207,21 @@ export function Textarea(props: ComponentProps<"textarea">) {
 export function Select({
   options,
   placeholder,
+  promptOnly,
   ...props
 }: ComponentProps<"select"> & {
   options: readonly { value: string; label: string }[];
   placeholder?: string;
+  /** The placeholder is a prompt ("+ Link a case"), not a choice: it shows in the box but not in the list. */
+  promptOnly?: boolean;
 }) {
   return (
     <select {...props} className={`${inputClass} ${props.className ?? ""}`}>
-      {placeholder !== undefined && <option value="">{placeholder}</option>}
+      {placeholder !== undefined && (
+        <option value="" disabled={promptOnly} hidden={promptOnly}>
+          {placeholder}
+        </option>
+      )}
       {options.map((option) => (
         <option key={option.value} value={option.value}>
           {option.label}

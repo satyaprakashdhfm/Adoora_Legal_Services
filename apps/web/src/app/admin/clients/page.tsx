@@ -85,6 +85,7 @@ function CasePicker({ value, onChange }: { value: string[]; onChange: (ids: stri
         value=""
         onChange={(e) => e.target.value && onChange([...value, e.target.value])}
         placeholder={cases === null ? "Loading cases…" : cases.length === 0 ? "No cases yet" : "+ Link a case"}
+        promptOnly
         options={(cases ?? []).filter((c) => !value.includes(c.id)).map((c) => ({ value: c.id, label: label(c) }))}
         disabled={!cases?.length}
       />
@@ -96,6 +97,8 @@ function ClientForm({ initial, onSaved }: { initial?: ClientRow; onSaved: () => 
   const [error, setError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   const [caseIds, setCaseIds] = useState<string[]>(() => initial?.cases.map((c) => c.id) ?? []);
+  const [kind, setKind] = useState<ClientRow["kind"]>(initial?.kind ?? "INDIVIDUAL");
+  const organisation = kind === "ORGANISATION";
 
   async function submit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -106,10 +109,10 @@ function ClientForm({ initial, onSaved }: { initial?: ClientRow; onSaved: () => 
       if (initial) {
         await api(`/admin/clients/${initial.id}`, {
           method: "PATCH",
-          body: { name: data.name, kind: data.kind, organisation: data.organisation, phone: data.phone, address: data.address, isActive: data.isActive === "true", caseIds },
+          body: { name: data.name, kind, organisation: data.organisation ?? "", phone: data.phone, address: data.address ?? "", isActive: data.isActive === "true", caseIds },
         });
       } else {
-        await api("/admin/clients", { method: "POST", body: { ...data, caseIds } });
+        await api("/admin/clients", { method: "POST", body: { ...data, kind, caseIds } });
       }
       onSaved();
     } catch (cause) {
@@ -120,24 +123,43 @@ function ClientForm({ initial, onSaved }: { initial?: ClientRow; onSaved: () => 
 
   return (
     <form onSubmit={submit} className="grid gap-4 sm:grid-cols-2">
-      <Field label="Google email" required className="sm:col-span-2" hint={initial ? "The sign-in email cannot be changed." : "The address they will sign in with. Their account is linked the first time they use “Continue with Google”."}>
-        <Input name="email" type="email" required defaultValue={initial?.email} disabled={Boolean(initial)} />
-      </Field>
-      <Field label="Name" required>
+      {/* Individuals need a name and a phone; an organisation also its name and address. */}
+      <div className="sm:col-span-2">
+        <p className="text-xs font-semibold uppercase tracking-wide text-ink-soft">Client is</p>
+        <div className="mt-1.5 inline-flex rounded-md border border-line-strong p-0.5" role="radiogroup" aria-label="Client is">
+          {(["INDIVIDUAL", "ORGANISATION"] as const).map((value) => (
+            <button
+              key={value}
+              type="button"
+              role="radio"
+              aria-checked={kind === value}
+              onClick={() => setKind(value)}
+              className={`rounded px-4 py-1.5 text-sm font-semibold transition ${kind === value ? "bg-ink text-white" : "text-ink-soft hover:text-ink"}`}
+            >
+              {value === "INDIVIDUAL" ? "An individual" : "An organisation"}
+            </button>
+          ))}
+        </div>
+      </div>
+      {organisation && (
+        <Field label="Organisation name" required className="sm:col-span-2">
+          <Input name="organisation" required minLength={2} maxLength={200} placeholder="e.g. Sri Venkateswara Constructions Pvt. Ltd." defaultValue={initial?.organisation ?? ""} />
+        </Field>
+      )}
+      <Field label={organisation ? "Contact person" : "Name"} required>
         <Input name="name" required minLength={2} defaultValue={initial?.name} />
-      </Field>
-      <Field label="Type">
-        <Select name="kind" defaultValue={initial?.kind ?? "INDIVIDUAL"} options={[{ value: "INDIVIDUAL", label: "Individual" }, { value: "ORGANISATION", label: "Organisation" }]} />
-      </Field>
-      <Field label="Organisation">
-        <Input name="organisation" defaultValue={initial?.organisation ?? ""} />
       </Field>
       <Field label="Phone">
         <Input name="phone" type="tel" defaultValue={initial?.phone ?? ""} />
       </Field>
-      <Field label="Address" className="sm:col-span-2">
-        <Textarea name="address" rows={2} defaultValue={initial?.address ?? ""} />
+      <Field label="Email" required className="sm:col-span-2" hint={initial ? "The sign-in email cannot be changed." : "The address they will sign in with."}>
+        <Input name="email" type="email" required defaultValue={initial?.email} disabled={Boolean(initial)} />
       </Field>
+      {organisation && (
+        <Field label="Office address" className="sm:col-span-2">
+          <Textarea name="address" rows={2} defaultValue={initial?.address ?? ""} />
+        </Field>
+      )}
       {/* Not a <Field>: that is a <label>, and this holds several controls. */}
       <div className="sm:col-span-2">
         <p className="text-xs font-semibold uppercase tracking-wide text-ink-soft">Cases</p>
@@ -187,7 +209,7 @@ export default function AdminClients() {
       <PageTitle
         eyebrow="Clients"
         title="Client accounts"
-        description="Clients sign in with Google. Add one in advance so their cases are waiting for them, or link a case to someone who has already signed in."
+        description="Clients sign in with their email. Add one in advance so their cases are waiting for them, or link a case to someone who has already signed in."
         actions={<Button onClick={() => setEditing("new")}>Add client</Button>}
       />
 
