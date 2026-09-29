@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { useUser } from "@/lib/portal/session";
+import { usePortalBase, useUser } from "@/lib/portal/session";
 import { DocumentDrive } from "@/components/portal/document-drive";
 import { UploadButton } from "@/components/portal/upload-button";
 import { PageTitle } from "@/components/portal/ui";
@@ -9,6 +9,7 @@ import { PageTitle } from "@/components/portal/ui";
 export default function DashboardDocuments() {
   const user = useUser();
   const client = user.kind === "client";
+  const base = usePortalBase();
   const [refresh, setRefresh] = useState(0);
 
   return (
@@ -22,7 +23,7 @@ export default function DashboardDocuments() {
         }
         actions={<UploadButton onUploaded={() => setRefresh((n) => n + 1)} />}
       />
-      <DocumentDrive key={refresh} basePath="/dashboard" staff={!client} />
+      <DocumentDrive key={refresh} basePath={base} staff={!client} />
     </div>
   );
 }

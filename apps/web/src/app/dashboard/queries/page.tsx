@@ -1,13 +1,14 @@
 "use client";
 
 import { useState } from "react";
-import { useUser } from "@/lib/portal/session";
+import { usePortalBase, useUser } from "@/lib/portal/session";
 import { QueryList, RaiseQueryButton } from "@/components/portal/query-list";
 import { PageTitle } from "@/components/portal/ui";
 
 export default function DashboardQueries() {
   const user = useUser();
   const client = user.kind === "client";
+  const base = usePortalBase();
   const [refresh, setRefresh] = useState(0);
 
   return (
@@ -21,7 +22,7 @@ export default function DashboardQueries() {
         }
         actions={client ? <RaiseQueryButton onRaised={() => setRefresh((n) => n + 1)} /> : undefined}
       />
-      <QueryList staff={!client} basePath="/dashboard" refreshKey={refresh} />
+      <QueryList staff={!client} basePath={base} refreshKey={refresh} />
     </div>
   );
 }

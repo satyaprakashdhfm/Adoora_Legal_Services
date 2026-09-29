@@ -27,12 +27,13 @@ export type OAuthState = {
   verifier: string;
   next: string;
   /** Which sign-in page started this: the firm's (/admin/login) or clients' (/login). */
-  audience: "staff" | "client";
+  /** Which sign-in page started it. "staff" is the admin console, from before lawyers had their own page. */
+  audience: "admin" | "lawyer" | "client" | "staff";
   /** Epoch ms after which the attempt is void. */
   exp: number;
 };
 
-export function beginGoogleSignIn(next: string, audience: "staff" | "client"): { url: string; state: OAuthState } {
+export function beginGoogleSignIn(next: string, audience: "admin" | "lawyer" | "client"): { url: string; state: OAuthState } {
   const state: OAuthState = {
     state: randomBytes(16).toString("base64url"),
     nonce: randomBytes(16).toString("base64url"),

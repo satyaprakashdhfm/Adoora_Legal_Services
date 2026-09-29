@@ -6,27 +6,35 @@ import type { ReactNode } from "react";
 import { RequireSession } from "@/components/portal/guard";
 import { PhonePrompt } from "@/components/portal/client-sign-in";
 import { Avatar } from "@/components/portal/ui";
-import { isFirmAdmin, signOut } from "@/lib/portal/session";
+import { signOut } from "@/lib/portal/session";
 
 /**
- * The client and lawyer dashboard. It sits under the site header, so a
- * client never feels they have left the firm's website.
+ * The client dashboard (/dashboard) and the lawyer workspace (/lawyer): the
+ * same pages, each area open only to its own accounts. It sits under the
+ * site header, so a client never feels they have left the firm's website.
  */
-export function DashboardShell({ children }: { children: ReactNode }) {
+export function DashboardShell({ area, children }: { area: "client" | "lawyer"; children: ReactNode }) {
   const pathname = usePathname();
+  const base = area === "lawyer" ? "/lawyer" : "/dashboard";
+
+  // The lawyer area's sign-in page sits outside it.
+  if (pathname === "/lawyer/login") return <>{children}</>;
 
   return (
     <RequireSession
-      // Editors work on website content, not case files.
-      allow={(user) => user.kind === "client" || user.role !== "EDITOR"}
-      deniedMessage="Content editors do not have access to case files."
+      allow={(user) => (area === "client" ? user.kind === "client" : user.kind === "staff" && user.role === "LAWYER")}
+      deniedMessage={
+        area === "client"
+          ? "The client dashboard is for client accounts. Your firm account works in its own area."
+          : "The lawyer workspace is for the firm's lawyers."
+      }
     >
       {(user) => {
         const tabs = [
-          { href: "/dashboard", label: "Overview", exact: true },
-          { href: "/dashboard/cases", label: "My cases" },
-          { href: "/dashboard/documents", label: "Documents" },
-          { href: "/dashboard/queries", label: user.kind === "client" ? "My queries" : "Client queries" },
+          { href: base, label: "Overview", exact: true },
+          { href: `${base}/cases`, label: "My cases" },
+          { href: `${base}/documents`, label: "Documents" },
+          { href: `${base}/queries`, label: user.kind === "client" ? "My queries" : "Client queries" },
         ];
 
         return (
@@ -39,17 +47,12 @@ export function DashboardShell({ children }: { children: ReactNode }) {
                   <Avatar name={user.name} src={user.avatarUrl} size={40} />
                   <div>
                     <p className="portal-label text-xs font-semibold uppercase tracking-wide text-slate">
-                      {user.kind === "client" ? "Client dashboard" : "Case dashboard"}
+                      {user.kind === "client" ? "Client dashboard" : "Lawyer workspace"}
                     </p>
                     <p className="font-serif text-lg font-semibold text-ink">{user.name}</p>
                   </div>
                 </div>
                 <div className="flex items-center gap-4 text-sm">
-                  {isFirmAdmin(user) && (
-                    <Link href="/admin" className="font-semibold text-gold-deep hover:underline">
-                      Admin console →
-                    </Link>
-                  )}
                   <button type="button" onClick={() => void signOut()} className="text-slate hover:text-ink">
                     Sign out
                   </button>

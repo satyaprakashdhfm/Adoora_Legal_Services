@@ -82,10 +82,10 @@ export function downloadUrl(reference: string, options: { version?: number; inli
   return `/api/documents/${encodeURIComponent(reference)}/download${query ? `?${query}` : ""}`;
 }
 
-export function googleSignInUrl(next = "", audience: "staff" | "client" = "client") {
+export function googleSignInUrl(next = "", audience: "admin" | "lawyer" | "client" = "client") {
   const params = new URLSearchParams();
   if (next) params.set("next", next);
-  if (audience === "staff") params.set("audience", "staff");
+  if (audience !== "client") params.set("audience", audience);
   const query = params.toString();
   return `/api/auth/google${query ? `?${query}` : ""}`;
 }

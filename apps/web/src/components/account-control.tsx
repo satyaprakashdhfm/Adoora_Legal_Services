@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
-import { homeFor, isFirmAdmin, signOut, useSession } from "@/lib/portal/session";
+import { AREA_LABEL, areaOf, homeFor, signOut, useSession } from "@/lib/portal/session";
 import { openLogin } from "@/lib/portal/login-dialog";
 import { Avatar } from "@/components/portal/ui";
 import { firstName as firstNameOf } from "@/lib/portal/format";
@@ -29,8 +29,8 @@ function ProfileIcon({ className = "h-4 w-4" }: { className?: string }) {
  *
  * Signed out it is a "Login" button that opens the sign-in popup (mobile
  * OTP and Google), coming back to the current page afterwards. Signed in it becomes the account menu, with a link into the
- * right workspace: `/admin` for owners and admins, `/dashboard` for clients
- * and lawyers.
+ * right workspace: `/admin` for owners and admins, `/lawyer` for lawyers,
+ * `/dashboard` for clients.
  *
  * Until the session is known it renders the signed-out button, which is the
  * right answer for nearly every visitor and avoids an empty gap.
@@ -107,7 +107,8 @@ export function AccountControl({ variant }: { variant: "nav" | "compact" | "draw
   }
 
   const home = homeFor(user);
-  const homeLabel = isFirmAdmin(user) ? "Admin console" : "My dashboard";
+  const label = AREA_LABEL[areaOf(user)];
+  const homeLabel = label.charAt(0).toUpperCase() + label.slice(1);
 
   if (variant === "drawer") {
     return (
@@ -169,16 +170,6 @@ export function AccountControl({ variant }: { variant: "nav" | "compact" | "draw
           >
             {homeLabel}
           </Link>
-          {isFirmAdmin(user) && (
-            <Link
-              role="menuitem"
-              href="/dashboard"
-              onClick={() => setOpen(false)}
-              className="block px-4 py-2.5 text-sm text-white/80 transition hover:bg-white/5"
-            >
-              Case dashboard
-            </Link>
-          )}
           <button
             role="menuitem"
             type="button"

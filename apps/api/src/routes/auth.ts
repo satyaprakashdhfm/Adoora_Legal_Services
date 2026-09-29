@@ -15,25 +15,19 @@ import { otpWidgetConfig, samePhone, verifyOtpAccessToken } from "../auth/msg91.
 import type { UserRole } from "../../generated/prisma/client.js";
 
 /**
- * Sign-in, kept apart for the two audiences:
+ * Three sign-ins, kept completely apart:
  *
- *   /admin/login  the firm   (?audience=staff)
- *   /login        clients    (?audience=client, the default)
+ *   /admin/login   owners, admins, editors  (?audience=admin)  -> /admin
+ *   /lawyer/login  lawyers                  (?audience=lawyer) -> /lawyer
+ *   /login         clients                  (the default)      -> /dashboard
  *
- * From the firm's page:
- *   1. an existing staff account with that Google id or email  -> staff
- *   2. an email listed in ADMIN_EMAILS                          -> new OWNER
- *   3. anyone else                                              -> refused
+ * Each page looks only at its own kind of account. The same email may have a
+ * firm account and a client account; which one opens depends only on the
+ * page used. A lawyer is sent to their own page from the console's, and an
+ * owner or admin the other way.
  *
- * From the clients' page:
- *   1. a staff account, or an ADMIN_EMAILS address              -> refused,
- *      pointed to /admin/login (a firm email never becomes a client)
- *   2. an existing client account                               -> client
- *   3. anyone else                                              -> new client
- *                                                  (if ALLOW_CLIENT_SIGNUP)
- *
- * Staff are never created by signing in (bar the ADMIN_EMAILS bootstrap): an
- * admin adds them by email first.
+ * Firm accounts are never created by signing in (bar the ADMIN_EMAILS
+ * bootstrap, on the console's page): an admin adds them by email first.
  */
 export const authRouter = Router();
 
@@ -58,18 +52,27 @@ function safeNext(value: unknown): string {
   return value.slice(0, 300);
 }
 
-function landingFor(kind: "staff" | "client", role: UserRole | null, next: string): string {
-  if (kind === "client") {
-    // A client following an admin link lands on their own dashboard instead.
-    return next && !next.startsWith("/admin") ? next : "/dashboard";
-  }
-  if (next) return next;
-  return role === "OWNER" || role === "ADMIN" ? "/admin" : "/dashboard";
+type Audience = "admin" | "lawyer" | "client";
+
+function audienceOf(value: unknown): Audience {
+  return value === "admin" || value === "staff" ? "admin" : value === "lawyer" ? "lawyer" : "client";
 }
 
-function loginError(code: string, audience: "staff" | "client" = "client") {
-  return `${appUrl}${audience === "staff" ? "/admin/login" : "/login"}?error=${encodeURIComponent(code)}`;
+const HOME: Record<Audience, string> = { admin: "/admin", lawyer: "/lawyer", client: "/dashboard" };
+const LOGIN_PAGE: Record<Audience, string> = { admin: "/admin/login", lawyer: "/lawyer/login", client: "/login" };
+
+/** Where to go after signing in: the `next` page if it is in this area, else the area's home. */
+function landingFor(audience: Audience, next: string): string {
+  const home = HOME[audience];
+  return next === home || next.startsWith(`${home}/`) ? next : home;
 }
+
+function loginError(code: string, audience: Audience = "client") {
+  return `${appUrl}${LOGIN_PAGE[audience]}?error=${encodeURIComponent(code)}`;
+}
+
+/** Which firm page a staff role signs in at. */
+const staffAudience = (role: UserRole): Audience => (role === "LAWYER" ? "lawyer" : "admin");
 
 authRouter.get("/providers", (_req, res) => {
   res.json({ google: googleEnabled, password: true, otp: otpWidgetConfig() });
@@ -91,16 +94,8 @@ authRouter.post("/otp", loginLimiter, async (req, res) => {
 
   const identity = await verifyOtpAccessToken(accessToken);
 
-  const firm =
-    identity.kind === "email"
-      ? await prisma.user.findFirst({ where: { email: identity.email }, select: { id: true } })
-      : (await prisma.user.findMany({ where: { phone: { not: null } }, select: { id: true, phone: true } })).find((u) =>
-          samePhone(u.phone, identity.digits),
-        );
-  if (firm || (identity.kind === "email" && adminEmails.includes(identity.email))) {
-    throw new HttpError(403, "use_admin_login", "use_admin_login");
-  }
-
+  // Client accounts only: a firm account on the same number or email is
+  // separate and signs in at its own page.
   const matches =
     identity.kind === "email"
       ? await prisma.client.findMany({ where: { email: identity.email }, select: { id: true, isActive: true } })
@@ -137,7 +132,7 @@ authRouter.post("/otp", loginLimiter, async (req, res) => {
   req.principal = { kind: "client", id: updated.id, email: updated.email, name: updated.name, avatarUrl: updated.avatarUrl, sessionId: "" };
   await audit(req, "auth.login", "Client", updated.id, { method: "otp" });
 
-  res.json({ redirect: landingFor("client", null, safeNext(req.body?.next)) });
+  res.json({ redirect: landingFor("client", safeNext(req.body?.next)) });
 });
 
 const signupSchema = z.object({
@@ -147,13 +142,13 @@ const signupSchema = z.object({
   next: z.string().optional(),
 });
 
-/** Is this number already on a client or a firm account? */
+/** Is this number already on another client account? (A firm account may share it.) */
 async function phoneTaken(digits: string, exceptClientId?: string) {
-  const [clients, staff] = await Promise.all([
-    prisma.client.findMany({ where: { phone: { not: null }, NOT: exceptClientId ? { id: exceptClientId } : undefined }, select: { phone: true } }),
-    prisma.user.findMany({ where: { phone: { not: null } }, select: { phone: true } }),
-  ]);
-  return [...clients, ...staff].some((row) => samePhone(row.phone, digits));
+  const clients = await prisma.client.findMany({
+    where: { phone: { not: null }, NOT: exceptClientId ? { id: exceptClientId } : undefined },
+    select: { phone: true },
+  });
+  return clients.some((row) => samePhone(row.phone, digits));
 }
 
 /**
@@ -173,8 +168,6 @@ authRouter.post("/otp/signup", loginLimiter, async (req, res) => {
   }
   if (!env.ALLOW_CLIENT_SIGNUP) throw new HttpError(403, "signup_closed", "signup_closed");
 
-  const firmAccount = await prisma.user.findFirst({ where: { email: input.email }, select: { id: true } });
-  if (firmAccount || adminEmails.includes(input.email)) throw new HttpError(403, "use_admin_login", "use_admin_login");
   const existing = await prisma.client.findFirst({ where: { email: input.email }, select: { id: true } });
   if (existing) throw new HttpError(409, "email_taken", "email_taken");
   if (await phoneTaken(token.phone)) throw new HttpError(409, "phone_ambiguous", "phone_ambiguous");
@@ -189,7 +182,7 @@ authRouter.post("/otp/signup", loginLimiter, async (req, res) => {
   req.principal = { kind: "client", id: client.id, email: client.email, name: client.name, avatarUrl: client.avatarUrl, sessionId: "", phone: client.phone };
   await audit(req, "auth.signup", "Client", client.id, { method: "otp" });
 
-  res.status(201).json({ redirect: landingFor("client", null, safeNext(input.next)) });
+  res.status(201).json({ redirect: landingFor("client", safeNext(input.next)) });
 });
 
 /**
@@ -222,7 +215,7 @@ authRouter.get("/google", (req, res) => {
     return;
   }
 
-  const audience = req.query.audience === "staff" ? "staff" : "client";
+  const audience = audienceOf(req.query.audience);
   const { url, state } = beginGoogleSignIn(safeNext(req.query.next), audience);
   setCookie(res, OAUTH_COOKIE, signValue(state), {
     maxAgeSeconds: 10 * 60,
@@ -235,20 +228,21 @@ type Resolved =
   | { kind: "staff"; id: string; role: UserRole }
   | { kind: "client"; id: string };
 
-async function resolveAccount(identity: GoogleIdentity, audience: "staff" | "client"): Promise<Resolved> {
+async function resolveAccount(identity: GoogleIdentity, audience: Audience): Promise<Resolved> {
   const now = new Date();
+
+  if (audience === "client") return resolveClient(identity, now);
 
   const staff = await prisma.user.findFirst({
     where: { OR: [{ googleSub: identity.sub }, { email: identity.email }] },
   });
 
-  // A firm account signs in at the console, never as a client.
-  if (audience === "client" && (staff || adminEmails.includes(identity.email))) {
-    throw new HttpError(403, "use_admin_login");
-  }
-
   if (staff) {
     if (!staff.isActive) throw new HttpError(403, "account_inactive");
+    // Lawyers at their page, owners/admins/editors at the console's.
+    if (staffAudience(staff.role) !== audience) {
+      throw new HttpError(403, audience === "admin" ? "use_lawyer_login" : "use_admin_login");
+    }
     // An email already linked to a different Google account is not taken over.
     if (staff.googleSub && staff.googleSub !== identity.sub) {
       throw new HttpError(403, "account_mismatch");
@@ -260,7 +254,7 @@ async function resolveAccount(identity: GoogleIdentity, audience: "staff" | "cli
     return { kind: "staff", id: staff.id, role: staff.role };
   }
 
-  if (adminEmails.includes(identity.email)) {
+  if (audience === "admin" && adminEmails.includes(identity.email)) {
     const owner = await prisma.user.create({
       data: {
         email: identity.email,
@@ -275,9 +269,12 @@ async function resolveAccount(identity: GoogleIdentity, audience: "staff" | "cli
     return { kind: "staff", id: owner.id, role: owner.role };
   }
 
-  // The console's page does not create or admit client accounts.
-  if (audience === "staff") throw new HttpError(403, "not_staff");
+  // The firm's pages do not create or admit client accounts.
+  throw new HttpError(403, "not_staff");
+}
 
+/** The clients' page: client accounts only, whatever firm account shares the email. */
+async function resolveClient(identity: GoogleIdentity, now: Date): Promise<Resolved> {
   const client = await prisma.client.findFirst({
     where: { OR: [{ googleSub: identity.sub }, { email: identity.email }] },
   });
@@ -324,19 +321,20 @@ authRouter.get("/google/callback", async (req, res) => {
 
   if (typeof req.query.error === "string") {
     // The person pressed "Cancel" on Google's screen, most likely.
-    res.redirect(302, loginError("google_cancelled", saved?.audience));
+    res.redirect(302, loginError("google_cancelled", audienceOf(saved?.audience)));
     return;
   }
 
   const code = typeof req.query.code === "string" ? req.query.code : null;
   if (!googleEnabled || !code || !saved || saved.exp < Date.now() || saved.state !== req.query.state) {
-    res.redirect(302, loginError("google_state", saved?.audience));
+    res.redirect(302, loginError("google_state", audienceOf(saved?.audience)));
     return;
   }
 
   try {
     const identity = await completeGoogleSignIn(code, saved);
-    const account = await resolveAccount(identity, saved.audience ?? "client");
+    const audience = audienceOf(saved.audience);
+    const account = await resolveAccount(identity, audience);
 
     await startSession(
       req,
@@ -351,7 +349,7 @@ authRouter.get("/google/callback", async (req, res) => {
         : { kind: "client", id: account.id, email: identity.email, name: identity.name, avatarUrl: identity.picture, sessionId: "" };
     await audit(req, "auth.login", account.kind === "staff" ? "User" : "Client", account.id, { method: "google" });
 
-    const landing = landingFor(account.kind, account.kind === "staff" ? account.role : null, saved.next);
+    const landing = landingFor(audience, saved.next);
     res.redirect(302, `${appUrl}${landing}`);
   } catch (error) {
     const code = error instanceof HttpError ? error.message : "google_failed";
@@ -360,7 +358,7 @@ authRouter.get("/google/callback", async (req, res) => {
     } else {
       logger.warn({ code, ip: clientIp(req) }, "Google sign-in refused");
     }
-    res.redirect(302, loginError(code, saved.audience));
+    res.redirect(302, loginError(code, audienceOf(saved.audience)));
   }
 });
 
@@ -390,7 +388,7 @@ authRouter.post("/password", loginLimiter, async (req, res) => {
   req.principal = { kind: "staff", id: user.id, email: user.email, name: user.name, role: user.role, avatarUrl: user.avatarUrl, sessionId: null };
   await audit(req, "auth.login", "User", user.id, { method: "password" });
 
-  res.json({ redirect: landingFor("staff", user.role, safeNext(req.body?.next)) });
+  res.json({ redirect: landingFor(staffAudience(user.role), safeNext(req.body?.next)) });
 });
 
 authRouter.post("/logout", async (req: Request, res) => {

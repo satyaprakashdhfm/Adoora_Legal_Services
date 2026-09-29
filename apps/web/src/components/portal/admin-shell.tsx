@@ -75,7 +75,7 @@ function NavLink({ item, pathname, muted }: { item: NavItem; pathname: string; m
 /**
  * The admin console at `/admin`: full screen, its own navigation, none of
  * the marketing site's chrome. Owners and admins only — lawyers work from
- * `/dashboard`, where they see the cases assigned to them.
+ * `/lawyer`, clients from `/dashboard`, each with its own sign-in.
  */
 export function AdminShell({ children }: { children: ReactNode }) {
   const pathname = usePathname();
@@ -90,7 +90,7 @@ export function AdminShell({ children }: { children: ReactNode }) {
   return (
     <RequireSession
       allow={isFirmAdmin}
-      deniedMessage="The admin console is for the firm's owners and administrators. Lawyers see their assigned cases on the dashboard."
+      deniedMessage="The admin console is for the firm's owners and administrators. Lawyers work in the lawyer workspace; clients in the client dashboard."
     >
       {(user) => (
         <div className="min-h-dvh bg-paper-warm lg:grid lg:grid-cols-[15.5rem_1fr] lg:bg-ink">

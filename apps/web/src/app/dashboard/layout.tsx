@@ -7,5 +7,5 @@ export const metadata: Metadata = {
 };
 
 export default function DashboardLayout({ children }: LayoutProps<"/dashboard">) {
-  return <DashboardShell>{children}</DashboardShell>;
+  return <DashboardShell area="client">{children}</DashboardShell>;
 }

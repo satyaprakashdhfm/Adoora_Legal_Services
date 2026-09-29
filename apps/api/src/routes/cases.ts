@@ -113,6 +113,15 @@ function firmOnly(principal: { kind: string }) {
   }
 }
 
+/** Opening a case (and the CNR lookup before it) is for owners and admins; they then assign lawyers. */
+function adminsOpenCases(principal: Principal) {
+  if (!isFirmAdmin(principal)) {
+    throw new HttpError(403, principal.kind === "client"
+      ? "The firm adds and updates cases. Please contact us to have a case linked to your account."
+      : "Cases are opened by the firm's admins, who assign them to lawyers.", "admins_only");
+  }
+}
+
 casesRouter.get("/", async (req, res) => {
   const principal = req.principal!;
   const query = caseListSchema.parse(req.query);
@@ -194,7 +203,7 @@ async function visibleDuplicate(principal: Principal, cnr: string | null | undef
 
 casesRouter.post("/", async (req, res) => {
   const principal = req.principal!;
-  firmOnly(principal);
+  adminsOpenCases(principal);
 
   if (principal.kind === "client") {
     const input = clientCaseSchema.parse(req.body);
@@ -624,7 +633,7 @@ const NEW_CASE = "new";
  */
 casesRouter.post("/cnr-lookup/start", portalLimiter, async (req, res) => {
   const principal = req.principal!;
-  firmOnly(principal);
+  adminsOpenCases(principal);
   if (!isCaseStaff(principal) && principal.kind !== "client") throw notFound();
   const cnr = normaliseCnr(String(req.body?.cnr ?? ""));
   if (!CNR_PATTERN.test(cnr)) throw new HttpError(400, "A CNR is 16 letters and digits, e.g. TSHC010025912022.", "bad_cnr");
@@ -637,7 +646,7 @@ casesRouter.post("/cnr-lookup/start", portalLimiter, async (req, res) => {
 
 casesRouter.post("/cnr-lookup/captcha", portalLimiter, async (req, res) => {
   const principal = req.principal!;
-  firmOnly(principal);
+  adminsOpenCases(principal);
   res.set("Cache-Control", "no-store");
   res.json(await newPortalCaptcha(String(req.body?.sessionId ?? ""), NEW_CASE, principal.id));
 });
@@ -649,7 +658,7 @@ casesRouter.post("/cnr-lookup/captcha", portalLimiter, async (req, res) => {
  */
 casesRouter.post("/cnr-lookup/submit", async (req, res) => {
   const principal = req.principal!;
-  firmOnly(principal);
+  adminsOpenCases(principal);
   const code = String(req.body?.code ?? "");
   if (!code.trim()) throw new HttpError(400, "Please type the characters in the picture.", "portal_no_code");
   const result = await submitPortalCaptcha(String(req.body?.sessionId ?? ""), NEW_CASE, principal.id, code);

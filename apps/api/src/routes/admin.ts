@@ -336,9 +336,7 @@ adminRouter.post(
     const input = staffCreateSchema.parse(req.body);
     assertCanManageRole(req.auth!.role, input.role);
 
-    if (await prisma.client.findUnique({ where: { email: input.email } })) {
-      throw new HttpError(409, "That email belongs to a client account. Use a different address for staff.", "email_in_use");
-    }
+    // A client account with the same email is fine: the two sign in at separate pages.
     if (await prisma.user.findUnique({ where: { email: input.email } })) {
       throw new HttpError(409, "A staff account with that email already exists.", "email_in_use");
     }
@@ -463,9 +461,7 @@ adminRouter.post(
   async (req, res) => {
     const input = clientCreateSchema.parse(req.body);
 
-    if (await prisma.user.findUnique({ where: { email: input.email } })) {
-      throw new HttpError(409, "That email belongs to a staff account.", "email_in_use");
-    }
+    // A firm account with the same email is fine: the two sign in at separate pages.
     if (await prisma.client.findUnique({ where: { email: input.email } })) {
       throw new HttpError(409, "A client with that email already exists.", "email_in_use");
     }

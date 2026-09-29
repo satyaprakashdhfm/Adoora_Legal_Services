@@ -3,7 +3,7 @@
 import { usePathname } from "next/navigation";
 import { useEffect, type ReactNode } from "react";
 import type { SessionUser } from "@/lib/portal/api";
-import { homeFor, useSession } from "@/lib/portal/session";
+import { AREA_LABEL, LOGIN_PAGE, areaOf, areaOfPath, homeFor, switchTo, useSession } from "@/lib/portal/session";
 import { ButtonLink, Spinner } from "@/components/portal/ui";
 
 /**
@@ -27,7 +27,7 @@ export function RequireSession({
 
   useEffect(() => {
     if (user === null) {
-      const page = pathname.startsWith("/admin") ? "/admin/login" : "/login";
+      const page = LOGIN_PAGE[areaOfPath(pathname)];
       window.location.replace(`${page}?next=${encodeURIComponent(pathname)}`);
     }
   }, [user, pathname]);
@@ -42,9 +42,17 @@ export function RequireSession({
         <p className="mt-3 text-sm text-slate">
           {deniedMessage ?? "Your account does not have access to this page."}
         </p>
-        <ButtonLink href={homeFor(user)} className="mt-6">
-          Go to your {homeFor(user) === "/admin" ? "admin console" : "dashboard"}
-        </ButtonLink>
+        <div className="mt-6 flex flex-wrap justify-center gap-3">
+          <ButtonLink href={homeFor(user)}>Go to your {AREA_LABEL[areaOf(user)]}</ButtonLink>
+          {/* The same person may have an account for this area too: sign out and sign in there. */}
+          <button
+            type="button"
+            onClick={() => void switchTo(areaOfPath(pathname))}
+            className="rounded-md border border-line-strong px-4 py-2 text-sm font-semibold text-ink hover:border-gold"
+          >
+            Sign in to the {AREA_LABEL[areaOfPath(pathname)]} instead
+          </button>
+        </div>
       </div>
     );
   }
