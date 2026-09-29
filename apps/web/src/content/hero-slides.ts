@@ -26,39 +26,58 @@ export type HeroSlide = {
    * brand and the right-hand half from glaring.
    */
   bright?: boolean;
+  /**
+   * A group photograph of the team: shown whole (centred, no navy wash over
+   * the faces), with the copy on a panel of its own instead.
+   */
+  people?: boolean;
 };
 
+/**
+ * In order: who we are (credibility first), what we do, why us, and careers.
+ */
 export const heroSlides: HeroSlide[] = [
   {
-    eyebrow: "Corporate Advisory",
-    heading: "Transactions structured for the rules they have",
-    accent: "to survive",
-    body: "Acquisitions, investments and joint ventures where the structuring question and the regulatory question cannot be separated — foreign investment routes, competition clearance and completion mechanics handled as one problem.",
-    href: "/services/corporate-ma",
-    cta: "Corporate Advisory",
+    eyebrow: "Our people",
+    heading: "The advocates who take your brief",
+    accent: "stay with it",
+    body: "One team across Hyderabad, Bengaluru and Guntur. Every matter has a named lawyer, from the first consultation to the final order.",
+    href: "/about#people",
+    cta: "Meet the team",
+    imageBase: "hero-team",
+    imageNote: "The team: six lawyers in a row, head-and-shoulders, against a navy backdrop.",
+    people: true,
+  },
+  {
+    eyebrow: "Our services",
+    heading: "Litigation, advisory and transactions under",
+    accent: "one roof",
+    body: "Civil, commercial, criminal and constitutional matters before the courts and tribunals, alongside corporate, banking, property and regulatory advice — so a dispute and the transaction behind it are handled together.",
+    href: "/services",
+    cta: "Explore our services",
     imageBase: "hero-office-desk",
     imageNote:
       "Office desk with laptop and contract folder, city skyline beyond, PEOPLE / PRINCIPLES / POSSIBILITIES on the wall.",
     bright: true,
   },
   {
-    eyebrow: "Litigation",
-    heading: "Strategy before pleadings, in the forum that",
-    accent: "fits the relief",
-    body: "Civil and commercial litigation across the High Courts, tribunals and district judiciary of Telangana, Andhra Pradesh and Karnataka — with a candid view on what a claim is worth after cost and time.",
-    href: "/services/litigation",
-    cta: "Litigation",
+    eyebrow: "Why ADOORA",
+    heading: "Candid advice, and a case you can",
+    accent: "follow yourself",
+    body: "Before you commit, we tell you what a matter is likely to cost and how long it may take. Once it is under way, your secure client portal shows every hearing date, court order and document, updated from the court’s own records.",
+    href: "/about",
+    cta: "How we work",
     imageBase: "hero-law-justice",
     imageNote:
       "Brass scales of justice resting on bound LAW and JUSTICE volumes, chambers window behind.",
   },
   {
-    eyebrow: "Banking & Finance",
-    heading: "Security that holds at the point it matters —",
-    accent: "enforcement",
-    body: "Rupee and foreign currency lending, external commercial borrowings and security documentation, with stamp duty, registration and perfection mapped for every state in which an asset sits.",
-    href: "/services/banking-finance",
-    cta: "Banking & Finance",
+    eyebrow: "Careers",
+    heading: "Build your practice with a team that",
+    accent: "invests in you",
+    body: "Openings for advocates, associates, interns and support staff across our offices. See the roles open now, or send us your CV.",
+    href: "/careers",
+    cta: "View openings",
     imageBase: "hero-shield-compliance",
     imageNote:
       "Brass shield and padlock against a Lady Justice figure, beside REGULATORY COMPLIANCE / ASSET PROTECTION / RISK MANAGEMENT volumes.",

@@ -116,7 +116,7 @@ export function Hero({ images }: { images: (string | null)[] }) {
         setPaused(false);
       }}
       aria-roledescription="carousel"
-      aria-label="Firm practice highlights"
+      aria-label="About the firm"
     >
       {/* One photograph per slide, cross-fading with the copy. The navy wash
           sits above all of them, so the left-hand column reads identically
@@ -138,8 +138,8 @@ export function Hero({ images }: { images: (string | null)[] }) {
                 alt=""
                 fill
                 sizes="100vw"
-                className="object-cover object-right"
-                /* The first frame is the LCP element; the other two only need
+                className={`object-cover ${slide.people ? "object-center" : "object-right"}`}
+                /* The first frame is the LCP element; the others only need
                    to be in hand before the rotation reaches them. */
                 {...(slideIndex === 0
                   ? { preload: true }
@@ -148,11 +148,20 @@ export function Hero({ images }: { images: (string | null)[] }) {
               {slide.bright && (
                 <div className="hero-bright-lift absolute inset-0" />
               )}
+              {/* The team photograph keeps the faces clear: only a shallow
+                  lift at the foot for the controls. */}
+              {slide.people && (
+                <div className="absolute inset-0 bg-gradient-to-t from-ink-deep/80 via-ink-deep/10 to-transparent" />
+              )}
             </div>
           );
         })}
 
-        <div className="hero-scrim absolute inset-0" />
+        <div
+          className={`hero-scrim hero-slide absolute inset-0 ${
+            active.people ? "opacity-0" : "opacity-100"
+          }`}
+        />
       </div>
 
       <div className="container-page relative flex flex-col justify-center py-16 sm:py-20 lg:min-h-[min(calc(100svh-7.5rem),46rem)] lg:py-16">
@@ -168,6 +177,12 @@ export function Hero({ images }: { images: (string | null)[] }) {
                   key={slide.eyebrow}
                   className={`hero-copy col-start-1 row-start-1 ${
                     isActive ? "opacity-100" : "pointer-events-none opacity-0"
+                  } ${
+                    /* Over the team photograph the copy sits on its own
+                       panel, so no face is washed out to make it legible. */
+                    slide.people
+                      ? "self-end rounded-xl bg-ink-deep/85 p-6 shadow-2xl shadow-ink-deep/40 backdrop-blur-sm sm:max-w-xl sm:p-8"
+                      : ""
                   }`}
                   aria-hidden={!isActive}
                 >
