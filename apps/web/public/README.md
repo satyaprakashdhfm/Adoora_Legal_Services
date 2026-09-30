@@ -82,13 +82,15 @@ roughly a third of the row and as tall as the locations beside it.
 ## "Our approach" photography
 
 The home page band (`our-approach.tsx`) shows one photograph per card on the
-left, cross-fading as the navy highlight moves from card to card. Each one is
+left, cross-fading as the navy highlight moves from card to card. The frame
+is 3:2 and so is every photograph, so each shows whole. Keep any
+replacement at 3:2, landscape, at least 1400px wide. Each one is
 named by `image`, and framed by `focus`, on its entry in `differentiators`
 (`src/content/firm.ts`):
 
 | File | Card | Made from |
 | --- | --- | --- |
-| `approach-scales.jpg` | Proven Legal Expertise | Right-hand crop of `hero-law-justice` |
+| `approach-scales.jpg` | Proven Legal Expertise | Right-hand 3:2 crop of `hero-law-justice` (1360 × 907) |
 | `approach-client-first.jpg` | Client-First Approach | `why-us-client-first.png` |
 | `approach-connected.jpg` | Connected Client Experience | `client-exp.png` |
 | `approach-cross-border.jpg` | Cross-Border & Regulatory Mastery | `why-us-cross-border.png` |

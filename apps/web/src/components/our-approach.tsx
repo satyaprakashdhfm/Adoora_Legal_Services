@@ -1,7 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import { useEffect, useState, type SVGProps } from "react";
+import { useEffect, useRef, useState, type SVGProps } from "react";
 import type { Differentiator } from "@/content/firm";
 
 /**
@@ -11,18 +11,23 @@ import type { Differentiator } from "@/content/firm";
  *
  * The navy ground travels. Every few seconds it moves on to the next card,
  * and the card it leaves takes over that card's old ground, so the two
- * swap colours rather than the whole set shifting. The photograph on the
- * left cross-fades to the picture for whichever card is navy, with that
- * card's number and title across its foot. Hovering a card moves the navy
- * there straight away; hovering anywhere in the band holds it still, and
- * readers who ask for reduced motion get no autoplay at all.
+ * swap colours rather than the whole set shifting. The panel on the left
+ * shows the picture for whichever card is navy, whole and at its own 3:2
+ * shape (no cropping), with that card's number and title beneath it.
+ * Resting on a card moves the navy there, after a short pause so a cursor
+ * passing over the grid doesn't set every card flickering; hovering
+ * anywhere in the band holds it still, and readers who ask for reduced
+ * motion get no autoplay at all.
  *
  * Each photograph comes from `image`/`focus` on the entry in `firm.ts`.
  */
 
 type Tone = "warm" | "navy" | "mist";
 
-const INTERVAL = 3500;
+/* How long each card holds the navy before it moves on, and how long the
+   hand-over itself takes (grounds, type and photograph alike). */
+const INTERVAL = 6500;
+const FADE = "duration-[1200ms] ease-in-out";
 
 /* Starting ground per card, in display order — the navy on the second. */
 const initialTones: Tone[] = ["warm", "navy", "mist", "mist", "warm"];
@@ -137,39 +142,64 @@ export function OurApproach({ items }: { items: readonly Differentiator[] }) {
     return () => window.clearTimeout(id);
   }, [active, paused, items.length]);
 
+  /* Hover intent: only move once the cursor has rested on a card. */
+  const hoverTimer = useRef<number | undefined>(undefined);
+  function hoverStart(index: number) {
+    window.clearTimeout(hoverTimer.current);
+    hoverTimer.current = window.setTimeout(() => moveTo(index), 220);
+  }
+  function hoverEnd() {
+    window.clearTimeout(hoverTimer.current);
+  }
+  useEffect(() => () => window.clearTimeout(hoverTimer.current), []);
+
   return (
     <div
-      className="grid gap-3 lg:grid-cols-[minmax(0,1fr)_minmax(0,2fr)]"
+      className="grid gap-3 lg:grid-cols-[minmax(0,1.1fr)_minmax(0,2fr)]"
       onMouseEnter={() => setPaused(true)}
       onMouseLeave={() => setPaused(false)}
     >
-      <div className="relative aspect-[16/10] overflow-hidden rounded-2xl bg-[linear-gradient(135deg,var(--color-ink-mid),var(--color-ink-deep))] sm:aspect-[2/1] lg:aspect-auto">
-        {items.map((item, index) => (
-          <Image
-            key={item.title}
-            src={item.image}
-            alt=""
-            fill
-            sizes="(min-width: 1280px) 440px, (min-width: 1024px) 34vw, 100vw"
-            quality={90}
-            style={{ objectPosition: item.focus }}
-            className={`object-cover transition-[opacity,transform] duration-1000 ease-out ${
-              index === active ? "scale-100 opacity-100" : "scale-105 opacity-0"
-            }`}
-          />
-        ))}
+      <div className="flex flex-col overflow-hidden rounded-2xl bg-[linear-gradient(160deg,var(--color-navy-soft),var(--color-ink-deep))] shadow-sm shadow-ink/10">
+        {/* The photographs are 3:2, and so is this frame — nothing is cut
+            off or enlarged beyond what the panel's width needs. */}
+        <div className="relative aspect-[3/2] w-full">
+          {items.map((item, index) => (
+            <Image
+              key={item.title}
+              src={item.image}
+              alt=""
+              fill
+              sizes="(min-width: 1280px) 460px, (min-width: 1024px) 36vw, 100vw"
+              quality={90}
+              style={{ objectPosition: item.focus }}
+              className={`object-cover transition-opacity ${FADE} ${
+                index === active ? "opacity-100" : "opacity-0"
+              }`}
+            />
+          ))}
+        </div>
 
-        {/* The selected card's number and title across the foot. */}
-        <div
-          aria-hidden="true"
-          className="absolute inset-x-0 bottom-0 bg-[linear-gradient(to_top,color-mix(in_oklab,var(--color-ink-deep)_85%,transparent),transparent)] px-6 pb-5 pt-16"
-        >
+        {/* The selected card's number and title, and a marker per card. */}
+        <div className="flex flex-1 flex-col justify-center gap-4 px-6 py-5 sm:px-7">
           <p key={active} className="rise font-serif text-white">
-            <span className="text-sm font-semibold text-gold-bright">
+            <span className="flex items-center gap-3 text-sm font-semibold text-gold-bright">
               {String(active + 1).padStart(2, "0")}
+              <span aria-hidden="true" className="h-px w-8 bg-gold-bright/60" />
             </span>
-            <span className="ml-3 text-lg font-semibold">{items[active]?.title}</span>
+            <span className="mt-2 block text-xl font-semibold leading-snug sm:text-2xl">
+              {items[active]?.title}
+            </span>
           </p>
+          <div className="flex gap-1.5" aria-hidden="true">
+            {items.map((item, index) => (
+              <span
+                key={item.title}
+                className={`h-1 rounded-full transition-all ${FADE} ${
+                  index === active ? "w-8 bg-gold-bright" : "w-3 bg-white/25"
+                }`}
+              />
+            ))}
+          </div>
         </div>
       </div>
 
@@ -184,27 +214,28 @@ export function OurApproach({ items }: { items: readonly Differentiator[] }) {
           return (
             <li
               key={item.title}
-              onMouseEnter={() => moveTo(index)}
+              onMouseEnter={() => hoverStart(index)}
+              onMouseLeave={hoverEnd}
               className={`${spans[index] ?? "lg:col-span-2"} ${isLastOdd ? "sm:col-span-2" : ""}`}
             >
               <div
-                className={`flex h-full flex-col rounded-2xl border p-6 transition-[background-color,border-color,box-shadow] duration-700 ease-out sm:p-7 lg:min-h-[13rem] ${tone.card}`}
+                className={`flex h-full flex-col rounded-2xl border p-6 transition-[background-color,border-color,box-shadow] ${FADE} sm:p-7 lg:min-h-[13rem] ${tone.card}`}
               >
                 <div className="flex items-start justify-between gap-4">
-                  <span className={`flex items-center gap-3 font-serif text-lg font-semibold transition-colors duration-700 ${tone.number}`}>
+                  <span className={`flex items-center gap-3 font-serif text-lg font-semibold transition-colors ${FADE} ${tone.number}`}>
                     {String(index + 1).padStart(2, "0")}
-                    <span aria-hidden="true" className={`h-px w-8 transition-colors duration-700 ${tone.rule}`} />
+                    <span aria-hidden="true" className={`h-px w-8 transition-colors ${FADE} ${tone.rule}`} />
                   </span>
                   <Icon
                     aria-hidden="true"
-                    className={`h-10 w-10 shrink-0 transition-colors duration-700 ${tone.icon}`}
+                    className={`h-10 w-10 shrink-0 transition-colors ${FADE} ${tone.icon}`}
                   />
                 </div>
 
-                <h3 className={`mt-4 max-w-[16rem] font-serif text-xl font-semibold leading-snug tracking-tight text-balance transition-colors duration-700 ${tone.title}`}>
+                <h3 className={`mt-4 max-w-[16rem] font-serif text-xl font-semibold leading-snug tracking-tight text-balance transition-colors ${FADE} ${tone.title}`}>
                   {item.title}
                 </h3>
-                <p className={`mt-3 max-w-sm text-[0.9rem] leading-relaxed transition-colors duration-700 ${tone.body}`}>
+                <p className={`mt-3 max-w-sm text-[0.9rem] leading-relaxed transition-colors ${FADE} ${tone.body}`}>
                   {item.body}
                 </p>
               </div>

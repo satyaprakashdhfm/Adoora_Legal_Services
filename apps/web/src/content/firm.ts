@@ -200,7 +200,7 @@ export const differentiators = [
     image: "/approach-scales.jpg",
     /* The card is portrait and the frame landscape, so `cover` crops the
        sides — this keeps the subject in shot. */
-    focus: "50% 55%",
+    focus: "50% 50%",
     body:
       "A strong track record in corporate law, M&A, and high-stakes legal matters.",
   },
