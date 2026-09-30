@@ -52,8 +52,8 @@ file names live in `src/content/hero-slides.ts`.
 
 | Base name | Slide | The photograph |
 | --- | --- | --- |
-| `hero-office-desk` | Corporate Advisory | Office desk with laptop and contract folder, city skyline beyond, PEOPLE / PRINCIPLES / POSSIBILITIES on the wall. Doubles as the photograph beside "Our approach" on the home page — see below. |
-| `hero-law-justice` | Litigation | Brass scales of justice on bound LAW and JUSTICE volumes. |
+| `hero-office-desk` | Corporate Advisory | Office desk with laptop and contract folder, city skyline beyond, PEOPLE / PRINCIPLES / POSSIBILITIES on the wall. |
+| `hero-law-justice` | Litigation | Brass scales of justice on bound LAW and JUSTICE volumes. Doubles as the photograph beside "Our approach" on the home page — see below. |
 | `hero-shield-compliance` | Banking & Finance | Brass shield and padlock against a Lady Justice figure, beside REGULATORY COMPLIANCE / ASSET PROTECTION / RISK MANAGEMENT volumes. |
 
 **The extension does not matter.** `src/lib/public-image.ts` resolves the base
@@ -82,9 +82,9 @@ roughly a third of the row and as tall as the locations beside it.
 ## "Our approach" photography
 
 The home page band (`our-approach.tsx`) is a photograph down the left beside
-a mosaic of five numbered cards. The photograph is `hero-office-desk` (see
-above), cropped `object-[45%_50%]` so the laptop and window stay in shot in
-the near-square frame on desktop.
+a mosaic of five numbered cards. The photograph is `hero-law-justice` (see
+above), cropped `object-[80%_55%]` so the scales and the LAW / JUSTICE
+volumes fill the near-square frame on desktop.
 
 `why-us-expertise.png`, `why-us-client-first.png`, `client-exp.png`,
 `why-us-cross-border.png`, `why-us-solutions.png` and `approach.png` are from
@@ -98,11 +98,13 @@ The home page practices band (`practices-grid.tsx`) is a 3 × 3 grid of navy
 cards, one per practice. Each card takes one of two photographs, both resolved
 by `publicImage()`, so the extension does not matter:
 
-- **`practice-photo-<slug>`: full-bleed card photograph (not yet supplied).**
+- **`practice-photo-<slug>`: full-bleed card photograph.** Sliced from the
+  firm's 3×3 composite (`resources/our-practices.png`, in grid order), about
+  550 × 307 each.
   When present, it fills the card behind a navy wash that darkens the left,
   where the number and name sit. Landscape, roughly 16:9, at least 900px
-  wide, with the subject on the **right**. Drop one in and that card switches
-  over; the others are unaffected.
+  wide, with the subject on the **right**. Replacing one: save the new frame
+  under the same base name; any extension works.
 - **`practice-<slug>`: circular inset (in place now).** Used only when the
   full-bleed frame is missing, as a gold-ringed disc on the right of the navy
   card. These are small (about 260px), which is why they are not stretched

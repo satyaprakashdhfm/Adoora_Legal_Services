@@ -63,7 +63,7 @@ function Card({ item, index }: { item: PracticeGridItem; index: number }) {
           />
           <div
             aria-hidden="true"
-            className="absolute inset-0 -z-10 bg-[linear-gradient(100deg,color-mix(in_oklab,var(--color-ink-deep)_88%,transparent)_0%,color-mix(in_oklab,var(--color-ink-deep)_55%,transparent)_55%,color-mix(in_oklab,var(--color-ink-deep)_25%,transparent)_100%)] transition duration-500 group-hover:opacity-90"
+            className="absolute inset-0 -z-10 bg-[linear-gradient(100deg,color-mix(in_oklab,var(--color-ink-deep)_85%,transparent)_0%,color-mix(in_oklab,var(--color-ink-deep)_45%,transparent)_50%,color-mix(in_oklab,var(--color-ink-deep)_12%,transparent)_100%)] transition duration-500 group-hover:opacity-90"
           />
         </>
       ) : (

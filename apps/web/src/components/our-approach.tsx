@@ -44,7 +44,7 @@ const toneClasses: Record<
     arrow: "border-ink/25 text-ink group-hover:border-gold group-hover:bg-gold group-hover:text-white",
   },
   navy: {
-    card: "bg-ink border-ink",
+    card: "bg-ink-mid border-ink-mid",
     number: "text-gold-bright",
     rule: "bg-gold-bright/60",
     icon: "text-gold-bright",
@@ -139,7 +139,7 @@ export function OurApproach({
             alt=""
             fill
             sizes="(min-width: 1024px) 33vw, 100vw"
-            className="object-cover object-[45%_50%]"
+            className="object-cover object-[80%_55%]"
           />
         )}
       </div>
