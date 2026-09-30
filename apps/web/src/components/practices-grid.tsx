@@ -3,8 +3,8 @@ import Link from "next/link";
 import type { PracticeArea } from "@/content/types";
 
 /**
- * The home page's practice teaser — a 3 × 3 grid of photo cards, each with a
- * gold number, the practice name in white serif and a gold arrow, over a
+ * The home page's practice teaser — a 3 × 3 grid of photo cards, each with
+ * the practice name in white serif and a gold arrow, over a
  * navy wash that keeps the copy legible whatever the photograph does.
  *
  * Two kinds of photograph, both resolved server-side by `publicImage()` and
@@ -43,7 +43,7 @@ function ArrowIcon({ className = "" }: { className?: string }) {
   );
 }
 
-function Card({ item, index }: { item: PracticeGridItem; index: number }) {
+function Card({ item }: { item: PracticeGridItem }) {
   const { area, photo, thumb } = item;
   const label = area.slug === "dispute-resolution" ? area.name : area.shortName;
 
@@ -84,10 +84,7 @@ function Card({ item, index }: { item: PracticeGridItem; index: number }) {
       )}
 
       <div className="max-w-[75%]">
-        <span className="font-serif text-[1.7rem] font-semibold leading-none text-gold-bright [text-shadow:0_1px_10px_rgb(0_0_0/0.5)] sm:text-3xl">
-          {String(index + 1).padStart(2, "0")}
-        </span>
-        <h3 className="mt-2 font-serif text-lg font-semibold leading-snug tracking-tight text-white text-balance [text-shadow:0_1px_12px_rgb(0_0_0/0.6)] sm:text-[1.35rem]">
+        <h3 className="font-serif text-xl font-semibold leading-snug tracking-tight text-white text-balance [text-shadow:0_1px_12px_rgb(0_0_0/0.6)] sm:text-2xl">
           {label}
         </h3>
         <span
@@ -120,7 +117,7 @@ export function PracticesGrid({ items }: { items: readonly PracticeGridItem[] })
               : ""
           }
         >
-          <Card item={item} index={index} />
+          <Card item={item} />
         </li>
       ))}
     </ul>

@@ -67,7 +67,7 @@ export const heroSlides: HeroSlide[] = [
     bright: true,
   },
   {
-    eyebrow: "Why ADOORA",
+    eyebrow: "Counsel",
     heading: "Candid advice, and a case you can",
     accent: "follow yourself",
     body: "Before you commit, we tell you what a matter is likely to cost and how long it may take. Once it is under way, your secure client portal shows every hearing date, court order and document, updated from the court’s own records.",

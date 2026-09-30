@@ -142,8 +142,8 @@ export default async function Home() {
       <section className="container-page pb-8 pt-6 sm:pb-10 sm:pt-7">
         <div className="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
           <SectionHeading
-            eyebrow="Practices"
-            title="Our practice areas"
+            eyebrow="Our practices"
+            title="Practice areas"
             lead="Nine key areas. One integrated approach to delivering practical legal solutions."
           />
           <Link
@@ -202,7 +202,7 @@ export default async function Home() {
           photograph beside a mosaic of five numbered cards. */}
       <section>
         <div className="container-page pb-8 pt-6 sm:pb-10 sm:pt-7">
-          <SectionHeading eyebrow="Our approach" title="How we work" lead="Five strengths. One committed partnership." />
+          <SectionHeading eyebrow="The Standard" title="Our Approach" lead="Five strengths. One committed partnership." />
 
           <div className="mt-6">
             <OurApproach items={differentiators} />

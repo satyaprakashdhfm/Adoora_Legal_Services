@@ -119,9 +119,9 @@ by `publicImage()`, so the extension does not matter:
 
 - **`practice-photo-<slug>`: full-bleed card photograph.** Sliced from the
   firm's 3×3 composite (`resources/our-practices.png`, in grid order), then
-  upscaled 2× (about 1094 × 614) with a light unsharp mask. The same frame is
-  also the background of that practice's own page top section
-  (`/services/<slug>` and its service pages), via `PageHero`'s `photo` prop.
+  upscaled 2× (about 1094 × 614) with a light unsharp mask. (The practice
+  pages' own top sections do not use them; `PageHero` still has a `photo`
+  prop if that is wanted again.)
   When present, it fills the card behind a navy wash that darkens the left,
   where the number and name sit. Landscape, roughly 16:9, at least 900px
   wide, with the subject on the **right**. Replacing one: save the new frame

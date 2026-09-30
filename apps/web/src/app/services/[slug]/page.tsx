@@ -1,5 +1,4 @@
 import Link from "next/link";
-import { publicImage } from "@/lib/public-image";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { Tabs, type TabDefinition } from "@/components/tabs";
@@ -197,7 +196,6 @@ export default async function PracticeAreaPage(
     <>
       <PageHero
         eyebrow="Practice area"
-        photo={publicImage(`practice-photo-${area.slug}`)}
         title={area.name}
         lead={area.tagline}
         trail={[

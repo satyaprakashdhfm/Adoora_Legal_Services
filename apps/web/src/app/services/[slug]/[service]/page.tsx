@@ -1,5 +1,4 @@
 import Link from "next/link";
-import { publicImage } from "@/lib/public-image";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import {
@@ -72,7 +71,6 @@ export default async function ServicePage(
     <>
       <PageHero
         eyebrow={area.name}
-        photo={publicImage(`practice-photo-${area.slug}`)}
         title={service.title}
         trail={[
           { label: "Home", href: "/" },
