@@ -97,7 +97,7 @@ export function SocialLinks({ variant }: { variant: "ribbon" | "drawer" | "foote
  */
 const brandMarks: Record<string, React.JSX.Element> = {
   LinkedIn: (
-    <svg viewBox="0 0 24 24" aria-hidden="true" className="h-8 w-8">
+    <svg viewBox="0 0 24 24" aria-hidden="true" className="h-6 w-6">
       <rect width="24" height="24" rx="4" fill="#0A66C2" />
       <path
         fill="#fff"
@@ -106,7 +106,7 @@ const brandMarks: Record<string, React.JSX.Element> = {
     </svg>
   ),
   WhatsApp: (
-    <svg viewBox="0 0 24 24" aria-hidden="true" className="h-8 w-8">
+    <svg viewBox="0 0 24 24" aria-hidden="true" className="h-6 w-6">
       <circle cx="12" cy="12" r="12" fill="#25D366" />
       <path
         fill="#fff"
@@ -115,7 +115,7 @@ const brandMarks: Record<string, React.JSX.Element> = {
     </svg>
   ),
   Instagram: (
-    <svg viewBox="0 0 24 24" aria-hidden="true" className="h-8 w-8">
+    <svg viewBox="0 0 24 24" aria-hidden="true" className="h-6 w-6">
       <defs>
         <radialGradient id="footer-ig" cx="0.3" cy="1.07" r="1.15">
           <stop offset="0" stopColor="#FDDC5C" />
@@ -135,7 +135,7 @@ const brandMarks: Record<string, React.JSX.Element> = {
 
 function FooterBrandIcons() {
   return (
-    <div className="flex items-center gap-4">
+    <div className="flex items-center gap-3">
       {ALL_PROFILES.map((profile) => {
         const mark = brandMarks[profile.name];
         return profile.href ? (
