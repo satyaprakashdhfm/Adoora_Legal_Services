@@ -50,7 +50,7 @@ export type Person = {
   /** Initials used by the portrait placeholder until photography is supplied. */
   initials: string;
   /**
-   * The home page "Our people" slide: a short introduction and three
+   * The home page "Our people" slide: a short introduction and four
    * credentials under it. Kept apart from `bio`, `education` and
    * `experience` so that sample copy here never shows up as fact on the
    * About page.
@@ -61,7 +61,7 @@ export type Person = {
 export type Spotlight = {
   summary: string;
   credentials: {
-    icon: "degree" | "bar" | "experience";
+    icon: "degree" | "bar" | "experience" | "practice";
     title: string;
     detail: string;
   }[];
@@ -84,6 +84,7 @@ export const people: Person[] = [
         { icon: "degree", title: "LL.B.", detail: "Law Degree" },
         { icon: "bar", title: "Admitted to the Bar", detail: "India" },
         { icon: "experience", title: "15+ Years", detail: "of Experience" },
+        { icon: "practice", title: "Litigation & Advisory", detail: "Practice focus" },
       ],
     },
   },
@@ -102,6 +103,7 @@ export const people: Person[] = [
         { icon: "degree", title: "LL.B.", detail: "Law Degree" },
         { icon: "bar", title: "Admitted to the Bar", detail: "India" },
         { icon: "experience", title: "10+ Years", detail: "of Experience" },
+        { icon: "practice", title: "Civil & Commercial", detail: "Practice focus" },
       ],
     },
   },
@@ -120,6 +122,7 @@ export const people: Person[] = [
         { icon: "degree", title: "LL.B.", detail: "Law Degree" },
         { icon: "bar", title: "Admitted to the Bar", detail: "India" },
         { icon: "experience", title: "8+ Years", detail: "of Experience" },
+        { icon: "practice", title: "Writs & Appeals", detail: "Practice focus" },
       ],
     },
   },

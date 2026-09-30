@@ -1,4 +1,5 @@
 import { people as staticPeople, type Person, type Spotlight } from "@/content/people";
+import { practiceAreas } from "@/content/practice-areas";
 import { insights as bundledInsights, type Block, type Insight, type InsightCategory } from "@/content/insights";
 import type { ArtworkKey } from "@/components/insight-artwork";
 
@@ -75,10 +76,11 @@ function initials(name: string): string {
 }
 
 /*
- * The card's three credentials. Each one comes from the console profile when
+ * The card's four credentials. Each one comes from the console profile when
  * that field is filled in; a field left empty falls back to the same
  * credential in the bundled roster (`content/people.ts`) for that slug, so a
- * profile with only a summary still shows all three rather than none.
+ * profile with only a summary still shows all four rather than none. The
+ * fourth is the first practice ticked on the profile.
  */
 function spotlight(profile: ApiProfile): Spotlight | undefined {
   const bundled = staticPeople.find((person) => person.slug === profile.slug)?.spotlight;
@@ -98,7 +100,11 @@ function spotlight(profile: ApiProfile): Spotlight | undefined {
   const experience = profile.experience
     ? { icon: "experience" as const, title: profile.experience, detail: "Experience" }
     : fallback("experience");
-  for (const item of [degree, bar, experience]) if (item) credentials.push(item);
+  const practiceName = practiceAreas.find((area) => area.slug === profile.practices[0])?.name;
+  const practice = practiceName
+    ? { icon: "practice" as const, title: practiceName, detail: "Practice focus" }
+    : fallback("practice");
+  for (const item of [degree, bar, experience, practice]) if (item) credentials.push(item);
   return { summary, credentials };
 }
 

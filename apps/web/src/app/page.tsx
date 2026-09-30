@@ -80,15 +80,15 @@ export default async function Home() {
           <div>
             <SectionHeading
               eyebrow="About the firm"
-              title="A full-service practice built around how work actually reaches a client"
+              title="One firm for the dispute and the deal behind it"
             />
             <span
               aria-hidden="true"
               className="mt-8 block h-0.5 w-16 bg-gold"
             />
             <p className="mt-6 max-w-sm font-serif text-base leading-relaxed sm:mt-8 sm:text-lg text-ink-soft">
-              Strategic legal solutions for businesses, institutions and
-              individuals.
+              Legal advice and representation for businesses, institutions
+              and individuals.
             </p>
           </div>
 
@@ -144,7 +144,7 @@ export default async function Home() {
           <SectionHeading
             eyebrow="Our practices"
             title="Practice areas"
-            lead="Nine key areas. One integrated approach to delivering practical legal solutions."
+            lead="Nine areas of law, handled by one team that works across all of them."
           />
           <Link
             href="/services"
@@ -202,7 +202,7 @@ export default async function Home() {
           photograph beside a mosaic of five numbered cards. */}
       <section>
         <div className="container-page pb-8 pt-6 sm:pb-10 sm:pt-7">
-          <SectionHeading eyebrow="The Standard" title="Our Approach" lead="Five strengths. One committed partnership." />
+          <SectionHeading eyebrow="The Standard" title="Our Approach" lead="What you can expect when you work with us." />
 
           <div className="mt-6">
             <OurApproach items={differentiators} />
@@ -219,7 +219,7 @@ export default async function Home() {
             <SectionHeading
               eyebrow="Locations"
               title="Our legal presence"
-              lead="Our offices across South India keep us close to our clients, their communities and the matters that move them forward."
+              lead="With offices in Hyderabad, Bengaluru and Guntur, we are close to our clients across South India."
             />
 
             <div className="mt-9 grid gap-5 sm:grid-cols-3">

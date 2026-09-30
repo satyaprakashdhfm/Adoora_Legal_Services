@@ -43,9 +43,9 @@ export const firm = {
 
 /** The firm overview, as the brochure sets it out. */
 export const firmOverview = [
-  "ADOORA Legal Services is a preeminent law firm, with 25+ years of collective team experience, specializing in corporate legal solutions across South India, with a well-established presence in Andhra Pradesh, Karnataka and Telangana.",
-  "With a team of highly skilled legal professionals and extensive industry expertise, the firm is committed to delivering precise, strategic and time-sensitive legal counsel.",
-  "ADOORA Legal Services is dedicated to ensuring corporate clients remain compliant with evolving legal frameworks while effectively navigating complex regulatory and contractual landscapes.",
+  "ADOORA Legal Services is a law firm in South India, with offices in Andhra Pradesh, Karnataka and Telangana. Our lawyers have more than 25 years of experience between them, much of it advising companies.",
+  "We know the industries our clients work in, and we give clear advice in time for the decision it is meant to inform.",
+  "A large part of our work is keeping companies compliant as the law changes, and helping them through regulatory and contract questions as they come up.",
 ] as const;
 
 /**
@@ -202,7 +202,7 @@ export const differentiators = [
        phones, so this keeps the subject in shot either way. */
     focus: "68% 50%",
     body:
-      "A strong track record in corporate law, M&A, and high-stakes legal matters.",
+      "Experience in corporate law, mergers and acquisitions, and matters where a great deal is at stake.",
   },
   {
     title: "Client-First Approach",
@@ -211,7 +211,7 @@ export const differentiators = [
        phones, so this keeps the subject in shot either way. */
     focus: "45% 50%",
     body:
-      "Transparent, responsive, and committed to protecting your interests.",
+      "We explain what we are doing, reply promptly and put your interests first.",
   },
   {
     title: "Connected Client Experience",
@@ -219,7 +219,7 @@ export const differentiators = [
     /* Square source; the panel is near-square on desktop and 3:2 on
        phones, so this keeps the subject in shot either way. */
     focus: "45% 50%",
-    body: "Case updates, documents and communication in one place.",
+    body: "Your case updates, documents and messages are together in the client portal.",
   },
   {
     title: "Cross-Border & Regulatory Mastery",
@@ -228,7 +228,7 @@ export const differentiators = [
        phones, so this keeps the subject in shot either way. */
     focus: "35% 50%",
     body:
-      "Expertise in international transactions and regional compliance.",
+      "Experience with international transactions and with local compliance rules.",
   },
   {
     title: "Strategic Legal Solutions",
@@ -237,7 +237,7 @@ export const differentiators = [
        phones, so this keeps the subject in shot either way. */
     focus: "55% 50%",
     body:
-      "Practical, business-aligned counsel for sustainable growth.",
+      "Practical advice that fits how your business runs and where it is heading.",
   },
 ] as const;
 

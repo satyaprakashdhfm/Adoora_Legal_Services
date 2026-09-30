@@ -1,5 +1,4 @@
 import Image from "next/image";
-import Link from "next/link";
 import type { Person, Spotlight } from "@/content/people";
 import { publicImage } from "@/lib/public-image";
 import { AutoSlider } from "@/components/auto-slider";
@@ -7,7 +6,7 @@ import { AutoSlider } from "@/components/auto-slider";
 /**
  * The home page's "Our people" band: one person per slide, portrait on the
  * left over soft beige blocks, and on the right the name, designation,
- * a short introduction, three credentials and a link to the full profile.
+ * a short introduction and four credentials.
  * Slides advance on their own and pause under the cursor (`auto-slider.tsx`).
  *
  * The portrait falls back to a silhouette on navy until `photo` is set on the
@@ -73,24 +72,6 @@ function PersonSlide({ person }: { person: Person }) {
         <span aria-hidden="true" className="mt-4 block h-0.5 w-14 bg-gold" />
 
         {person.spotlight && <SpotlightBody spotlight={person.spotlight} />}
-
-        <Link
-          href={`/about#${person.slug}`}
-          className="group mt-6 inline-flex items-center gap-3 rounded-md bg-gold px-6 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-gold-deep sm:px-8 sm:py-3.5 sm:text-base"
-        >
-          View Profile
-          <svg viewBox="0 0 16 16" aria-hidden="true" className="h-3.5 w-3.5 transition-transform group-hover:translate-x-0.5">
-            <path
-              d="M2 8h11M9 4l4 4-4 4"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth={1.6}
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            />
-          </svg>
-          <span className="sr-only">of {person.name}</span>
-        </Link>
       </div>
     </article>
   );
@@ -103,19 +84,19 @@ function SpotlightBody({ spotlight }: { spotlight: Spotlight }) {
         {spotlight.summary}
       </p>
 
-      {/* Icon in a beige disc with its text beside it on wide screens;
-          stacked and centred where the column is narrow. */}
-      <ul className="mt-6 grid grid-cols-3 divide-x divide-line xl:flex">
+      {/* Two by two: icon in a beige disc with its text beside it, stacked
+          and centred on phones. */}
+      <ul className="mt-6 grid grid-cols-2 gap-x-6 gap-y-5 border-t border-line pt-6">
         {spotlight.credentials.map((item) => (
           <li
             key={item.title}
-            className="flex flex-col items-center gap-2 px-2 text-center first:pl-0 xl:flex-none xl:flex-row xl:gap-3 xl:px-6 xl:text-left"
+            className="flex flex-col items-center gap-2 text-center sm:flex-row sm:gap-3 sm:text-left"
           >
             <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-gold/15 xl:h-14 xl:w-14">
               <CredentialIcon name={item.icon} />
             </span>
             <span>
-              <span className="block text-sm font-semibold text-ink sm:text-base xl:whitespace-nowrap">{item.title}</span>
+              <span className="block text-sm font-semibold text-ink sm:text-base">{item.title}</span>
               <span className="mt-0.5 block text-xs text-slate sm:text-sm">{item.detail}</span>
             </span>
           </li>
@@ -149,6 +130,14 @@ function CredentialIcon({ name }: { name: Spotlight["credentials"][number]["icon
         <path d="M6 3h8l4 4v14H6z" />
         <path d="M14 3v4h4" />
         <path d="M9 11h6M9 14.5h6M9 18h4" />
+      </>
+    ),
+    // Scales.
+    practice: (
+      <>
+        <path d="M12 3.5v16M8 20.5h8M5 6.5h14" />
+        <path d="M5 6.5 2.5 13h5zM19 6.5 16.5 13h5z" />
+        <path d="M2.5 13a2.5 2.2 0 0 0 5 0M16.5 13a2.5 2.2 0 0 0 5 0" />
       </>
     ),
   };
