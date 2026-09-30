@@ -12,8 +12,7 @@ import type { Differentiator } from "@/content/firm";
  * The navy ground travels. Every few seconds it moves on to the next card,
  * and the card it leaves takes over that card's old ground, so the two
  * swap colours rather than the whole set shifting. The panel on the left
- * shows the picture for whichever card is navy, whole and at its own 3:2
- * shape (no cropping), with that card's number and title beneath it.
+ * cross-fades to the picture for whichever card is navy.
  * Resting on a card moves the navy there, after a short pause so a cursor
  * passing over the grid doesn't set every card flickering; hovering
  * anywhere in the band holds it still, and readers who ask for reduced
@@ -159,48 +158,24 @@ export function OurApproach({ items }: { items: readonly Differentiator[] }) {
       onMouseEnter={() => setPaused(true)}
       onMouseLeave={() => setPaused(false)}
     >
-      <div className="flex flex-col overflow-hidden rounded-2xl bg-[linear-gradient(160deg,var(--color-navy-soft),var(--color-ink-deep))] shadow-sm shadow-ink/10">
-        {/* 3:2 like the photographs on phones; on wide screens it takes
-            whatever height the cards leave, so the caption stays compact. */}
-        <div className="relative aspect-[3/2] w-full lg:aspect-auto lg:min-h-[16rem] lg:flex-1">
-          {items.map((item, index) => (
-            <Image
-              key={item.title}
-              src={item.image}
-              alt=""
-              fill
-              sizes="(min-width: 1280px) 480px, (min-width: 1024px) 38vw, 100vw"
-              quality={90}
-              style={{ objectPosition: item.focus }}
-              className={`object-cover transition-opacity ${FADE} ${
-                index === active ? "opacity-100" : "opacity-0"
-              }`}
-            />
-          ))}
-        </div>
-
-        {/* The selected card's number and title, and a marker per card. */}
-        <div className="flex flex-col gap-3 px-6 py-4 sm:px-7">
-          <p key={active} className="rise font-serif text-white">
-            <span className="flex items-center gap-3 text-sm font-semibold text-gold-bright">
-              {String(active + 1).padStart(2, "0")}
-              <span aria-hidden="true" className="h-px w-8 bg-gold-bright/60" />
-            </span>
-            <span className="mt-1.5 block text-xl font-semibold leading-snug">
-              {items[active]?.title}
-            </span>
-          </p>
-          <div className="flex gap-1.5" aria-hidden="true">
-            {items.map((item, index) => (
-              <span
-                key={item.title}
-                className={`h-1 rounded-full transition-all ${FADE} ${
-                  index === active ? "w-8 bg-gold-bright" : "w-3 bg-white/25"
-                }`}
-              />
-            ))}
-          </div>
-        </div>
+      {/* The picture for the navy card fills the whole panel: 3:2 on
+          phones, and on wide screens as tall as the cards beside it
+          (roughly square). */}
+      <div className="relative aspect-[3/2] overflow-hidden rounded-2xl bg-[linear-gradient(160deg,var(--color-navy-soft),var(--color-ink-deep))] shadow-sm shadow-ink/10 lg:aspect-auto">
+        {items.map((item, index) => (
+          <Image
+            key={item.title}
+            src={item.image}
+            alt=""
+            fill
+            sizes="(min-width: 1280px) 480px, (min-width: 1024px) 38vw, 100vw"
+            quality={90}
+            style={{ objectPosition: item.focus }}
+            className={`object-cover transition-opacity ${FADE} ${
+              index === active ? "opacity-100" : "opacity-0"
+            }`}
+          />
+        ))}
       </div>
 
       <ul className="grid gap-3 sm:grid-cols-2 lg:grid-cols-6">

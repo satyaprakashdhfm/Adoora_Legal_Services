@@ -82,9 +82,11 @@ roughly a third of the row and as tall as the locations beside it.
 ## "Our approach" photography
 
 The home page band (`our-approach.tsx`) shows one photograph per card on the
-left, cross-fading as the navy highlight moves from card to card. The frame
-is 3:2 and so is every photograph, so each shows whole. Keep any
-replacement at 3:2, landscape, at least 1400px wide. Each one is
+left, cross-fading as the navy highlight moves from card to card. The photo
+fills the whole panel. On laptops and desktops that panel is roughly square
+(about 450–550px each way on screen); on phones it is 3:2 landscape. So a
+replacement should be **square, 1200 × 1200px**, with the subject in the
+middle, where it survives both crops. Each one is
 named by `image`, and framed by `focus`, on its entry in `differentiators`
 (`src/content/firm.ts`):
 
