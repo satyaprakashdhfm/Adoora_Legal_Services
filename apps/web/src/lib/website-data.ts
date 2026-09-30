@@ -74,15 +74,32 @@ function initials(name: string): string {
     .join("");
 }
 
+/*
+ * The card's three credentials. Each one comes from the console profile when
+ * that field is filled in; a field left empty falls back to the same
+ * credential in the bundled roster (`content/people.ts`) for that slug, so a
+ * profile with only a summary still shows all three rather than none.
+ */
 function spotlight(profile: ApiProfile): Spotlight | undefined {
-  if (!profile.summary) return undefined;
+  const bundled = staticPeople.find((person) => person.slug === profile.slug)?.spotlight;
+  const summary = profile.summary ?? bundled?.summary;
+  if (!summary) return undefined;
+  const fallback = (icon: Spotlight["credentials"][number]["icon"]) =>
+    bundled?.credentials.find((item) => item.icon === icon);
+
   const credentials: Spotlight["credentials"] = [];
-  if (profile.qualification) credentials.push({ icon: "degree", title: profile.qualification, detail: "Qualification" });
-  if (profile.enrolment || profile.stateBar) {
-    credentials.push({ icon: "bar", title: "Admitted to the Bar", detail: profile.stateBar ?? profile.enrolment ?? "" });
-  }
-  if (profile.experience) credentials.push({ icon: "experience", title: profile.experience, detail: "Experience" });
-  return { summary: profile.summary, credentials };
+  const degree = profile.qualification
+    ? { icon: "degree" as const, title: profile.qualification, detail: "Qualification" }
+    : fallback("degree");
+  const bar =
+    profile.enrolment || profile.stateBar
+      ? { icon: "bar" as const, title: "Admitted to the Bar", detail: profile.stateBar ?? profile.enrolment ?? "" }
+      : fallback("bar");
+  const experience = profile.experience
+    ? { icon: "experience" as const, title: profile.experience, detail: "Experience" }
+    : fallback("experience");
+  for (const item of [degree, bar, experience]) if (item) credentials.push(item);
+  return { summary, credentials };
 }
 
 const undef = <T,>(value: T | null): T | undefined => value ?? undefined;
