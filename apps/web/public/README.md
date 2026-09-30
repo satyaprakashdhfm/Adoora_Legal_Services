@@ -9,11 +9,14 @@ them, exactly as the letterhead uses it.
 
 ## Inner-page hero background
 
-`hero-bg` — the blindfolded Lady Justice statue, sepia-toned on a matching
-pale ground, subject on the right. Behind `PageHero` (`src/components/ui.tsx`)
-on the pages passed `image` — currently Practices (`/services`), Insights, Careers, About and Contact.
-Pale enough that the heading needs no scrim over it; a page that doesn't pass
-`image` keeps the plain `paper-tint` band.
+`hero-bg-other` — the blindfolded Lady Justice statue before columns,
+sepia-toned on a pale cream ground, subject on the right. Behind `PageHero`
+(`src/components/ui.tsx`) on **every page except home**: practices and
+service pages, sectors, insights and articles, about, careers, contact and
+the policy pages. Pale enough that the heading needs no scrim over it. A
+page can opt out with `image={false}` (plain `paper-tint` band).
+
+`hero-bg` is the earlier version of the same frame, no longer referenced.
 
 Keep the subject on the **right** and give it room top and bottom. The band
 is only as tall as the page's own heading copy, and `cover` crops whatever

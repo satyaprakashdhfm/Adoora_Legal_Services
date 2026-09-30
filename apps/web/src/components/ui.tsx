@@ -365,13 +365,11 @@ export function InsightCard({ insight }: { insight: Insight }) {
  * distinct band rather than blending into the page. The home page has its
  * own photographic hero; every other page opens here.
  *
- * `image` opts a page into `hero-bg` — the blindfolded Lady Justice statue,
- * sepia-toned on a matching pale ground — behind the heading. It is pale
- * enough, and the statue sits far enough to the right, that the heading
- * needs no scrim to stay readable over it. Not every page that uses
- * `PageHero` gets it: only pass `image` on the pages the firm chose for it
- * (currently Insights, Careers, About and Contact) so the others keep the
- * plain `paper-tint` band.
+ * Every inner page opens on `hero-bg-other` — the blindfolded Lady Justice
+ * statue, sepia-toned on a matching pale ground — behind the heading. It is
+ * pale enough, and the statue sits far enough to the right, that the heading
+ * needs no scrim to stay readable over it. Pass `image={false}` for the
+ * plain `paper-tint` band instead.
  *
  * A band with the image gets a floor under its height, because the band is
  * as tall as whatever copy the page passes and `cover` crops the statue to
@@ -385,7 +383,7 @@ export function PageHero({
   title,
   lead,
   trail,
-  image = false,
+  image = true,
   photo,
   aside,
   children,
@@ -394,7 +392,7 @@ export function PageHero({
   title: string;
   lead?: string;
   trail?: { label: string; href?: string }[];
-  /** The pale Lady Justice ground (`hero-bg`). */
+  /** The pale Lady Justice ground (`hero-bg-other`); on unless set false. */
   image?: boolean;
   /**
    * A photograph URL for a dark band instead: the frame on the right, a
@@ -406,7 +404,7 @@ export function PageHero({
   aside?: ReactNode;
   children?: ReactNode;
 }) {
-  const heroBg = !photo && image ? publicImage("hero-bg") : null;
+  const heroBg = !photo && image ? publicImage("hero-bg-other") : null;
   const dark = Boolean(photo);
 
   return (
