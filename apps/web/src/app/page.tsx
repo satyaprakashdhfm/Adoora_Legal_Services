@@ -199,7 +199,7 @@ export default async function Home() {
           photograph beside a mosaic of five numbered cards. */}
       <section>
         <div className="container-page py-14 sm:py-16">
-          <SectionHeading eyebrow="Why us" title="Our approach" lead="Five strengths. One committed partnership." />
+          <SectionHeading eyebrow="Our approach" title="How we work" lead="Five strengths. One committed partnership." />
 
           <div className="mt-10">
             <OurApproach items={differentiators} photo={approachImage} />

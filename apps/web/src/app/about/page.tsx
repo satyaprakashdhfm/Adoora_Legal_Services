@@ -43,7 +43,8 @@ export default async function AboutPage() {
           Overview section says next, one scroll down. */}
       <PageHero
         eyebrow="About us"
-        title="About ADOORA Legal Services"
+        title="Counsel built on trust and clarity"
+        lead="ADOORA Legal Services is a full-service law firm with offices in Hyderabad, Bengaluru and Guntur, advising businesses, institutions and individuals across South India."
         trail={[{ label: "Home", href: "/" }, { label: "About Us" }]}
         image
       />

@@ -17,6 +17,7 @@ export default function ServicesPage() {
         title="Our practices"
         lead="The matters we handle, grouped by practice. Each practice has its own page setting out how the work is sequenced, the courts, tribunals and regulators involved, and the questions clients ask most often."
         trail={[{ label: "Home", href: "/" }, { label: "Practices" }]}
+        image
       />
 
       <div className="container-page py-14 sm:py-16">
