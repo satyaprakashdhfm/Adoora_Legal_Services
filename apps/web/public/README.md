@@ -90,19 +90,19 @@ middle, where it survives both crops. Each one is
 named by `image`, and framed by `focus`, on its entry in `differentiators`
 (`src/content/firm.ts`):
 
-| File | Card | Made from |
-| --- | --- | --- |
-| `approach-scales.jpg` | Proven Legal Expertise | Right-hand 3:2 crop of `hero-law-justice` (1360 × 907) |
-| `approach-client-first.jpg` | Client-First Approach | `why-us-client-first.png` |
-| `approach-connected.jpg` | Connected Client Experience | `client-exp.png` |
-| `approach-cross-border.jpg` | Cross-Border & Regulatory Mastery | `why-us-cross-border.png` |
-| `approach-solutions.jpg` | Strategic Legal Solutions | `why-us-solutions.png` |
+| File | Card |
+| --- | --- |
+| `approach-scales1.jpg` | Proven Legal Expertise |
+| `approach-client-first1.jpg` | Client-First Approach |
+| `approach-connected1.jpg` | Connected Client Experience |
+| `approach-cross-border1.jpg` | Cross-Border & Regulatory Mastery |
+| `approach-solutions1.jpg` | Strategic Legal Solutions |
 
-The sources are small (about 770px wide), so each was upscaled 2× with
-Lanczos and given a light unsharp mask. Served at `quality={90}`, which
-`next.config.ts` allows via `images.qualities`. Otherwise they look soft on
-high-density screens. `approach.png` and `why-us-expertise.png` are no longer
-referenced.
+Supplied by the firm at 1254 × 1254 and re-saved as JPEG (quality 90):
+they arrived as PNG data under a `.jpg` name, about 1.8 MB each. Served at
+`quality={90}`, which `next.config.ts` allows via `images.qualities`.
+`approach.png`, `client-exp.png` and the `why-us-*.png` frames are earlier
+versions, no longer referenced.
 
 ## People portraits (home page)
 

@@ -115,8 +115,8 @@ export const keyStrengths = [
   {
     title: "Strategic Legal Solutions",
     image: "/why-us-solutions.png",
-    /* The card is portrait and the frame landscape, so `cover` crops the
-       sides — this keeps the subject in shot. */
+    /* Square source; the panel is near-square on desktop and 3:2 on
+       phones, so this keeps the subject in shot either way. */
     focus: "62% 50%",
     body:
       "Tailored legal counsel designed to mitigate risks, ensure regulatory adherence and address industry-specific challenges.",
@@ -124,8 +124,8 @@ export const keyStrengths = [
   {
     title: "Proven Legal Expertise",
     image: "/why-us-expertise.png",
-    /* The card is portrait and the frame landscape, so `cover` crops the
-       sides — this keeps the subject in shot. */
+    /* Square source; the panel is near-square on desktop and 3:2 on
+       phones, so this keeps the subject in shot either way. */
     focus: "30% 50%",
     body:
       "A highly skilled team of attorneys and legal professionals with extensive experience in corporate law, dispute resolution and compliance.",
@@ -197,45 +197,45 @@ export const offices = [
 export const differentiators = [
   {
     title: "Proven Legal Expertise",
-    image: "/approach-scales.jpg",
-    /* The card is portrait and the frame landscape, so `cover` crops the
-       sides — this keeps the subject in shot. */
-    focus: "50% 50%",
+    image: "/approach-scales1.jpg",
+    /* Square source; the panel is near-square on desktop and 3:2 on
+       phones, so this keeps the subject in shot either way. */
+    focus: "68% 50%",
     body:
       "A strong track record in corporate law, M&A, and high-stakes legal matters.",
   },
   {
     title: "Client-First Approach",
-    image: "/approach-client-first.jpg",
-    /* The card is portrait and the frame landscape, so `cover` crops the
-       sides — this keeps the subject in shot. */
-    focus: "50% 50%",
+    image: "/approach-client-first1.jpg",
+    /* Square source; the panel is near-square on desktop and 3:2 on
+       phones, so this keeps the subject in shot either way. */
+    focus: "45% 50%",
     body:
       "Transparent, responsive, and committed to protecting your interests.",
   },
   {
     title: "Connected Client Experience",
-    image: "/approach-connected.jpg",
-    /* The card is portrait and the frame landscape, so `cover` crops the
-       sides — this keeps the subject in shot. */
-    focus: "62% 45%",
+    image: "/approach-connected1.jpg",
+    /* Square source; the panel is near-square on desktop and 3:2 on
+       phones, so this keeps the subject in shot either way. */
+    focus: "45% 50%",
     body: "Case updates, documents and communication in one place.",
   },
   {
     title: "Cross-Border & Regulatory Mastery",
-    image: "/approach-cross-border.jpg",
-    /* The card is portrait and the frame landscape, so `cover` crops the
-       sides — this keeps the subject in shot. */
-    focus: "32% 50%",
+    image: "/approach-cross-border1.jpg",
+    /* Square source; the panel is near-square on desktop and 3:2 on
+       phones, so this keeps the subject in shot either way. */
+    focus: "35% 50%",
     body:
       "Expertise in international transactions and regional compliance.",
   },
   {
     title: "Strategic Legal Solutions",
-    image: "/approach-solutions.jpg",
-    /* The card is portrait and the frame landscape, so `cover` crops the
-       sides — this keeps the subject in shot. */
-    focus: "62% 50%",
+    image: "/approach-solutions1.jpg",
+    /* Square source; the panel is near-square on desktop and 3:2 on
+       phones, so this keeps the subject in shot either way. */
+    focus: "55% 50%",
     body:
       "Practical, business-aligned counsel for sustainable growth.",
   },
