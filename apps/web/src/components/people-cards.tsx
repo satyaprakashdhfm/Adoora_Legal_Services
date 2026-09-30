@@ -5,31 +5,19 @@ import { publicImage } from "@/lib/public-image";
 import { AutoSlider } from "@/components/auto-slider";
 
 /**
- * The home page's "Our people" band: one person per slide. The portrait sits
- * on a navy panel on the left inside an offset gold frame; on the right, the
- * name, designation, a short introduction, three credentials and a link to
- * the full profile. Slides advance on their own and pause under the cursor
- * (`auto-slider.tsx`), and a row of tabs under the slider — portrait, name
- * and designation for each person — shows who is next and jumps to them.
+ * The home page's "Our people" band: one person per slide, portrait on the
+ * left inside an offset gold frame, and on the right the name, designation,
+ * a short introduction, three credentials and a link to the full profile.
+ * Slides advance on their own and pause under the cursor (`auto-slider.tsx`).
  *
- * The portrait falls back to a silhouette until `photo` or `photoUrl` is set
- * on the person, the same convention `person-card.tsx` uses on the About
- * page. The introduction and credentials come from `spotlight`, and are left
- * out when it isn't set.
+ * The portrait falls back to a silhouette on navy until `photo` is set on the
+ * person in `people.ts`, the same convention `person-card.tsx` uses on the
+ * About page. The introduction and credentials come from `spotlight`, and
+ * are left out when it isn't set.
  */
-function photoFor(person: Person): string | null {
-  return person.photoUrl ?? (person.photo ? publicImage(person.photo) : null);
-}
-
 export function PeopleCards({ people }: { people: readonly Person[] }) {
   return (
-    <AutoSlider
-      label="Our people"
-      interval={6000}
-      tabs={people.map((person) => (
-        <PersonTab key={person.slug} person={person} />
-      ))}
-    >
+    <AutoSlider label="Our people">
       {people.map((person) => (
         <PersonSlide key={person.slug} person={person} />
       ))}
@@ -37,90 +25,44 @@ export function PeopleCards({ people }: { people: readonly Person[] }) {
   );
 }
 
-function PersonTab({ person }: { person: Person }) {
-  const photo = photoFor(person);
-
-  return (
-    <span className="flex items-center justify-center gap-3 sm:justify-start">
-      <span className="relative h-11 w-11 shrink-0 overflow-hidden rounded-full bg-ink-mid ring-2 ring-gold/40">
-        {photo ? (
-          <Image
-            src={photo}
-            alt=""
-            fill
-            sizes="44px"
-            unoptimized={Boolean(person.photoUrl)}
-            className="object-cover object-top"
-          />
-        ) : (
-          <span className="flex h-full w-full items-center justify-center text-xs font-semibold text-white/70">
-            {person.initials}
-          </span>
-        )}
-      </span>
-      {/* Portrait only on phones, where three names will not fit across. */}
-      <span className="sr-only min-w-0 sm:not-sr-only">
-        <span className="block truncate font-serif text-sm font-semibold text-ink sm:text-base">
-          {person.name}
-        </span>
-        <span className="mt-0.5 hidden truncate text-xs uppercase tracking-[0.18em] text-gold-deep sm:block">
-          {person.designation}
-        </span>
-      </span>
-    </span>
-  );
-}
-
 function PersonSlide({ person }: { person: Person }) {
-  const photo = photoFor(person);
+  const photo = person.photoUrl ?? (person.photo ? publicImage(person.photo) : null);
 
   return (
-    <article className="grid overflow-hidden rounded-2xl border border-line bg-paper shadow-sm md:grid-cols-[minmax(0,5fr)_minmax(0,7fr)]">
-      {/* Portrait on a navy panel, with a thin gold frame set off behind it
-          to the right and a soft gold glow behind the sitter. */}
-      <div className="relative flex items-center justify-center overflow-hidden bg-[linear-gradient(160deg,var(--color-navy-soft),var(--color-ink-deep))] px-8 py-8 sm:py-10">
+    <article className="grid items-center gap-6 rounded-2xl border border-line bg-paper p-5 shadow-sm sm:gap-10 sm:p-10 md:grid-cols-[minmax(0,5fr)_minmax(0,7fr)] lg:gap-16 lg:p-12">
+      {/* Portrait, with a thin gold frame set off behind it to the right. */}
+      <div className="relative mx-auto w-full max-w-[12.5rem] pr-3 pb-3 sm:max-w-sm sm:pr-4 sm:pb-4">
         <div
           aria-hidden="true"
-          className="absolute -left-16 -top-16 h-56 w-56 rounded-full bg-gold/15 blur-3xl"
+          className="absolute inset-0 left-3 top-3 rounded-sm sm:left-4 sm:top-4 border border-gold"
         />
-        <div
-          aria-hidden="true"
-          className="absolute -bottom-20 -right-10 h-56 w-56 rounded-full border border-gold/20"
-        />
-        <div className="relative w-full max-w-[14rem] pr-3 pb-3 sm:max-w-[19rem] sm:pr-4 sm:pb-4">
-          <div
-            aria-hidden="true"
-            className="absolute inset-0 left-3 top-3 rounded-sm sm:left-4 sm:top-4 border border-gold"
-          />
-          <div className="relative aspect-[4/5] overflow-hidden rounded-sm shadow-lg shadow-ink/15">
-            {photo ? (
-              <Image
-                src={photo}
-                alt={`Portrait of ${person.name}`}
-                fill
-                sizes="(min-width: 640px) 19rem, 14rem"
-                quality={90}
-                unoptimized={Boolean(person.photoUrl)}
-                className="object-cover object-top"
-              />
-            ) : (
-              <div className="flex h-full w-full items-center justify-center bg-[linear-gradient(160deg,var(--color-ink-mid),var(--color-ink))]">
-                <svg
-                  viewBox="0 0 96 96"
-                  aria-hidden="true"
-                  className="h-28 w-28 text-white/15"
-                  fill="currentColor"
-                >
-                  <circle cx="48" cy="37" r="17" />
-                  <path d="M14 96c0-22.6 15.2-38 34-38s34 15.4 34 38z" />
-                </svg>
-              </div>
-            )}
-          </div>
+        <div className="relative aspect-[4/5] overflow-hidden rounded-sm shadow-lg shadow-ink/15">
+          {photo ? (
+            <Image
+              src={photo}
+              alt={`Portrait of ${person.name}`}
+              fill
+              sizes="(min-width: 768px) 24rem, 100vw"
+              unoptimized={Boolean(person.photoUrl)}
+              className="object-cover"
+            />
+          ) : (
+            <div className="flex h-full w-full items-center justify-center bg-[linear-gradient(160deg,var(--color-ink-mid),var(--color-ink))]">
+              <svg
+                viewBox="0 0 96 96"
+                aria-hidden="true"
+                className="h-28 w-28 text-white/15"
+                fill="currentColor"
+              >
+                <circle cx="48" cy="37" r="17" />
+                <path d="M14 96c0-22.6 15.2-38 34-38s34 15.4 34 38z" />
+              </svg>
+            </div>
+          )}
         </div>
       </div>
 
-      <div className="flex flex-col justify-center p-6 sm:p-10 lg:px-14">
+      <div>
         <h3 className="font-serif text-2xl font-semibold leading-tight tracking-tight text-ink sm:text-4xl">
           {person.name}
         </h3>
@@ -133,7 +75,7 @@ function PersonSlide({ person }: { person: Person }) {
 
         <Link
           href={`/about#${person.slug}`}
-          className="group mt-6 inline-flex self-start items-center gap-3 rounded-lg border border-gold px-5 py-2.5 sm:mt-8 sm:px-6 sm:py-3 text-sm font-semibold text-ink transition hover:bg-gold hover:text-white"
+          className="group mt-6 inline-flex items-center gap-3 rounded-lg border border-gold px-5 py-2.5 sm:mt-8 sm:px-6 sm:py-3 text-sm font-semibold text-ink transition hover:bg-gold hover:text-white"
         >
           View Profile
           <svg viewBox="0 0 16 16" aria-hidden="true" className="h-3.5 w-3.5 transition-transform group-hover:translate-x-0.5">
