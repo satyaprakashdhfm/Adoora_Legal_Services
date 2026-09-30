@@ -1,5 +1,4 @@
 import Image from "next/image";
-import Link from "next/link";
 import type { SVGProps } from "react";
 import type { Differentiator } from "@/content/firm";
 
@@ -10,7 +9,7 @@ import type { Differentiator } from "@/content/firm";
  * the grounds alternate warm / navy / mist so neighbouring cards never read
  * as one panel. The navy card is the second, so the eye lands on it first.
  *
- * Every card links to the fuller "Key strengths" band on /about.
+ * The cards are statements, not navigation — no link, no arrow.
  *
  * `photo` is resolved by the server-only `publicImage()` in the page; a
  * missing file leaves the navy gradient panel in its place.
@@ -32,7 +31,7 @@ const spans = [
 
 const toneClasses: Record<
   Tone,
-  { card: string; number: string; rule: string; icon: string; title: string; body: string; arrow: string }
+  { card: string; number: string; rule: string; icon: string; title: string; body: string }
 > = {
   warm: {
     card: "bg-paper-warm border-line",
@@ -41,16 +40,14 @@ const toneClasses: Record<
     icon: "text-gold",
     title: "text-ink",
     body: "text-ink-soft",
-    arrow: "border-ink/25 text-ink group-hover:border-gold group-hover:bg-gold group-hover:text-white",
   },
   navy: {
-    card: "bg-ink-mid border-ink-mid",
+    card: "bg-navy-soft border-navy-soft",
     number: "text-gold-bright",
     rule: "bg-gold-bright/60",
     icon: "text-gold-bright",
     title: "text-white",
     body: "text-white/75",
-    arrow: "border-white/40 text-white group-hover:border-gold-bright group-hover:bg-gold-bright group-hover:text-ink-deep",
   },
   mist: {
     card: "bg-mist border-mist-line",
@@ -59,7 +56,6 @@ const toneClasses: Record<
     icon: "text-gold",
     title: "text-ink",
     body: "text-ink-soft",
-    arrow: "border-ink/25 text-ink group-hover:border-gold group-hover:bg-gold group-hover:text-white",
   },
 };
 
@@ -108,21 +104,6 @@ const icons: ((props: SVGProps<SVGSVGElement>) => React.JSX.Element)[] = [
   ),
 ];
 
-function ArrowIcon({ className = "" }: { className?: string }) {
-  return (
-    <svg viewBox="0 0 16 16" aria-hidden="true" className={className}>
-      <path
-        d="M2 8h11M9 4l4 4-4 4"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth={1.6}
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-    </svg>
-  );
-}
-
 export function OurApproach({
   items,
   photo,
@@ -138,8 +119,9 @@ export function OurApproach({
             src={photo}
             alt=""
             fill
-            sizes="(min-width: 1024px) 33vw, 100vw"
-            className="object-cover object-[80%_55%]"
+            sizes="(min-width: 1280px) 440px, (min-width: 1024px) 34vw, 100vw"
+            quality={90}
+            className="object-cover object-[50%_55%]"
           />
         )}
       </div>
@@ -157,9 +139,8 @@ export function OurApproach({
               key={item.title}
               className={`${spans[index] ?? "lg:col-span-2"} ${isLastOdd ? "sm:col-span-2" : ""}`}
             >
-              <Link
-                href="/about#approach"
-                className={`group flex h-full flex-col sm:min-h-[14rem] rounded-2xl border p-6 transition duration-300 hover:-translate-y-0.5 hover:shadow-xl hover:shadow-ink/10 sm:p-7 lg:min-h-[15.5rem] ${tone.card}`}
+              <div
+                className={`flex h-full flex-col rounded-2xl border p-6 sm:p-7 lg:min-h-[13rem] ${tone.card}`}
               >
                 <div className="flex items-start justify-between gap-4">
                   <span className={`flex items-center gap-3 font-serif text-lg font-semibold ${tone.number}`}>
@@ -168,7 +149,7 @@ export function OurApproach({
                   </span>
                   <Icon
                     aria-hidden="true"
-                    className={`h-10 w-10 shrink-0 transition duration-300 group-hover:scale-110 ${tone.icon}`}
+                    className={`h-10 w-10 shrink-0 ${tone.icon}`}
                   />
                 </div>
 
@@ -178,16 +159,7 @@ export function OurApproach({
                 <p className={`mt-3 max-w-sm text-[0.9rem] leading-relaxed ${tone.body}`}>
                   {item.body}
                 </p>
-
-                <span className="mt-auto pt-5 sm:pt-6">
-                  <span
-                    aria-hidden="true"
-                    className={`flex h-9 w-9 items-center justify-center rounded-full border transition duration-300 ${tone.arrow}`}
-                  >
-                    <ArrowIcon className="h-3.5 w-3.5 transition duration-300 group-hover:translate-x-0.5" />
-                  </span>
-                </span>
-              </Link>
+              </div>
             </li>
           );
         })}

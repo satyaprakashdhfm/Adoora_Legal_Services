@@ -53,7 +53,7 @@ file names live in `src/content/hero-slides.ts`.
 | Base name | Slide | The photograph |
 | --- | --- | --- |
 | `hero-office-desk` | Corporate Advisory | Office desk with laptop and contract folder, city skyline beyond, PEOPLE / PRINCIPLES / POSSIBILITIES on the wall. |
-| `hero-law-justice` | Litigation | Brass scales of justice on bound LAW and JUSTICE volumes. Doubles as the photograph beside "Our approach" on the home page — see below. |
+| `hero-law-justice` | Litigation | Brass scales of justice on bound LAW and JUSTICE volumes. The source of the "Our approach" crop — see below. |
 | `hero-shield-compliance` | Banking & Finance | Brass shield and padlock against a Lady Justice figure, beside REGULATORY COMPLIANCE / ASSET PROTECTION / RISK MANAGEMENT volumes. |
 
 **The extension does not matter.** `src/lib/public-image.ts` resolves the base
@@ -82,9 +82,13 @@ roughly a third of the row and as tall as the locations beside it.
 ## "Our approach" photography
 
 The home page band (`our-approach.tsx`) is a photograph down the left beside
-a mosaic of five numbered cards. The photograph is `hero-law-justice` (see
-above), cropped `object-[80%_55%]` so the scales and the LAW / JUSTICE
-volumes fill the near-square frame on desktop.
+a mosaic of five numbered cards. The photograph is `approach-scales.jpg`: a
+portrait crop of the right-hand side of `hero-law-justice` (scales on the LAW
+/ JUSTICE volumes), upscaled to 1100px wide with Lanczos and a light unsharp
+mask. Cropping the wide hero frame at render time left too few pixels for a
+tall panel on high-density screens, and it looked soft. The component also
+requests `quality={90}`, which `next.config.ts` allows via `images.qualities`.
+The blur behind the scales is the photograph's own depth of field.
 
 `why-us-expertise.png`, `why-us-client-first.png`, `client-exp.png`,
 `why-us-cross-border.png`, `why-us-solutions.png` and `approach.png` are from

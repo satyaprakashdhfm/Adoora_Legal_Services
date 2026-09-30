@@ -39,6 +39,8 @@
      alternate grounds (the home page "Our approach" mosaic). */
   --color-mist: #eaf0f6;
   --color-mist-line: #dbe3ed;
+  /* A lighter navy than ink-mid, for a feature card among pale ones. */
+  --color-navy-soft: #243d6e;
 
   --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
   --font-serif: var(--font-serif-display), ui-serif, Georgia, serif;

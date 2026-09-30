@@ -13,6 +13,13 @@ const apiOrigin = (
 ).replace(/\/$/, "");
 
 const nextConfig: NextConfig = {
+  images: {
+    /* Next 16 allows only quality 75 unless listed here. 90 is for the
+       large editorial photographs (e.g. the home "Our approach" frame),
+       where 75 visibly softens fine detail. */
+    qualities: [75, 90],
+  },
+
   experimental: {
     /*
      * Document uploads pass through the `/api` rewrite below, and Next
