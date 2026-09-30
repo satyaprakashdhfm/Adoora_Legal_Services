@@ -41,6 +41,9 @@
   --color-mist-line: #dbe3ed;
   /* A lighter navy than ink-mid, for a feature card among pale ones. */
   --color-navy-soft: #243d6e;
+  /* The pale ground of the inner-page header photograph (hero-bg-other),
+     sampled from its left edge, so the band extends it seamlessly. */
+  --color-hero-cream: #fbf2e7;
 
   --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
   --font-serif: var(--font-serif-display), ui-serif, Georgia, serif;

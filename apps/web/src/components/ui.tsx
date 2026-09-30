@@ -6,7 +6,7 @@ import type { Person } from "@/content/people";
 import type { Insight } from "@/content/insights";
 import { InsightArtwork } from "@/components/insight-artwork";
 import { anchorFor } from "@/lib/anchor";
-import { publicImage } from "@/lib/public-image";
+import { publicImage, publicImageSize } from "@/lib/public-image";
 
 /** Eyebrow + heading + optional lead, used at the top of every section. */
 export function SectionHeading({
@@ -405,22 +405,38 @@ export function PageHero({
   children?: ReactNode;
 }) {
   const heroBg = !photo && image ? publicImage("hero-bg-other") : null;
+  const heroSize = heroBg ? publicImageSize(heroBg) : null;
   const dark = Boolean(photo);
 
   return (
     <section
       className={`relative overflow-hidden border-b ${
-        dark ? "border-ink-deep bg-ink-deep text-white" : "border-line-strong bg-paper-tint text-ink"
-      } ${heroBg || dark ? "flex min-h-[22rem] items-center" : ""}`}
+        dark
+          ? "border-ink-deep bg-ink-deep text-white"
+          : heroBg
+            ? "border-line-strong bg-hero-cream text-ink"
+            : "border-line-strong bg-paper-tint text-ink"
+      } ${dark ? "flex min-h-[22rem] items-center" : ""} ${
+        heroBg ? "flex min-h-[21rem] items-center sm:min-h-[24rem]" : ""
+      }`}
     >
+      {/* Drawn at exactly the band's height and pinned right, so the statue
+          is never cropped top or bottom; any width the frame doesn't cover
+          on the left is the frame's own cream (`hero-cream`). Every page's
+          header copy fits in 24rem, so every band is the same height and
+          the statue sits in the same place — article pages, with a cover
+          beside the title, are the one exception and grow to fit. */}
       {heroBg && (
-        <Image
-          src={heroBg}
-          alt=""
-          fill
-          sizes="100vw"
-          className="object-cover object-right"
-        />
+        <div
+          aria-hidden="true"
+          className="absolute inset-y-0 right-0 h-full"
+          style={{ aspectRatio: heroSize ? `${heroSize.width} / ${heroSize.height}` : "8 / 3" }}
+        >
+          <Image src={heroBg} alt="" fill priority quality={90} sizes="1100px" className="object-cover object-right" />
+          {/* Fades the frame's left edge into the band's cream, so no seam
+              shows where the photograph ends on a wide screen. */}
+          <div className="absolute inset-y-0 left-0 w-1/5 bg-[linear-gradient(to_right,var(--color-hero-cream),transparent)]" />
+        </div>
       )}
       {photo && (
         <>

@@ -18,6 +18,19 @@ page can opt out with `image={false}` (plain `paper-tint` band).
 
 `hero-bg` is the earlier version of the same frame, no longer referenced.
 
+How it is drawn: every inner-page header is the same height, **384px on
+laptops and desktops** (24rem; at least 336px on phones, growing if the text
+needs more). The photograph is drawn at exactly that height, pinned to the
+right edge, so it is never cropped top or bottom. Its left edge fades into
+`--color-hero-cream` (#fbf2e7, sampled from the frame), which fills whatever
+width the photograph doesn't cover. Article pages, with a cover beside the
+title, are the one header that grows taller.
+
+**Size for a replacement: 2048 × 768px** (8:3, twice the on-screen 384px
+height, so it stays sharp on high-density screens). Keep the subject in the
+right half, the left half plain, and the ground close to #fbf2e7 at the
+left edge. Any width works, since the frame's aspect is read from the file.
+
 Keep the subject on the **right** and give it room top and bottom. The band
 is only as tall as the page's own heading copy, and `cover` crops whatever
 does not fit, so a frame with the subject running edge to edge loses its
