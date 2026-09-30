@@ -52,8 +52,8 @@ file names live in `src/content/hero-slides.ts`.
 
 | Base name | Slide | The photograph |
 | --- | --- | --- |
-| `hero-office-desk` | Corporate Advisory | Office desk with laptop and contract folder, city skyline beyond, PEOPLE / PRINCIPLES / POSSIBILITIES on the wall. |
-| `hero-law-justice` | Litigation | Brass scales of justice on bound LAW and JUSTICE volumes. Doubles as the photograph behind "Our approach" on the home page — see below. |
+| `hero-office-desk` | Corporate Advisory | Office desk with laptop and contract folder, city skyline beyond, PEOPLE / PRINCIPLES / POSSIBILITIES on the wall. Doubles as the photograph beside "Our approach" on the home page — see below. |
+| `hero-law-justice` | Litigation | Brass scales of justice on bound LAW and JUSTICE volumes. |
 | `hero-shield-compliance` | Banking & Finance | Brass shield and padlock against a Lady Justice figure, beside REGULATORY COMPLIANCE / ASSET PROTECTION / RISK MANAGEMENT volumes. |
 
 **The extension does not matter.** `src/lib/public-image.ts` resolves the base
@@ -79,44 +79,50 @@ runs solid down the left of the panel, where the heading, buttons and the
 PEOPLE / IDEAS / IMPACT triad sit. Portrait or square crops best — the panel is
 roughly a third of the row and as tall as the locations beside it.
 
-## "Our approach" photography (unused)
+## "Our approach" photography
+
+The home page band (`our-approach.tsx`) is a photograph down the left beside
+a mosaic of five numbered cards. The photograph is `hero-office-desk` (see
+above), cropped `object-[45%_50%]` so the laptop and window stay in shot in
+the near-square frame on desktop.
 
 `why-us-expertise.png`, `why-us-client-first.png`, `client-exp.png`,
-`why-us-cross-border.png` and `why-us-solutions.png` — one frame per entry in
-`differentiators` (`src/content/firm.ts`) from an earlier version of the "Our
-approach" home page band, which showed all five as numbered photo nodes on a
-spine. The current version (`our-approach.tsx`) is a tabbed list with a single
-photograph behind the selected entry's copy — `hero-law-justice`, see above —
-so these five are no longer referenced. Left in place rather than deleted in
-case a future version wants a photograph per entry again; `differentiators`
-still carries the `image`/`focus` fields that named them.
-
-`approach.png` — the single photograph the tabbed version used before it was
-pointed at `hero-law-justice` instead. Also unused; also left in place.
+`why-us-cross-border.png`, `why-us-solutions.png` and `approach.png` are from
+earlier versions of the band and are no longer referenced. Left in place
+rather than deleted; `differentiators` still carries the `image`/`focus`
+fields that named the first five.
 
 ## Practice photography
 
-One circular frame per practice, behind the home page's practices ring
-(`practices-wheel.tsx`) and its mobile fallback grid. Resolved by
-`publicImage("practice-<slug>")`, so a missing frame just omits the photo
-rather than breaking the layout.
+The home page practices band (`practices-grid.tsx`) is a 3 × 3 grid of navy
+cards, one per practice. Each card takes one of two photographs, both resolved
+by `publicImage()`, so the extension does not matter:
 
-| File | Practice |
+- **`practice-photo-<slug>`: full-bleed card photograph (not yet supplied).**
+  When present, it fills the card behind a navy wash that darkens the left,
+  where the number and name sit. Landscape, roughly 16:9, at least 900px
+  wide, with the subject on the **right**. Drop one in and that card switches
+  over; the others are unaffected.
+- **`practice-<slug>`: circular inset (in place now).** Used only when the
+  full-bleed frame is missing, as a gold-ringed disc on the right of the navy
+  card. These are small (about 260px), which is why they are not stretched
+  to fill the card.
+
+| Slug | Practice |
 | --- | --- |
-| `practice-corporate-ma.png` | Corporate Advisory |
-| `practice-banking-finance.png` | Banking & Finance |
-| `practice-litigation.png` | Litigation |
-| `practice-dispute-resolution.png` | Alternative Dispute Resolution |
-| `practice-real-estate-infrastructure.png` | Real Estate & Infrastructure |
-| `practice-taxation.png` | Taxation |
-| `practice-labour-employment.png` | Labour & Employment |
-| `practice-intellectual-property.png` | Intellectual Property |
-| `practice-regulatory-environmental.png` | Regulatory & Environmental |
+| `corporate-ma` | Corporate Advisory |
+| `banking-finance` | Banking & Finance |
+| `litigation` | Litigation |
+| `dispute-resolution` | Alternative Dispute Resolution |
+| `real-estate-infrastructure` | Real Estate & Infrastructure |
+| `taxation` | Taxation |
+| `labour-employment` | Labour & Employment |
+| `intellectual-property` | Intellectual Property |
+| `regulatory-environmental` | Regulatory & Environmental |
 
-Already cropped square and centred — `object-cover` inside a circle is enough,
-no `focus` value needed. These were cut from a single 3×3 composite the firm
-supplied; the composite itself is not kept here once sliced (see Composites,
-below).
+The circular insets are already cropped square and centred. They were cut
+from a single 3×3 composite the firm supplied; the composite itself is not
+kept here once sliced (see Composites, below).
 
 ## Insight photography
 

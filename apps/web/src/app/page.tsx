@@ -3,7 +3,7 @@ import Link from "next/link";
 import type { Metadata } from "next";
 import { Hero } from "@/components/hero";
 import { InsightCard, SectionHeading } from "@/components/ui";
-import { PracticesCarousel } from "@/components/practices-carousel";
+import { PracticesGrid } from "@/components/practices-grid";
 import { CityIcon } from "@/components/city-icon";
 import { OurApproach } from "@/components/our-approach";
 import { firm, firmOverview, differentiators, offices } from "@/content/firm";
@@ -36,9 +36,9 @@ function Arrow({ className = "" }: { className?: string }) {
   );
 }
 
-/** Display order for the home page's practice carousel — banking, litigation
+/** Display order for the home page's practice grid — banking, litigation
  *  and ADR lead, then the rest in their declared order. */
-const practiceCarouselOrder = [
+const practiceGridOrder = [
   "banking-finance",
   "litigation",
   "dispute-resolution",
@@ -54,13 +54,18 @@ export default async function Home() {
   /* Profiles marked "Show on the home page" in the admin console. */
   const featuredPeople = await getFeaturedPeople();
   const latestInsights = (await getInsights()).slice(0, 3);
-  const practiceCarouselItems = practiceCarouselOrder
+  const practiceGridItems = practiceGridOrder
     .map((slug) => practiceAreas.find((area) => area.slug === slug))
-    .filter((area): area is (typeof practiceAreas)[number] => Boolean(area));
+    .filter((area): area is (typeof practiceAreas)[number] => Boolean(area))
+    .map((area) => ({
+      area,
+      photo: publicImage(`practice-photo-${area.slug}`),
+      thumb: publicImage(`practice-${area.slug}`),
+    }));
   /* Resolved at build time; a missing file falls back to the navy gradient,
      exactly as the hero frames do. */
   const careersImage = publicImage("careers-office");
-  const approachImage = publicImage("hero-law-justice");
+  const approachImage = publicImage("hero-office-desk");
 
   return (
     <>
@@ -125,19 +130,18 @@ export default async function Home() {
         </div>
       </section>
 
-      {/* Practices — a horizontally scrolling row of cards. Plain ground,
-          same as About and Our approach: the home page already alternates
-          paper and paper-warm bands section to section, so this doesn't
-          need its own framed panel on top of that to read as a distinct
-          section. The dense, bulleted index a visitor wants once they
-          already know which practice they need lives at /services; this is
-          the lighter teaser that gets them there. */}
+      {/* Practices — a 3 × 3 grid of photo cards, one per practice. Plain
+          ground, same as About and Our approach: the home page already
+          alternates paper and paper-warm bands section to section. The
+          dense, bulleted index a visitor wants once they already know which
+          practice they need lives at /services; this is the lighter teaser
+          that gets them there. */}
       <section className="container-page py-14 sm:py-16">
         <div className="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
           <SectionHeading
             eyebrow="Practices"
             title="Our practice areas"
-            lead="An integrated approach to the legal matters that shape businesses, industries and communities."
+            lead="Nine key areas. One integrated approach to delivering practical legal solutions."
           />
           <Link
             href="/services"
@@ -148,8 +152,8 @@ export default async function Home() {
           </Link>
         </div>
 
-        <div className="mt-12">
-          <PracticesCarousel items={practiceCarouselItems} />
+        <div className="mt-10">
+          <PracticesGrid items={practiceGridItems} />
         </div>
       </section>
 
@@ -192,13 +196,12 @@ export default async function Home() {
 
       {/* Our approach. Copy supplied by the firm — see the note on
           `differentiators` in firm.ts about the BCI advertising rules. A
-          numbered list with the selected entry's copy over a photograph,
-          rather than a diagram — one image (approach.png) serves all five. */}
+          photograph beside a mosaic of five numbered cards. */}
       <section>
         <div className="container-page py-14 sm:py-16">
           <SectionHeading eyebrow="Why us" title="Our approach" lead="Five strengths. One committed partnership." />
 
-          <div className="mt-12">
+          <div className="mt-10">
             <OurApproach items={differentiators} photo={approachImage} />
           </div>
         </div>

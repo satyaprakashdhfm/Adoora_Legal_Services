@@ -1,64 +1,109 @@
-"use client";
-
 import Image from "next/image";
-import { useState, type SVGProps } from "react";
+import Link from "next/link";
+import type { SVGProps } from "react";
 import type { Differentiator } from "@/content/firm";
 
 /**
- * "Our approach" — a numbered list of the firm's five differentiators on the
- * left, the selected one's full copy over a photograph on the right.
+ * "Our approach" — a photograph down the left, the firm's five
+ * differentiators as a mosaic of cards beside it: three across the top, two
+ * across the bottom. Each card is numbered and carries a gold line icon, and
+ * the grounds alternate warm / navy / mist so neighbouring cards never read
+ * as one panel. The navy card is the second, so the eye lands on it first.
  *
- * One photograph (`hero-law-justice.png` in `public/` — brass scales on
- * bound LAW and JUSTICE volumes) serves all five entries; only the copy
- * changes when a different one is selected. It runs dark across the left
- * side where the copy sits, so the wash under the text and the text itself
- * are both tuned for a dark ground, not a light one.
+ * Every card links to the fuller "Key strengths" band on /about.
  *
- * `photo` is resolved by the server-only `publicImage()` and passed in as a
- * plain URL — this is a client component (it holds the selection state), and
- * `publicImage()` reads the filesystem, which a client bundle can't do.
- *
- * Icons and the row arrow are gold (`text-gold`, the site's standard accent)
- * on an inactive row, and switch to `text-ink` — the site's navy — on the
- * selected one, matching the row's own title text.
+ * `photo` is resolved by the server-only `publicImage()` in the page; a
+ * missing file leaves the navy gradient panel in its place.
  */
 
+type Tone = "warm" | "navy" | "mist";
+
+/* Ground per card, in display order — matches the approved mockup. */
+const tones: Tone[] = ["warm", "navy", "mist", "mist", "warm"];
+
+/* lg column spans on the six-column card grid: three across, then two. */
+const spans = [
+  "lg:col-span-2",
+  "lg:col-span-2",
+  "lg:col-span-2",
+  "lg:col-span-3",
+  "lg:col-span-3",
+];
+
+const toneClasses: Record<
+  Tone,
+  { card: string; number: string; rule: string; icon: string; title: string; body: string; arrow: string }
+> = {
+  warm: {
+    card: "bg-paper-warm border-line",
+    number: "text-gold-deep",
+    rule: "bg-gold/50",
+    icon: "text-gold",
+    title: "text-ink",
+    body: "text-ink-soft",
+    arrow: "border-ink/25 text-ink group-hover:border-gold group-hover:bg-gold group-hover:text-white",
+  },
+  navy: {
+    card: "bg-ink border-ink",
+    number: "text-gold-bright",
+    rule: "bg-gold-bright/60",
+    icon: "text-gold-bright",
+    title: "text-white",
+    body: "text-white/75",
+    arrow: "border-white/40 text-white group-hover:border-gold-bright group-hover:bg-gold-bright group-hover:text-ink-deep",
+  },
+  mist: {
+    card: "bg-mist border-mist-line",
+    number: "text-gold-deep",
+    rule: "bg-gold/50",
+    icon: "text-gold",
+    title: "text-ink",
+    body: "text-ink-soft",
+    arrow: "border-ink/25 text-ink group-hover:border-gold group-hover:bg-gold group-hover:text-white",
+  },
+};
+
 const icons: ((props: SVGProps<SVGSVGElement>) => React.JSX.Element)[] = [
-  // Proven Legal Expertise — a single figure.
+  // Proven Legal Expertise — scales of justice.
   (props) => (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.4} strokeLinecap="round" strokeLinejoin="round" {...props}>
-      <circle cx="12" cy="8.5" r="3.3" />
-      <path d="M5 20.5c0-3.9 3.1-6.5 7-6.5s7 2.6 7 6.5" />
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.2} strokeLinecap="round" strokeLinejoin="round" {...props}>
+      <path d="M12 3.5v16M8 20.5h8M5 6.5h14M12 3.5a.9.9 0 100 .01" />
+      <path d="M5 6.5L2.5 13h5L5 6.5zM19 6.5L16.5 13h5L19 6.5z" />
+      <path d="M2.5 13a2.5 2.2 0 005 0M16.5 13a2.5 2.2 0 005 0" />
     </svg>
   ),
-  // Client-First Approach — two figures.
+  // Client-First Approach — a group of three.
   (props) => (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.4} strokeLinecap="round" strokeLinejoin="round" {...props}>
-      <circle cx="8.5" cy="8" r="2.6" />
-      <circle cx="15.5" cy="8" r="2.6" />
-      <path d="M3 20c0-3.3 2.5-5.4 5.5-5.4S14 16.7 14 20" />
-      <path d="M10 20c0-3.3 2.5-5.4 5.5-5.4S21 16.7 21 20" />
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.2} strokeLinecap="round" strokeLinejoin="round" {...props}>
+      <circle cx="12" cy="7.5" r="3" />
+      <circle cx="5.5" cy="9.5" r="2.3" />
+      <circle cx="18.5" cy="9.5" r="2.3" />
+      <path d="M6.5 20v-2.2c0-2.8 2.5-4.8 5.5-4.8s5.5 2 5.5 4.8V20H6.5z" />
+      <path d="M4.6 14.6C2.7 14.9 1.5 16.3 1.5 18v2h3M19.4 14.6c1.9.3 3.1 1.7 3.1 3.4v2h-3" />
     </svg>
   ),
-  // Connected Client Experience — a message bubble.
+  // Connected Client Experience — a speech bubble.
   (props) => (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.4} strokeLinecap="round" strokeLinejoin="round" {...props}>
-      <path d="M4 5.5h16a1 1 0 011 1v9a1 1 0 01-1 1H9.5L5 20.5V16.5H4a1 1 0 01-1-1v-9a1 1 0 011-1z" />
-      <path d="M7.5 10.5h9M7.5 13.5h5.5" />
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.2} strokeLinecap="round" strokeLinejoin="round" {...props}>
+      <path d="M12 3.5c5 0 9 3.3 9 7.5s-4 7.5-9 7.5c-1.1 0-2.2-.2-3.2-.5L4 20.5l1.3-4.2C3.9 14.9 3 13 3 11c0-4.2 4-7.5 9-7.5z" />
     </svg>
   ),
   // Cross-Border & Regulatory Mastery — a globe.
   (props) => (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.4} strokeLinecap="round" strokeLinejoin="round" {...props}>
-      <circle cx="12" cy="12" r="8.5" />
-      <path d="M3.5 12h17" />
-      <path d="M12 3.5c2.8 2.3 4.3 5.3 4.3 8.5s-1.5 6.2-4.3 8.5c-2.8-2.3-4.3-5.3-4.3-8.5S9.2 5.8 12 3.5z" />
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.2} strokeLinecap="round" strokeLinejoin="round" {...props}>
+      <circle cx="12" cy="12" r="9" />
+      <path d="M3 12h18M4.2 7.5h15.6M4.2 16.5h15.6" />
+      <path d="M12 3c2.6 2.4 4 5.5 4 9s-1.4 6.6-4 9c-2.6-2.4-4-5.5-4-9s1.4-6.6 4-9z" />
     </svg>
   ),
   // Strategic Legal Solutions — an ascending bar chart.
   (props) => (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.4} strokeLinecap="round" strokeLinejoin="round" {...props}>
-      <path d="M4.5 20V12.5M10.5 20V9M16.5 20V5.5M3 20.5h18" />
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.2} strokeLinecap="round" strokeLinejoin="round" {...props}>
+      <path d="M2.5 20.5h19" />
+      <rect x="4" y="14" width="3.2" height="6.5" />
+      <rect x="9" y="10.5" width="3.2" height="10" />
+      <rect x="14" y="7" width="3.2" height="13.5" />
+      <rect x="19" y="3.5" width="2.5" height="17" />
     </svg>
   ),
 ];
@@ -85,71 +130,68 @@ export function OurApproach({
   items: readonly Differentiator[];
   photo: string | null;
 }) {
-  const [activeIndex, setActiveIndex] = useState(0);
-  const active = items[activeIndex];
-
   return (
-    <div className="grid gap-3 lg:grid-cols-[1fr_2fr]">
-      <ul className="overflow-hidden rounded-2xl border border-line shadow-sm shadow-ink/[0.04]">
-        {items.map((item, index) => {
-          const Icon = icons[index % icons.length];
-          const isActive = index === activeIndex;
-
-          return (
-            <li key={item.title} className={index > 0 ? "border-t border-line" : ""}>
-              <button
-                type="button"
-                onClick={() => setActiveIndex(index)}
-                aria-current={isActive}
-                className={`flex w-full items-center gap-4 border-l-2 px-5 py-5 text-left transition ${
-                  isActive
-                    ? "border-gold bg-paper-warm"
-                    : "border-transparent hover:bg-paper-warm/60"
-                }`}
-              >
-                <Icon
-                  className={`h-7 w-7 shrink-0 transition ${isActive ? "text-ink" : "text-gold"}`}
-                />
-                <span className="flex-1 font-serif text-base font-semibold leading-snug tracking-tight text-ink">
-                  {item.title}
-                </span>
-                <ArrowIcon
-                  className={`h-3.5 w-3.5 shrink-0 transition ${isActive ? "text-ink" : "text-gold"}`}
-                />
-              </button>
-            </li>
-          );
-        })}
-      </ul>
-
-      <div className="relative min-h-[22rem] overflow-hidden rounded-2xl border border-line shadow-sm shadow-ink/[0.04] lg:min-h-0">
+    <div className="grid gap-3 lg:grid-cols-[minmax(0,1fr)_minmax(0,2fr)]">
+      <div className="relative aspect-[16/10] overflow-hidden rounded-2xl bg-[linear-gradient(135deg,var(--color-ink-mid),var(--color-ink-deep))] sm:aspect-[2/1] lg:aspect-auto">
         {photo && (
           <Image
             src={photo}
             alt=""
             fill
-            sizes="(min-width: 1024px) 66vw, 100vw"
-            className="object-cover"
+            sizes="(min-width: 1024px) 33vw, 100vw"
+            className="object-cover object-[45%_50%]"
           />
         )}
-
-        {/* A dark wash under the copy — the photograph already runs dark on
-            this side, so this deepens that rather than fighting it. */}
-        <div
-          aria-hidden="true"
-          className="absolute inset-0 bg-[linear-gradient(105deg,var(--color-ink)_0%,color-mix(in_oklab,var(--color-ink)_75%,transparent)_38%,transparent_65%)]"
-        />
-
-        <div className="relative flex h-full flex-col justify-center p-8 sm:p-12">
-          <span aria-hidden="true" className="h-px w-9 bg-gold-bright" />
-          <h3 className="mt-5 max-w-sm font-serif text-2xl font-semibold leading-tight tracking-tight text-white sm:text-4xl">
-            {active.title}
-          </h3>
-          <p className="mt-6 max-w-sm text-base leading-relaxed text-white/80">
-            {active.body}
-          </p>
-        </div>
       </div>
+
+      <ul className="grid gap-3 sm:grid-cols-2 lg:grid-cols-6">
+        {items.map((item, index) => {
+          const Icon = icons[index % icons.length];
+          const tone = toneClasses[tones[index % tones.length]];
+          /* Five cards on a two-column grid leave the last one alone — let it
+             take the full row there instead of leaving a hole. */
+          const isLastOdd = index === items.length - 1 && items.length % 2 === 1;
+
+          return (
+            <li
+              key={item.title}
+              className={`${spans[index] ?? "lg:col-span-2"} ${isLastOdd ? "sm:col-span-2" : ""}`}
+            >
+              <Link
+                href="/about#approach"
+                className={`group flex h-full flex-col sm:min-h-[14rem] rounded-2xl border p-6 transition duration-300 hover:-translate-y-0.5 hover:shadow-xl hover:shadow-ink/10 sm:p-7 lg:min-h-[15.5rem] ${tone.card}`}
+              >
+                <div className="flex items-start justify-between gap-4">
+                  <span className={`flex items-center gap-3 font-serif text-lg font-semibold ${tone.number}`}>
+                    {String(index + 1).padStart(2, "0")}
+                    <span aria-hidden="true" className={`h-px w-8 ${tone.rule}`} />
+                  </span>
+                  <Icon
+                    aria-hidden="true"
+                    className={`h-10 w-10 shrink-0 transition duration-300 group-hover:scale-110 ${tone.icon}`}
+                  />
+                </div>
+
+                <h3 className={`mt-4 max-w-[16rem] font-serif text-xl font-semibold leading-snug tracking-tight text-balance ${tone.title}`}>
+                  {item.title}
+                </h3>
+                <p className={`mt-3 max-w-sm text-[0.9rem] leading-relaxed ${tone.body}`}>
+                  {item.body}
+                </p>
+
+                <span className="mt-auto pt-5 sm:pt-6">
+                  <span
+                    aria-hidden="true"
+                    className={`flex h-9 w-9 items-center justify-center rounded-full border transition duration-300 ${tone.arrow}`}
+                  >
+                    <ArrowIcon className="h-3.5 w-3.5 transition duration-300 group-hover:translate-x-0.5" />
+                  </span>
+                </span>
+              </Link>
+            </li>
+          );
+        })}
+      </ul>
     </div>
   );
 }

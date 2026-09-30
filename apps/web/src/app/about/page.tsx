@@ -90,8 +90,8 @@ export default async function AboutPage() {
         </div>
       </section>
 
-      {/* Approach */}
-      <section className="border-y border-line bg-paper-warm">
+      {/* Approach — the home page "Our approach" cards link here. */}
+      <section id="approach" className="border-y border-line bg-paper-warm">
         <div className="container-page py-12 sm:py-14">
           <SectionHeading eyebrow="Our approach" title="Key strengths" />
 

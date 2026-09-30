@@ -35,6 +35,11 @@
   --color-line: #e5e2d8;
   --color-line-strong: #cfcbbd;
 
+  /* A pale navy tint — the cool counterpart to paper-warm, used where cards
+     alternate grounds (the home page "Our approach" mosaic). */
+  --color-mist: #eaf0f6;
+  --color-mist-line: #dbe3ed;
+
   --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
   --font-serif: var(--font-serif-display), ui-serif, Georgia, serif;
 }
