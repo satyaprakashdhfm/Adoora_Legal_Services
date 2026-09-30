@@ -7,7 +7,7 @@ import { firm } from "@/content/firm";
  *
  * - `ribbon`  small icons in the utility bar above the header
  * - `drawer`  the mobile menu
- * - `footer`  bordered squares in the footer, under the email address
+ * - `footer`  the full-colour brand marks, under the footer's email address
  *
  * The ribbon and drawer leave out a profile with no address. The footer
  * always shows all three; one without an address yet is drawn but is not
@@ -55,14 +55,14 @@ export function SocialLinks({ variant }: { variant: "ribbon" | "drawer" | "foote
   if (variant !== "footer" && !hasSocialLinks) return null;
 
   const link =
-    variant === "footer"
-      ? "inline-flex h-10 w-10 items-center justify-center rounded-md border border-white/15 transition hover:border-gold hover:text-gold-bright"
-      : variant === "drawer"
+    variant === "drawer"
         ? "inline-flex h-9 w-9 items-center justify-center rounded-md border border-white/15 text-white/80 transition hover:text-gold-bright"
         : "inline-flex items-center transition hover:text-gold-bright";
   const size = variant === "ribbon" ? "h-3.5 w-3.5" : "h-4 w-4";
 
-  const profiles = variant === "footer" ? ALL_PROFILES : PROFILES;
+  if (variant === "footer") return <FooterBrandIcons />;
+
+  const profiles = PROFILES;
 
   return (
     <div className={`flex items-center ${variant === "ribbon" ? "gap-3" : "gap-2"}`}>
@@ -84,6 +84,80 @@ export function SocialLinks({ variant }: { variant: "ribbon" | "drawer" | "foote
         ) : (
           <span key={profile.name} className={link} title={`${profile.name} — coming soon`} aria-label={`${profile.name} (coming soon)`} role="img">
             {icon}
+          </span>
+        );
+      })}
+    </div>
+  );
+}
+
+/*
+ * The footer's row: each network's own mark in its own colours, with no
+ * frame around it. A profile with no address yet is drawn but not linked.
+ */
+const brandMarks: Record<string, React.JSX.Element> = {
+  LinkedIn: (
+    <svg viewBox="0 0 24 24" aria-hidden="true" className="h-8 w-8">
+      <rect width="24" height="24" rx="4" fill="#0A66C2" />
+      <path
+        fill="#fff"
+        d="M6.94 9.5H4.8V19h2.14zM5.87 5a1.24 1.24 0 100 2.48A1.24 1.24 0 005.87 5zM19.2 13.4c0-2.55-1.36-3.74-3.17-3.74a2.74 2.74 0 00-2.48 1.37V9.5h-2.14V19h2.14v-4.7c0-1.24.23-2.44 1.77-2.44 1.52 0 1.54 1.42 1.54 2.52V19h2.14z"
+      />
+    </svg>
+  ),
+  WhatsApp: (
+    <svg viewBox="0 0 24 24" aria-hidden="true" className="h-8 w-8">
+      <circle cx="12" cy="12" r="12" fill="#25D366" />
+      <path
+        fill="#fff"
+        d="M16.7 14.1c-.23-.12-1.37-.68-1.58-.75-.21-.08-.37-.12-.52.11-.15.23-.6.75-.73.9-.13.16-.27.18-.5.06-.23-.12-.98-.36-1.86-1.15-.69-.61-1.15-1.37-1.29-1.6-.13-.23-.01-.36.1-.47.1-.1.23-.27.35-.4.12-.14.15-.23.23-.39.08-.15.04-.29-.02-.4-.06-.12-.52-1.25-.71-1.72-.19-.45-.38-.39-.52-.4h-.45c-.15 0-.4.06-.61.29-.21.23-.8.79-.8 1.93s.82 2.24.94 2.39c.12.15 1.63 2.49 3.95 3.49.55.24.98.38 1.32.49.55.18 1.06.15 1.46.09.44-.07 1.37-.56 1.56-1.1.19-.54.19-1 .14-1.1-.06-.1-.21-.15-.44-.27zM12.04 19.3h-.01a7.3 7.3 0 01-3.72-1.02l-.27-.16-2.77.73.74-2.7-.17-.28a7.3 7.3 0 1113.52-3.87 7.3 7.3 0 01-7.32 7.3z"
+      />
+    </svg>
+  ),
+  Instagram: (
+    <svg viewBox="0 0 24 24" aria-hidden="true" className="h-8 w-8">
+      <defs>
+        <radialGradient id="footer-ig" cx="0.3" cy="1.07" r="1.15">
+          <stop offset="0" stopColor="#FDDC5C" />
+          <stop offset="0.25" stopColor="#FD9A3B" />
+          <stop offset="0.5" stopColor="#E1306C" />
+          <stop offset="0.8" stopColor="#C13584" />
+          <stop offset="1" stopColor="#5851DB" />
+        </radialGradient>
+      </defs>
+      <rect width="24" height="24" rx="6" fill="url(#footer-ig)" />
+      <rect x="5.5" y="5.5" width="13" height="13" rx="3.8" fill="none" stroke="#fff" strokeWidth="1.6" />
+      <circle cx="12" cy="12" r="3.1" fill="none" stroke="#fff" strokeWidth="1.6" />
+      <circle cx="16" cy="8" r="0.95" fill="#fff" />
+    </svg>
+  ),
+};
+
+function FooterBrandIcons() {
+  return (
+    <div className="flex items-center gap-4">
+      {ALL_PROFILES.map((profile) => {
+        const mark = brandMarks[profile.name];
+        return profile.href ? (
+          <a
+            key={profile.name}
+            href={profile.href}
+            target="_blank"
+            rel="noreferrer noopener"
+            aria-label={`${firm.name} on ${profile.name}`}
+            className="inline-flex rounded-md transition hover:-translate-y-0.5 hover:opacity-90"
+          >
+            {mark}
+          </a>
+        ) : (
+          <span
+            key={profile.name}
+            role="img"
+            title={`${profile.name} — coming soon`}
+            aria-label={`${profile.name} (coming soon)`}
+            className="inline-flex"
+          >
+            {mark}
           </span>
         );
       })}
