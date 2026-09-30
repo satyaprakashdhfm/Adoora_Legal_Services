@@ -32,8 +32,12 @@ export function SectionHeading({
             isDark ? "text-gold-bright" : "text-gold-deep"
           }`}
         >
+          {/* A border rather than a 1px-tall box: a border always paints
+              at least one device pixel, so the rule can't vanish at
+              fractional zoom levels. */}
           <span
-            className={`h-px w-8 ${isDark ? "bg-gold-bright/60" : "bg-gold/50"}`}
+            aria-hidden="true"
+            className={`w-8 border-t ${isDark ? "border-gold-bright/70" : "border-gold/70"}`}
           />
           {eyebrow}
         </p>
@@ -447,7 +451,7 @@ export function PageHero({
         {trail && <Breadcrumbs trail={trail} tone={dark ? "dark" : "light"} />}
         {eyebrow && (
           <p className={`eyebrow mt-6 inline-flex items-center gap-2.5 ${dark ? "text-gold-bright" : "text-gold-deep"}`}>
-            <span className={`h-px w-8 ${dark ? "bg-gold-bright/60" : "bg-gold/50"}`} />
+            <span aria-hidden="true" className={`w-8 border-t ${dark ? "border-gold-bright/70" : "border-gold/70"}`} />
             {eyebrow}
           </p>
         )}
