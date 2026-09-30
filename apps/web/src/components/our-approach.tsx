@@ -155,21 +155,21 @@ export function OurApproach({ items }: { items: readonly Differentiator[] }) {
 
   return (
     <div
-      className="grid gap-3 lg:grid-cols-[minmax(0,1.1fr)_minmax(0,2fr)]"
+      className="grid gap-3 lg:grid-cols-[minmax(0,1.2fr)_minmax(0,2fr)]"
       onMouseEnter={() => setPaused(true)}
       onMouseLeave={() => setPaused(false)}
     >
       <div className="flex flex-col overflow-hidden rounded-2xl bg-[linear-gradient(160deg,var(--color-navy-soft),var(--color-ink-deep))] shadow-sm shadow-ink/10">
-        {/* The photographs are 3:2, and so is this frame — nothing is cut
-            off or enlarged beyond what the panel's width needs. */}
-        <div className="relative aspect-[3/2] w-full">
+        {/* 3:2 like the photographs on phones; on wide screens it takes
+            whatever height the cards leave, so the caption stays compact. */}
+        <div className="relative aspect-[3/2] w-full lg:aspect-auto lg:min-h-[16rem] lg:flex-1">
           {items.map((item, index) => (
             <Image
               key={item.title}
               src={item.image}
               alt=""
               fill
-              sizes="(min-width: 1280px) 460px, (min-width: 1024px) 36vw, 100vw"
+              sizes="(min-width: 1280px) 480px, (min-width: 1024px) 38vw, 100vw"
               quality={90}
               style={{ objectPosition: item.focus }}
               className={`object-cover transition-opacity ${FADE} ${
@@ -180,13 +180,13 @@ export function OurApproach({ items }: { items: readonly Differentiator[] }) {
         </div>
 
         {/* The selected card's number and title, and a marker per card. */}
-        <div className="flex flex-1 flex-col justify-center gap-4 px-6 py-5 sm:px-7">
+        <div className="flex flex-col gap-3 px-6 py-4 sm:px-7">
           <p key={active} className="rise font-serif text-white">
             <span className="flex items-center gap-3 text-sm font-semibold text-gold-bright">
               {String(active + 1).padStart(2, "0")}
               <span aria-hidden="true" className="h-px w-8 bg-gold-bright/60" />
             </span>
-            <span className="mt-2 block text-xl font-semibold leading-snug sm:text-2xl">
+            <span className="mt-1.5 block text-xl font-semibold leading-snug">
               {items[active]?.title}
             </span>
           </p>
