@@ -6,7 +6,7 @@ import { AutoSlider } from "@/components/auto-slider";
 
 /**
  * The home page's "Our people" band: one person per slide, portrait on the
- * left inside an offset gold frame, and on the right the name, designation,
+ * left over soft beige blocks, and on the right the name, designation,
  * a short introduction, three credentials and a link to the full profile.
  * Slides advance on their own and pause under the cursor (`auto-slider.tsx`).
  *
@@ -29,20 +29,21 @@ function PersonSlide({ person }: { person: Person }) {
   const photo = person.photoUrl ?? (person.photo ? publicImage(person.photo) : null);
 
   return (
-    <article className="grid items-center gap-6 rounded-2xl border border-line bg-paper p-5 shadow-sm sm:gap-10 sm:p-10 md:grid-cols-[minmax(0,5fr)_minmax(0,7fr)] lg:gap-16 lg:p-12">
-      {/* Portrait, with a thin gold frame set off behind it to the right. */}
-      <div className="relative mx-auto w-full max-w-[12.5rem] pr-3 pb-3 sm:max-w-sm sm:pr-4 sm:pb-4">
-        <div
-          aria-hidden="true"
-          className="absolute inset-0 left-3 top-3 rounded-sm sm:left-4 sm:top-4 border border-gold"
-        />
-        <div className="relative aspect-[4/5] overflow-hidden rounded-sm shadow-lg shadow-ink/15">
+    <article className="grid items-center gap-8 rounded-2xl border border-line bg-paper px-5 py-6 shadow-sm sm:px-8 md:grid-cols-[minmax(0,5fr)_minmax(0,7fr)] md:gap-10 lg:gap-14 lg:px-12 lg:py-7">
+      {/* Portrait, with soft beige blocks set off behind it — one low on the
+          left, one high on the right, a short one under its foot. */}
+      <div className="relative mx-auto w-full max-w-[15rem] sm:max-w-[22rem] lg:max-w-[26rem]">
+        <div aria-hidden="true" className="absolute -left-5 bottom-[3%] top-[22%] w-2/5 rounded-md bg-gold/20 sm:-left-8" />
+        <div aria-hidden="true" className="absolute -right-4 top-[4%] h-[82%] w-1/3 rounded-md bg-gold/20 sm:-right-6" />
+        <div aria-hidden="true" className="absolute -bottom-3 right-[5%] h-6 w-1/4 rounded-md bg-gold/15" />
+        <div className="relative aspect-[15/16] overflow-hidden rounded-md shadow-lg shadow-ink/15">
           {photo ? (
             <Image
               src={photo}
               alt={`Portrait of ${person.name}`}
               fill
-              sizes="(min-width: 768px) 24rem, 100vw"
+              sizes="(min-width: 1024px) 26rem, (min-width: 640px) 22rem, 15rem"
+              quality={90}
               unoptimized={Boolean(person.photoUrl)}
               className="object-cover"
             />
@@ -66,16 +67,16 @@ function PersonSlide({ person }: { person: Person }) {
         <h3 className="font-serif text-2xl font-semibold leading-tight tracking-tight text-ink sm:text-4xl">
           {person.name}
         </h3>
-        <p className="mt-3 text-xs font-semibold uppercase tracking-[0.3em] text-gold-deep sm:text-sm">
+        <p className="mt-2.5 text-xs font-semibold uppercase tracking-[0.3em] text-gold-deep sm:text-sm">
           {person.designation}
         </p>
-        <span aria-hidden="true" className="mt-4 block h-px w-12 bg-gold sm:mt-6" />
+        <span aria-hidden="true" className="mt-4 block h-0.5 w-14 bg-gold" />
 
         {person.spotlight && <SpotlightBody spotlight={person.spotlight} />}
 
         <Link
           href={`/about#${person.slug}`}
-          className="group mt-6 inline-flex items-center gap-3 rounded-lg border border-gold px-5 py-2.5 sm:mt-8 sm:px-6 sm:py-3 text-sm font-semibold text-ink transition hover:bg-gold hover:text-white"
+          className="group mt-6 inline-flex items-center gap-3 rounded-md bg-gold px-6 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-gold-deep sm:px-8 sm:py-3.5 sm:text-base"
         >
           View Profile
           <svg viewBox="0 0 16 16" aria-hidden="true" className="h-3.5 w-3.5 transition-transform group-hover:translate-x-0.5">
@@ -98,17 +99,25 @@ function PersonSlide({ person }: { person: Person }) {
 function SpotlightBody({ spotlight }: { spotlight: Spotlight }) {
   return (
     <>
-      <p className="mt-4 max-w-xl text-[0.95rem] leading-relaxed text-ink-soft sm:mt-6 sm:text-base">
+      <p className="mt-4 max-w-2xl text-[0.95rem] leading-relaxed text-ink-soft sm:text-lg">
         {spotlight.summary}
       </p>
-      <span aria-hidden="true" className="mt-6 block h-px w-12 bg-gold sm:mt-8" />
 
-      <ul className="mt-6 grid grid-cols-3 sm:mt-8 divide-x divide-line">
+      {/* Icon in a beige disc with its text beside it on wide screens;
+          stacked and centred where the column is narrow. */}
+      <ul className="mt-6 grid grid-cols-3 divide-x divide-line xl:flex">
         {spotlight.credentials.map((item) => (
-          <li key={item.title} className="flex flex-col items-center px-2 text-center">
-            <CredentialIcon name={item.icon} />
-            <span className="mt-3 text-sm font-semibold text-ink">{item.title}</span>
-            <span className="mt-0.5 text-xs text-slate sm:text-sm">{item.detail}</span>
+          <li
+            key={item.title}
+            className="flex flex-col items-center gap-2 px-2 text-center first:pl-0 xl:flex-none xl:flex-row xl:gap-3 xl:px-6 xl:text-left"
+          >
+            <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-gold/15 xl:h-14 xl:w-14">
+              <CredentialIcon name={item.icon} />
+            </span>
+            <span>
+              <span className="block text-sm font-semibold text-ink sm:text-base xl:whitespace-nowrap">{item.title}</span>
+              <span className="mt-0.5 block text-xs text-slate sm:text-sm">{item.detail}</span>
+            </span>
           </li>
         ))}
       </ul>
