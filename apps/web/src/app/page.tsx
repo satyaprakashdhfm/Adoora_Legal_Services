@@ -75,7 +75,7 @@ export default async function Home() {
       <Hero images={heroSlides.map((slide) => publicImage(slide.imageBase))} />
 
       {/* About — the heading and standing line sit opposite the prose. */}
-      <section className="container-page py-10 sm:py-12">
+      <section className="container-page py-8 sm:py-10">
         <div className="grid gap-12 lg:grid-cols-[1fr_1.1fr] lg:gap-20">
           <div>
             <SectionHeading
@@ -112,7 +112,7 @@ export default async function Home() {
       {/* The team, below the about band — the profiles marked for the home
           page in the admin console, one per slide, auto-advancing. */}
       <section className="border-y border-line bg-paper-warm">
-        <div className="container-page py-10 sm:py-12">
+        <div className="container-page py-8 sm:py-10">
           <div className="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
             <SectionHeading
               eyebrow="Our people"
@@ -127,7 +127,7 @@ export default async function Home() {
             </Link>
           </div>
 
-          <div className="mt-7">
+          <div className="mt-6">
             <PeopleCards people={featuredPeople} />
           </div>
         </div>
@@ -139,7 +139,7 @@ export default async function Home() {
           dense, bulleted index a visitor wants once they already know which
           practice they need lives at /services; this is the lighter teaser
           that gets them there. */}
-      <section className="container-page py-10 sm:py-12">
+      <section className="container-page py-8 sm:py-10">
         <div className="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
           <SectionHeading
             eyebrow="Practices"
@@ -155,7 +155,7 @@ export default async function Home() {
           </Link>
         </div>
 
-        <div className="mt-7">
+        <div className="mt-6">
           <PracticesGrid items={practiceGridItems} />
         </div>
       </section>
@@ -163,7 +163,7 @@ export default async function Home() {
       {/* Insights. Warm, between the paper practices and why-us bands — the
           home page alternates its grounds so no two neighbours read as one. */}
       <section className="border-y border-line bg-paper-warm">
-        <div className="container-page py-10 sm:py-12">
+        <div className="container-page py-8 sm:py-10">
           <div className="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
             <SectionHeading
               eyebrow="Insights"
@@ -184,7 +184,7 @@ export default async function Home() {
               instead — each card most of the viewport with the next peeking
               in, so the section takes one screen's height rather than three;
               sm and up it is the grid it always was. */}
-          <ul className="-mx-6 mt-7 flex snap-x snap-mandatory gap-5 overflow-x-auto px-6 pb-2 [scrollbar-width:none] sm:mx-0 sm:grid sm:snap-none sm:gap-5 sm:overflow-visible sm:px-0 sm:pb-0 sm:grid-cols-2 lg:grid-cols-3 [&::-webkit-scrollbar]:hidden">
+          <ul className="-mx-6 mt-6 flex snap-x snap-mandatory gap-5 overflow-x-auto px-6 pb-2 [scrollbar-width:none] sm:mx-0 sm:grid sm:snap-none sm:gap-5 sm:overflow-visible sm:px-0 sm:pb-0 sm:grid-cols-2 lg:grid-cols-3 [&::-webkit-scrollbar]:hidden">
             {latestInsights.map((insight) => (
               <li
                 key={insight.slug}
@@ -201,10 +201,10 @@ export default async function Home() {
           `differentiators` in firm.ts about the BCI advertising rules. A
           photograph beside a mosaic of five numbered cards. */}
       <section>
-        <div className="container-page py-10 sm:py-12">
+        <div className="container-page py-8 sm:py-10">
           <SectionHeading eyebrow="Our approach" title="How we work" lead="Five strengths. One committed partnership." />
 
-          <div className="mt-7">
+          <div className="mt-6">
             <OurApproach items={differentiators} />
           </div>
         </div>
@@ -213,7 +213,7 @@ export default async function Home() {
       {/* Locations and the careers teaser share one row — offices on the
           left, careers on the right. */}
       <section className="border-t border-line bg-paper-warm">
-        <div className="container-page grid items-stretch gap-10 py-10 sm:py-12 lg:grid-cols-[1.35fr_1fr] lg:gap-12">
+        <div className="container-page grid items-stretch gap-10 py-8 sm:py-10 lg:grid-cols-[1.35fr_1fr] lg:gap-12">
           {/* The three offices, each card led by its city's landmark. */}
           <div>
             <SectionHeading

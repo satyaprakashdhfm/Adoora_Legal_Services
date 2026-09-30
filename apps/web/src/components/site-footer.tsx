@@ -29,11 +29,11 @@ const icons = {
 export function SiteFooter() {
   return (
     <footer className="mt-auto bg-ink text-white/85">
-      <div className="container-page py-16">
-        <div className="grid gap-12 lg:grid-cols-[1.1fr_2fr]">
+      <div className="container-page pb-6 pt-10 sm:pt-12">
+        <div className="grid gap-10 lg:grid-cols-[1.1fr_2fr]">
           <div>
             <Wordmark tone="dark" />
-            <p className="mt-6 max-w-sm text-sm leading-relaxed">
+            <p className="mt-5 max-w-sm text-sm leading-relaxed">
               {firm.descriptor}
             </p>
             <div className="mt-5 flex flex-col text-sm">
@@ -53,12 +53,12 @@ export function SiteFooter() {
               </a>
             </div>
 
-            <div className="mt-6">
+            <div className="mt-4">
               <SocialLinks variant="footer" />
             </div>
           </div>
 
-          <div className="grid grid-cols-2 gap-x-6 gap-y-10 lg:grid-cols-4">
+          <div className="grid grid-cols-2 gap-x-6 gap-y-8 lg:grid-cols-4">
             {footerNav.map((column) => (
               <div key={column.heading}>
                 <h2 className="eyebrow text-gold-bright/80">{column.heading}</h2>
@@ -67,7 +67,7 @@ export function SiteFooter() {
                     <li key={link.href}>
                       <Link
                         href={link.href}
-                        className="inline-block py-1.5 text-sm transition hover:text-white"
+                        className="inline-block py-1 text-sm transition hover:text-white"
                       >
                         {link.label}
                       </Link>
@@ -79,7 +79,7 @@ export function SiteFooter() {
           </div>
         </div>
 
-        <div className="mt-14 flex flex-col gap-4 border-t border-white/10 pt-8 text-xs sm:flex-row sm:items-center sm:justify-between">
+        <div className="mt-10 flex flex-col gap-3 border-t border-white/10 pt-5 text-xs sm:flex-row sm:items-center sm:justify-between">
           <p>
             &copy; {new Date().getFullYear()} {firm.name}. All rights reserved.
           </p>
