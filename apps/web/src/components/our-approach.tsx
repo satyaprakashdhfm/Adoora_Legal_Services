@@ -26,10 +26,11 @@ type Tone = "warm" | "navy" | "mist";
 /* How long each card holds the navy before it moves on, and how long the
    hand-over itself takes (grounds, type and photograph alike). */
 const INTERVAL = 6500;
-const FADE = "duration-[1200ms] ease-in-out";
+const FADE = "duration-[1800ms] ease-in-out";
 
-/* Starting ground per card, in display order — the navy on the second. */
-const initialTones: Tone[] = ["warm", "navy", "mist", "mist", "warm"];
+/* Starting ground per card, in display order — the navy on the first, so
+   the sequence opens at 01. */
+const initialTones: Tone[] = ["navy", "warm", "mist", "mist", "warm"];
 
 /* lg column spans on the six-column card grid: three across, then two. */
 const spans = [
@@ -145,7 +146,7 @@ export function OurApproach({ items }: { items: readonly Differentiator[] }) {
   const hoverTimer = useRef<number | undefined>(undefined);
   function hoverStart(index: number) {
     window.clearTimeout(hoverTimer.current);
-    hoverTimer.current = window.setTimeout(() => moveTo(index), 220);
+    hoverTimer.current = window.setTimeout(() => moveTo(index), 400);
   }
   function hoverEnd() {
     window.clearTimeout(hoverTimer.current);
