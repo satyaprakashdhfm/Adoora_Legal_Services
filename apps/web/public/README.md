@@ -81,20 +81,31 @@ roughly a third of the row and as tall as the locations beside it.
 
 ## "Our approach" photography
 
-The home page band (`our-approach.tsx`) is a photograph down the left beside
-a mosaic of five numbered cards. The photograph is `approach-scales.jpg`: a
-portrait crop of the right-hand side of `hero-law-justice` (scales on the LAW
-/ JUSTICE volumes), upscaled to 1100px wide with Lanczos and a light unsharp
-mask. Cropping the wide hero frame at render time left too few pixels for a
-tall panel on high-density screens, and it looked soft. The component also
-requests `quality={90}`, which `next.config.ts` allows via `images.qualities`.
-The blur behind the scales is the photograph's own depth of field.
+The home page band (`our-approach.tsx`) shows one photograph per card on the
+left, cross-fading as the navy highlight moves from card to card. Each one is
+named by `image`, and framed by `focus`, on its entry in `differentiators`
+(`src/content/firm.ts`):
 
-`why-us-expertise.png`, `why-us-client-first.png`, `client-exp.png`,
-`why-us-cross-border.png`, `why-us-solutions.png` and `approach.png` are from
-earlier versions of the band and are no longer referenced. Left in place
-rather than deleted; `differentiators` still carries the `image`/`focus`
-fields that named the first five.
+| File | Card | Made from |
+| --- | --- | --- |
+| `approach-scales.jpg` | Proven Legal Expertise | Right-hand crop of `hero-law-justice` |
+| `approach-client-first.jpg` | Client-First Approach | `why-us-client-first.png` |
+| `approach-connected.jpg` | Connected Client Experience | `client-exp.png` |
+| `approach-cross-border.jpg` | Cross-Border & Regulatory Mastery | `why-us-cross-border.png` |
+| `approach-solutions.jpg` | Strategic Legal Solutions | `why-us-solutions.png` |
+
+The sources are small (about 770px wide), so each was upscaled 2× with
+Lanczos and given a light unsharp mask. Served at `quality={90}`, which
+`next.config.ts` allows via `images.qualities`. Otherwise they look soft on
+high-density screens. `approach.png` and `why-us-expertise.png` are no longer
+referenced.
+
+## People portraits (home page)
+
+`people1.png`, `people2.png`, `people3.png`: square studio portraits on a
+navy and gold backdrop. The home page "Our people" slider gives them to the
+first three featured profiles, in order (`src/app/page.tsx`). A portrait
+uploaded for that person in the console takes precedence.
 
 ## Practice photography
 
@@ -103,8 +114,10 @@ cards, one per practice. Each card takes one of two photographs, both resolved
 by `publicImage()`, so the extension does not matter:
 
 - **`practice-photo-<slug>`: full-bleed card photograph.** Sliced from the
-  firm's 3×3 composite (`resources/our-practices.png`, in grid order), about
-  550 × 307 each.
+  firm's 3×3 composite (`resources/our-practices.png`, in grid order), then
+  upscaled 2× (about 1094 × 614) with a light unsharp mask. The same frame is
+  also the background of that practice's own page top section
+  (`/services/<slug>` and its service pages), via `PageHero`'s `photo` prop.
   When present, it fills the card behind a navy wash that darkens the left,
   where the number and name sit. Landscape, roughly 16:9, at least 900px
   wide, with the subject on the **right**. Replacing one: save the new frame

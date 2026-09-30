@@ -197,16 +197,16 @@ export const offices = [
 export const differentiators = [
   {
     title: "Proven Legal Expertise",
-    image: "/why-us-expertise.png",
+    image: "/approach-scales.jpg",
     /* The card is portrait and the frame landscape, so `cover` crops the
        sides — this keeps the subject in shot. */
-    focus: "30% 50%",
+    focus: "50% 55%",
     body:
       "A strong track record in corporate law, M&A, and high-stakes legal matters.",
   },
   {
     title: "Client-First Approach",
-    image: "/why-us-client-first.png",
+    image: "/approach-client-first.jpg",
     /* The card is portrait and the frame landscape, so `cover` crops the
        sides — this keeps the subject in shot. */
     focus: "50% 50%",
@@ -215,7 +215,7 @@ export const differentiators = [
   },
   {
     title: "Connected Client Experience",
-    image: "/client-exp.png",
+    image: "/approach-connected.jpg",
     /* The card is portrait and the frame landscape, so `cover` crops the
        sides — this keeps the subject in shot. */
     focus: "62% 45%",
@@ -223,7 +223,7 @@ export const differentiators = [
   },
   {
     title: "Cross-Border & Regulatory Mastery",
-    image: "/why-us-cross-border.png",
+    image: "/approach-cross-border.jpg",
     /* The card is portrait and the frame landscape, so `cover` crops the
        sides — this keeps the subject in shot. */
     focus: "32% 50%",
@@ -232,7 +232,7 @@ export const differentiators = [
   },
   {
     title: "Strategic Legal Solutions",
-    image: "/why-us-solutions.png",
+    image: "/approach-solutions.jpg",
     /* The card is portrait and the frame landscape, so `cover` crops the
        sides — this keeps the subject in shot. */
     focus: "62% 50%",

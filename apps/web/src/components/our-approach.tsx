@@ -1,24 +1,31 @@
+"use client";
+
 import Image from "next/image";
-import type { SVGProps } from "react";
+import { useEffect, useState, type SVGProps } from "react";
 import type { Differentiator } from "@/content/firm";
 
 /**
  * "Our approach" — a photograph down the left, the firm's five
  * differentiators as a mosaic of cards beside it: three across the top, two
- * across the bottom. Each card is numbered and carries a gold line icon, and
- * the grounds alternate warm / navy / mist so neighbouring cards never read
- * as one panel. The navy card is the second, so the eye lands on it first.
+ * across the bottom, on warm / navy / mist grounds.
  *
- * The cards are statements, not navigation — no link, no arrow.
+ * The navy ground travels. Every few seconds it moves on to the next card,
+ * and the card it leaves takes over that card's old ground, so the two
+ * swap colours rather than the whole set shifting. The photograph on the
+ * left cross-fades to the picture for whichever card is navy, with that
+ * card's number and title across its foot. Hovering a card moves the navy
+ * there straight away; hovering anywhere in the band holds it still, and
+ * readers who ask for reduced motion get no autoplay at all.
  *
- * `photo` is resolved by the server-only `publicImage()` in the page; a
- * missing file leaves the navy gradient panel in its place.
+ * Each photograph comes from `image`/`focus` on the entry in `firm.ts`.
  */
 
 type Tone = "warm" | "navy" | "mist";
 
-/* Ground per card, in display order — matches the approved mockup. */
-const tones: Tone[] = ["warm", "navy", "mist", "mist", "warm"];
+const INTERVAL = 3500;
+
+/* Starting ground per card, in display order — the navy on the second. */
+const initialTones: Tone[] = ["warm", "navy", "mist", "mist", "warm"];
 
 /* lg column spans on the six-column card grid: three across, then two. */
 const spans = [
@@ -42,12 +49,12 @@ const toneClasses: Record<
     body: "text-ink-soft",
   },
   navy: {
-    card: "bg-navy-soft border-navy-soft",
+    card: "bg-navy-soft border-navy-soft shadow-xl shadow-ink/15",
     number: "text-gold-bright",
     rule: "bg-gold-bright/60",
     icon: "text-gold-bright",
     title: "text-white",
-    body: "text-white/75",
+    body: "text-white/80",
   },
   mist: {
     card: "bg-mist border-mist-line",
@@ -104,32 +111,72 @@ const icons: ((props: SVGProps<SVGSVGElement>) => React.JSX.Element)[] = [
   ),
 ];
 
-export function OurApproach({
-  items,
-  photo,
-}: {
-  items: readonly Differentiator[];
-  photo: string | null;
-}) {
+export function OurApproach({ items }: { items: readonly Differentiator[] }) {
+  const [tones, setTones] = useState<Tone[]>(() =>
+    items.map((_, i) => initialTones[i % initialTones.length]),
+  );
+  const active = Math.max(0, tones.indexOf("navy"));
+  const [paused, setPaused] = useState(false);
+
+  /* Move the navy ground to card `next`; the two cards swap grounds. */
+  function moveTo(next: number) {
+    setTones((current) => {
+      const from = current.indexOf("navy");
+      if (from === next || from < 0) return current;
+      const swapped = [...current];
+      swapped[from] = current[next];
+      swapped[next] = "navy";
+      return swapped;
+    });
+  }
+
+  useEffect(() => {
+    if (paused || items.length < 2) return;
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    const id = window.setTimeout(() => moveTo((active + 1) % items.length), INTERVAL);
+    return () => window.clearTimeout(id);
+  }, [active, paused, items.length]);
+
   return (
-    <div className="grid gap-3 lg:grid-cols-[minmax(0,1fr)_minmax(0,2fr)]">
+    <div
+      className="grid gap-3 lg:grid-cols-[minmax(0,1fr)_minmax(0,2fr)]"
+      onMouseEnter={() => setPaused(true)}
+      onMouseLeave={() => setPaused(false)}
+    >
       <div className="relative aspect-[16/10] overflow-hidden rounded-2xl bg-[linear-gradient(135deg,var(--color-ink-mid),var(--color-ink-deep))] sm:aspect-[2/1] lg:aspect-auto">
-        {photo && (
+        {items.map((item, index) => (
           <Image
-            src={photo}
+            key={item.title}
+            src={item.image}
             alt=""
             fill
             sizes="(min-width: 1280px) 440px, (min-width: 1024px) 34vw, 100vw"
             quality={90}
-            className="object-cover object-[50%_55%]"
+            style={{ objectPosition: item.focus }}
+            className={`object-cover transition-[opacity,transform] duration-1000 ease-out ${
+              index === active ? "scale-100 opacity-100" : "scale-105 opacity-0"
+            }`}
           />
-        )}
+        ))}
+
+        {/* The selected card's number and title across the foot. */}
+        <div
+          aria-hidden="true"
+          className="absolute inset-x-0 bottom-0 bg-[linear-gradient(to_top,color-mix(in_oklab,var(--color-ink-deep)_85%,transparent),transparent)] px-6 pb-5 pt-16"
+        >
+          <p key={active} className="rise font-serif text-white">
+            <span className="text-sm font-semibold text-gold-bright">
+              {String(active + 1).padStart(2, "0")}
+            </span>
+            <span className="ml-3 text-lg font-semibold">{items[active]?.title}</span>
+          </p>
+        </div>
       </div>
 
       <ul className="grid gap-3 sm:grid-cols-2 lg:grid-cols-6">
         {items.map((item, index) => {
           const Icon = icons[index % icons.length];
-          const tone = toneClasses[tones[index % tones.length]];
+          const tone = toneClasses[tones[index]];
           /* Five cards on a two-column grid leave the last one alone — let it
              take the full row there instead of leaving a hole. */
           const isLastOdd = index === items.length - 1 && items.length % 2 === 1;
@@ -137,26 +184,27 @@ export function OurApproach({
           return (
             <li
               key={item.title}
+              onMouseEnter={() => moveTo(index)}
               className={`${spans[index] ?? "lg:col-span-2"} ${isLastOdd ? "sm:col-span-2" : ""}`}
             >
               <div
-                className={`flex h-full flex-col rounded-2xl border p-6 sm:p-7 lg:min-h-[13rem] ${tone.card}`}
+                className={`flex h-full flex-col rounded-2xl border p-6 transition-[background-color,border-color,box-shadow] duration-700 ease-out sm:p-7 lg:min-h-[13rem] ${tone.card}`}
               >
                 <div className="flex items-start justify-between gap-4">
-                  <span className={`flex items-center gap-3 font-serif text-lg font-semibold ${tone.number}`}>
+                  <span className={`flex items-center gap-3 font-serif text-lg font-semibold transition-colors duration-700 ${tone.number}`}>
                     {String(index + 1).padStart(2, "0")}
-                    <span aria-hidden="true" className={`h-px w-8 ${tone.rule}`} />
+                    <span aria-hidden="true" className={`h-px w-8 transition-colors duration-700 ${tone.rule}`} />
                   </span>
                   <Icon
                     aria-hidden="true"
-                    className={`h-10 w-10 shrink-0 ${tone.icon}`}
+                    className={`h-10 w-10 shrink-0 transition-colors duration-700 ${tone.icon}`}
                   />
                 </div>
 
-                <h3 className={`mt-4 max-w-[16rem] font-serif text-xl font-semibold leading-snug tracking-tight text-balance ${tone.title}`}>
+                <h3 className={`mt-4 max-w-[16rem] font-serif text-xl font-semibold leading-snug tracking-tight text-balance transition-colors duration-700 ${tone.title}`}>
                   {item.title}
                 </h3>
-                <p className={`mt-3 max-w-sm text-[0.9rem] leading-relaxed ${tone.body}`}>
+                <p className={`mt-3 max-w-sm text-[0.9rem] leading-relaxed transition-colors duration-700 ${tone.body}`}>
                   {item.body}
                 </p>
               </div>

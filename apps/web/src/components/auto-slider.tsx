@@ -10,15 +10,21 @@ import { Children, useEffect, useState, type ReactNode } from "react";
  *
  * Slides off screen are `inert`, so keyboard focus can't land on a link the
  * reader can't see.
+ *
+ * Pass `tabs` (one node per slide) to replace the dots with a row of labelled
+ * tabs under the slider; the active tab carries a gold bar that fills over
+ * the slide's interval.
  */
 export function AutoSlider({
   children,
   interval = 5000,
   label,
+  tabs,
 }: {
   children: ReactNode;
   interval?: number;
   label: string;
+  tabs?: ReactNode[];
 }) {
   const slides = Children.toArray(children);
   const [active, setActive] = useState(0);
@@ -79,7 +85,44 @@ export function AutoSlider({
         )}
       </div>
 
-      {slides.length > 1 && (
+      {slides.length > 1 && tabs && (
+        <div
+          className="mt-4 grid gap-3"
+          style={{ gridTemplateColumns: `repeat(${slides.length}, minmax(0, 1fr))` }}
+        >
+          {tabs.map((tab, i) => (
+            <button
+              key={i}
+              type="button"
+              onClick={() => setActive(i)}
+              aria-current={i === active}
+              className={`relative overflow-hidden rounded-xl border px-3 py-3 text-left transition sm:px-4 ${
+                i === active
+                  ? "border-gold/70 bg-paper shadow-md shadow-ink/5"
+                  : "border-line bg-paper/60 hover:border-gold/50 hover:bg-paper"
+              }`}
+            >
+              {tab}
+              <span aria-hidden="true" className="absolute inset-x-0 bottom-0 h-0.5 bg-line" />
+              {i === active && (
+                /* Keyed on the pause too: the timer restarts in full after a
+                   pause, so the bar starts over with it rather than drifting. */
+                <span
+                  key={`${active}-${paused}`}
+                  aria-hidden="true"
+                  className="slide-progress absolute inset-x-0 bottom-0 h-0.5 bg-gold"
+                  style={{
+                    animationDuration: `${interval}ms`,
+                    animationPlayState: paused ? "paused" : "running",
+                  }}
+                />
+              )}
+            </button>
+          ))}
+        </div>
+      )}
+
+      {slides.length > 1 && !tabs && (
         <div className="mt-5 flex items-center justify-center gap-2 sm:mt-6">
           {/* On phones the arrows sit here, beside the dots, rather than
               over the slide where they would cover its text. */}

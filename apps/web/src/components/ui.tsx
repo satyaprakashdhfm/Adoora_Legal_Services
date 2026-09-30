@@ -60,25 +60,32 @@ export function SectionHeading({
 
 export function Breadcrumbs({
   trail,
+  tone = "light",
 }: {
   trail: { label: string; href?: string }[];
+  tone?: "light" | "dark";
 }) {
+  const isDark = tone === "dark";
+
   return (
     <nav aria-label="Breadcrumb">
-      <ol className="flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-slate">
+      <ol className={`flex flex-wrap items-center gap-x-2 gap-y-1 text-xs ${isDark ? "text-white/70" : "text-slate"}`}>
         {trail.map((crumb, index) => (
           <li key={crumb.label} className="flex items-center gap-2">
             {index > 0 && (
-              <span aria-hidden="true" className="text-line-strong">
+              <span aria-hidden="true" className={isDark ? "text-white/30" : "text-line-strong"}>
                 /
               </span>
             )}
             {crumb.href ? (
-              <Link href={crumb.href} className="transition hover:text-gold-deep">
+              <Link
+                href={crumb.href}
+                className={`transition ${isDark ? "hover:text-gold-bright" : "hover:text-gold-deep"}`}
+              >
                 {crumb.label}
               </Link>
             ) : (
-              <span className="text-ink">{crumb.label}</span>
+              <span className={isDark ? "text-white" : "text-ink"}>{crumb.label}</span>
             )}
           </li>
         ))}
@@ -375,6 +382,7 @@ export function PageHero({
   lead,
   trail,
   image = false,
+  photo,
   aside,
   children,
 }: {
@@ -382,18 +390,26 @@ export function PageHero({
   title: string;
   lead?: string;
   trail?: { label: string; href?: string }[];
+  /** The pale Lady Justice ground (`hero-bg`). */
   image?: boolean;
+  /**
+   * A photograph URL for a dark band instead: the frame on the right, a
+   * navy wash across the left where the copy sits, white type. Used by the
+   * practice pages with that practice's photograph. Wins over `image`.
+   */
+  photo?: string | null;
   /** Shown to the right of the title on wide screens (below it on phones), e.g. an article's cover. */
   aside?: ReactNode;
   children?: ReactNode;
 }) {
-  const heroBg = image ? publicImage("hero-bg") : null;
+  const heroBg = !photo && image ? publicImage("hero-bg") : null;
+  const dark = Boolean(photo);
 
   return (
     <section
-      className={`relative overflow-hidden border-b border-line-strong bg-paper-tint text-ink ${
-        heroBg ? "flex min-h-[22rem] items-center" : ""
-      }`}
+      className={`relative overflow-hidden border-b ${
+        dark ? "border-ink-deep bg-ink-deep text-white" : "border-line-strong bg-paper-tint text-ink"
+      } ${heroBg || dark ? "flex min-h-[22rem] items-center" : ""}`}
     >
       {heroBg && (
         <Image
@@ -404,20 +420,42 @@ export function PageHero({
           className="object-cover object-right"
         />
       )}
+      {photo && (
+        <>
+          <div className="absolute inset-y-0 right-0 w-full lg:w-[64%]">
+            <Image
+              src={photo}
+              alt=""
+              fill
+              priority
+              quality={90}
+              sizes="(min-width: 1024px) 64vw, 100vw"
+              className="object-cover brightness-125 saturate-110"
+            />
+          </div>
+          {/* Solid navy under the copy on the left, easing out over the
+              photograph; on phones, where the copy runs across the whole
+              frame, an even wash instead. */}
+          <div
+            aria-hidden="true"
+            className="absolute inset-0 bg-[color-mix(in_oklab,var(--color-ink-deep)_70%,transparent)] lg:bg-[linear-gradient(90deg,var(--color-ink-deep)_0%,var(--color-ink-deep)_32%,color-mix(in_oklab,var(--color-ink-deep)_45%,transparent)_48%,transparent_72%)]"
+          />
+        </>
+      )}
       <div className={`container-page relative py-12 sm:py-14 ${aside ? "grid items-center gap-8 lg:grid-cols-[minmax(0,1fr)_minmax(0,26rem)] lg:gap-12 xl:grid-cols-[minmax(0,1fr)_minmax(0,30rem)]" : ""}`}>
         <div className="min-w-0">
-        {trail && <Breadcrumbs trail={trail} />}
+        {trail && <Breadcrumbs trail={trail} tone={dark ? "dark" : "light"} />}
         {eyebrow && (
-          <p className="eyebrow mt-6 inline-flex items-center gap-2.5 text-gold-deep">
-            <span className="h-px w-8 bg-gold/50" />
+          <p className={`eyebrow mt-6 inline-flex items-center gap-2.5 ${dark ? "text-gold-bright" : "text-gold-deep"}`}>
+            <span className={`h-px w-8 ${dark ? "bg-gold-bright/60" : "bg-gold/50"}`} />
             {eyebrow}
           </p>
         )}
-        <h1 className="mt-3 max-w-4xl font-serif text-[1.7rem] font-semibold leading-tight tracking-tight text-balance sm:text-4xl lg:text-5xl">
+        <h1 className={`mt-3 max-w-4xl font-serif text-[1.7rem] font-semibold leading-tight tracking-tight text-balance sm:text-4xl lg:text-5xl ${dark ? "text-white" : ""}`}>
           {title}
         </h1>
         {lead && (
-          <p className="mt-4 max-w-3xl text-base leading-relaxed text-ink-soft sm:mt-5 sm:text-lg">
+          <p className={`mt-4 text-base leading-relaxed sm:mt-5 sm:text-lg ${dark ? "max-w-2xl text-white/85" : "max-w-3xl text-ink-soft"}`}>
             {lead}
           </p>
         )}

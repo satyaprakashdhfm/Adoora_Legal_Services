@@ -200,6 +200,25 @@ figcaption {
 }
 
 /*
+ * The fill under the active tab of an auto-advancing slider (the home
+ * "Our people" band): runs once over the slide's interval, set inline as
+ * `animation-duration`, and pauses with the slider.
+ */
+@keyframes slide-progress {
+  from {
+    transform: scaleX(0);
+  }
+  to {
+    transform: scaleX(1);
+  }
+}
+
+.slide-progress {
+  transform-origin: left;
+  animation: slide-progress linear both;
+}
+
+/*
  * Hero slide cross-fade. The active slide is opacity-1, others 0.
  *
  * Deliberately slow: at the 900ms this used to be, a change — whether the
@@ -308,7 +327,8 @@ figcaption {
   }
 
   .rise,
-  .fade-in {
+  .fade-in,
+  .slide-progress {
     animation: none;
   }
 

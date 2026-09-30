@@ -50,7 +50,7 @@ function Card({ item, index }: { item: PracticeGridItem; index: number }) {
   return (
     <Link
       href={`/services/${area.slug}`}
-      className="group relative isolate flex h-full min-h-[8rem] flex-col justify-between overflow-hidden rounded-xl bg-[linear-gradient(135deg,var(--color-ink-mid),var(--color-ink-deep))] p-4 shadow-sm shadow-ink/10 transition duration-300 hover:-translate-y-0.5 hover:shadow-xl hover:shadow-ink/20 sm:min-h-[11rem] sm:p-5"
+      className="group relative isolate flex h-full min-h-[8.5rem] flex-col justify-between overflow-hidden rounded-xl bg-[linear-gradient(135deg,var(--color-ink-mid),var(--color-ink-deep))] p-4 shadow-sm shadow-ink/10 transition duration-300 hover:-translate-y-0.5 hover:shadow-xl hover:shadow-ink/20 sm:min-h-[11.5rem] sm:p-6"
     >
       {photo ? (
         <>
@@ -63,7 +63,7 @@ function Card({ item, index }: { item: PracticeGridItem; index: number }) {
           />
           <div
             aria-hidden="true"
-            className="absolute inset-0 -z-10 bg-[linear-gradient(100deg,color-mix(in_oklab,var(--color-ink-deep)_85%,transparent)_0%,color-mix(in_oklab,var(--color-ink-deep)_45%,transparent)_50%,color-mix(in_oklab,var(--color-ink-deep)_12%,transparent)_100%)] transition duration-500 group-hover:opacity-90"
+            className="absolute inset-0 -z-10 bg-[linear-gradient(100deg,color-mix(in_oklab,var(--color-ink-deep)_88%,transparent)_0%,color-mix(in_oklab,var(--color-ink-deep)_55%,transparent)_50%,color-mix(in_oklab,var(--color-ink-deep)_12%,transparent)_100%)] transition duration-500 group-hover:opacity-90"
           />
         </>
       ) : (
@@ -83,11 +83,11 @@ function Card({ item, index }: { item: PracticeGridItem; index: number }) {
         )
       )}
 
-      <div className="max-w-[62%]">
-        <span className="font-serif text-2xl font-medium leading-none text-gold-bright sm:text-[1.7rem]">
+      <div className="max-w-[75%]">
+        <span className="font-serif text-[1.7rem] font-semibold leading-none text-gold-bright [text-shadow:0_1px_10px_rgb(0_0_0/0.5)] sm:text-3xl">
           {String(index + 1).padStart(2, "0")}
         </span>
-        <h3 className="mt-2 font-serif text-base font-semibold leading-snug tracking-tight text-white text-balance sm:text-lg">
+        <h3 className="mt-2 font-serif text-lg font-semibold leading-snug tracking-tight text-white text-balance [text-shadow:0_1px_12px_rgb(0_0_0/0.6)] sm:text-[1.35rem]">
           {label}
         </h3>
         <span
