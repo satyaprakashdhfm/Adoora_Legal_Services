@@ -50,7 +50,7 @@ function Card({ item }: { item: PracticeGridItem }) {
   return (
     <Link
       href={`/services/${area.slug}`}
-      className="group relative isolate flex h-full min-h-[8.5rem] flex-col justify-between overflow-hidden rounded-xl bg-[linear-gradient(135deg,var(--color-ink-mid),var(--color-ink-deep))] p-4 shadow-sm shadow-ink/10 transition duration-300 hover:-translate-y-0.5 hover:shadow-xl hover:shadow-ink/20 sm:min-h-[11.5rem] sm:p-6"
+      className="group relative isolate flex h-full min-h-[7.5rem] flex-col justify-between overflow-hidden rounded-xl bg-[linear-gradient(135deg,var(--color-ink-mid),var(--color-ink-deep))] p-3.5 shadow-sm shadow-ink/10 transition duration-300 hover:-translate-y-0.5 hover:shadow-xl hover:shadow-ink/20 sm:min-h-[11.5rem] sm:p-6"
     >
       {photo ? (
         <>
@@ -83,8 +83,8 @@ function Card({ item }: { item: PracticeGridItem }) {
         )
       )}
 
-      <div className="max-w-[75%]">
-        <h3 className="font-serif text-xl font-semibold leading-snug tracking-tight text-white text-balance [text-shadow:0_1px_12px_rgb(0_0_0/0.6)] sm:text-2xl">
+      <div className="sm:max-w-[75%]">
+        <h3 className="font-serif text-base font-semibold leading-snug tracking-tight text-white text-balance [text-shadow:0_1px_12px_rgb(0_0_0/0.6)] sm:text-2xl">
           {label}
         </h3>
         <span
@@ -105,7 +105,7 @@ function Card({ item }: { item: PracticeGridItem }) {
 
 export function PracticesGrid({ items }: { items: readonly PracticeGridItem[] }) {
   return (
-    <ul className="grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-4 lg:grid-cols-3">
+    <ul className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-3">
       {items.map((item, index) => (
         <li
           key={item.area.slug}
@@ -113,7 +113,7 @@ export function PracticesGrid({ items }: { items: readonly PracticeGridItem[] })
              it take the full row there. */
           className={
             index === items.length - 1 && items.length % 2 === 1
-              ? "sm:max-lg:col-span-2"
+              ? "max-lg:col-span-2"
               : ""
           }
         >

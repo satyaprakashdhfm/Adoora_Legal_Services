@@ -76,7 +76,7 @@ export default async function Home() {
 
       {/* About — the heading and standing line sit opposite the prose. */}
       <section className="container-page pb-8 pt-6 sm:pb-10 sm:pt-7">
-        <div className="grid gap-12 lg:grid-cols-[1fr_1.1fr] lg:gap-20">
+        <div className="grid gap-8 lg:grid-cols-[1fr_1.1fr] lg:gap-20">
           <div>
             <SectionHeading
               eyebrow="About the firm"
@@ -84,7 +84,7 @@ export default async function Home() {
             />
             <span
               aria-hidden="true"
-              className="mt-8 block h-0.5 w-16 bg-gold"
+              className="mt-6 block h-0.5 w-16 bg-gold sm:mt-8"
             />
             <p className="mt-6 max-w-sm font-serif text-base leading-relaxed sm:mt-8 sm:text-lg text-ink-soft">
               Legal advice and representation for businesses, institutions
@@ -214,19 +214,20 @@ export default async function Home() {
           left, careers on the right. */}
       <section className="border-t border-line bg-paper-warm">
         <div className="container-page grid items-stretch gap-10 pb-8 pt-6 sm:pb-10 sm:pt-7 lg:grid-cols-[1.35fr_1fr] lg:gap-12">
-          {/* The three offices, each card led by its city's landmark. */}
-          <div>
+          {/* The three offices, each card led by its city's landmark.
+              min-w-0 keeps the phone strip from widening the grid. */}
+          <div className="min-w-0">
             <SectionHeading
               eyebrow="Locations"
               title="Our legal presence"
               lead="With offices in Hyderabad, Bengaluru and Guntur, we are close to our clients across South India."
             />
 
-            <div className="mt-9 grid gap-5 sm:grid-cols-3">
+            <div className="-mx-6 mt-6 flex snap-x snap-mandatory gap-4 overflow-x-auto px-6 pb-2 [scrollbar-width:none] sm:mx-0 sm:mt-9 sm:grid sm:snap-none sm:grid-cols-3 sm:gap-5 sm:overflow-visible sm:px-0 sm:pb-0 [&::-webkit-scrollbar]:hidden">
               {offices.map((office) => (
                 <div
                   key={office.city}
-                  className="rounded-xl border border-line bg-paper p-5"
+                  className="w-[78%] shrink-0 snap-center rounded-xl border border-line bg-paper p-5 sm:w-auto sm:shrink"
                 >
                   <CityIcon city={office.city} className="h-20 w-full" />
                   <h3 className="mt-4 font-serif text-lg font-semibold text-ink">

@@ -63,7 +63,7 @@ export function AutoSlider({
                 aria-label={`${i + 1} of ${slides.length}`}
                 aria-hidden={i !== active}
                 inert={i !== active}
-                className="w-full shrink-0"
+                className="flex w-full shrink-0 [&>*]:w-full"
               >
                 {slide}
               </div>

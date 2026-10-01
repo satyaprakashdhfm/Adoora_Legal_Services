@@ -28,7 +28,7 @@ function PersonSlide({ person }: { person: Person }) {
   const photo = person.photoUrl ?? (person.photo ? publicImage(person.photo) : null);
 
   return (
-    <article className="grid items-center gap-8 rounded-2xl border border-line bg-paper px-5 py-6 shadow-sm sm:px-8 md:grid-cols-[minmax(0,5fr)_minmax(0,7fr)] md:gap-10 lg:gap-14 lg:px-12 lg:py-7">
+    <article className="grid h-full items-center gap-8 rounded-2xl border border-line bg-paper px-5 py-6 shadow-sm sm:px-8 md:grid-cols-[minmax(0,5fr)_minmax(0,7fr)] md:gap-10 lg:gap-14 lg:px-12 lg:py-7">
       {/* Portrait, with soft beige blocks set off behind it — one low on the
           left, one high on the right, a short one under its foot. */}
       <div className="relative mx-auto w-full max-w-[15rem] sm:max-w-[22rem] lg:max-w-[26rem]">
@@ -62,14 +62,14 @@ function PersonSlide({ person }: { person: Person }) {
         </div>
       </div>
 
-      <div>
+      <div className="text-center md:text-left">
         <h3 className="font-serif text-2xl font-semibold leading-tight tracking-tight text-ink sm:text-4xl">
           {person.name}
         </h3>
         <p className="mt-2.5 text-xs font-semibold uppercase tracking-[0.3em] text-gold-deep sm:text-sm">
           {person.designation}
         </p>
-        <span aria-hidden="true" className="mt-4 block h-0.5 w-14 bg-gold" />
+        <span aria-hidden="true" className="mx-auto mt-4 block h-0.5 w-14 bg-gold md:mx-0" />
 
         {person.spotlight && <SpotlightBody spotlight={person.spotlight} />}
       </div>
@@ -90,7 +90,7 @@ function SpotlightBody({ spotlight }: { spotlight: Spotlight }) {
         {spotlight.credentials.map((item) => (
           <li
             key={item.title}
-            className="flex flex-col items-center gap-2 text-center sm:flex-row sm:gap-3 sm:text-left"
+            className="flex flex-col items-center gap-2 text-center md:flex-row md:gap-3 md:text-left"
           >
             <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-gold/15 xl:h-14 xl:w-14">
               <CredentialIcon name={item.icon} />

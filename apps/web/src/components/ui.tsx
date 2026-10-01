@@ -349,11 +349,11 @@ export function InsightCard({ insight }: { insight: Insight }) {
           </Link>
         </h3>
 
-        <p className="mt-3 line-clamp-3 flex-1 text-sm leading-relaxed text-ink-soft">
+        <p className="mt-3 line-clamp-3 text-sm leading-relaxed text-ink-soft">
           {insight.summary}
         </p>
 
-        <p className="mt-4 text-xs text-slate-light">{insight.readingTime}</p>
+        <p className="mt-auto pt-4 text-xs text-slate-light">{insight.readingTime}</p>
       </div>
     </article>
   );
