@@ -122,18 +122,32 @@ const RESEND_AFTER = 30;
 /** Someone who is not a client yet: off to the Contact page, after a moment to read why. */
 const CONTACT_AFTER_MS = 6000;
 
-function ToContact() {
+/**
+ * Not an error so much as a next step, so it reads as a calm notice in the
+ * site's sand and gold rather than a red warning.
+ */
+function NotRegistered() {
   const router = useRouter();
   useEffect(() => {
     const timer = window.setTimeout(() => router.push("/contact"), CONTACT_AFTER_MS);
     return () => window.clearTimeout(timer);
   }, [router]);
   return (
-    <div className="mt-3 flex flex-wrap items-center gap-3">
-      <a href="/contact" className="inline-flex items-center justify-center rounded-md bg-gold px-4 py-2 text-sm font-semibold text-ink-deep transition hover:bg-gold-bright">
+    <div role="status" className="rounded-xl border border-sand-line bg-sand-wash px-4 py-4 text-left sm:px-5">
+      <p className="font-serif text-base font-semibold text-ink">Not registered as a client yet</p>
+      <p className="mt-1.5 text-sm leading-relaxed text-ink-soft">
+        Please contact us first. Once you are onboarded, the firm will give you access to the client portal.
+      </p>
+      <a
+        href="/contact"
+        className="mt-4 inline-flex items-center justify-center gap-2 rounded-md bg-gold px-5 py-2.5 text-sm font-semibold text-ink-deep transition hover:bg-gold-bright active:translate-y-px"
+      >
         Contact us
+        <svg viewBox="0 0 16 16" aria-hidden="true" className="h-3.5 w-3.5">
+          <path d="M2 8h11M9 4l4 4-4 4" fill="none" stroke="currentColor" strokeWidth={1.6} strokeLinecap="round" strokeLinejoin="round" />
+        </svg>
       </a>
-      <span className="text-xs text-slate">Taking you to the Contact page…</span>
+      <p className="mt-2.5 text-xs text-slate">Taking you to the Contact page in a few seconds.</p>
     </div>
   );
 }
@@ -156,11 +170,17 @@ function useWidgetConfig() {
 
 function ErrorBlock({ error, detail }: { error: string | null; detail?: string | null }) {
   if (!error) return null;
+  if (error === "client_not_registered") {
+    return (
+      <div className="mb-4">
+        <NotRegistered />
+      </div>
+    );
+  }
   return (
     <div className="mb-4">
       <ErrorNote>{SIGN_IN_ERRORS[error] ?? "We could not sign you in. Please try again."}</ErrorNote>
       {detail && <p className="mt-1.5 text-xs text-slate">MSG91: {detail}</p>}
-      {error === "client_not_registered" && <ToContact />}
       {error === "use_admin_login" && (
         <a href="/admin/login" className="mt-2 inline-block text-sm font-semibold text-gold-deep underline underline-offset-4">
           Go to the admin console sign-in
