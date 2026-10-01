@@ -39,6 +39,10 @@
      alternate grounds (the home page "Our approach" mosaic). */
   --color-mist: #eaf0f6;
   --color-mist-line: #dbe3ed;
+  /* Profile cards: a warm paper sand, on a lighter sand ground. */
+  --color-sand: #e4c8b6;
+  --color-sand-line: #d3b29c;
+  --color-sand-wash: #f6ece4;
   /* A lighter navy than ink-mid, for a feature card among pale ones. */
   --color-navy-soft: #243d6e;
   /* The pale ground of the inner-page header photograph (hero-bg-other),

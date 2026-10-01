@@ -28,7 +28,7 @@ function PersonSlide({ person }: { person: Person }) {
   const photo = person.photoUrl ?? (person.photo ? publicImage(person.photo) : null);
 
   return (
-    <article className="grid h-full items-center gap-6 rounded-2xl border border-mist-line bg-mist px-5 py-6 shadow-sm sm:px-8 md:grid-cols-[minmax(0,5fr)_minmax(0,7fr)] md:gap-10 lg:gap-14 lg:px-14 lg:py-9">
+    <article className="grid h-full items-center gap-6 rounded-2xl border border-sand-line bg-sand px-5 py-6 shadow-sm sm:px-8 md:grid-cols-[minmax(0,5fr)_minmax(0,7fr)] md:gap-10 lg:gap-14 lg:px-14 lg:py-9">
       {/* Portrait, with soft beige blocks set off behind it — one low on the
           left, one high on the right, a short one under its foot. */}
       <div className="relative mx-auto w-full max-w-[12rem] sm:max-w-[17rem] lg:max-w-[21rem]">
@@ -92,12 +92,12 @@ function SpotlightBody({ spotlight }: { spotlight: Spotlight }) {
             key={item.title}
             className="flex flex-col items-center gap-2 text-center md:flex-row md:gap-3 md:text-left"
           >
-            <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-gold/15">
+            <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-paper/55">
               <CredentialIcon name={item.icon} />
             </span>
             <span>
               <span className="block text-sm font-semibold text-ink sm:text-base">{item.title}</span>
-              <span className="mt-0.5 block text-xs text-slate sm:text-sm">{item.detail}</span>
+              <span className="mt-0.5 block text-xs text-ink-soft sm:text-sm">{item.detail}</span>
             </span>
           </li>
         ))}

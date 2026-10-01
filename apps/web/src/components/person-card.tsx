@@ -10,7 +10,7 @@ import { publicImage } from "@/lib/public-image";
  * from this list, which now has a single entry.)
  */
 const accents = [
-  { soft: "#dde8f7", wash: "#f3f7fd", bar: "var(--color-gold)", text: "var(--color-gold-deep)" },
+  { soft: "#d3b29c", wash: "#e4c8b6", bar: "var(--color-gold)", text: "var(--color-gold-deep)" },
 ] as const;
 
 /**
@@ -44,7 +44,7 @@ export function PersonCard({
           "--accent-text": accent.text,
         } as CSSProperties
       }
-      className="group relative flex h-full flex-col items-center overflow-hidden rounded-2xl border border-line bg-[linear-gradient(to_bottom,var(--accent-wash)_0%,var(--color-paper)_55%)] px-3 pb-6 pt-5 text-center sm:px-5 sm:pb-7 sm:pt-7 shadow-sm shadow-ink/[0.03] transition duration-300 hover:-translate-y-1 hover:shadow-lg hover:shadow-ink/10"
+      className="group relative flex h-full flex-col items-center overflow-hidden rounded-2xl border border-sand-line bg-[linear-gradient(to_bottom,var(--accent-wash)_0%,var(--color-sand-wash)_55%)] px-3 pb-6 pt-5 text-center sm:px-5 sm:pb-7 sm:pt-7 shadow-sm shadow-ink/[0.03] transition duration-300 hover:-translate-y-1 hover:shadow-lg hover:shadow-ink/10"
     >
       <div className="relative h-16 w-16 shrink-0 overflow-hidden rounded-full sm:h-24 sm:w-24 bg-[var(--accent-soft)] ring-4 ring-paper transition duration-300 group-hover:scale-105">
         {photo ? (
