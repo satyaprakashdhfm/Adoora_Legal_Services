@@ -169,7 +169,7 @@ function ClientForm({ initial, onSaved }: { initial?: ClientRow; onSaved: () => 
         <p className="mt-1 text-xs text-slate">
           {initial
             ? "The cases this client sees on their dashboard."
-            : "Attach the client's case now so it is waiting when they sign in. No case yet? They can open one from its CNR after signing in."}
+            : "Attach the client's case now so it is waiting when they sign in. No case yet? Link it later, here or from the case's Client accounts card."}
         </p>
       </div>
       {initial && (

@@ -309,16 +309,21 @@ function TeamCard({ record, onChange }: { record: CaseDetail; onChange: () => vo
           {draft.map((entry, index) => {
             const person = staff.find((s) => s.id === entry.userId) ?? record.assignments.find((a) => a.user.id === entry.userId)?.user;
             return (
-              <div key={entry.userId} className="flex items-center gap-2">
-                <p className="min-w-0 flex-1 truncate text-sm">{person?.name ?? "…"}</p>
-                <Select
-                  aria-label="Role on case"
-                  value={entry.role}
-                  onChange={(e) => setDraft(draft.map((d, i) => (i === index ? { ...d, role: e.target.value } : d)))}
-                  options={[{ value: "LEAD", label: "Lead" }, { value: "ASSOCIATE", label: "Associate" }, { value: "SUPPORT", label: "Support" }]}
-                  className="w-32"
-                />
-                <button type="button" onClick={() => setDraft(draft.filter((_, i) => i !== index))} className="text-xs text-slate hover:text-red-700">Remove</button>
+              /* The name on its own line: beside the role box it was squeezed
+                 out of sight in this narrow card. */
+              <div key={entry.userId} className="rounded-md border border-line bg-paper-warm px-3 py-2.5">
+                <p className="truncate text-sm font-semibold text-ink">{person?.name ?? "…"}</p>
+                <div className="mt-2 flex items-center gap-3">
+                  <div className="min-w-0 flex-1">
+                    <Select
+                      aria-label={`Role on case: ${person?.name ?? "lawyer"}`}
+                      value={entry.role}
+                      onChange={(e) => setDraft(draft.map((d, i) => (i === index ? { ...d, role: e.target.value } : d)))}
+                      options={[{ value: "LEAD", label: "Lead" }, { value: "ASSOCIATE", label: "Associate" }, { value: "SUPPORT", label: "Support" }]}
+                    />
+                  </div>
+                  <button type="button" onClick={() => setDraft(draft.filter((_, i) => i !== index))} className="shrink-0 text-xs text-slate hover:text-red-700">Remove</button>
+                </div>
               </div>
             );
           })}
