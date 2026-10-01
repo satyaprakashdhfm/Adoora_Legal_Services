@@ -47,7 +47,7 @@ export function SectionHeading({
       )}
       <h2
         className={`mt-3 font-serif text-2xl font-semibold leading-tight tracking-tight text-balance sm:text-4xl ${
-          size === "large" ? "sm:text-[2.75rem] sm:leading-[1.15] lg:text-[3.25rem]" : ""
+          size === "large" ? "lg:text-[2.5rem] lg:leading-[1.15]" : ""
         } ${
           isDark ? "text-white" : "text-ink"
         }`}
