@@ -74,37 +74,42 @@ export default async function Home() {
     <>
       <Hero images={heroSlides.map((slide) => publicImage(slide.imageBase))} />
 
-      {/* About — the heading and standing line sit opposite the prose. */}
+      {/* About. The heading, standing line and link on the left; the prose
+          opposite, starting level with the heading rather than the eyebrow,
+          so the two columns read as one block. */}
       <section className="container-page pb-8 pt-6 sm:pb-10 sm:pt-7">
-        <div className="grid gap-8 lg:grid-cols-[1fr_1.1fr] lg:gap-20">
+        <div className="grid gap-6 lg:grid-cols-[minmax(0,34rem)_minmax(0,1fr)] lg:gap-16 xl:gap-20">
           <div>
             <SectionHeading
               eyebrow="About the firm"
               title="One firm for the dispute and the deal behind it"
+              size="large"
             />
-            <span
-              aria-hidden="true"
-              className="mt-6 block h-0.5 w-16 bg-gold sm:mt-8"
-            />
-            <p className="mt-6 max-w-sm font-serif text-base leading-relaxed sm:mt-8 sm:text-lg text-ink-soft">
+            <p className="mt-4 max-w-md font-serif text-base leading-relaxed text-ink-soft sm:text-lg">
               Legal advice and representation for businesses, institutions
               and individuals.
             </p>
+            <Link
+              href="/about"
+              className="mt-6 hidden items-center gap-2 text-sm font-semibold text-gold-deep underline decoration-gold/40 underline-offset-[6px] transition hover:decoration-gold lg:inline-flex"
+            >
+              Read about our approach
+              <Arrow />
+            </Link>
           </div>
 
-          <div className="space-y-5 text-base leading-relaxed text-ink-soft">
+          <div className="space-y-4 text-base leading-relaxed text-ink-soft lg:pt-10 lg:text-[1.0625rem]">
             {firmOverview.map((paragraph) => (
               <p key={paragraph}>{paragraph}</p>
             ))}
-            <div className="flex flex-wrap gap-x-8 gap-y-3 pt-4">
-              <Link
-                href="/about"
-                className="inline-flex items-center gap-2 text-sm font-semibold text-gold-deep underline decoration-gold/40 underline-offset-[6px] transition hover:decoration-gold"
-              >
-                Read about our approach
-                <Arrow />
-              </Link>
-            </div>
+            {/* On phones the link follows the prose instead. */}
+            <Link
+              href="/about"
+              className="inline-flex items-center gap-2 pt-2 text-sm font-semibold text-gold-deep underline decoration-gold/40 underline-offset-[6px] transition hover:decoration-gold lg:hidden"
+            >
+              Read about our approach
+              <Arrow />
+            </Link>
           </div>
         </div>
       </section>

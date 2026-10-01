@@ -15,12 +15,15 @@ export function SectionHeading({
   lead,
   tone = "light",
   align = "left",
+  size = "default",
 }: {
   eyebrow?: string;
   title: string;
   lead?: string;
   tone?: "light" | "dark";
   align?: "left" | "center";
+  /** "large" for the home page's opening About band. */
+  size?: "default" | "large";
 }) {
   const isDark = tone === "dark";
 
@@ -44,6 +47,8 @@ export function SectionHeading({
       )}
       <h2
         className={`mt-3 font-serif text-2xl font-semibold leading-tight tracking-tight text-balance sm:text-4xl ${
+          size === "large" ? "lg:text-[2.75rem] lg:leading-[1.15]" : ""
+        } ${
           isDark ? "text-white" : "text-ink"
         }`}
       >

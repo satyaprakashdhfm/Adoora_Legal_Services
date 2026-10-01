@@ -181,7 +181,7 @@ export function Hero({ images }: { images: (string | null)[] }) {
         />
       </div>
 
-      <div className="container-page relative flex flex-col justify-center pb-28 pt-16 sm:pt-20 lg:min-h-[min(calc(100svh-7.5rem),46rem)] lg:pt-16">
+      <div className="container-page relative flex flex-col justify-center pb-28 pt-16 sm:pt-20 lg:min-h-[min(calc(100svh-14rem),38rem)] lg:pt-16">
         <div className="max-w-3xl">
           {/* Slides are stacked so the container height does not jump between
               headings of different lengths. The team slide is not among them:
