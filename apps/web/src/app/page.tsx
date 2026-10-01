@@ -118,7 +118,6 @@ export default async function Home() {
           page in the admin console, one per slide, auto-advancing. */}
       <section className="border-y border-line bg-paper-warm">
         <div className="container-page pb-8 pt-6 sm:pb-10 sm:pt-7">
-          <div className="mx-auto max-w-5xl">
           <div className="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
             <SectionHeading
               eyebrow="Our people"
@@ -135,7 +134,6 @@ export default async function Home() {
 
           <div className="mt-6">
             <PeopleCards people={featuredPeople} />
-          </div>
           </div>
         </div>
       </section>

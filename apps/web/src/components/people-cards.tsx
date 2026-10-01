@@ -28,10 +28,10 @@ function PersonSlide({ person }: { person: Person }) {
   const photo = person.photoUrl ?? (person.photo ? publicImage(person.photo) : null);
 
   return (
-    <article className="grid h-full items-center gap-6 rounded-2xl border border-line bg-paper px-5 py-6 shadow-sm sm:px-8 md:grid-cols-[minmax(0,4fr)_minmax(0,8fr)] md:gap-10 lg:gap-12 lg:px-12 lg:py-6">
+    <article className="grid h-full items-center gap-6 rounded-2xl border border-line bg-paper px-5 py-6 shadow-sm sm:px-8 md:grid-cols-[minmax(0,5fr)_minmax(0,7fr)] md:gap-10 lg:gap-14 lg:px-14 lg:py-9">
       {/* Portrait, with soft beige blocks set off behind it — one low on the
           left, one high on the right, a short one under its foot. */}
-      <div className="relative mx-auto w-full max-w-[12rem] sm:max-w-[16rem] lg:max-w-[18rem]">
+      <div className="relative mx-auto w-full max-w-[12rem] sm:max-w-[17rem] lg:max-w-[21rem]">
         <div aria-hidden="true" className="absolute -left-5 bottom-[3%] top-[22%] w-2/5 rounded-md bg-gold/20 sm:-left-8" />
         <div aria-hidden="true" className="absolute -right-4 top-[4%] h-[82%] w-1/3 rounded-md bg-gold/20 sm:-right-6" />
         <div aria-hidden="true" className="absolute -bottom-3 right-[5%] h-6 w-1/4 rounded-md bg-gold/15" />
@@ -41,7 +41,7 @@ function PersonSlide({ person }: { person: Person }) {
               src={photo}
               alt={`Portrait of ${person.name}`}
               fill
-              sizes="(min-width: 1024px) 18rem, (min-width: 640px) 16rem, 12rem"
+              sizes="(min-width: 1024px) 21rem, (min-width: 640px) 17rem, 12rem"
               quality={90}
               unoptimized={Boolean(person.photoUrl)}
               className="object-cover"
@@ -63,7 +63,7 @@ function PersonSlide({ person }: { person: Person }) {
       </div>
 
       <div className="text-center md:text-left">
-        <h3 className="font-serif text-2xl font-semibold leading-tight tracking-tight text-ink sm:text-3xl">
+        <h3 className="font-serif text-2xl font-semibold leading-tight tracking-tight text-ink sm:text-3xl lg:text-[2.125rem]">
           {person.name}
         </h3>
         <p className="mt-2.5 text-xs font-semibold uppercase tracking-[0.3em] text-gold-deep sm:text-sm">
@@ -80,7 +80,7 @@ function PersonSlide({ person }: { person: Person }) {
 function SpotlightBody({ spotlight }: { spotlight: Spotlight }) {
   return (
     <>
-      <p className="mt-4 max-w-2xl text-[0.95rem] leading-relaxed text-ink-soft sm:text-base">
+      <p className="mt-4 max-w-2xl text-[0.95rem] leading-relaxed text-ink-soft sm:text-base lg:text-[1.0625rem]">
         {spotlight.summary}
       </p>
 
@@ -92,7 +92,7 @@ function SpotlightBody({ spotlight }: { spotlight: Spotlight }) {
             key={item.title}
             className="flex flex-col items-center gap-2 text-center md:flex-row md:gap-3 md:text-left"
           >
-            <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-gold/15">
+            <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-gold/15">
               <CredentialIcon name={item.icon} />
             </span>
             <span>
