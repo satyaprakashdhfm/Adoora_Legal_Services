@@ -59,11 +59,11 @@ function Card({ item }: { item: PracticeGridItem }) {
             alt=""
             fill
             sizes="(min-width: 1024px) 33vw, (min-width: 640px) 50vw, 100vw"
-            className="-z-20 object-cover transition duration-700 ease-out group-hover:scale-105"
+            className="-z-20 object-cover brightness-[1.15] saturate-[1.05] transition duration-700 ease-out group-hover:scale-105"
           />
           <div
             aria-hidden="true"
-            className="absolute inset-0 -z-10 bg-[linear-gradient(100deg,color-mix(in_oklab,var(--color-ink-deep)_88%,transparent)_0%,color-mix(in_oklab,var(--color-ink-deep)_55%,transparent)_50%,color-mix(in_oklab,var(--color-ink-deep)_12%,transparent)_100%)] transition duration-500 group-hover:opacity-90"
+            className="absolute inset-0 -z-10 bg-[linear-gradient(160deg,color-mix(in_oklab,var(--color-ink-deep)_62%,transparent)_0%,color-mix(in_oklab,var(--color-ink-deep)_22%,transparent)_45%,transparent_75%)] transition duration-500 group-hover:opacity-80"
           />
         </>
       ) : (
@@ -95,7 +95,7 @@ function Card({ item }: { item: PracticeGridItem }) {
 
       <span
         aria-hidden="true"
-        className="mt-4 flex h-8 w-8 items-center justify-center rounded-full border border-gold-bright/70 text-gold-bright transition duration-300 group-hover:border-gold-bright group-hover:bg-gold-bright group-hover:text-ink-deep"
+        className="mt-4 flex h-8 w-8 items-center justify-center rounded-full border border-gold-bright/70 bg-ink-deep/60 text-gold-bright backdrop-blur-sm transition duration-300 group-hover:border-gold-bright group-hover:bg-gold-bright group-hover:text-ink-deep"
       >
         <ArrowIcon className="h-3.5 w-3.5 transition duration-300 group-hover:translate-x-0.5" />
       </span>

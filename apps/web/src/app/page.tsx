@@ -77,28 +77,28 @@ export default async function Home() {
       {/* About. The heading, standing line and link on the left; the prose
           opposite, starting level with the heading rather than the eyebrow,
           so the two columns read as one block. */}
-      <section className="container-page pb-8 pt-6 sm:pb-10 sm:pt-7">
-        <div className="grid gap-6 lg:grid-cols-[minmax(0,34rem)_minmax(0,1fr)] lg:gap-16 xl:gap-20">
+      <section className="container-page py-10 sm:py-14 lg:py-20">
+        <div className="grid gap-6 lg:grid-cols-[minmax(0,38rem)_minmax(0,1fr)] lg:gap-16 xl:gap-20">
           <div>
             <SectionHeading
               eyebrow="About the firm"
               title="One firm for the dispute and the deal behind it"
               size="large"
             />
-            <p className="mt-4 max-w-md font-serif text-base leading-relaxed text-ink-soft sm:text-lg">
+            <p className="mt-5 max-w-lg font-serif text-lg leading-relaxed text-ink-soft sm:text-xl">
               Legal advice and representation for businesses, institutions
               and individuals.
             </p>
             <Link
               href="/about"
-              className="mt-6 hidden items-center gap-2 text-sm font-semibold text-gold-deep underline decoration-gold/40 underline-offset-[6px] transition hover:decoration-gold lg:inline-flex"
+              className="mt-8 hidden items-center gap-2 text-base font-semibold text-gold-deep underline decoration-gold/40 underline-offset-[6px] transition hover:decoration-gold lg:inline-flex"
             >
               Read about our approach
               <Arrow />
             </Link>
           </div>
 
-          <div className="space-y-4 text-base leading-relaxed text-ink-soft lg:pt-10 lg:text-[1.0625rem]">
+          <div className="space-y-5 text-base leading-relaxed text-ink-soft sm:text-lg lg:pt-11">
             {firmOverview.map((paragraph) => (
               <p key={paragraph}>{paragraph}</p>
             ))}
