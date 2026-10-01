@@ -53,7 +53,10 @@ function SignInAccess({ users }: { users: StaffRow[] }) {
   const consoleUsers = active
     .filter((u) => u.role !== "LAWYER")
     .sort((a, b) => ["OWNER", "ADMIN", "EDITOR"].indexOf(a.role) - ["OWNER", "ADMIN", "EDITOR"].indexOf(b.role));
-  const lawyers = active.filter((u) => u.role === "LAWYER");
+  // The lawyers' sign-in admits lawyers, and owners and admins for their own cases.
+  const lawyers = active
+    .filter((u) => u.role === "LAWYER" || u.role === "OWNER" || u.role === "ADMIN")
+    .sort((a, b) => ["LAWYER", "ADMIN", "OWNER"].indexOf(a.role) - ["LAWYER", "ADMIN", "OWNER"].indexOf(b.role));
   const pending = (serverEmails ?? []).filter((entry) => !entry.role);
 
   const row = (u: StaffRow) => (
@@ -110,7 +113,7 @@ function SignInAccess({ users }: { users: StaffRow[] }) {
           <h3 className="text-sm font-semibold text-ink">
             Lawyer dashboard <span className="font-normal text-slate">· /lawyer/login</span>
           </h3>
-          <p className="mt-0.5 text-xs text-slate">Only the cases they are assigned to.</p>
+          <p className="mt-0.5 text-xs text-slate">Lawyers, owners and admins: each sees only the cases assigned to them here.</p>
           {lawyers.length ? (
             <ul className="mt-2 divide-y divide-line">{lawyers.map(row)}</ul>
           ) : (
@@ -119,9 +122,10 @@ function SignInAccess({ users }: { users: StaffRow[] }) {
         </section>
       </div>
       <p className="border-t border-line px-5 py-3.5 text-xs leading-relaxed text-slate">
-        A lawyer who also runs the firm: set their access to <strong className="text-ink">Admin</strong>. Admins can still be
-        assigned to cases and do everything a lawyer does, from the admin console. Each email has one role, so they then sign in
-        at /admin/login instead of /lawyer/login. Deactivated people are not listed.
+        Sign-in is by the email (Gmail) or mobile number saved on each person below. The three sign-ins are independent: an owner or
+        admin can be signed in to the admin console, the lawyer dashboard and, with a client account, the client dashboard at the same
+        time. A lawyer who also runs the firm: set their access to <strong className="text-ink">Admin</strong>. Deactivated people
+        are not listed.
       </p>
     </Card>
   );
