@@ -53,7 +53,7 @@ export const heroSlides: HeroSlide[] = [
     eyebrow: "Our people",
     heading: "Experienced minds,",
     accent: "trusted counsels",
-    body: "Our advocates bring courtroom experience and commercial judgement to every case, working as one team across Hyderabad, Bengaluru and Guntur.",
+    body: "A team of experienced lawyers, working together with clarity, sound judgment, and a shared commitment to every client we represent.",
     href: "/about#people",
     cta: "Meet the team",
     imageBase: "hero-team",

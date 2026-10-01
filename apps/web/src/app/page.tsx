@@ -149,7 +149,7 @@ export default async function Home() {
           <SectionHeading
             eyebrow="Our practices"
             title="Practice areas"
-            lead="Nine areas of law, handled by one team that works across all of them."
+            lead="Our practice brings together diverse areas of law, with a shared focus on clear, practical legal advice."
           />
           <Link
             href="/services"
@@ -173,7 +173,7 @@ export default async function Home() {
             <SectionHeading
               eyebrow="Insights"
               title="Articles &amp; publications"
-              lead="Explainers and regulatory updates written for the person who has to act on them."
+              lead="Perspectives from our lawyers on evolving laws, important developments, and the issues shaping legal practice."
             />
             <Link
               href="/insights"
