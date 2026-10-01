@@ -73,7 +73,7 @@ export default async function PracticeAreaPage(
             className="scroll-mt-44 border-t border-line pt-10 lg:scroll-mt-56"
           >
             <h2 className="font-serif text-2xl font-semibold tracking-tight text-ink">
-              What we handle
+              What We Handle
             </h2>
             <p className="mt-3 max-w-2xl leading-relaxed text-ink-soft">
               The work inside this practice. Each has its own page setting out
@@ -96,7 +96,7 @@ export default async function PracticeAreaPage(
         <div className="space-y-14">
           <section>
             <h2 className="font-serif text-2xl font-semibold tracking-tight text-ink">
-              How the work is sequenced
+              How the Work Is Sequenced
             </h2>
             <p className="mt-3 max-w-2xl leading-relaxed text-ink-soft">
               Indicative stages and what each produces. Timelines depend on the
@@ -110,7 +110,7 @@ export default async function PracticeAreaPage(
 
           <section className="border-t border-line pt-10">
             <h2 className="font-serif text-2xl font-semibold tracking-tight text-ink">
-              Jurisdictions, forums and regulators
+              Jurisdictions, Forums and Regulators
             </h2>
             <p className="mt-3 max-w-2xl leading-relaxed text-ink-soft">
               Where matters in this practice are heard, filed or determined.
@@ -128,7 +128,7 @@ export default async function PracticeAreaPage(
       panel: (
         <section>
           <h2 className="font-serif text-2xl font-semibold tracking-tight text-ink">
-            Practice team
+            Practice Team
           </h2>
           <p className="mt-3 max-w-2xl leading-relaxed text-ink-soft">
             The lawyers who lead this practice.
@@ -145,7 +145,7 @@ export default async function PracticeAreaPage(
       panel: (
         <section>
           <h2 className="font-serif text-2xl font-semibold tracking-tight text-ink">
-            Related insights
+            Related Insights
           </h2>
           {relatedInsights.length ? (
             <ul className="mt-8 grid gap-5 sm:grid-cols-2">
@@ -173,7 +173,7 @@ export default async function PracticeAreaPage(
       panel: (
         <section>
           <h2 className="font-serif text-2xl font-semibold tracking-tight text-ink">
-            Frequently asked questions
+            Frequently Asked Questions
           </h2>
           <p className="mt-3 max-w-2xl leading-relaxed text-ink-soft">
             General information about how this practice works. It is not legal

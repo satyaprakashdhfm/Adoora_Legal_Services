@@ -202,7 +202,7 @@ export default async function InsightPage(
         {related.length > 0 && (
           <section className="mt-20 border-t border-line pt-14">
             <h2 className="font-serif text-2xl font-semibold tracking-tight text-ink">
-              Related insights
+              Related Insights
             </h2>
             <ul className="mt-8 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
               {related.map((other) => (

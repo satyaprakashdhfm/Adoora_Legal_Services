@@ -223,7 +223,9 @@ export function SiteHeader() {
           onMouseLeave={() => setOpenMenu(null)}
         >
         <div className="flex items-center justify-between gap-6 py-4">
-            <Wordmark tone="dark" />
+            <div className="shrink-0">
+              <Wordmark tone="dark" />
+            </div>
 
             {/* Desktop navigation */}
             <ul className="hidden items-center gap-1 lg:flex">
@@ -244,7 +246,7 @@ export function SiteHeader() {
                         aria-expanded={expanded}
                         aria-haspopup="true"
                         onClick={() => setOpenMenu(expanded ? null : item.label)}
-                        className={`flex items-center gap-1.5 rounded px-3 py-2 text-sm font-medium transition ${
+                        className={`flex items-center gap-1.5 whitespace-nowrap rounded px-2 py-2 text-sm font-medium transition xl:px-3 ${
                           active || expanded
                             ? "text-gold-bright"
                             : "text-white/80 hover:text-gold-bright"
@@ -271,7 +273,7 @@ export function SiteHeader() {
                     ) : (
                       <Link
                         href={item.href}
-                        className={`block rounded px-3 py-2 text-sm font-medium transition ${
+                        className={`block whitespace-nowrap rounded px-2 py-2 text-sm font-medium transition xl:px-3 ${
                           active ? "text-gold-bright" : "text-white/80 hover:text-gold-bright"
                         }`}
                       >

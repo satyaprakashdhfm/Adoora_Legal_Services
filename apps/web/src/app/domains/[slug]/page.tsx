@@ -88,7 +88,7 @@ export default async function IndustryPage(
       panel: (
         <section>
           <h2 className="font-serif text-2xl font-semibold tracking-tight text-ink">
-            Representative work
+            Representative Work
           </h2>
           <p className="mt-3 max-w-2xl leading-relaxed text-ink-soft">
             Factual descriptions of the kind of work handled in this sector.
@@ -107,7 +107,7 @@ export default async function IndustryPage(
       panel: (
         <section>
           <h2 className="font-serif text-2xl font-semibold tracking-tight text-ink">
-            Regulators and forums
+            Regulators and Forums
           </h2>
           <p className="mt-3 max-w-2xl leading-relaxed text-ink-soft">
             The authorities, tribunals and courts that matters in this sector
@@ -125,7 +125,7 @@ export default async function IndustryPage(
       panel: (
         <section>
           <h2 className="font-serif text-2xl font-semibold tracking-tight text-ink">
-            Sector team
+            Sector Team
           </h2>
           <p className="mt-3 max-w-2xl leading-relaxed text-ink-soft">
             The lawyers who most often advise clients in this domain.
@@ -142,7 +142,7 @@ export default async function IndustryPage(
       panel: (
         <section>
           <h2 className="font-serif text-2xl font-semibold tracking-tight text-ink">
-            Related insights
+            Related Insights
           </h2>
           {relatedInsights.length ? (
             <ul className="mt-8 grid gap-5 sm:grid-cols-2">
@@ -170,7 +170,7 @@ export default async function IndustryPage(
       panel: (
         <section>
           <h2 className="font-serif text-2xl font-semibold tracking-tight text-ink">
-            Frequently asked questions
+            Frequently Asked Questions
           </h2>
           <p className="mt-3 max-w-2xl leading-relaxed text-ink-soft">
             General information about legal issues in this sector. It is not

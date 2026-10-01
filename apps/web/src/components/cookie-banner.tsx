@@ -60,7 +60,7 @@ export function CookieBanner() {
         <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
           <div className="max-w-2xl">
             <h2 className="text-sm font-semibold text-ink">
-              Cookies on this website
+              Cookies on This Website
             </h2>
             <p className="mt-1.5 text-sm leading-relaxed text-ink-soft">
               We use strictly necessary cookies to make this website work.

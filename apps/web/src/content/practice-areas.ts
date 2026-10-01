@@ -1,3 +1,4 @@
+import { titleCase } from "@/lib/title-case";
 import type { PracticeArea, ServiceItem } from "./types";
 import { anchorFor } from "@/lib/anchor";
 
@@ -1372,6 +1373,14 @@ export const practiceAreaBySlug = new Map(
  * `/services/banking-finance/enforcement-and-recovery`. Derived from the
  * title, so renaming a service moves its page.
  */
+for (const area of practiceAreas) {
+  for (const block of area.overview) block.heading = titleCase(block.heading);
+  for (const service of area.services) {
+    service.title = titleCase(service.title);
+    if (service.short) service.short = titleCase(service.short);
+  }
+}
+
 export function serviceSlug(service: ServiceItem): string {
   return anchorFor(service.title);
 }

@@ -58,7 +58,7 @@ export default function ContactPage() {
               Enquiry
             </p>
             <h2 className="mt-4 font-serif text-2xl font-semibold tracking-tight text-white sm:text-3xl">
-              Send an enquiry
+              Send an Enquiry
             </h2>
             <p className="mt-3 max-w-xl leading-relaxed text-white/80">
               {firm.responseTime} We run a conflicts check before responding

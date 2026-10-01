@@ -23,7 +23,7 @@ export const primaryNav: NavItem[] = [
     label: "Practices",
     href: "/services",
     children: [
-      { label: "All practices and sectors", href: "/services" },
+      { label: "All Practices and Sectors", href: "/services" },
       ...practiceAreas.map((area) => ({
         label: area.name,
         href: `/services/${area.slug}`,
@@ -32,6 +32,7 @@ export const primaryNav: NavItem[] = [
   },
   { label: "Insights", href: "/insights" },
   { label: "About Us", href: "/about" },
+  { label: "Community", href: "/community" },
   { label: "Careers", href: "/careers" },
   { label: "Contact", href: "/contact" },
 ];
@@ -56,6 +57,7 @@ export const footerNav = [
     links: [
       { label: "About Us", href: "/about" },
       { label: "Insights", href: "/insights" },
+      { label: "Community", href: "/community" },
       { label: "Careers", href: "/careers" },
       { label: "Contact Us", href: "/contact" },
     ],

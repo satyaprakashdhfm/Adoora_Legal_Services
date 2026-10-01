@@ -39,7 +39,8 @@ export type HeroSlide = {
 };
 
 /**
- * In order: who we are (credibility first), what we do, why us, and careers.
+ * In order: who we are (credibility first), pro bono, what we do, why us,
+ * and careers.
  */
 export const heroSlides: HeroSlide[] = [
   {
@@ -53,6 +54,18 @@ export const heroSlides: HeroSlide[] = [
     imageNote: "The team: six lawyers in a row, head-and-shoulders, against a navy backdrop.",
     people: true,
     imageAspect: "2125 / 740",
+  },
+  {
+    eyebrow: "Pro bono",
+    heading: "Legal help for people and causes that",
+    accent: "need it most",
+    body: "Free legal aid, legal awareness camps and support for NGOs. We work alongside legal services authorities, community groups and law schools.",
+    href: "/community",
+    cta: "Our pro bono work",
+    imageBase: "hero-pro-bono",
+    imageNote:
+      "Placeholder: the pale Lady Justice frame used behind inner-page headers. Replace hero-pro-bono with a photograph of the firm's community work.",
+    bright: true,
   },
   {
     eyebrow: "Our services",

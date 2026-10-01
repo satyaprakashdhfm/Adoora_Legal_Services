@@ -85,7 +85,7 @@ export function EnquiryForm() {
           </svg>
         </span>
         <h3 className="mt-5 font-serif text-xl font-semibold text-white">
-          Your enquiry has reached us
+          Your Enquiry Has Reached Us
         </h3>
         <p className="mt-3 text-sm leading-relaxed text-white/80">
           We aim to acknowledge every enquiry within one working day. We will

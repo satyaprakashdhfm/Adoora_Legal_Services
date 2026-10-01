@@ -109,7 +109,7 @@ export function CareerForm({ role }: { role: string }) {
           </svg>
         </span>
         <h3 className="mt-5 font-serif text-xl font-semibold text-ink">
-          Application received
+          Application Received
         </h3>
         <p className="mt-3 text-sm leading-relaxed text-ink-soft">
           Thank you. Please email your CV and a short covering note to{" "}

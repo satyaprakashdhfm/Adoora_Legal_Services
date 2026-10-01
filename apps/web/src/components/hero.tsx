@@ -1,5 +1,6 @@
 "use client";
 
+import { titleCase } from "@/lib/title-case";
 import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useRef, useState, type PointerEvent as ReactPointerEvent } from "react";
@@ -202,8 +203,8 @@ export function Hero({ images }: { images: (string | null)[] }) {
                   <p className="eyebrow text-gold-bright">{slide.eyebrow}</p>
 
                   <h1 className="mt-4 font-serif text-[1.7rem] font-semibold leading-[1.15] tracking-tight text-balance sm:text-4xl lg:text-[2.75rem] xl:text-[3.15rem]">
-                    {slide.heading}{" "}
-                    <span className="text-gold-bright">{slide.accent}</span>
+                    {titleCase(slide.heading)}{" "}
+                    <span className="text-gold-bright">{titleCase(slide.accent)}</span>
                   </h1>
 
                   <p className="mt-5 max-w-xl text-sm leading-relaxed text-white/85 sm:text-base">
@@ -261,8 +262,8 @@ export function Hero({ images }: { images: (string | null)[] }) {
               <div>
                 <p className="eyebrow text-gold-bright">{slide.eyebrow}</p>
                 <h1 className="mt-3 font-serif text-2xl font-semibold leading-[1.15] tracking-tight text-balance sm:text-3xl xl:text-[2.4rem]">
-                  {slide.heading}{" "}
-                  <span className="text-gold-bright">{slide.accent}</span>
+                  {titleCase(slide.heading)}{" "}
+                  <span className="text-gold-bright">{titleCase(slide.accent)}</span>
                 </h1>
               </div>
               <div>

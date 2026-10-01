@@ -1,5 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
+import { titleCase } from "@/lib/title-case";
 import type { ReactNode } from "react";
 import type { Faq } from "@/content/types";
 import type { Person } from "@/content/people";
@@ -52,7 +53,7 @@ export function SectionHeading({
           isDark ? "text-white" : "text-ink"
         }`}
       >
-        {title}
+        {titleCase(title)}
       </h2>
       {lead && (
         <p
@@ -161,10 +162,10 @@ export function ServiceList({
               <h3 className="font-serif text-xl font-semibold tracking-tight text-ink">
                 {href ? (
                   <Link href={href} className="transition hover:text-gold-deep">
-                    {item.title}
+                    {titleCase(item.title)}
                   </Link>
                 ) : (
-                  item.title
+                  titleCase(item.title)
                 )}
               </h3>
               <p className="mt-2.5 leading-relaxed text-ink-soft">{item.body}</p>
@@ -350,7 +351,7 @@ export function InsightCard({ insight }: { insight: Insight }) {
             {/* Stretches the link over the whole card, so the frame and the
                 summary are clickable too. */}
             <span aria-hidden="true" className="absolute inset-0" />
-            {insight.title}
+            {titleCase(insight.title)}
           </Link>
         </h3>
 
@@ -475,7 +476,7 @@ export function PageHero({
           </p>
         )}
         <h1 className={`mt-3 max-w-4xl font-serif text-[1.7rem] font-semibold leading-tight tracking-tight text-balance sm:text-4xl lg:text-5xl ${dark ? "text-white" : ""}`}>
-          {title}
+          {titleCase(title)}
         </h1>
         {lead && (
           <p className={`mt-4 text-base leading-relaxed sm:mt-5 sm:text-lg ${dark ? "max-w-2xl text-white/85" : "max-w-3xl text-ink-soft"}`}>

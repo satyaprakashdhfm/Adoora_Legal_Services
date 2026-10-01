@@ -1,3 +1,4 @@
+import { titleCase } from "@/lib/title-case";
 import type { Industry } from "./types";
 
 /**
@@ -775,6 +776,11 @@ export const industries: Industry[] = [
     ],
   },
 ];
+
+for (const industry of industries) {
+  for (const block of industry.overview) block.heading = titleCase(block.heading);
+  for (const matter of industry.commonMatters) matter.title = titleCase(matter.title);
+}
 
 /** Fast lookup used by the dynamic route and by cross-links. */
 export const industryBySlug = new Map(

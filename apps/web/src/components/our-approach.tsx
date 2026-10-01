@@ -1,36 +1,16 @@
-"use client";
-
 import Image from "next/image";
-import { useEffect, useRef, useState, type SVGProps } from "react";
+import type { SVGProps } from "react";
 import type { Differentiator } from "@/content/firm";
 
 /**
- * "Our approach" — a photograph down the left, the firm's five
- * differentiators as a mosaic of cards beside it: three across the top, two
- * across the bottom, on warm / navy / mist grounds.
- *
- * The navy ground travels. Every few seconds it moves on to the next card,
- * and the card it leaves takes over that card's old ground, so the two
- * swap colours rather than the whole set shifting. The panel on the left
- * cross-fades to the picture for whichever card is navy.
- * Resting on a card moves the navy there, after a short pause so a cursor
- * passing over the grid doesn't set every card flickering; hovering
- * anywhere in the band holds it still, and readers who ask for reduced
- * motion get no autoplay at all.
- *
- * Each photograph comes from `image`/`focus` on the entry in `firm.ts`.
+ * "Our approach": the handshake photograph down the left, the firm's five
+ * differentiators as a mosaic of cards beside it (three across the top, two
+ * across the bottom). Static: no rotation, no hover hand-over. The cards
+ * alternate two light grounds, mist blue and warm paper.
  */
 
-type Tone = "warm" | "navy" | "mist";
-
-/* How long each card holds the navy before it moves on, and how long the
-   hand-over itself takes (grounds, type and photograph alike). */
-const INTERVAL = 6500;
-const FADE = "duration-[1800ms] ease-in-out";
-
-/* Starting ground per card, in display order — the navy on the first, so
-   the sequence opens at 01. */
-const initialTones: Tone[] = ["navy", "warm", "mist", "mist", "warm"];
+/* The one photograph for the panel. */
+const PHOTO = { src: "/approach-client-first1.jpg", focus: "45% 50%" };
 
 /* lg column spans on the six-column card grid: three across, then two. */
 const spans = [
@@ -41,35 +21,8 @@ const spans = [
   "lg:col-span-3",
 ];
 
-const toneClasses: Record<
-  Tone,
-  { card: string; number: string; rule: string; icon: string; title: string; body: string }
-> = {
-  warm: {
-    card: "bg-paper-warm border-line",
-    number: "text-gold-deep",
-    rule: "bg-gold/50",
-    icon: "text-gold",
-    title: "text-ink",
-    body: "text-ink-soft",
-  },
-  navy: {
-    card: "bg-navy-soft border-navy-soft shadow-xl shadow-ink/15",
-    number: "text-gold-bright",
-    rule: "bg-gold-bright/60",
-    icon: "text-gold-bright",
-    title: "text-white",
-    body: "text-white/80",
-  },
-  mist: {
-    card: "bg-mist border-mist-line",
-    number: "text-gold-deep",
-    rule: "bg-gold/50",
-    icon: "text-gold",
-    title: "text-ink",
-    body: "text-ink-soft",
-  },
-};
+/* Alternating grounds: blue, paper, blue, paper, blue. */
+const grounds = ["bg-mist border-mist-line", "bg-paper-warm border-line"];
 
 const icons: ((props: SVGProps<SVGSVGElement>) => React.JSX.Element)[] = [
   // Proven Legal Expertise — scales of justice.
@@ -117,101 +70,48 @@ const icons: ((props: SVGProps<SVGSVGElement>) => React.JSX.Element)[] = [
 ];
 
 export function OurApproach({ items }: { items: readonly Differentiator[] }) {
-  const [tones, setTones] = useState<Tone[]>(() =>
-    items.map((_, i) => initialTones[i % initialTones.length]),
-  );
-  const active = Math.max(0, tones.indexOf("navy"));
-  const [paused, setPaused] = useState(false);
-
-  /* Move the navy ground to card `next`; the two cards swap grounds. */
-  function moveTo(next: number) {
-    setTones((current) => {
-      const from = current.indexOf("navy");
-      if (from === next || from < 0) return current;
-      const swapped = [...current];
-      swapped[from] = current[next];
-      swapped[next] = "navy";
-      return swapped;
-    });
-  }
-
-  useEffect(() => {
-    if (paused || items.length < 2) return;
-    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
-    const id = window.setTimeout(() => moveTo((active + 1) % items.length), INTERVAL);
-    return () => window.clearTimeout(id);
-  }, [active, paused, items.length]);
-
-  /* Hover intent: only move once the cursor has rested on a card. */
-  const hoverTimer = useRef<number | undefined>(undefined);
-  function hoverStart(index: number) {
-    window.clearTimeout(hoverTimer.current);
-    hoverTimer.current = window.setTimeout(() => moveTo(index), 400);
-  }
-  function hoverEnd() {
-    window.clearTimeout(hoverTimer.current);
-  }
-  useEffect(() => () => window.clearTimeout(hoverTimer.current), []);
-
   return (
-    <div
-      className="grid gap-3 lg:grid-cols-[minmax(0,1.2fr)_minmax(0,2fr)]"
-      onMouseEnter={() => setPaused(true)}
-      onMouseLeave={() => setPaused(false)}
-    >
-      {/* The picture for the navy card fills the whole panel: 3:2 on
-          phones, and on wide screens as tall as the cards beside it
-          (roughly square). */}
+    <div className="grid gap-3 lg:grid-cols-[minmax(0,1.2fr)_minmax(0,2fr)]">
+      {/* 3:2 on phones; on wide screens as tall as the cards beside it. */}
       <div className="relative aspect-[3/2] overflow-hidden rounded-2xl bg-[linear-gradient(160deg,var(--color-navy-soft),var(--color-ink-deep))] shadow-sm shadow-ink/10 lg:aspect-auto">
-        {items.map((item, index) => (
-          <Image
-            key={item.title}
-            src={item.image}
-            alt=""
-            fill
-            sizes="(min-width: 1280px) 480px, (min-width: 1024px) 38vw, 100vw"
-            quality={90}
-            style={{ objectPosition: item.focus }}
-            className={`object-cover transition-opacity ${FADE} ${
-              index === active ? "opacity-100" : "opacity-0"
-            }`}
-          />
-        ))}
+        <Image
+          src={PHOTO.src}
+          alt=""
+          fill
+          sizes="(min-width: 1280px) 480px, (min-width: 1024px) 38vw, 100vw"
+          quality={90}
+          style={{ objectPosition: PHOTO.focus }}
+          className="object-cover"
+        />
       </div>
 
       <ul className="grid gap-3 sm:grid-cols-2 lg:grid-cols-6">
         {items.map((item, index) => {
           const Icon = icons[index % icons.length];
-          const tone = toneClasses[tones[index]];
-          /* Five cards on a two-column grid leave the last one alone — let it
+          /* Five cards on a two-column grid leave the last one alone; let it
              take the full row there instead of leaving a hole. */
           const isLastOdd = index === items.length - 1 && items.length % 2 === 1;
 
           return (
             <li
               key={item.title}
-              onMouseEnter={() => hoverStart(index)}
-              onMouseLeave={hoverEnd}
               className={`${spans[index] ?? "lg:col-span-2"} ${isLastOdd ? "sm:col-span-2" : ""}`}
             >
               <div
-                className={`flex h-full flex-col rounded-2xl border p-6 transition-[background-color,border-color,box-shadow] ${FADE} sm:p-7 lg:min-h-[13rem] ${tone.card}`}
+                className={`flex h-full flex-col rounded-2xl border p-6 sm:p-7 lg:min-h-[13rem] ${grounds[index % 2]}`}
               >
                 <div className="flex items-start justify-between gap-4">
-                  <span className={`flex items-center gap-3 font-serif text-lg font-semibold transition-colors ${FADE} ${tone.number}`}>
+                  <span className="flex items-center gap-3 font-serif text-lg font-semibold text-gold-deep">
                     {String(index + 1).padStart(2, "0")}
-                    <span aria-hidden="true" className={`h-px w-8 transition-colors ${FADE} ${tone.rule}`} />
+                    <span aria-hidden="true" className="h-px w-8 bg-gold/50" />
                   </span>
-                  <Icon
-                    aria-hidden="true"
-                    className={`h-10 w-10 shrink-0 transition-colors ${FADE} ${tone.icon}`}
-                  />
+                  <Icon aria-hidden="true" className="h-10 w-10 shrink-0 text-gold" />
                 </div>
 
-                <h3 className={`mt-4 max-w-[16rem] font-serif text-xl font-semibold leading-snug tracking-tight text-balance transition-colors ${FADE} ${tone.title}`}>
+                <h3 className="mt-4 max-w-[16rem] font-serif text-xl font-semibold leading-snug tracking-tight text-balance text-ink">
                   {item.title}
                 </h3>
-                <p className={`mt-3 max-w-sm text-[0.9rem] leading-relaxed transition-colors ${FADE} ${tone.body}`}>
+                <p className="mt-3 max-w-sm text-[0.9rem] leading-relaxed text-ink-soft">
                   {item.body}
                 </p>
               </div>

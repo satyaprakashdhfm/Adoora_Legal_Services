@@ -95,7 +95,7 @@ export default async function ServicePage(
 
             <section className="mt-12 border-t border-line pt-10">
               <h2 className="font-serif text-2xl font-semibold tracking-tight text-ink">
-                How the work is sequenced
+                How the Work Is Sequenced
               </h2>
               <p className="mt-3 max-w-2xl leading-relaxed text-ink-soft">
                 The stages {area.shortName} matters move through. Timelines
@@ -108,7 +108,7 @@ export default async function ServicePage(
 
             <section className="mt-12 border-t border-line pt-10">
               <h2 className="font-serif text-2xl font-semibold tracking-tight text-ink">
-                Where it is heard
+                Where It Is Heard
               </h2>
               <p className="mt-3 max-w-2xl leading-relaxed text-ink-soft">
                 The courts, tribunals and regulators this work comes before.
@@ -121,7 +121,7 @@ export default async function ServicePage(
             {relatedInsights.length > 0 && (
               <section className="mt-12 border-t border-line pt-10">
                 <h2 className="font-serif text-2xl font-semibold tracking-tight text-ink">
-                  Related insights
+                  Related Insights
                 </h2>
                 <ul className="mt-8 grid gap-5 sm:grid-cols-2">
                   {relatedInsights.map((insight) => (
@@ -189,7 +189,7 @@ export default async function ServicePage(
 
             <div className="rounded-2xl bg-ink p-6 text-white">
               <h2 className="font-serif text-lg font-semibold">
-                Discuss a matter
+                Discuss a Matter
               </h2>
               <p className="mt-2 text-sm leading-relaxed text-white/75">
                 Tell us briefly what it concerns and we will route it to the
