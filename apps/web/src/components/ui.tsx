@@ -444,6 +444,14 @@ export function PageHero({
           <div className="absolute inset-y-0 left-0 w-1/5 bg-[linear-gradient(to_right,var(--color-hero-cream),transparent)]" />
         </div>
       )}
+      {/* Below lg the copy runs across the statue, so a cream wash over the
+          frame keeps the text readable; the statue stays as a faint ground. */}
+      {heroBg && (
+        <div
+          aria-hidden="true"
+          className="absolute inset-0 bg-[color-mix(in_oklab,var(--color-hero-cream)_84%,transparent)] lg:hidden"
+        />
+      )}
       {photo && (
         <>
           <div className="absolute inset-y-0 right-0 w-full lg:w-[64%]">

@@ -4,19 +4,13 @@ import type { Person } from "@/content/people";
 import { publicImage } from "@/lib/public-image";
 
 /**
- * Six soft accents the roster cycles through, card by card. Each sets the
- * avatar ring, a faint wash at the top of the card, the rule along its foot,
- * and the designation text — the last darkened on its own until it clears
- * 4.5:1 on the white card, because the pastel that works as a fill does not
- * work as type.
+ * One look for every card on the roster: the light blue the home page's
+ * profile card uses for the avatar and the wash at the top, the brand gold
+ * for the rule along the foot and the designation. (`index` still picks
+ * from this list, which now has a single entry.)
  */
 const accents = [
-  { soft: "#f6e6d4", wash: "#fdf6ee", bar: "#e3bc8c", text: "#9a6224" }, // sand
-  { soft: "#dde8f7", wash: "#f3f7fd", bar: "#9dbbe5", text: "#3b5b8c" }, // blue
-  { soft: "#d9ede3", wash: "#f2f9f5", bar: "#8fc7aa", text: "#3f7a5e" }, // sage
-  { soft: "#f8dfe0", wash: "#fdf4f4", bar: "#e9a7ae", text: "#a2475a" }, // rose
-  { soft: "#e6e1f5", wash: "#f6f4fc", bar: "#b8ade3", text: "#5d4f96" }, // lavender
-  { soft: "#f8e8c9", wash: "#fdf8ee", bar: "#e8c67f", text: "#8a6414" }, // amber
+  { soft: "#dde8f7", wash: "#f3f7fd", bar: "var(--color-gold)", text: "var(--color-gold-deep)" },
 ] as const;
 
 /**
