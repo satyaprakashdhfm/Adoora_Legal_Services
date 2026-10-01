@@ -275,15 +275,15 @@ export function Hero({ images }: { images: (string | null)[] }) {
             }`}
             aria-hidden={!isActive}
           >
-            <div className="container-page grid gap-4 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)] lg:items-end lg:gap-12">
-              <div>
-                <p className="eyebrow text-gold-bright">{slide.eyebrow}</p>
-                <h1 className="mt-3 font-serif text-2xl font-semibold leading-[1.15] tracking-tight text-balance sm:text-3xl xl:text-[2.4rem]">
-                  {titleCase(slide.heading)}{" "}
-                  <span className="text-gold-bright">{titleCase(slide.accent)}</span>
-                </h1>
-              </div>
-              <div>
+            {/* The eyebrow takes its own row, so the heading and the description
+                start on the same line, left and right. */}
+            <div className="container-page grid gap-y-3 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)] lg:items-start lg:gap-x-12">
+              <p className="eyebrow text-gold-bright lg:col-span-2">{slide.eyebrow}</p>
+              <h1 className="font-serif text-2xl font-semibold leading-[1.15] tracking-tight text-balance sm:text-3xl xl:text-[2.4rem]">
+                {titleCase(slide.heading)}{" "}
+                <span className="text-gold-bright">{titleCase(slide.accent)}</span>
+              </h1>
+              <div className="mt-1 lg:mt-0 lg:pt-1">
                 <p className="text-sm leading-relaxed text-white/85 sm:text-base">{slide.body}</p>
                 <div className="mt-5 flex flex-wrap gap-3">
                   <Link
