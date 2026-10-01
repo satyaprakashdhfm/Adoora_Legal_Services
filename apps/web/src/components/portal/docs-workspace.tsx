@@ -1,10 +1,11 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useDeferredValue, useEffect, useMemo, useRef, useState } from "react";
 import { api } from "@/lib/portal/api";
 import { formatDate } from "@/lib/portal/format";
 import { Button, ErrorNote, Input, Spinner } from "@/components/portal/ui";
 import { DocMarkdown, headingsOf } from "@/components/portal/doc-markdown";
+import { markTerms, searchDocs, searchTerms } from "@/components/portal/doc-search";
 
 type DocPage = {
   id: string;
@@ -20,6 +21,32 @@ function chapterFromHash() {
   if (typeof window === "undefined") return null;
   const match = /^#c-([0-9a-f-]{36})/.exec(window.location.hash);
   return match ? match[1] : null;
+}
+
+function SearchIcon() {
+  return (
+    <svg viewBox="0 0 20 20" aria-hidden="true" className="h-4 w-4">
+      <circle cx="8.5" cy="8.5" r="5.25" fill="none" stroke="currentColor" strokeWidth={1.6} />
+      <path d="M12.5 12.5L17 17" fill="none" stroke="currentColor" strokeWidth={1.6} strokeLinecap="round" />
+    </svg>
+  );
+}
+
+/** Text with the searched words picked out. */
+function Marked({ text, terms }: { text: string; terms: string[] }) {
+  return (
+    <>
+      {markTerms(text, terms).map((part, i) =>
+        part.match ? (
+          <mark key={i} className="rounded-sm bg-gold/25 text-ink">
+            {part.text}
+          </mark>
+        ) : (
+          part.text
+        ),
+      )}
+    </>
+  );
 }
 
 function PencilIcon() {
@@ -203,6 +230,11 @@ function Sidebar({
   onAdd: () => void;
 }) {
   const headings = useMemo(() => (current ? headingsOf(current.body) : []), [current]);
+  const [query, setQuery] = useState("");
+  const deferred = useDeferredValue(query);
+  const terms = useMemo(() => searchTerms(deferred), [deferred]);
+  const results = useMemo(() => searchDocs(pages, deferred), [pages, deferred]);
+  const searching = terms.length > 0;
 
   return (
     <aside className="lg:sticky lg:top-6 lg:max-h-[calc(100dvh-3rem)] lg:overflow-y-auto lg:pr-1">
@@ -212,57 +244,123 @@ function Sidebar({
           {pages.length} chapter{pages.length === 1 ? "" : "s"}
         </p>
 
-        {/* Phones: a chapter picker instead of the long list. */}
-        <select
-          aria-label="Chapter"
-          value={current?.id ?? ""}
-          onChange={(e) => onOpen(e.target.value)}
-          className="mt-3 w-full rounded-md border border-line-strong bg-white px-3 py-2 text-sm text-ink lg:hidden"
-        >
-          {pages.map((page, i) => (
-            <option key={page.id} value={page.id}>
-              {i + 1}. {page.title}
-            </option>
-          ))}
-        </select>
+        <label className="relative mt-3 block">
+          <span className="sr-only">Search the documentation</span>
+          <span className="pointer-events-none absolute inset-y-0 left-3 flex items-center text-slate">
+            <SearchIcon />
+          </span>
+          <input
+            type="search"
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === "Escape") setQuery("");
+            }}
+            placeholder="Search, e.g. deactivate"
+            className="w-full rounded-md border border-line-strong bg-white py-2 pl-9 pr-3 text-sm text-ink placeholder:text-slate focus:border-gold focus:outline-none focus:ring-2 focus:ring-gold/25"
+          />
+        </label>
 
-        <ol className="mt-4 space-y-0.5 max-lg:hidden">
-          {pages.map((page, i) => {
-            const active = page.id === current?.id;
-            return (
-              <li key={page.id}>
-                <button
-                  type="button"
-                  onClick={() => onOpen(page.id)}
-                  aria-current={active ? "page" : undefined}
-                  className={`flex w-full gap-2 rounded-md px-2.5 py-2 text-left text-sm transition ${
-                    active ? "bg-paper-warm font-semibold text-ink" : "text-ink-soft hover:bg-paper-warm hover:text-ink"
-                  }`}
-                >
-                  <span className={`w-5 shrink-0 tabular-nums ${active ? "text-gold-deep" : "text-slate"}`}>{i + 1}.</span>
-                  <span className="min-w-0">{page.title}</span>
-                </button>
-                {active && headings.length > 0 && (
-                  <ul className="mb-2 ml-[1.15rem] mt-1 space-y-0.5 border-l border-line pl-3">
-                    {headings.map((heading, k) => (
-                      <li key={`${heading.id}-${k}`}>
-                        <button
-                          type="button"
-                          onClick={() => onOpen(page.id, heading.id)}
-                          className={`block w-full rounded px-2 py-1 text-left transition hover:bg-paper-warm hover:text-ink ${
-                            heading.level === 3 ? "pl-4 text-xs text-slate" : "text-[0.8125rem] text-ink-soft"
-                          }`}
-                        >
-                          {heading.text}
-                        </button>
-                      </li>
-                    ))}
-                  </ul>
-                )}
-              </li>
-            );
-          })}
-        </ol>
+        {searching ? (
+          <div className="mt-4" aria-live="polite">
+            <p className="px-0.5 text-xs text-slate">
+              {results.length
+                ? `${results.length} chapter${results.length === 1 ? " mentions" : "s mention"} “${deferred.trim()}”`
+                : `No chapter mentions “${deferred.trim()}”. Try another word, or fewer words.`}
+            </p>
+            <ol className="mt-2 space-y-3">
+              {results.map((result) => (
+                <li key={result.id}>
+                  <button
+                    type="button"
+                    onClick={() => onOpen(result.id)}
+                    className={`flex w-full gap-2 rounded-md px-2.5 py-1.5 text-left text-sm font-semibold text-ink transition hover:bg-paper-warm ${
+                      result.id === current?.id ? "bg-paper-warm" : ""
+                    }`}
+                  >
+                    <span className="w-5 shrink-0 tabular-nums text-gold-deep">{result.number}.</span>
+                    <span className="min-w-0">
+                      <Marked text={result.title} terms={terms} />
+                    </span>
+                  </button>
+                  {result.hits.length > 0 && (
+                    <ul className="ml-[1.15rem] mt-1 space-y-0.5 border-l border-line pl-2">
+                      {result.hits.slice(0, 3).map((hit, k) => (
+                        <li key={k}>
+                          <button
+                            type="button"
+                            onClick={() => onOpen(result.id, hit.heading?.id)}
+                            className="block w-full rounded px-2 py-1.5 text-left transition hover:bg-paper-warm"
+                          >
+                            {hit.heading && hit.heading.text !== hit.text && <span className="block text-[0.6875rem] font-semibold text-slate">{hit.heading.text}</span>}
+                            <span className="block text-[0.8125rem] leading-snug text-ink-soft">
+                              <Marked text={hit.text} terms={terms} />
+                            </span>
+                          </button>
+                        </li>
+                      ))}
+                      {result.hits.length > 3 && <li className="px-2 py-1 text-xs text-slate">and {result.hits.length - 3} more in this chapter</li>}
+                    </ul>
+                  )}
+                </li>
+              ))}
+            </ol>
+          </div>
+        ) : (
+          <>
+            {/* Phones: a chapter picker instead of the long list. */}
+                <select
+              aria-label="Chapter"
+              value={current?.id ?? ""}
+              onChange={(e) => onOpen(e.target.value)}
+              className="mt-3 w-full rounded-md border border-line-strong bg-white px-3 py-2 text-sm text-ink lg:hidden"
+            >
+              {pages.map((page, i) => (
+                <option key={page.id} value={page.id}>
+                  {i + 1}. {page.title}
+                </option>
+              ))}
+            </select>
+
+            <ol className="mt-4 space-y-0.5 max-lg:hidden">
+              {pages.map((page, i) => {
+                const active = page.id === current?.id;
+                return (
+                  <li key={page.id}>
+                    <button
+                      type="button"
+                      onClick={() => onOpen(page.id)}
+                      aria-current={active ? "page" : undefined}
+                      className={`flex w-full gap-2 rounded-md px-2.5 py-2 text-left text-sm transition ${
+                        active ? "bg-paper-warm font-semibold text-ink" : "text-ink-soft hover:bg-paper-warm hover:text-ink"
+                      }`}
+                    >
+                      <span className={`w-5 shrink-0 tabular-nums ${active ? "text-gold-deep" : "text-slate"}`}>{i + 1}.</span>
+                      <span className="min-w-0">{page.title}</span>
+                    </button>
+                    {active && headings.length > 0 && (
+                      <ul className="mb-2 ml-[1.15rem] mt-1 space-y-0.5 border-l border-line pl-3">
+                        {headings.map((heading, k) => (
+                          <li key={`${heading.id}-${k}`}>
+                            <button
+                              type="button"
+                              onClick={() => onOpen(page.id, heading.id)}
+                              className={`block w-full rounded px-2 py-1 text-left transition hover:bg-paper-warm hover:text-ink ${
+                                heading.level === 3 ? "pl-4 text-xs text-slate" : "text-[0.8125rem] text-ink-soft"
+                              }`}
+                            >
+                              {heading.text}
+                            </button>
+                          </li>
+                        ))}
+                      </ul>
+                    )}
+                  </li>
+                );
+              })}
+            </ol>
+          </>
+        )}
 
         {canEdit && (
           <button type="button" onClick={onAdd} className="mt-4 w-full rounded-md border border-dashed border-line-strong px-3 py-2 text-sm font-semibold text-ink-soft transition hover:border-gold hover:text-gold-deep">

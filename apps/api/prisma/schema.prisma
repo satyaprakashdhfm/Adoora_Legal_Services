@@ -978,3 +978,11 @@ model DocImage {
   bytes     Int
   createdAt DateTime @default(now())
 }
+
+/// Which one-time changes to the bundled guide (`GUIDE_UPDATES` in
+/// routes/docs.ts) have been applied, so each runs once and a chapter the
+/// firm deletes afterwards is never brought back.
+model DocGuideUpdate {
+  key       String   @id
+  appliedAt DateTime @default(now())
+}

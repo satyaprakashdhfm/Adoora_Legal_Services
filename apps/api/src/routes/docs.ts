@@ -1,4 +1,4 @@
-import { readdir, readFile } from "node:fs/promises";
+import { readFile } from "node:fs/promises";
 import { Router, type RequestHandler } from "express";
 import multer from "multer";
 import { z } from "zod";
@@ -15,7 +15,8 @@ import { DEFAULT_DOC_PAGES } from "../docs/default-pages.js";
  * Markdown as `docimg:<id>`.
  *
  * The first time it is opened the guide in `docs/default-pages.ts` is seeded,
- * with its screenshots from `apps/api/docs-seed/`.
+ * with its screenshots from `apps/api/docs-seed/`; later changes to it reach
+ * an existing guide through `GUIDE_UPDATES`.
  */
 export const docsRouter = Router();
 
@@ -26,44 +27,100 @@ const SEED_DIR = new URL("../../docs-seed/", import.meta.url);
 
 const pageSelect = { id: true, title: true, body: true, position: true, updatedAt: true, updatedByName: true } as const;
 
-/** Seeds the bundled guide once: never again after anything has been seeded, even if every chapter is deleted later. */
-async function seedIfEmpty() {
-  if (await prisma.docPage.count()) return;
+/**
+ * Changes to the bundled guide made after it was first seeded, applied once
+ * to a guide that already exists. A guide seeded later already has them.
+ * `add` takes the chapter from `DEFAULT_DOC_PAGES` by its title.
+ */
+const GUIDE_UPDATES: { key: string; remove?: string[]; add?: { title: string; after: string }[] }[] = [
+  {
+    key: "2026-10-step-by-step",
+    remove: ["What it costs to run", "Behind the scenes, in plain terms", "Where things are kept in the project", "Current limits and next steps"],
+    add: [{ title: "Step by step: jobs, articles, enquiries and more", after: "Cases and the court's own record" }],
+  },
+];
+
+type Tx = Parameters<Parameters<typeof prisma.$transaction>[0]>[0];
+
+const DOCIMG = /!\[([^\]]*)\]\(docimg:([a-z0-9-]+)\)/g;
+
+/** The bundled screenshots these chapters use, stored once each: name → DocImage id. */
+async function bundledImages(tx: Tx, bodies: string[]) {
+  const names = new Set(bodies.flatMap((body) => [...body.matchAll(DOCIMG)].map((match) => match[2]!)));
+  const ids = new Map<string, string>();
+  const stored = await tx.docImage.findMany({ where: { name: { in: [...names] } }, select: { id: true, name: true } });
+  for (const image of stored) if (!ids.has(image.name!)) ids.set(image.name!, image.id);
+  for (const name of names) {
+    if (ids.has(name)) continue;
+    const data = await readFile(new URL(`${name}.png`, SEED_DIR)).catch(() => null);
+    if (!data) continue;
+    const image = await tx.docImage.create({
+      data: { name, data: new Uint8Array(data), mimeType: "image/png", bytes: data.length },
+      select: { id: true },
+    });
+    ids.set(name, image.id);
+  }
+  return ids;
+}
+
+/** A bundled chapter's Markdown with its screenshots pointing at their stored ids; one that is not bundled is dropped rather than left broken. */
+function withImages(body: string, ids: Map<string, string>) {
+  return body.replace(DOCIMG, (_, alt: string, name: string) => (ids.has(name) ? `![${alt}](docimg:${ids.get(name)})` : ""));
+}
+
+/**
+ * Seeds the bundled guide the first time, never again (even if every chapter
+ * is deleted later), and applies each of `GUIDE_UPDATES` once.
+ */
+async function syncGuide() {
+  if ((await prisma.docGuideUpdate.count()) > GUIDE_UPDATES.length) return;
   await prisma.$transaction(
     async (tx) => {
       // Two console tabs opening at once must not both seed.
       await tx.$executeRaw`SELECT pg_advisory_xact_lock(724001)`;
-      if ((await tx.docPage.count()) || (await tx.docImage.count({ where: { name: { not: null } } }))) return;
+      const done = new Set((await tx.docGuideUpdate.findMany({ select: { key: true } })).map((row) => row.key));
 
-      const ids = new Map<string, string>();
-      const files = await readdir(SEED_DIR).catch(() => [] as string[]);
-      for (const file of files.filter((f) => f.endsWith(".png"))) {
-        const data = await readFile(new URL(file, SEED_DIR));
-        const image = await tx.docImage.create({
-          data: { name: file.replace(/\.png$/, ""), data: new Uint8Array(data), mimeType: "image/png", bytes: data.length },
-          select: { id: true, name: true },
-        });
-        ids.set(image.name!, image.id);
+      if (!done.has("seeded")) {
+        const fresh = !(await tx.docPage.count()) && !(await tx.docImage.count({ where: { name: { not: null } } }));
+        if (fresh) {
+          const ids = await bundledImages(tx, DEFAULT_DOC_PAGES.map((page) => page.body));
+          await tx.docPage.createMany({
+            data: DEFAULT_DOC_PAGES.map((page, index) => ({
+              title: page.title,
+              body: withImages(page.body, ids),
+              position: index + 1,
+              updatedByName: "ADOORA guide",
+            })),
+          });
+          await tx.docGuideUpdate.createMany({ data: ["seeded", ...GUIDE_UPDATES.map((update) => update.key)].map((key) => ({ key })) });
+          return;
+        }
+        // Seeded before updates were recorded.
+        await tx.docGuideUpdate.create({ data: { key: "seeded" } });
       }
 
-      await tx.docPage.createMany({
-        data: DEFAULT_DOC_PAGES.map((page, index) => ({
-          title: page.title,
-          // A screenshot that is not bundled is dropped rather than left broken.
-          body: page.body.replace(/!\[([^\]]*)\]\(docimg:([a-z0-9-]+)\)/g, (_, alt: string, name: string) =>
-            ids.has(name) ? `![${alt}](docimg:${ids.get(name)})` : "",
-          ),
-          position: index + 1,
-          updatedByName: "ADOORA guide",
-        })),
-      });
+      for (const update of GUIDE_UPDATES) {
+        if (done.has(update.key)) continue;
+        if (update.remove?.length) await tx.docPage.deleteMany({ where: { title: { in: update.remove } } });
+        for (const { title, after } of update.add ?? []) {
+          const page = DEFAULT_DOC_PAGES.find((p) => p.title === title);
+          if (!page || (await tx.docPage.count({ where: { title } }))) continue;
+          const anchor = await tx.docPage.findFirst({ where: { title: after }, orderBy: { position: "asc" }, select: { position: true } });
+          const last = await tx.docPage.aggregate({ _max: { position: true } });
+          const position = anchor ? anchor.position + 1 : (last._max.position ?? 0) + 1;
+          await tx.docPage.updateMany({ where: { position: { gte: position } }, data: { position: { increment: 1 } } });
+          const ids = await bundledImages(tx, [page.body]);
+          await tx.docPage.create({ data: { title, body: withImages(page.body, ids), position, updatedByName: "ADOORA guide" } });
+        }
+        await tx.docGuideUpdate.create({ data: { key: update.key } });
+      }
     },
     { timeout: 30_000 },
   );
 }
 
 docsRouter.get("/docs", ...readers, async (req, res) => {
-  await seedIfEmpty();
+  await syncGuide();
   const pages = await prisma.docPage.findMany({ orderBy: [{ position: "asc" }, { createdAt: "asc" }], select: pageSelect });
   res.json({ pages, canEdit: req.auth!.role === "OWNER" || req.auth!.role === "ADMIN" });
 });
