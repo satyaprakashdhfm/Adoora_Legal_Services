@@ -61,12 +61,6 @@ const schema = z.object({
    */
   ADMIN_EMAILS: z.string().default(""),
 
-  /** Whether an unknown Google account may create a client account. */
-  ALLOW_CLIENT_SIGNUP: z
-    .enum(["true", "false"])
-    .default("true")
-    .transform((value) => value === "true"),
-
   /**
    * Where document bytes are kept. `s3` is any S3-compatible service —
    * Railway Buckets today; AWS S3, Cloudflare R2 or MinIO by changing the

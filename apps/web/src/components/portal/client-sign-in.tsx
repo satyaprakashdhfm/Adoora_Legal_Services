@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { useRouter } from "next/navigation";
 import { api, ApiError, googleSignInUrl, type Area } from "@/lib/portal/api";
 import { refreshSession } from "@/lib/portal/session";
 import { Button, ErrorNote, GoogleMark } from "@/components/portal/ui";
@@ -18,6 +19,8 @@ export const SIGN_IN_ERRORS: Record<string, string> = {
   account_inactive: "This account has been deactivated. Please contact the firm.",
   account_mismatch: "This email is linked to a different Google account. Sign in with that account, or contact the firm.",
   signup_closed: "New accounts are created by the firm. Please contact us and we will set one up for you.",
+  client_not_registered:
+    "You are not registered as a client yet. Please contact us first: once you are onboarded, the firm will give you access to the client portal.",
   use_admin_login: "This account is an owner's or administrator's. Please sign in at the admin console.",
   use_lawyer_login: "Lawyers sign in on the lawyer sign-in page.",
   not_staff: "This email is not registered with the firm. Please ask the firm's administrator to add you, or sign in as a client.",
@@ -29,7 +32,7 @@ export const SIGN_IN_ERRORS: Record<string, string> = {
   otp_send_failed: "We could not send a code to that number. Please check it and try again.",
   otp_captcha: "Please complete the check below the number, then press Send OTP again.",
   otp_wrong_code: "That code is not right, or it has expired. Please check it or send a new one.",
-  phone_not_registered: "This mobile number is not on any client account. Sign in with Google, or ask the firm to add your number.",
+  phone_not_registered: "This mobile number is not on any client account. Please contact us and the firm will add it.",
   phone_ambiguous: "This mobile number is already on an account. Please sign in with Google, or contact the firm.",
   phone_in_use: "That number is already on another account. Please use a different number, or contact the firm.",
   signup_expired: "That took a little too long. Please verify your number again.",
@@ -116,6 +119,25 @@ function ensureWidget(ref: { current: Promise<void> | null }, config: WidgetConf
 
 const RESEND_AFTER = 30;
 
+/** Someone who is not a client yet: off to the Contact page, after a moment to read why. */
+const CONTACT_AFTER_MS = 6000;
+
+function ToContact() {
+  const router = useRouter();
+  useEffect(() => {
+    const timer = window.setTimeout(() => router.push("/contact"), CONTACT_AFTER_MS);
+    return () => window.clearTimeout(timer);
+  }, [router]);
+  return (
+    <div className="mt-3 flex flex-wrap items-center gap-3">
+      <a href="/contact" className="inline-flex items-center justify-center rounded-md bg-gold px-4 py-2 text-sm font-semibold text-ink-deep transition hover:bg-gold-bright">
+        Contact us
+      </a>
+      <span className="text-xs text-slate">Taking you to the Contact page…</span>
+    </div>
+  );
+}
+
 const errorCode = (cause: unknown) => (cause instanceof ApiError && cause.code ? cause.code : "otp_failed");
 
 function useWidgetConfig() {
@@ -138,6 +160,7 @@ function ErrorBlock({ error, detail }: { error: string | null; detail?: string |
     <div className="mb-4">
       <ErrorNote>{SIGN_IN_ERRORS[error] ?? "We could not sign you in. Please try again."}</ErrorNote>
       {detail && <p className="mt-1.5 text-xs text-slate">MSG91: {detail}</p>}
+      {error === "client_not_registered" && <ToContact />}
       {error === "use_admin_login" && (
         <a href="/admin/login" className="mt-2 inline-block text-sm font-semibold text-gold-deep underline underline-offset-4">
           Go to the admin console sign-in
@@ -149,8 +172,6 @@ function ErrorBlock({ error, detail }: { error: string | null; detail?: string |
 
 const primaryButton =
   "mt-3 w-full rounded-lg bg-gold px-5 py-3 text-sm font-semibold text-ink-deep transition hover:bg-gold-bright disabled:cursor-not-allowed disabled:bg-paper-tint disabled:text-slate";
-const fieldClass =
-  "mt-1.5 w-full rounded-lg border border-line-strong bg-white px-3 py-2.5 text-sm font-normal text-ink outline-none placeholder:text-slate-light focus:border-gold-deep focus:ring-2 focus:ring-gold/25";
 
 /**
  * Proves a mobile number with MSG91's OTP widget: number, Send OTP, code,
@@ -357,20 +378,16 @@ export function ClientSignIn({
   audience?: Area;
 }) {
   const config = useWidgetConfig();
-  const [signup, setSignup] = useState<{ token: string; phone: string } | null>(null);
   const firm = audience !== "client";
 
   async function signIn(accessToken: string) {
-    const result = await api<{ redirect?: string; needsSignup?: boolean; signupToken?: string; phone?: string }>("/auth/otp", {
+    const result = await api<{ redirect?: string }>("/auth/otp", {
       method: "POST",
       body: { accessToken, next, audience },
       area: audience,
     });
-    if (result.needsSignup && result.signupToken) setSignup({ token: result.signupToken, phone: result.phone ?? "" });
-    else if (result.redirect) window.location.assign(result.redirect);
+    if (result.redirect) window.location.assign(result.redirect);
   }
-
-  if (signup) return <SignupDetails signup={signup} next={next} onBack={() => setSignup(null)} />;
 
   return (
     <div className="text-left">
@@ -384,7 +401,7 @@ export function ClientSignIn({
             hint={
               firm
                 ? "Use the mobile number registered with the firm. We will text you a one-time code."
-                : "We will text you a one-time code. New here? The same code creates your account."
+                : "Use the mobile number you gave the firm. We will text you a one-time code."
             }
           />
           <div className="my-5 flex items-center gap-3 text-xs font-semibold text-slate">
@@ -402,68 +419,6 @@ export function ClientSignIn({
         Continue with Google
       </a>
     </div>
-  );
-}
-
-/** After a new number is verified: the two things a phone cannot tell us. */
-function SignupDetails({ signup, next, onBack }: { signup: { token: string; phone: string }; next: string; onBack: () => void }) {
-  const [name, setName] = useState("");
-  const [email, setEmail] = useState("");
-  const [busy, setBusy] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [message, setMessage] = useState<string | null>(null);
-
-  async function submit(event: React.FormEvent) {
-    event.preventDefault();
-    setBusy(true);
-    setError(null);
-    setMessage(null);
-    try {
-      const result = await api<{ redirect: string }>("/auth/otp/signup", {
-        method: "POST",
-        body: { signupToken: signup.token, name, email, next },
-      });
-      window.location.assign(result.redirect);
-    } catch (cause) {
-      const code = errorCode(cause);
-      if (SIGN_IN_ERRORS[code]) setError(code);
-      else setMessage((cause as Error).message);
-      setBusy(false);
-    }
-  }
-
-  return (
-    <form onSubmit={submit} className="text-left">
-      <p className="rounded-lg bg-emerald-50 px-3 py-2 text-sm text-emerald-800">✓ {signup.phone} verified. Two details and your account is ready.</p>
-      <div className="mt-4">
-        <ErrorBlock error={error} />
-        <ErrorNote>{message}</ErrorNote>
-      </div>
-      <label className="mt-2 block text-xs font-semibold text-ink-soft">
-        Your name
-        <input
-          required
-          minLength={2}
-          maxLength={120}
-          autoComplete="name"
-          value={name}
-          onChange={(e) => setName(e.target.value)}
-          className={fieldClass}
-          placeholder="As you would like the firm to address you"
-        />
-      </label>
-      <label className="mt-3 block text-xs font-semibold text-ink-soft">
-        Email
-        <input required type="email" autoComplete="email" value={email} onChange={(e) => setEmail(e.target.value)} className={fieldClass} placeholder="you@example.com" />
-      </label>
-      <p className="mt-1.5 text-xs text-slate">For case updates and documents. Signing in with Google using this email later confirms it.</p>
-      <button type="submit" disabled={busy} className={primaryButton}>
-        {busy ? "Creating your account…" : "Create account"}
-      </button>
-      <button type="button" onClick={onBack} className="mt-3 w-full text-center text-xs font-semibold text-slate hover:text-ink">
-        Use a different number
-      </button>
-    </form>
   );
 }
 

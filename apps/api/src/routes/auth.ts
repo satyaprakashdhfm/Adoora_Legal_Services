@@ -139,20 +139,9 @@ authRouter.post("/otp", loginLimiter, async (req, res) => {
           samePhone(c.phone, identity.digits),
         );
 
-  if (matches.length === 0) {
-    // A new number: offer sign-up. The verified number travels in a signed,
-    // short-lived token, so the sign-up step cannot swap in another number.
-    if (identity.kind !== "phone" || !env.ALLOW_CLIENT_SIGNUP) {
-      throw new HttpError(404, "phone_not_registered", "phone_not_registered");
-    }
-    const phone = identity.digits.slice(-10);
-    res.json({
-      needsSignup: true,
-      phone: `+91 ${phone}`,
-      signupToken: signValue({ purpose: "otp-signup", phone, exp: Date.now() + 15 * 60 * 1000 }),
-    });
-    return;
-  }
+  // Clients are added by the firm (Admin console → Clients); a number or
+  // email it has not added opens nothing, and the page sends them to Contact.
+  if (matches.length === 0) throw new HttpError(403, "client_not_registered", "client_not_registered");
   // Two clients on one number: the firm has to say which account it is.
   if (matches.length > 1) throw new HttpError(409, "phone_ambiguous", "phone_ambiguous");
   const client = matches[0]!;
@@ -171,13 +160,6 @@ authRouter.post("/otp", loginLimiter, async (req, res) => {
   res.json({ redirect: landingFor("client", safeNext(req.body?.next)) });
 });
 
-const signupSchema = z.object({
-  signupToken: z.string().min(10).max(2000),
-  name: z.string().trim().min(2, "Please enter your name.").max(120),
-  email: z.string().trim().toLowerCase().email("Please enter a valid email address.").max(200),
-  next: z.string().optional(),
-});
-
 /** Is this number already on another client account? (A firm account may share it.) */
 async function phoneTaken(digits: string, exceptClientId?: string) {
   const clients = await prisma.client.findMany({
@@ -186,40 +168,6 @@ async function phoneTaken(digits: string, exceptClientId?: string) {
   });
   return clients.some((row) => samePhone(row.phone, digits));
 }
-
-/**
- * POST /api/auth/otp/signup — a new client after a mobile OTP: the verified
- * number (from the signed token) plus the name and email they type.
- *
- * The email is unproven — OTP proves only the phone — so it is stored as
- * unverified until the person signs in with Google once. An email already on
- * an account is refused rather than attached, so nobody can take over an
- * account by typing its address.
- */
-authRouter.post("/otp/signup", loginLimiter, async (req, res) => {
-  const input = signupSchema.parse(req.body);
-  const token = verifySignedValue<{ purpose?: string; phone?: string; exp?: number }>(input.signupToken);
-  if (!token || token.purpose !== "otp-signup" || !token.phone || !token.exp || token.exp < Date.now()) {
-    throw new HttpError(400, "signup_expired", "signup_expired");
-  }
-  if (!env.ALLOW_CLIENT_SIGNUP) throw new HttpError(403, "signup_closed", "signup_closed");
-
-  const existing = await prisma.client.findFirst({ where: { email: input.email }, select: { id: true } });
-  if (existing) throw new HttpError(409, "email_taken", "email_taken");
-  if (await phoneTaken(token.phone)) throw new HttpError(409, "phone_ambiguous", "phone_ambiguous");
-
-  const now = new Date();
-  const client = await prisma.client.create({
-    data: { email: input.email, name: input.name, phone: `+91 ${token.phone}`, phoneVerifiedAt: now, lastLoginAt: now },
-    select: { id: true, email: true, name: true, avatarUrl: true, phone: true },
-  });
-  await startSession(req, res, { clientId: client.id }, "otp", "client");
-
-  req.principal = { kind: "client", id: client.id, email: client.email, name: client.name, avatarUrl: client.avatarUrl, sessionId: "", phone: client.phone };
-  await audit(req, "auth.signup", "Client", client.id, { method: "otp" });
-
-  res.status(201).json({ redirect: landingFor("client", safeNext(input.next)) });
-});
 
 /**
  * POST /api/auth/me/phone — a signed-in client adds (or changes) their
@@ -325,28 +273,17 @@ async function resolveClient(identity: GoogleIdentity, now: Date): Promise<Resol
         avatarUrl: identity.picture,
         lastLoginAt: now,
         emailVerifiedAt: client.emailVerifiedAt ?? now,
-        // The account's email is proven for the first time. If it was created
-        // by mobile sign-up, whoever typed this email may not be its owner,
-        // so their number stops opening it; the owner is asked for their own.
+        // The account's email is proven for the first time. If its number was
+        // typed by someone else (an older mobile sign-up), that number stops
+        // opening it; the owner is asked for their own.
         ...(client.emailVerifiedAt ? {} : { phone: null, phoneVerifiedAt: null }),
       },
     });
     return { kind: "client", id: client.id };
   }
 
-  if (!env.ALLOW_CLIENT_SIGNUP) throw new HttpError(403, "signup_closed");
-
-  const created = await prisma.client.create({
-    data: {
-      email: identity.email,
-      name: identity.name,
-      googleSub: identity.sub,
-      avatarUrl: identity.picture,
-      lastLoginAt: now,
-      emailVerifiedAt: now,
-    },
-  });
-  return { kind: "client", id: created.id };
+  // Only clients the firm has added can sign in; nobody signs themselves up.
+  throw new HttpError(403, "client_not_registered");
 }
 
 authRouter.get("/google/callback", async (req, res) => {

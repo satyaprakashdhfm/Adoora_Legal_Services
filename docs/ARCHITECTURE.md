@@ -80,7 +80,7 @@ all three at once and signing out of one leaves the others
 
 | Area | Page | Who | Lands on |
 |---|---|---|---|
-| `client` | `/login` | anyone, as a client | `/dashboard` |
+| `client` | `/login` | clients the firm has added | `/dashboard` |
 | `lawyer` | `/lawyer/login` | `LAWYER`, `OWNER`, `ADMIN` | `/lawyer` |
 | `admin` | `/admin/login` (not linked from the site) | `OWNER`, `ADMIN`, `EDITOR` | `/admin` |
 
@@ -93,8 +93,10 @@ acts with the `LAWYER` role: the cases assigned to them, nothing more.
 
 Sign-in is by Google or by mobile OTP (MSG91):
 
-- **Client page:** open. A new number or Google account becomes a new client
-  account (a Google one is asked to add a mobile); an existing one signs in.
+- **Client page:** only a `Client` the firm has added (Admin console →
+  Clients), by its email (Google) or saved phone (OTP). Anything else gets
+  `client_not_registered`, and the page sends the person to `/contact`.
+  Nobody signs themselves up.
 - **Lawyer and admin pages:** only a `User` on the Team page whose email
   (Google) or saved phone (OTP, matched with `samePhone`) fits, with a role
   allowed in that area; otherwise `staff_not_registered` / `not_allowed_here`.
@@ -329,7 +331,6 @@ In Google Cloud Console, for the firm's project:
 | `GOOGLE_CLIENT_ID` | for Google sign-in | From Google Cloud Console. |
 | `GOOGLE_CLIENT_SECRET` | for Google sign-in | Seal it in Railway. |
 | `ADMIN_EMAILS` | no | Comma-separated; become `OWNER` on first Google sign-in. |
-| `ALLOW_CLIENT_SIGNUP` | no | `true` (default) lets any Google account create a client account. |
 | `STORAGE_DRIVER` | yes in production | `s3` (production) or `local` (development). |
 | `S3_BUCKET` `S3_ENDPOINT` `S3_REGION` `S3_ACCESS_KEY_ID` `S3_SECRET_ACCESS_KEY` | with `s3` | On Railway, references to the bucket: `${{documents.BUCKET}}`, `${{documents.ENDPOINT}}`, `${{documents.REGION}}`, `${{documents.ACCESS_KEY_ID}}`, `${{documents.SECRET_ACCESS_KEY}}`. |
 | `S3_FORCE_PATH_STYLE` | no | `true` only for providers that need path-style URLs. |
