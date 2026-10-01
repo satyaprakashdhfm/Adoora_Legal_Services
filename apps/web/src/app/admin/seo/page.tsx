@@ -139,7 +139,7 @@ export default function SeoAnalytics() {
           <Spinner />
         ) : (
           <>
-            <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+            <div className="grid grid-cols-2 gap-3 sm:gap-4 xl:grid-cols-4">
               <Tile label="Keywords targeted" value={keywords.length} note="Across drafts and published articles." />
               <Tile label="Published articles" value={published.length} />
               <Tile label="Without a focus keyword" value={noKeyword.length} note={noKeyword.length ? "Set one in the editor's SEO panel." : undefined} />

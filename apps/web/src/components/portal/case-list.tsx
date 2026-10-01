@@ -103,14 +103,14 @@ export function CaseList({
               <li key={item.id}>
                 <Link
                   href={`${basePath}/cases/${item.reference}`}
-                  className="grid gap-x-6 gap-y-2 px-5 py-4 transition hover:bg-paper-warm md:grid-cols-[minmax(0,1fr)_9rem_10rem]"
+                  className="grid grid-cols-2 gap-x-4 gap-y-3 px-4 py-4 transition hover:bg-paper-warm sm:px-5 md:grid-cols-[minmax(0,1fr)_9rem_10rem] md:gap-x-6 md:gap-y-2"
                 >
-                  <div className="min-w-0">
+                  <div className="col-span-2 min-w-0 md:col-span-1">
                     <div className="flex flex-wrap items-center gap-2">
                       <span className="font-mono text-xs font-semibold text-gold-deep">{item.reference}</span>
                       <StatusBadge status={item.status} />
                     </div>
-                    <p className="mt-1 truncate font-semibold text-ink">{item.title}</p>
+                    <p className="mt-1 line-clamp-2 font-semibold text-ink md:line-clamp-1">{item.title}</p>
                     <p className="mt-0.5 truncate text-xs text-slate">
                       {[number, item.courtName ?? labelFor(COURT_LEVELS, item.courtLevel), item.bench].filter(Boolean).join(" · ")}
                     </p>
@@ -119,14 +119,14 @@ export function CaseList({
                     )}
                   </div>
 
-                  <div className="text-xs">
+                  <div className="min-w-0 text-xs">
                     <p className="portal-label font-semibold uppercase tracking-wide text-slate">Next hearing</p>
                     <p className={`mt-1 text-sm ${days !== null && days >= 0 && days <= 7 ? "font-semibold text-gold-deep" : "text-ink"}`}>
                       {item.nextHearingDate ? formatDate(item.nextHearingDate) : "—"}
                     </p>
                   </div>
 
-                  <div className="text-xs">
+                  <div className="min-w-0 text-xs">
                     <p className="portal-label font-semibold uppercase tracking-wide text-slate">{lead ? "Lead" : "Team"}</p>
                     <p className="mt-1 truncate text-sm text-ink">{lead?.user.name ?? (staff ? "Unassigned" : "Being assigned")}</p>
                     <p className="text-slate">{item._count.documents} document{item._count.documents === 1 ? "" : "s"}</p>

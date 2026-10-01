@@ -51,7 +51,7 @@ export default function DashboardOverview() {
         }
       />
 
-      <div className="grid gap-4 sm:grid-cols-3">
+      <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4">
         <StatTile label={"Open cases"} value={cases ? open.length : "…"} href={`${base}/cases`} />
         <StatTile label="Documents" value={cases ? documents : "…"} href={`${base}/documents`} />
         <StatTile
@@ -59,6 +59,7 @@ export default function DashboardOverview() {
           value={upcoming[0] ? formatDate(upcoming[0].nextHearingDate) : "—"}
           hint={upcoming[0] ? upcoming[0].title : "Nothing listed"}
           href={upcoming[0] ? `${base}/cases/${upcoming[0].reference}` : undefined}
+          className="col-span-2 sm:col-span-1"
         />
       </div>
 

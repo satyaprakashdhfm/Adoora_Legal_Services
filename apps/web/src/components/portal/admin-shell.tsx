@@ -95,18 +95,19 @@ export function AdminShell({ children }: { children: ReactNode }) {
       {(user) => (
         <div className="min-h-dvh bg-paper-warm lg:grid lg:grid-cols-[15.5rem_1fr] lg:bg-ink">
           <aside
-            className={`bg-ink text-white lg:sticky lg:top-0 lg:flex lg:h-dvh lg:flex-col ${menuOpen ? "" : "max-lg:[&>nav]:hidden max-lg:[&>div.account]:hidden"}`}
+            className={`sticky top-0 z-30 bg-ink text-white lg:flex lg:h-dvh lg:flex-col ${menuOpen ? "max-lg:flex max-lg:max-h-dvh max-lg:flex-col" : "max-lg:[&>nav]:hidden max-lg:[&>div.account]:hidden"}`}
           >
-            <div className="flex items-center justify-between gap-3 border-b border-white/10 px-5 py-4">
+            {/* On phones this bar stays at the top while the page scrolls, so the menu is always in reach. */}
+            <div className="flex items-center justify-between gap-3 border-b border-white/10 px-4 py-3 sm:px-5 lg:py-4">
               <div className="min-w-0">
                 <Wordmark tone="dark" />
-                <p className="eyebrow mt-3 text-gold-bright">Admin console</p>
+                <p className="eyebrow mt-2 text-gold-bright lg:mt-3">Admin console</p>
               </div>
               <button
                 type="button"
                 onClick={() => setOpenOn(menuOpen ? null : pathname)}
                 aria-expanded={menuOpen}
-                className="rounded-md border border-white/20 px-2.5 py-1.5 text-xs lg:hidden"
+                className="rounded-md border border-white/20 px-3 py-2 text-xs font-semibold lg:hidden"
               >
                 {menuOpen ? "Close" : "Menu"}
               </button>

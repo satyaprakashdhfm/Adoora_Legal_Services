@@ -336,3 +336,45 @@ figcaption {
 .portal-label {
   font-family: var(--font-sans);
 }
+
+/* Portal tables on phones: one card per row, the column heading beside
+   each value (the labels are set by <Table>). */
+@media (max-width: 767.98px) {
+  .portal-table thead {
+    display: none;
+  }
+  .portal-table,
+  .portal-table tbody,
+  .portal-table tr {
+    display: block;
+    width: 100%;
+  }
+  .portal-table tr {
+    border-bottom: 1px solid var(--color-line);
+    padding: 0.875rem 0;
+  }
+  .portal-table td {
+    display: block;
+    border: 0;
+    padding: 0.2rem 1rem;
+    text-align: left;
+  }
+  .portal-table td[data-label]:not([data-label=""]) {
+    display: grid;
+    grid-template-columns: 6.5rem minmax(0, 1fr);
+    column-gap: 0.75rem;
+    align-items: baseline;
+  }
+  .portal-table td[data-label]:not([data-label=""])::before {
+    content: attr(data-label);
+    font-family: var(--font-sans);
+    font-size: 0.65rem;
+    font-weight: 600;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    color: var(--color-slate);
+  }
+  .portal-table td .justify-end {
+    justify-content: flex-start;
+  }
+}

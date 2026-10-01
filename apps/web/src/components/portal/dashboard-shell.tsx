@@ -31,10 +31,10 @@ export function DashboardShell({ area, children }: { area: "client" | "lawyer"; 
     >
       {(user) => {
         const tabs = [
-          { href: base, label: "Overview", exact: true },
-          { href: `${base}/cases`, label: "My cases" },
-          { href: `${base}/documents`, label: "Documents" },
-          { href: `${base}/queries`, label: user.kind === "client" ? "My queries" : "Client queries" },
+          { href: base, label: "Overview", short: "Overview", exact: true },
+          { href: `${base}/cases`, label: "My cases", short: "Cases" },
+          { href: `${base}/documents`, label: "Documents", short: "Documents" },
+          { href: `${base}/queries`, label: user.kind === "client" ? "My queries" : "Client queries", short: "Queries" },
         ];
 
         return (
@@ -42,24 +42,25 @@ export function DashboardShell({ area, children }: { area: "client" | "lawyer"; 
             {/* A client who signed in with Google has no verified mobile yet. */}
             {user.kind === "client" && !user.phone && <PhonePrompt />}
             <div className="border-b border-line bg-white">
-              <div className="container-page flex flex-wrap items-center justify-between gap-4 pt-6">
-                <div className="flex items-center gap-3">
+              <div className="container-page flex items-center justify-between gap-4 pt-5 sm:pt-6">
+                <div className="flex min-w-0 items-center gap-3">
                   <Avatar name={user.name} src={user.avatarUrl} size={40} />
-                  <div>
+                  <div className="min-w-0">
                     <p className="portal-label text-xs font-semibold uppercase tracking-wide text-slate">
                       {user.kind === "client" ? "Client dashboard" : "Lawyer workspace"}
                     </p>
-                    <p className="font-serif text-lg font-semibold text-ink">{user.name}</p>
+                    <p className="truncate font-serif text-lg font-semibold text-ink">{user.name}</p>
                   </div>
                 </div>
-                <div className="flex items-center gap-4 text-sm">
+                <div className="flex shrink-0 items-center gap-4 text-sm">
                   <button type="button" onClick={() => void signOut()} className="text-slate hover:text-ink">
                     Sign out
                   </button>
                 </div>
               </div>
 
-              <nav aria-label="Dashboard" className="container-page mt-4 flex gap-1 overflow-x-auto">
+              {/* Four equal tabs on phones, with shorter labels so all of them fit. */}
+              <nav aria-label="Dashboard" className="container-page mt-4 grid grid-cols-4 sm:flex sm:gap-1">
                 {tabs.map((tab) => {
                   const active = tab.exact ? pathname === tab.href : pathname.startsWith(tab.href);
                   return (
@@ -67,18 +68,19 @@ export function DashboardShell({ area, children }: { area: "client" | "lawyer"; 
                       key={tab.href}
                       href={tab.href}
                       aria-current={active ? "page" : undefined}
-                      className={`whitespace-nowrap border-b-2 px-3 pb-3 text-sm font-semibold transition ${
+                      className={`whitespace-nowrap border-b-2 px-1 pb-3 text-center text-[0.8125rem] font-semibold transition sm:px-3 sm:text-sm ${
                         active ? "border-gold text-ink" : "border-transparent text-slate hover:text-ink"
                       }`}
                     >
-                      {tab.label}
+                      <span className="sm:hidden">{tab.short}</span>
+                      <span className="max-sm:hidden">{tab.label}</span>
                     </Link>
                   );
                 })}
               </nav>
             </div>
 
-            <div className="container-page py-8">{children}</div>
+            <div className="container-page py-6 sm:py-8">{children}</div>
           </div>
         );
       }}

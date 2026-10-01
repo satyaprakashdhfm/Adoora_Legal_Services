@@ -61,7 +61,7 @@ export default function AdminOverview() {
         }
       />
 
-      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+      <div className="grid grid-cols-2 gap-3 sm:gap-4 xl:grid-cols-4">
         <StatTile label="Open cases" value={open} hint={`${stats.cases.DISPOSED ?? 0} disposed · ${stats.cases.CLOSED ?? 0} closed`} href="/admin/cases" />
         <StatTile label="Intake to review" value={stats.cases.INTAKE ?? 0} hint="Opened by clients or awaiting take-on" href="/admin/cases" />
         <StatTile label="Unassigned" value={stats.casesUnassigned} hint="Open cases with no lawyer" href="/admin/cases" />

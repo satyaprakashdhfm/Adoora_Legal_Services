@@ -272,15 +272,27 @@ export function EmptyState({ title, children, action }: { title: string; childre
   );
 }
 
-export function StatTile({ label, value, hint, href }: { label: string; value: ReactNode; hint?: ReactNode; href?: string }) {
+export function StatTile({
+  label,
+  value,
+  hint,
+  href,
+  className: extra = "",
+}: {
+  label: string;
+  value: ReactNode;
+  hint?: ReactNode;
+  href?: string;
+  className?: string;
+}) {
   const body = (
     <>
       <p className="portal-label text-xs font-semibold uppercase tracking-wide text-slate">{label}</p>
-      <p className="mt-2 font-serif text-3xl font-semibold text-ink">{value}</p>
+      <p className="mt-1.5 font-serif text-2xl font-semibold text-ink sm:mt-2 sm:text-3xl">{value}</p>
       {hint && <p className="mt-1 text-xs text-slate">{hint}</p>}
     </>
   );
-  const className = "block rounded-xl border border-line bg-white px-5 py-4 transition";
+  const className = `block min-w-0 rounded-xl border border-line bg-white px-4 py-3 transition sm:px-5 sm:py-4 ${extra}`;
   return href ? (
     <Link href={href} className={`${className} hover:border-gold`}>
       {body}
@@ -294,10 +306,29 @@ export function StatTile({ label, value, hint, href }: { label: string; value: R
 // Table
 // ---------------------------------------------------------------------------
 
+/**
+ * A table on tablets and up; on phones each row becomes a card (see
+ * `.portal-table` in globals.css), every cell after the first labelled with
+ * its column heading, so nothing hides off the side of the screen.
+ */
 export function Table({ children }: { children: ReactNode }) {
+  const ref = useRef<HTMLTableElement>(null);
+
+  // Runs after every render, so rows added later are labelled too.
+  useEffect(() => {
+    const table = ref.current;
+    if (!table) return;
+    const headings = [...table.querySelectorAll("thead th")].map((th) => th.textContent?.trim() ?? "");
+    for (const row of table.querySelectorAll("tbody tr")) {
+      [...row.children].forEach((cell, index) => cell.setAttribute("data-label", index === 0 ? "" : (headings[index] ?? "")));
+    }
+  });
+
   return (
-    <div className="overflow-x-auto">
-      <table className="w-full min-w-[40rem] border-collapse text-left text-sm">{children}</table>
+    <div className="md:overflow-x-auto">
+      <table ref={ref} className="portal-table w-full border-collapse text-left text-sm md:min-w-[40rem]">
+        {children}
+      </table>
     </div>
   );
 }
@@ -311,7 +342,11 @@ export function Th({ children, className = "" }: { children?: ReactNode; classNa
 }
 
 export function Td({ children, className = "" }: { children?: ReactNode; className?: string }) {
-  return <td className={`border-b border-line px-4 py-3 align-top text-ink ${className}`}>{children}</td>;
+  return (
+    <td className={`border-b border-line px-4 py-3 align-top text-ink ${className}`}>
+      <div className="min-w-0">{children}</div>
+    </td>
+  );
 }
 
 // ---------------------------------------------------------------------------

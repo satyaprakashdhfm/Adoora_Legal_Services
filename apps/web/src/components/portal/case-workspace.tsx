@@ -17,9 +17,9 @@ type Tab = "overview" | "court" | "documents" | "timeline" | "edit";
 function Detail({ label, children }: { label: string; children: ReactNode }) {
   if (children === null || children === undefined || children === "" || children === "—") return null;
   return (
-    <div>
+    <div className="min-w-0">
       <dt className="text-xs font-semibold uppercase tracking-wide text-slate">{label}</dt>
-      <dd className="mt-1 text-sm text-ink">{children}</dd>
+      <dd className="mt-1 break-words text-sm text-ink">{children}</dd>
     </div>
   );
 }
@@ -98,7 +98,7 @@ export function CaseWorkspace({ reference, user, basePath }: { reference: string
             </p>
           </div>
           {record.nextHearingDate && (
-            <div className="rounded-lg border border-gold/40 bg-gold/10 px-4 py-3 text-right">
+            <div className="w-full rounded-lg border border-gold/40 bg-gold/10 px-4 py-3 sm:w-auto sm:text-right">
               <p className="portal-label text-xs font-semibold uppercase tracking-wide text-gold-deep">Next hearing</p>
               <p className="font-serif text-lg font-semibold text-ink">{formatDate(record.nextHearingDate)}</p>
               <p className="text-xs text-slate">
@@ -110,7 +110,9 @@ export function CaseWorkspace({ reference, user, basePath }: { reference: string
         </div>
       </div>
 
-      <nav aria-label="Case sections" className="flex gap-1 overflow-x-auto border-b border-line">
+      {/* Underlined tabs from sm up; on phones they wrap as chips, so none
+          is hidden off the side of the screen. */}
+      <nav aria-label="Case sections" className="flex flex-wrap gap-2 sm:flex-nowrap sm:gap-1 sm:overflow-x-auto sm:border-b sm:border-line">
         {tabs.map((item) => (
           <button
             key={item.id}
@@ -120,8 +122,10 @@ export function CaseWorkspace({ reference, user, basePath }: { reference: string
               setSaved(null);
             }}
             aria-current={tab === item.id ? "page" : undefined}
-            className={`whitespace-nowrap border-b-2 px-3 pb-2.5 text-sm font-semibold transition ${
-              tab === item.id ? "border-gold text-ink" : "border-transparent text-slate hover:text-ink"
+            className={`whitespace-nowrap font-semibold transition max-sm:rounded-full max-sm:border max-sm:px-3.5 max-sm:py-1.5 max-sm:text-xs sm:border-b-2 sm:px-3 sm:pb-2.5 sm:text-sm ${
+              tab === item.id
+                ? "max-sm:border-ink max-sm:bg-ink max-sm:text-white sm:border-gold sm:text-ink"
+                : "text-slate hover:text-ink max-sm:border-line-strong max-sm:bg-white sm:border-transparent"
             }`}
           >
             {item.label}
@@ -136,7 +140,7 @@ export function CaseWorkspace({ reference, user, basePath }: { reference: string
           <div className="space-y-6">
             <Card>
               <CardHeader title="Case details" />
-              <dl className="grid gap-5 px-5 py-5 sm:grid-cols-2 lg:grid-cols-3">
+              <dl className="grid grid-cols-2 gap-x-4 gap-y-5 px-4 py-5 sm:px-5 lg:grid-cols-3">
                 <Detail label="Forum">{labelFor(COURT_LEVELS, record.courtLevel)}</Detail>
                 <Detail label="Court">{record.courtName}</Detail>
                 <Detail label="Seat / bench">{record.bench}</Detail>
