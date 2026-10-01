@@ -52,7 +52,8 @@ cached.
 `apps/web/next.config.ts` rewrites `/api/*` to the API service. To the browser
 the API is the website's own origin, so:
 
-- the session cookie is **first-party** (`__Host-als_session`, httpOnly,
+- the session cookies are **first-party** (`__Host-als_admin`,
+  `__Host-als_lawyer`, `__Host-als_client`; httpOnly,
   Secure, SameSite=Lax). The two services sit on different `up.railway.app`
   hosts, which is on the public-suffix list — a cookie set by the API's own
   hostname would be third-party to the website and blocked by Safari and
@@ -72,18 +73,37 @@ message rather than arriving truncated. The public forms still post to
 document always said they should be: a bug in one audience's checks cannot
 hand the other audience's access to a client's matters.
 
-One "Continue with Google" button serves both. On the callback the API decides
-which account the Google identity is (`apps/api/src/routes/auth.ts`):
+**Three independent sign-in areas.** Each has its own page, its own session
+cookie and its own sessions (`Session.area`), so one person can be signed in to
+all three at once and signing out of one leaves the others
+(`apps/api/src/auth/session.ts`):
 
-1. an existing staff account with that Google id or email → staff session;
-2. an email in `ADMIN_EMAILS` → a new `OWNER` (bootstraps the first admin);
-3. an existing client account → client session;
-4. anyone else → a new client account, if `ALLOW_CLIENT_SIGNUP` is true.
+| Area | Page | Who | Lands on |
+|---|---|---|---|
+| `client` | `/login` | anyone, as a client | `/dashboard` |
+| `lawyer` | `/lawyer/login` | `LAWYER`, `OWNER`, `ADMIN` | `/lawyer` |
+| `admin` | `/admin/login` (not linked from the site) | `OWNER`, `ADMIN`, `EDITOR` | `/admin` |
+
+Every portal request says which area it acts in: the `x-adoora-area` header
+(set by `api()` in `apps/web/src/lib/portal/api.ts`), else `?area=` (document
+downloads), else the Referer's path. The API reads only that area's cookie, and
+rechecks on every request that the account is active and its role is allowed
+there, so a role change applies at once. In the lawyer area an owner or admin
+acts with the `LAWYER` role: the cases assigned to them, nothing more.
+
+Sign-in is by Google or by mobile OTP (MSG91):
+
+- **Client page:** open. A new number or Google account becomes a new client
+  account (a Google one is asked to add a mobile); an existing one signs in.
+- **Lawyer and admin pages:** only a `User` on the Team page whose email
+  (Google) or saved phone (OTP, matched with `samePhone`) fits, with a role
+  allowed in that area; otherwise `staff_not_registered` / `not_allowed_here`.
+  An email in `ADMIN_EMAILS` becomes an `OWNER` on its first Google sign-in at
+  the admin page.
 
 Staff are never created by signing in (apart from the bootstrap): an admin adds
-a lawyer by email under **Lawyers & staff**, and the lawyer's first Google
-sign-in with that email links the account. A stranger who signs in gets a
-client account that sees nothing until the firm links a case to it.
+them on the Team page with their email and phone. `GET /api/admin/access` feeds
+the Team page's "Who can sign in" panel.
 
 The flow is OpenID Connect authorization code with PKCE, `state` and `nonce`;
 the ID token is verified against Google's published keys, audience and issuer,
@@ -97,9 +117,9 @@ Cookie-authenticated writes must also carry an `Origin` matching the website.
 
 The original password login (`POST /api/admin/auth/login`, bearer token) still
 works for scripts, and now checks the account is still active on every call.
-`POST /api/auth/password` gives staff with a password a session cookie too —
-an emergency route if Google is ever unavailable. `/login` does not offer it;
-the page shows only "Continue with Google".
+`POST /api/auth/password` gives staff with a password a session cookie too (admin
+area, or lawyer with `audience: "lawyer"`), an emergency route if Google and
+OTP are ever unavailable. No sign-in page offers it.
 
 ### Roles
 
