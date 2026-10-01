@@ -4,8 +4,8 @@ import type { PracticeArea } from "@/content/types";
 
 /**
  * The home page's practice teaser — a 3 × 3 grid of photo cards, each with
- * the practice name in white serif and a gold arrow, over a
- * navy wash that keeps the copy legible whatever the photograph does.
+ * the practice name in white serif and a gold arrow, over a light
+ * shade in the title corner that keeps the copy legible.
  *
  * Two kinds of photograph, both resolved server-side by `publicImage()` and
  * passed in per slug:
@@ -59,11 +59,14 @@ function Card({ item }: { item: PracticeGridItem }) {
             alt=""
             fill
             sizes="(min-width: 1024px) 33vw, (min-width: 640px) 50vw, 100vw"
-            className="-z-20 object-cover brightness-[1.15] saturate-[1.05] transition duration-700 ease-out group-hover:scale-105"
+            quality={90}
+            className="-z-20 object-cover transition duration-700 ease-out group-hover:scale-105"
           />
+          {/* A neutral (not navy) shade in the title corner only, so the
+              photograph keeps its own colour and light everywhere else. */}
           <div
             aria-hidden="true"
-            className="absolute inset-0 -z-10 bg-[linear-gradient(160deg,color-mix(in_oklab,var(--color-ink-deep)_62%,transparent)_0%,color-mix(in_oklab,var(--color-ink-deep)_22%,transparent)_45%,transparent_75%)] transition duration-500 group-hover:opacity-80"
+            className="absolute inset-0 -z-10 bg-[linear-gradient(160deg,rgb(0_0_0/0.45)_0%,rgb(0_0_0/0.12)_32%,transparent_55%)] transition duration-500 group-hover:opacity-80"
           />
         </>
       ) : (
