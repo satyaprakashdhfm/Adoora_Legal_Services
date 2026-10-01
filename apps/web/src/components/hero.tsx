@@ -33,7 +33,14 @@ function Arrow({ className = "" }: { className?: string }) {
  */
 export function Hero({ images }: { images: (string | null)[] }) {
   const [index, setIndex] = useState(0);
-  const [paused, setPaused] = useState(false);
+  /* The slideshow holds while the cursor is over the hero, while keyboard
+     focus is inside it, and during a drag. Kept apart so ending one (a
+     click's pointer-up, say) cannot restart the rotation while another
+     still applies. */
+  const [hovering, setHovering] = useState(false);
+  const [focused, setFocused] = useState(false);
+  const [dragging, setDragging] = useState(false);
+  const paused = hovering || focused || dragging;
   const reducedMotion = useRef(false);
   /* Drag tracking for the swipe gesture. `startX` is null when no drag is in
      progress, which also doubles as "ignore this pointer's move/up events". */
@@ -79,10 +86,13 @@ export function Hero({ images }: { images: (string | null)[] }) {
     // A right-click, or a second finger while one is already dragging.
     if (event.button !== 0 && event.pointerType === "mouse") return;
     dragRef.current = { startX: event.clientX, moved: false };
-    setPaused(true);
+    setDragging(true);
   }
 
   function onPointerMove(event: ReactPointerEvent<HTMLElement>) {
+    /* Also catches a cursor that was already resting on the hero when the
+       page loaded, which never fires an enter event. */
+    if (event.pointerType === "mouse" && !hovering) setHovering(true);
     if (!dragRef.current) return;
     if (Math.abs(event.clientX - dragRef.current.startX) > 4) {
       dragRef.current.moved = true;
@@ -92,7 +102,7 @@ export function Hero({ images }: { images: (string | null)[] }) {
   function onPointerUp(event: ReactPointerEvent<HTMLElement>) {
     const drag = dragRef.current;
     dragRef.current = null;
-    setPaused(false);
+    setDragging(false);
     if (!drag) return;
 
     const delta = event.clientX - drag.startX;
@@ -105,16 +115,23 @@ export function Hero({ images }: { images: (string | null)[] }) {
   return (
     <section
       className="relative isolate touch-pan-y overflow-hidden bg-ink-mid text-white select-none"
-      onMouseEnter={() => setPaused(true)}
-      onMouseLeave={() => setPaused(false)}
-      onFocusCapture={() => setPaused(true)}
-      onBlurCapture={() => setPaused(false)}
+      onMouseEnter={() => setHovering(true)}
+      onMouseLeave={() => setHovering(false)}
+      onFocusCapture={(event) => {
+        /* Keyboard focus only: a mouse click also focuses the button it
+           lands on, and that should not hold the slideshow once the cursor
+           has left. */
+        if ((event.target as HTMLElement).matches?.(":focus-visible")) setFocused(true);
+      }}
+      onBlurCapture={(event) => {
+        if (!event.currentTarget.contains(event.relatedTarget)) setFocused(false);
+      }}
       onPointerDown={onPointerDown}
       onPointerMove={onPointerMove}
       onPointerUp={onPointerUp}
       onPointerCancel={() => {
         dragRef.current = null;
-        setPaused(false);
+        setDragging(false);
       }}
       aria-roledescription="carousel"
       aria-label="About the firm"

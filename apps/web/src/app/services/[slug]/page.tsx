@@ -100,7 +100,7 @@ export default async function PracticeAreaPage(
             </h2>
             <p className="mt-3 max-w-2xl leading-relaxed text-ink-soft">
               Indicative stages and what each produces. Timelines depend on the
-              matter — where we can give a realistic range, the FAQs below say
+              case. Where we can give a realistic range, the FAQs below say
               so.
             </p>
             <div className="mt-8">
@@ -113,7 +113,7 @@ export default async function PracticeAreaPage(
               Jurisdictions, Forums and Regulators
             </h2>
             <p className="mt-3 max-w-2xl leading-relaxed text-ink-soft">
-              Where matters in this practice are heard, filed or determined.
+              Where cases in this practice are heard, filed or determined.
             </p>
             <div className="mt-8">
               <FactList items={area.forums} />

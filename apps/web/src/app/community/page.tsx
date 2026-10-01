@@ -21,7 +21,7 @@ export const metadata: Metadata = {
 const work = [
   {
     title: "Legal aid for individuals",
-    body: "Advice and representation for people who qualify for free legal aid: women and children, senior citizens, persons with disabilities, workers, people in custody and families on low incomes. Many of these matters reach us through referrals from legal services authorities.",
+    body: "Advice and representation for people who qualify for free legal aid: women and children, senior citizens, persons with disabilities, workers, people in custody and families on low incomes. Many of these cases reach us through referrals from legal services authorities.",
   },
   {
     title: "Legal awareness camps",
@@ -33,7 +33,7 @@ const work = [
   },
   {
     title: "Lok Adalats and mediation",
-    body: "Helping parties settle disputes through Lok Adalats and mediation, where a matter can close sooner and an award of a Lok Adalat carries no court fee.",
+    body: "Helping parties settle disputes through Lok Adalats and mediation, where a case can close sooner and an award of a Lok Adalat carries no court fee.",
   },
   {
     title: "Mentoring law students",
@@ -75,7 +75,7 @@ const steps = [
   },
   {
     title: "Agree the scope",
-    body: "We agree what we will take on, who from the firm will lead it, and how matters or sessions will be referred to us.",
+    body: "We agree what we will take on, who from the firm will lead it, and how cases or sessions will be referred to us.",
   },
   {
     title: "Review it together",
@@ -145,7 +145,7 @@ export default function CommunityPage() {
         <SectionHeading
           eyebrow="Tie-ups"
           title="Organisations we work with"
-          lead="We are open to working with organisations of these kinds. Every matter goes through the same conflict check as any other, and we take work on as our capacity allows."
+          lead="We are open to working with organisations of these kinds. Every case goes through the same conflict check as any other, and we take work on as our capacity allows."
         />
         <ul className="mt-8 grid gap-x-10 gap-y-6 border-t border-line pt-8 sm:grid-cols-2 lg:grid-cols-3">
           {partners.map((item) => (

@@ -50,7 +50,7 @@ export const policies: Policy[] = [
       {
         heading: "No representation as to outcomes",
         body: [
-          "Descriptions of matters on this website are illustrative of the type of work the firm handles. They omit client names and identifying details, and they are not representations about the outcome of any matter. Past work does not indicate what will happen in yours.",
+          "Descriptions of cases on this website are illustrative of the type of work the firm handles. They omit client names and identifying details, and they are not representations about the outcome of any case. Past work does not indicate what will happen in yours.",
           "Rankings and awards listed on this website are decided by third-party publishers on their own criteria. They are recorded as facts and are not a claim by the firm about the quality of its services.",
         ],
       },
@@ -81,7 +81,7 @@ export const policies: Policy[] = [
         heading: "What we collect",
         body: ["We collect only what the website needs to function and to respond to you."],
         bullets: [
-          "Enquiry form: your name, email address, telephone number, the matter type you select, and the description you provide.",
+          "Enquiry form: your name, email address, telephone number, the case type you select, and the description you provide.",
           "Careers form: your name, contact details, the role applied for, and any information in the application you send.",
           "Technical data: IP address, browser and device type, and pages visited — used for security and, if you have consented to analytics cookies, to understand how the site is used.",
           "Preferences: whether you accepted the disclaimer, and your cookie choices, stored in first-party cookies on your device.",
@@ -189,7 +189,7 @@ export const policies: Policy[] = [
       {
         heading: "Submissions",
         body: [
-          "Do not send confidential or privileged material through this website. Information submitted through the enquiry form is not privileged and does not create a lawyer–client relationship, and we may be unable to treat it as confidential if we already act for another party in the matter. We run a conflicts check before responding substantively.",
+          "Do not send confidential or privileged material through this website. Information submitted through the enquiry form is not privileged and does not create a lawyer–client relationship, and we may be unable to treat it as confidential if we already act for another party in the case. We run a conflicts check before responding substantively.",
         ],
       },
       {

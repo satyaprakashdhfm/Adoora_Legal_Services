@@ -98,8 +98,8 @@ export default async function ServicePage(
                 How the Work Is Sequenced
               </h2>
               <p className="mt-3 max-w-2xl leading-relaxed text-ink-soft">
-                The stages {area.shortName} matters move through. Timelines
-                depend on the matter.
+                The stages {area.shortName} cases move through. Timelines
+                depend on the case.
               </p>
               <div className="mt-8">
                 <ProcessSteps steps={area.process} />
@@ -189,7 +189,7 @@ export default async function ServicePage(
 
             <div className="rounded-2xl bg-ink p-6 text-white">
               <h2 className="font-serif text-lg font-semibold">
-                Discuss a Matter
+                Discuss a Case
               </h2>
               <p className="mt-2 text-sm leading-relaxed text-white/75">
                 Tell us briefly what it concerns and we will route it to the

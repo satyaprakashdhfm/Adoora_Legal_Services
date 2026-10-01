@@ -329,22 +329,22 @@ export const practiceAreas: PracticeArea[] = [
       {
         heading: "The litigation landscape",
         body: [
-          "Commercial disputes in India are increasingly triaged by forum before they are triaged by merit. The Commercial Courts Act, 2015 introduced case management timelines for commercial suits above the specified value, while ordinary civil suits proceed under the Code of Civil Procedure, 1908 in the district judiciary. Specialist tribunals now decide much of what used to be general civil litigation — the NCLT for company and insolvency matters, RERA authorities for real estate, consumer commissions for consumer claims, and the writ jurisdiction of the High Courts for regulatory and administrative action.",
+          "Commercial disputes in India are increasingly triaged by forum before they are triaged by merit. The Commercial Courts Act, 2015 introduced case management timelines for commercial suits above the specified value, while ordinary civil suits proceed under the Code of Civil Procedure, 1908 in the district judiciary. Specialist tribunals now decide much of what used to be general civil litigation — the NCLT for company and insolvency cases, RERA authorities for real estate, consumer commissions for consumer claims, and the writ jurisdiction of the High Courts for regulatory and administrative action.",
           "Choosing the wrong forum, or missing the procedural step that keeps a claim alive, costs more time than losing an interlocutory application. Limitation, jurisdiction and the correct cause of action are questions we resolve before drafting starts, not after a defendant raises them.",
-          "In practice the early weeks of a matter matter disproportionately. Interim protection — an injunction, an attachment before judgment, the appointment of a receiver — frequently shapes the settlement range long before any final hearing, and a case built on a thin factual record rarely recovers later.",
+          "In practice the early weeks of a case matter disproportionately. Interim protection — an injunction, an attachment before judgment, the appointment of a receiver — frequently shapes the settlement range long before any final hearing, and a case built on a thin factual record rarely recovers later.",
         ],
       },
       {
         heading: "How we support you",
         body: [
           "We advise on strategy before we advise on pleadings: whether the claim is worth bringing, which forum gives the best route to the relief you actually need, what interim protection is available, and what the realistic cost and timeline look like. Where a commercial settlement is the better outcome, we say so early.",
-          "The team handles the full course of contentious work — pre-action notices and replies, interim applications, pleadings and evidence, cross-examination, execution of decrees, and appeals. We act on both sides, including in matters filed against clients without notice, and we run the litigation, insolvency and regulatory angles of a dispute as one brief rather than several.",
+          "The team handles the full course of contentious work — pre-action notices and replies, interim applications, pleadings and evidence, cross-examination, execution of decrees, and appeals. We act on both sides, including in cases filed against clients without notice, and we run the litigation, insolvency and regulatory angles of a dispute as one brief rather than several.",
         ],
       },
       {
         heading: "Who we act for",
         body: [
-          "Indian and international companies, banks and financial institutions, promoters and shareholders in governance and oppression disputes, infrastructure and construction parties in claims arising out of delay and variation, and individuals in significant civil and commercial matters.",
+          "Indian and international companies, banks and financial institutions, promoters and shareholders in governance and oppression disputes, infrastructure and construction parties in claims arising out of delay and variation, and individuals in significant civil and commercial cases.",
         ],
       },
     ],
@@ -353,7 +353,7 @@ export const practiceAreas: PracticeArea[] = [
         short: "civil & commercial litigation",
         title: "Civil and commercial litigation",
         body:
-          "Contractual claims, recovery suits, specific performance, property and title suits, guarantee and indemnity claims, and shareholder and joint venture disputes. We handle proceedings before the commercial divisions, the district judiciary, the High Courts and — where the matter warrants it — the Supreme Court of India.",
+          "Contractual claims, recovery suits, specific performance, property and title suits, guarantee and indemnity claims, and shareholder and joint venture disputes. We handle proceedings before the commercial divisions, the district judiciary, the High Courts and — where the case warrants it — the Supreme Court of India.",
       },
       {
         short: "interim & injunctive relief",
@@ -461,7 +461,7 @@ export const practiceAreas: PracticeArea[] = [
       },
       {
         q: "How do you charge for litigation work?",
-        a: "Usually a combination of a retainer for the matter and appearance fees, or hourly rates for advisory and drafting stages. We give a written estimate at the outset broken down by stage, and flag when a development is likely to move the estimate.",
+        a: "Usually a combination of a retainer for the case and appearance fees, or hourly rates for advisory and drafting stages. We give a written estimate at the outset broken down by stage, and flag when a development is likely to move the estimate.",
       },
       {
         q: "Do you act on the defence side as well?",
@@ -609,7 +609,7 @@ export const practiceAreas: PracticeArea[] = [
       },
       {
         q: "How do you charge for arbitration and mediation work?",
-        a: "Usually a retainer for the matter combined with hearing fees, or hourly rates for drafting and advisory stages. We give a written estimate broken down by stage at the outset — separate from the tribunal's and institution's own fees, which are not ours to quote.",
+        a: "Usually a retainer for the case combined with hearing fees, or hourly rates for drafting and advisory stages. We give a written estimate broken down by stage at the outset — separate from the tribunal's and institution's own fees, which are not ours to quote.",
       },
     ],
   },
@@ -784,7 +784,7 @@ export const practiceAreas: PracticeArea[] = [
         heading: "How we support you",
         body: [
           "We advise on the employment documentation and structures that sit under a workforce: contracts and appointment letters, employee handbooks and policies, fixed-term and consultancy arrangements, non-compete and confidentiality provisions and how far they are actually enforceable in India, ESOP documentation, and secondment and cross-border deputation.",
-          "On the compliance side we run diligence and audits, advise on contract labour and gig arrangements, help set up internal committees under the POSH Act, and manage the sensitive matters — investigations, disciplinary process, performance exits, retrenchment and closure, and the settlements that end them. Where a matter becomes contentious, the same team handles the tribunal work.",
+          "On the compliance side we run diligence and audits, advise on contract labour and gig arrangements, help set up internal committees under the POSH Act, and manage the sensitive cases — investigations, disciplinary process, performance exits, retrenchment and closure, and the settlements that end them. Where a case becomes contentious, the same team handles the tribunal work.",
         ],
       },
       {
@@ -871,14 +871,14 @@ export const practiceAreas: PracticeArea[] = [
           "Registrations and licences, committee constitution and training, registers and returns, and manager briefing — the step most often skipped, and the one that determines whether a policy holds up in an enquiry.",
       },
       {
-        stage: "Sensitive matters",
+        stage: "Sensitive cases",
         detail:
           "Investigation, disciplinary process or exit run to a documented procedure, with the record built as the process goes rather than reconstructed afterwards.",
       },
       {
         stage: "Contentious stage",
         detail:
-          "Conciliation, tribunal proceedings or writ petition, with a settlement assessment kept live throughout — most employment matters are better resolved than tried.",
+          "Conciliation, tribunal proceedings or writ petition, with a settlement assessment kept live throughout — most employment cases are better resolved than tried.",
       },
     ],
     team: [],
@@ -1014,7 +1014,7 @@ export const practiceAreas: PracticeArea[] = [
       {
         stage: "Structuring or remediation",
         detail:
-          "Where the matter is forward-looking, structuring options with the tax cost of each. Where an exposure already exists, the options for regularising it and their consequences.",
+          "Where the case is forward-looking, structuring options with the tax cost of each. Where an exposure already exists, the options for regularising it and their consequences.",
       },
       {
         stage: "Documentation and record",
@@ -1050,7 +1050,7 @@ export const practiceAreas: PracticeArea[] = [
       },
       {
         q: "How long do tax appeals take?",
-        a: "First appeals commonly take one to three years, and appeals before the Income Tax Appellate Tribunal a further two to four, though the position varies by bench and by the age of the matter. This is why we advise on stay of demand at the outset and give a settle-or-litigate view based on the amount at stake rather than on the merits alone.",
+        a: "First appeals commonly take one to three years, and appeals before the Income Tax Appellate Tribunal a further two to four, though the position varies by bench and by the age of the case. This is why we advise on stay of demand at the outset and give a settle-or-litigate view based on the amount at stake rather than on the merits alone.",
       },
       {
         q: "Can input tax credit be denied because our supplier did not pay GST?",
@@ -1077,9 +1077,9 @@ export const practiceAreas: PracticeArea[] = [
       {
         heading: "The protection framework",
         body: [
-          "India's intellectual property regime is statutory and registration-led for most rights: the Trade Marks Act, 1999, the Patents Act, 1970, the Copyright Act, 1957, and the Designs Act, 2000. Registry practice has moved substantially online, and examination and opposition timelines have improved, though contested matters still take years.",
+          "India's intellectual property regime is statutory and registration-led for most rights: the Trade Marks Act, 1999, the Patents Act, 1970, the Copyright Act, 1957, and the Designs Act, 2000. Registry practice has moved substantially online, and examination and opposition timelines have improved, though contested cases still take years.",
           "Two features shape enforcement strategy in India. Passing off protects unregistered marks with goodwill, so a business that never registered is not without a remedy. And courts have historically been willing to grant interim injunctions in clear infringement cases — which means the early application often matters more than the eventual trial.",
-          "The abolition of the Intellectual Property Appellate Board moved appeals to the High Courts, and the specialist IP divisions established at some High Courts have brought more consistent handling of contested matters.",
+          "The abolition of the Intellectual Property Appellate Board moved appeals to the High Courts, and the specialist IP divisions established at some High Courts have brought more consistent handling of contested cases.",
         ],
       },
       {

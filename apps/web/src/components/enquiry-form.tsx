@@ -129,7 +129,7 @@ export function EnquiryForm() {
             htmlFor="matterType"
             className="block text-sm font-medium text-white"
           >
-            Matter type <span className="text-gold-bright">*</span>
+            Case type <span className="text-gold-bright">*</span>
           </label>
           <select
             id="matterType"
@@ -166,7 +166,7 @@ export function EnquiryForm() {
           maxLength={MAX_DESCRIPTION}
           value={description}
           onChange={(event) => setDescription(event.target.value)}
-          placeholder="A few lines on what the matter concerns and any deadline you are working to."
+          placeholder="A few lines on what the case concerns and any deadline you are working to."
           className="mt-2 w-full resize-y rounded-lg border border-transparent bg-paper px-3.5 py-2.5 text-sm text-ink transition placeholder:text-slate-light focus:border-gold"
         />
         <div className="mt-1.5 flex items-start justify-between gap-4">

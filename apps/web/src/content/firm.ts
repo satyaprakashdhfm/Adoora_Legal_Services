@@ -11,7 +11,7 @@ export const firm = {
   shortName: "ADOORA",
   tagline: "Comprehensive Legal Advisory & Representation",
   descriptor:
-    "A full-service law practice advising Indian and international clients on corporate transactions, financing, regulatory matters and dispute resolution.",
+    "A full-service law practice advising Indian and international clients on corporate transactions, financing, regulatory cases and dispute resolution.",
   years: "25+",
   regions: "Andhra Pradesh · Karnataka · Telangana",
   /** The three offices, in the order the utility bar lists them. */
@@ -58,7 +58,7 @@ export const coreValues = {
     {
       title: "Integrity",
       body:
-        "We uphold the highest ethical standards, ensuring transparency, confidentiality and trust in every legal matter.",
+        "We uphold the highest ethical standards, ensuring transparency, confidentiality and trust in every legal case.",
     },
     {
       title: "Excellence",
@@ -202,7 +202,7 @@ export const differentiators = [
        phones, so this keeps the subject in shot either way. */
     focus: "68% 50%",
     body:
-      "Experience in corporate law, mergers and acquisitions, and matters where a great deal is at stake.",
+      "Experience in corporate law, mergers and acquisitions, and cases where a great deal is at stake.",
   },
   {
     title: "Client-First Approach",

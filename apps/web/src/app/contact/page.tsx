@@ -8,7 +8,7 @@ import { firm, offices } from "@/content/firm";
 export const metadata: Metadata = {
   title: "Contact Us",
   description:
-    "Contact ADOORA Legal Services — offices in Hyderabad, Bengaluru and Guntur. Send a brief description of your matter and we will route it to the right person.",
+    "Contact ADOORA Legal Services — offices in Hyderabad, Bengaluru and Guntur. Send a brief description of your case and we will route it to the right person.",
   alternates: { canonical: "/contact" },
 };
 
@@ -22,7 +22,7 @@ export default function ContactPage() {
       <PageHero
         eyebrow="Contact"
         title="Request information"
-        lead="Tell us briefly what the matter concerns and we will point you to the right person in the firm. This form is for information requests; it is not an offer of legal services and sending it does not create a lawyer–client relationship."
+        lead="Tell us briefly what the case concerns and we will point you to the right person in the firm. This form is for information requests; it is not an offer of legal services and sending it does not create a lawyer–client relationship."
         trail={[{ label: "Home", href: "/" }, { label: "Contact Us" }]}
         image
       />

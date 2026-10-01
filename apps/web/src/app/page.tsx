@@ -276,7 +276,7 @@ export default async function Home() {
                 eyebrow="Careers"
                 title="Work with us"
                 tone="dark"
-                lead="We look for lawyers who want responsibility early and are willing to learn a matter properly before forming a view. Roles are listed with the eligibility and the practice they sit in."
+                lead="We look for lawyers who want responsibility early and are willing to learn a case properly before forming a view. Roles are listed with the eligibility and the practice they sit in."
               />
 
               <div className="mt-8 flex flex-col gap-3 sm:flex-row">

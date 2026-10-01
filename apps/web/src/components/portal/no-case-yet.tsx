@@ -12,7 +12,7 @@ export function NoCaseYet() {
     <div className="mx-auto max-w-xl text-center">
       <p className="font-serif text-lg font-semibold text-ink">No case is linked to your account yet</p>
       <p className="mt-2 text-sm leading-relaxed text-slate">
-        Please contact us to set up a meeting with the team. Once the firm takes on your matter, it links the case to this account and its hearing
+        Please contact us to set up a meeting with the team. Once the firm takes on your case, it links it to this account and its hearing
         dates, court orders and documents appear here.
       </p>
       <div className="mt-5 flex flex-wrap justify-center gap-3">

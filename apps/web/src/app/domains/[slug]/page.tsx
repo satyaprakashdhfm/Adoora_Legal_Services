@@ -74,10 +74,10 @@ export default async function IndustryPage(
     },
     {
       id: "matters",
-      label: "Common matters",
+      label: "Common cases",
       panel: (
         <>
-          <h2 className="sr-only">Common matters in this domain</h2>
+          <h2 className="sr-only">Common cases in this domain</h2>
           <ServiceList items={industry.commonMatters} />
         </>
       ),
@@ -93,7 +93,7 @@ export default async function IndustryPage(
           <p className="mt-3 max-w-2xl leading-relaxed text-ink-soft">
             Factual descriptions of the kind of work handled in this sector.
             Client names and identifying details are omitted, and nothing here
-            is a representation about the outcome of any matter.
+            is a representation about the outcome of any case.
           </p>
           <div className="mt-8">
             <FactList items={industry.representativeWork} />
@@ -110,7 +110,7 @@ export default async function IndustryPage(
             Regulators and Forums
           </h2>
           <p className="mt-3 max-w-2xl leading-relaxed text-ink-soft">
-            The authorities, tribunals and courts that matters in this sector
+            The authorities, tribunals and courts that cases in this sector
             most often involve.
           </p>
           <div className="mt-8">

@@ -23,7 +23,7 @@ export const roles: Role[] = [
     slug: "dispute-resolution",
     title: "Associate — Dispute Resolution",
     detail:
-      "Commercial litigation and arbitration. Drafting pleadings and interim applications, briefing and appearing in the district judiciary and tribunals, and assisting on High Court matters.",
+      "Commercial litigation and arbitration. Drafting pleadings and interim applications, briefing and appearing in the district judiciary and tribunals, and assisting on High Court cases.",
   },
 ];
 

@@ -70,7 +70,7 @@ export default async function CareersPage() {
       <PageHero
         eyebrow="Careers"
         title="Work with us"
-        lead="We look for lawyers who want responsibility early and are willing to learn a matter properly before forming a view. Roles are listed with the eligibility and the practice they sit in."
+        lead="We look for lawyers who want responsibility early and are willing to learn a case properly before forming a view. Roles are listed with the eligibility and the practice they sit in."
         trail={[{ label: "Home", href: "/" }, { label: "Careers" }]}
         image
       />
@@ -84,7 +84,7 @@ export default async function CareersPage() {
           />
           <div className="space-y-5 leading-relaxed text-ink-soft">
             <p>
-              Teams are small, which means associates are on matters rather than
+              Teams are small, which means associates are on cases rather than
               adjacent to them. You will be in the client call, not reading the
               note afterwards. That is the main thing we offer, and it is also
               the main demand — the work assumes you will get to grips with the
@@ -97,7 +97,7 @@ export default async function CareersPage() {
               advance that it is how the firm works.
             </p>
             <p>
-              Because practices overlap, you will see how a corporate matter
+              Because practices overlap, you will see how a corporate case
               becomes an employment question or a dispute. Associates who want
               to specialise can, but not before spending time across the areas
               that touch their own.

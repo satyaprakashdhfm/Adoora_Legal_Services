@@ -79,7 +79,7 @@ export const people: Person[] = [
     photo: "person-ganesh-raghavendra",
     spotlight: {
       summary:
-        "Leads the firm's litigation and advisory practice, advising businesses and individuals on commercial disputes, corporate matters and regulatory questions before courts and tribunals across South India.",
+        "Leads the firm's litigation and advisory practice, advising businesses and individuals on commercial disputes, corporate cases and regulatory questions before courts and tribunals across South India.",
       credentials: [
         { icon: "degree", title: "LL.B.", detail: "Law Degree" },
         { icon: "bar", title: "Admitted to the Bar", detail: "India" },
@@ -117,7 +117,7 @@ export const people: Person[] = [
     photo: "person-kondal-rao",
     spotlight: {
       summary:
-        "Advises on dispute resolution and regulatory matters, handling writ petitions, appeals and statutory proceedings for corporate and individual clients.",
+        "Advises on dispute resolution and regulatory cases, handling writ petitions, appeals and statutory proceedings for corporate and individual clients.",
       credentials: [
         { icon: "degree", title: "LL.B.", detail: "Law Degree" },
         { icon: "bar", title: "Admitted to the Bar", detail: "India" },

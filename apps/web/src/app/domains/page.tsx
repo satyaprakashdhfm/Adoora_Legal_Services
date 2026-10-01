@@ -16,7 +16,7 @@ export default function DomainsPage() {
       <PageHero
         eyebrow="Domains"
         title="Industry domains"
-        lead="Sector pages set out the regulatory landscape and transaction patterns a business in that industry actually faces, the matters that follow, and the regulators involved."
+        lead="Sector pages set out the regulatory landscape and transaction patterns a business in that industry actually faces, the cases that follow, and the regulators involved."
         trail={[{ label: "Home", href: "/" }, { label: "Domains" }]}
       />
 
@@ -36,7 +36,7 @@ export default function DomainsPage() {
                 </p>
 
                 <dl className="mt-6 flex-1 border-t border-line pt-5">
-                  <dt className="eyebrow text-slate-light">Common matters</dt>
+                  <dt className="eyebrow text-slate-light">Common cases</dt>
                   <dd className="mt-2.5">
                     <ul className="space-y-1.5">
                       {industry.commonMatters.slice(0, 3).map((matter) => (

@@ -322,7 +322,7 @@ export const insights: Insight[] = [
       { type: "h2", text: "The drafting consequence" },
       {
         type: "p",
-        text: "There is a real cost to including a clause you know to be void. It gives the employer false comfort, it discourages investment in the protections that would have worked, and when the matter reaches a court the presence of an obviously unenforceable restraint does not improve the credibility of the clauses next to it.",
+        text: "There is a real cost to including a clause you know to be void. It gives the employer false comfort, it discourages investment in the protections that would have worked, and when the case reaches a court the presence of an obviously unenforceable restraint does not improve the credibility of the clauses next to it.",
       },
       {
         type: "p",

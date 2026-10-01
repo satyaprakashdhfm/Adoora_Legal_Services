@@ -49,7 +49,7 @@ export const enquirySchema = z.object({
   matterType: z
     .string()
     .trim()
-    .min(2, "Please select the matter type.")
+    .min(2, "Please select the case type.")
     .max(120),
   description: z
     .string()

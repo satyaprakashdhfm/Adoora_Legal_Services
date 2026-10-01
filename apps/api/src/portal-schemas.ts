@@ -124,7 +124,7 @@ const caseFields = {
 };
 
 export const caseCreateSchema = z.object({
-  title: z.string().trim().min(3, "Please give the matter a title.").max(300),
+  title: z.string().trim().min(3, "Please give the case a title.").max(300),
   ...caseFields,
   clientIds: z.array(z.string().uuid()).max(20).optional(),
   assignments: z
@@ -143,11 +143,11 @@ export const caseUpdateSchema = z.object({
  * It lands as INTAKE; the firm confirms the details and takes it on.
  */
 export const clientCaseSchema = z.object({
-  title: z.string().trim().min(3, "Please give the matter a short title.").max(300),
+  title: z.string().trim().min(3, "Please give the case a short title.").max(300),
   summary: z
     .string()
     .trim()
-    .min(20, "Please describe the matter in a sentence or two.")
+    .min(20, "Please describe the case in a sentence or two.")
     .max(5000),
   practiceArea: optionalText(120),
   courtLevel: courtLevel.optional(),
