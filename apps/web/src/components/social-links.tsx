@@ -9,9 +9,9 @@ import { firm } from "@/content/firm";
  * - `drawer`  the mobile menu
  * - `footer`  the full-colour brand marks, under the footer's email address
  *
- * The ribbon and drawer leave out a profile with no address. The footer
- * always shows all three; one without an address yet is drawn but is not
- * a link, so nothing points at a dead page.
+ * All three places always show their marks (the ribbon and drawer
+ * LinkedIn and Instagram, the footer WhatsApp as well); one without an
+ * address yet is drawn but is not a link, so nothing points at a dead page.
  */
 
 type Profile = {
@@ -44,10 +44,8 @@ const ALL_PROFILES: Profile[] = [
   },
 ];
 
-/* The ribbon and drawer: LinkedIn and Instagram, when they have addresses. */
-const PROFILES = ALL_PROFILES.filter(
-  (profile) => profile.name !== "WhatsApp" && profile.href,
-);
+/* The ribbon and drawer: LinkedIn and Instagram. */
+const PROFILES = ALL_PROFILES.filter((profile) => profile.name !== "WhatsApp");
 
 export const hasSocialLinks = PROFILES.length > 0;
 
@@ -82,7 +80,7 @@ export function SocialLinks({ variant }: { variant: "ribbon" | "drawer" | "foote
             {icon}
           </a>
         ) : (
-          <span key={profile.name} className={link} title={`${profile.name} — coming soon`} aria-label={`${profile.name} (coming soon)`} role="img">
+          <span key={profile.name} className={link} title={`${profile.name} (coming soon)`} aria-label={`${profile.name} (coming soon)`} role="img">
             {icon}
           </span>
         );
@@ -153,7 +151,7 @@ function FooterBrandIcons() {
           <span
             key={profile.name}
             role="img"
-            title={`${profile.name} — coming soon`}
+            title={`${profile.name} (coming soon)`}
             aria-label={`${profile.name} (coming soon)`}
             className="inline-flex"
           >
