@@ -15,8 +15,13 @@ const secure = appUrl.startsWith("https://");
  * `__Host-` pins the cookie to exactly this host, over HTTPS, at path `/` —
  * it cannot be set or overwritten by a sibling subdomain. Browsers reject the
  * prefix over plain http, so local development uses the bare name.
+ *
+ * One session cookie per signed-in area (admin, lawyer, client), so the
+ * three never interfere.
  */
-export const SESSION_COOKIE = secure ? "__Host-als_session" : "als_session";
+export function sessionCookie(area: "admin" | "lawyer" | "client"): string {
+  return secure ? `__Host-als_${area}` : `als_${area}`;
+}
 export const OAUTH_COOKIE = secure ? "__Secure-als_oauth" : "als_oauth";
 
 export function readCookie(req: Request, name: string): string | undefined {

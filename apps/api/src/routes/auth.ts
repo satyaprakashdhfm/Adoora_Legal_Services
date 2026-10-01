@@ -10,24 +10,29 @@ import { audit } from "../lib/audit.js";
 import { z } from "zod";
 import { OAUTH_COOKIE, clearCookie, readCookie, setCookie, signValue, verifySignedValue } from "../lib/cookies.js";
 import { beginGoogleSignIn, completeGoogleSignIn, type GoogleIdentity, type OAuthState } from "../auth/google.js";
-import { endSession, startSession } from "../auth/session.js";
+import { endSession, requestArea, staffAllowed, startSession, type Area } from "../auth/session.js";
 import { otpWidgetConfig, samePhone, verifyOtpAccessToken } from "../auth/msg91.js";
 import type { UserRole } from "../../generated/prisma/client.js";
 
 /**
- * Three sign-ins, kept completely apart:
+ * Three sign-ins, completely independent. Each has its own session and
+ * cookie, so one person can be signed in to all three at once:
  *
- *   /admin/login   owners, admins, editors  (?audience=admin)  -> /admin
- *   /lawyer/login  lawyers                  (?audience=lawyer) -> /lawyer
- *   /login         clients                  (the default)      -> /dashboard
+ *   /admin/login   owners, admins, editors        (audience=admin)  -> /admin
+ *   /lawyer/login  lawyers, and owners and admins (audience=lawyer) -> /lawyer
+ *   /login         anyone, as a client            (the default)     -> /dashboard
  *
- * Each page looks only at its own kind of account. The same email may have a
- * firm account and a client account; which one opens depends only on the
- * page used. A lawyer is sent to their own page from the console's, and an
- * owner or admin the other way.
+ * The two firm sign-ins admit only people on the Team page, by their
+ * registered email (Google, or an emailed code) or registered mobile number
+ * (OTP), and only with a role allowed there. In the lawyer area an owner or
+ * admin works as a lawyer: the cases assigned to them.
+ *
+ * The client sign-in is open: a new number or Google account becomes a new
+ * client account, an existing one signs in. The same email or number may
+ * also belong to a firm account; the page used decides which opens.
  *
  * Firm accounts are never created by signing in (bar the ADMIN_EMAILS
- * bootstrap, on the console's page): an admin adds them by email first.
+ * bootstrap, on the console's page): an admin adds them first.
  */
 export const authRouter = Router();
 
@@ -52,7 +57,7 @@ function safeNext(value: unknown): string {
   return value.slice(0, 300);
 }
 
-type Audience = "admin" | "lawyer" | "client";
+type Audience = Area;
 
 function audienceOf(value: unknown): Audience {
   return value === "admin" || value === "staff" ? "admin" : value === "lawyer" ? "lawyer" : "client";
@@ -70,9 +75,6 @@ function landingFor(audience: Audience, next: string): string {
 function loginError(code: string, audience: Audience = "client") {
   return `${appUrl}${LOGIN_PAGE[audience]}?error=${encodeURIComponent(code)}`;
 }
-
-/** Which firm page a staff role signs in at. */
-const staffAudience = (role: UserRole): Audience => (role === "LAWYER" ? "lawyer" : "admin");
 
 authRouter.get("/providers", (_req, res) => {
   res.json({ google: googleEnabled, password: true, otp: otpWidgetConfig() });
@@ -93,6 +95,40 @@ authRouter.post("/otp", loginLimiter, async (req, res) => {
   if (!accessToken || accessToken.length > 4000) throw new HttpError(400, "otp_invalid", "otp_invalid");
 
   const identity = await verifyOtpAccessToken(accessToken);
+  const audience = audienceOf(req.body?.audience);
+
+  // The firm's pages: a registered member of the team, with a role allowed there.
+  if (audience !== "client") {
+    const select = { id: true, email: true, name: true, role: true, isActive: true, avatarUrl: true, phone: true } as const;
+    const matches =
+      identity.kind === "email"
+        ? await prisma.user.findMany({ where: { email: identity.email }, select })
+        : (await prisma.user.findMany({ where: { phone: { not: null } }, select })).filter((u) => samePhone(u.phone, identity.digits));
+    const allowed = matches.filter((u) => staffAllowed(u.role, audience));
+    if (allowed.length === 0) {
+      const code = matches.length ? "not_allowed_here" : "staff_not_registered";
+      throw new HttpError(403, code, code);
+    }
+    if (allowed.length > 1) throw new HttpError(409, "phone_ambiguous", "phone_ambiguous");
+    const user = allowed[0]!;
+    if (!user.isActive) throw new HttpError(403, "account_inactive", "account_inactive");
+
+    await prisma.user.update({ where: { id: user.id }, data: { lastLoginAt: new Date() } });
+    await startSession(req, res, { userId: user.id }, "otp", audience);
+    req.principal = {
+      kind: "staff",
+      id: user.id,
+      email: user.email,
+      name: user.name,
+      role: audience === "lawyer" ? "LAWYER" : user.role,
+      area: audience,
+      avatarUrl: user.avatarUrl,
+      sessionId: null,
+    };
+    await audit(req, "auth.login", "User", user.id, { method: "otp", area: audience });
+    res.json({ redirect: landingFor(audience, safeNext(req.body?.next)) });
+    return;
+  }
 
   // Client accounts only: a firm account on the same number or email is
   // separate and signs in at its own page.
@@ -127,7 +163,7 @@ authRouter.post("/otp", loginLimiter, async (req, res) => {
     data: { lastLoginAt: new Date(), phoneVerifiedAt: new Date() },
     select: { id: true, email: true, name: true, avatarUrl: true },
   });
-  await startSession(req, res, { clientId: updated.id }, "otp");
+  await startSession(req, res, { clientId: updated.id }, "otp", "client");
 
   req.principal = { kind: "client", id: updated.id, email: updated.email, name: updated.name, avatarUrl: updated.avatarUrl, sessionId: "" };
   await audit(req, "auth.login", "Client", updated.id, { method: "otp" });
@@ -177,7 +213,7 @@ authRouter.post("/otp/signup", loginLimiter, async (req, res) => {
     data: { email: input.email, name: input.name, phone: `+91 ${token.phone}`, phoneVerifiedAt: now, lastLoginAt: now },
     select: { id: true, email: true, name: true, avatarUrl: true, phone: true },
   });
-  await startSession(req, res, { clientId: client.id }, "otp");
+  await startSession(req, res, { clientId: client.id }, "otp", "client");
 
   req.principal = { kind: "client", id: client.id, email: client.email, name: client.name, avatarUrl: client.avatarUrl, sessionId: "", phone: client.phone };
   await audit(req, "auth.signup", "Client", client.id, { method: "otp" });
@@ -239,10 +275,8 @@ async function resolveAccount(identity: GoogleIdentity, audience: Audience): Pro
 
   if (staff) {
     if (!staff.isActive) throw new HttpError(403, "account_inactive");
-    // Lawyers at their page, owners/admins/editors at the console's.
-    if (staffAudience(staff.role) !== audience) {
-      throw new HttpError(403, audience === "admin" ? "use_lawyer_login" : "use_admin_login");
-    }
+    // Owners, admins and editors at the console; lawyers, owners and admins at the lawyers' page.
+    if (!staffAllowed(staff.role, audience)) throw new HttpError(403, "not_allowed_here");
     // An email already linked to a different Google account is not taken over.
     if (staff.googleSub && staff.googleSub !== identity.sub) {
       throw new HttpError(403, "account_mismatch");
@@ -341,13 +375,23 @@ authRouter.get("/google/callback", async (req, res) => {
       res,
       account.kind === "staff" ? { userId: account.id } : { clientId: account.id },
       "google",
+      audience,
     );
 
     req.principal =
-      account.kind === "staff"
-        ? { kind: "staff", id: account.id, email: identity.email, name: identity.name, role: account.role, avatarUrl: identity.picture, sessionId: null }
+      account.kind === "staff" && audience !== "client"
+        ? {
+            kind: "staff",
+            id: account.id,
+            email: identity.email,
+            name: identity.name,
+            role: audience === "lawyer" ? "LAWYER" : account.role,
+            area: audience,
+            avatarUrl: identity.picture,
+            sessionId: null,
+          }
         : { kind: "client", id: account.id, email: identity.email, name: identity.name, avatarUrl: identity.picture, sessionId: "" };
-    await audit(req, "auth.login", account.kind === "staff" ? "User" : "Client", account.id, { method: "google" });
+    await audit(req, "auth.login", account.kind === "staff" ? "User" : "Client", account.id, { method: "google", area: audience });
 
     const landing = landingFor(audience, saved.next);
     res.redirect(302, `${appUrl}${landing}`);
@@ -381,21 +425,24 @@ authRouter.post("/password", loginLimiter, async (req, res) => {
     logger.warn({ ip: clientIp(req) }, "Failed password sign-in");
     throw new HttpError(401, "Incorrect email or password.", "invalid_credentials");
   }
+  const area = req.body?.audience === "lawyer" ? "lawyer" : "admin";
+  if (!staffAllowed(user.role, area)) throw new HttpError(403, "This account cannot sign in here.", "not_allowed_here");
 
   await prisma.user.update({ where: { id: user.id }, data: { lastLoginAt: new Date() } });
-  await startSession(req, res, { userId: user.id }, "password");
+  await startSession(req, res, { userId: user.id }, "password", area);
 
-  req.principal = { kind: "staff", id: user.id, email: user.email, name: user.name, role: user.role, avatarUrl: user.avatarUrl, sessionId: null };
-  await audit(req, "auth.login", "User", user.id, { method: "password" });
+  req.principal = { kind: "staff", id: user.id, email: user.email, name: user.name, role: area === "lawyer" ? "LAWYER" : user.role, area, avatarUrl: user.avatarUrl, sessionId: null };
+  await audit(req, "auth.login", "User", user.id, { method: "password", area });
 
-  res.json({ redirect: landingFor(staffAudience(user.role), safeNext(req.body?.next)) });
+  res.json({ redirect: landingFor(area, safeNext(req.body?.next)) });
 });
 
 authRouter.post("/logout", async (req: Request, res) => {
   if (req.principal) {
     await audit(req, "auth.logout", req.principal.kind === "staff" ? "User" : "Client", req.principal.id);
   }
-  await endSession(req, res);
+  // Only the area the request acts in; the other two stay signed in.
+  await endSession(req, res, requestArea(req) ?? "client");
   res.json({ ok: true });
 });
 
@@ -417,6 +464,7 @@ authRouter.get("/me", (req, res) => {
       name: principal.name,
       avatarUrl: principal.avatarUrl,
       role: principal.kind === "staff" ? principal.role : null,
+      area: principal.kind === "staff" ? principal.area : "client",
       phone: principal.kind === "client" ? principal.phone ?? null : null,
     },
   });

@@ -20,12 +20,33 @@ export class ApiError extends Error {
 
 type Body = Record<string, unknown> | unknown[] | FormData | undefined;
 
+/**
+ * The three signed-in areas. Each has its own session cookie on the API, and
+ * every call says which area it acts in (the `x-adoora-area` header), so one
+ * person can be signed in to all three at once.
+ */
+export type Area = "admin" | "lawyer" | "client";
+
+/** The area a path belongs to: the console, the lawyers' workspace, or everything else (clients and the public site). */
+export function areaOfPath(pathname: string): Area {
+  return pathname.startsWith("/admin") ? "admin" : pathname.startsWith("/lawyer") ? "lawyer" : "client";
+}
+
+/** The area of the page in the browser now. */
+export function currentArea(): Area {
+  return typeof window === "undefined" ? "client" : areaOfPath(window.location.pathname);
+}
+
+export const AREA_HEADER = "x-adoora-area";
+
 export async function api<T = unknown>(
   path: string,
-  options: { method?: string; body?: Body; signal?: AbortSignal } = {},
+  options: { method?: string; body?: Body; signal?: AbortSignal; area?: Area } = {},
 ): Promise<T> {
   const { method = "GET", body, signal } = options;
   const isForm = body instanceof FormData;
+  const headers: Record<string, string> = { [AREA_HEADER]: options.area ?? currentArea() };
+  if (body && !isForm) headers["Content-Type"] = "application/json";
 
   let response: Response;
   try {
@@ -33,7 +54,7 @@ export async function api<T = unknown>(
       method,
       signal,
       credentials: "same-origin",
-      headers: body && !isForm ? { "Content-Type": "application/json" } : undefined,
+      headers,
       body: body === undefined ? undefined : isForm ? body : JSON.stringify(body),
       cache: "no-store",
     });
@@ -78,6 +99,8 @@ export function downloadUrl(reference: string, options: { version?: number; inli
   const params = new URLSearchParams();
   if (options.version) params.set("version", String(options.version));
   if (options.inline) params.set("inline", "1");
+  // A plain link cannot carry the area header, so it rides in the query.
+  params.set("area", currentArea());
   const query = params.toString();
   return `/api/documents/${encodeURIComponent(reference)}/download${query ? `?${query}` : ""}`;
 }
@@ -103,6 +126,8 @@ export type SessionUser = {
   name: string;
   avatarUrl: string | null;
   role: StaffRole | null;
+  /** The area this session is for. In "lawyer" an owner or admin has role LAWYER. */
+  area?: Area;
   /** Clients only: their mobile, or null when they have not given one. */
   phone?: string | null;
 };

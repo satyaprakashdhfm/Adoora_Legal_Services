@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { usePathname } from "next/navigation";
 import { Wordmark } from "@/components/brand";
 import { ClientSignIn } from "@/components/portal/client-sign-in";
@@ -8,8 +8,10 @@ import { closeLogin, useLoginDialog } from "@/lib/portal/login-dialog";
 
 /**
  * The sign-in popup, opened by the header's Login button from any page.
- * Mounted once in the root layout. The /login page shows the same form, for
- * links and redirects that arrive there directly.
+ * Mounted once in the root layout. Client sign-in by default (any number or
+ * Gmail; new ones sign up); "Lawyer login" below it turns the same popup
+ * into the lawyers' sign-in (registered numbers and emails only). The admin
+ * console is never offered here: it signs in only at /admin/login.
  */
 export function LoginDialog() {
   const dialog = useLoginDialog();
@@ -39,7 +41,7 @@ export function LoginDialog() {
       onClick={(event) => {
         if (event.target === ref.current) ref.current?.close();
       }}
-      aria-label="Client sign in"
+      aria-label="Sign in"
       className="m-auto w-[calc(100%-2rem)] max-w-md overflow-hidden rounded-2xl bg-paper p-0 text-ink shadow-2xl backdrop:bg-ink-deep/70 backdrop:backdrop-blur-sm"
     >
       <div className="relative flex items-center justify-center bg-[linear-gradient(160deg,var(--color-ink-mid),var(--color-ink-deep))] px-6 py-8">
@@ -56,10 +58,44 @@ export function LoginDialog() {
         </button>
       </div>
       <div className="px-6 pb-7 pt-6 sm:px-8">
-        <h2 className="font-serif text-2xl font-semibold tracking-tight text-ink">Client sign in</h2>
-        <p className="mt-1 mb-5 text-sm text-slate">Follow your cases, documents and queries.</p>
-        <ClientSignIn next={dialog.next} />
+        <SignInBody next={dialog.next} />
       </div>
     </dialog>
+  );
+}
+
+/**
+ * The popup's contents. Mounted only while the popup is open, so every
+ * opening starts on the client sign-in.
+ */
+function SignInBody({ next }: { next: string }) {
+  const [mode, setMode] = useState<"client" | "lawyer">("client");
+
+  return (
+    <>
+      <h2 className="font-serif text-2xl font-semibold tracking-tight text-ink">
+        {mode === "lawyer" ? "Lawyer sign in" : "Client sign in"}
+      </h2>
+      <p className="mt-1 mb-5 text-sm text-slate">
+        {mode === "lawyer"
+          ? "With the mobile number or Gmail registered with the firm."
+          : "Follow your cases, documents and queries."}
+      </p>
+      <ClientSignIn key={mode} next={mode === "lawyer" ? "" : next} audience={mode} />
+      <p className="mt-6 border-t border-line pt-4 text-center text-sm text-slate">
+        {mode === "lawyer" ? (
+          <button type="button" onClick={() => setMode("client")} className="font-semibold text-gold-deep underline underline-offset-4">
+            Back to client sign in
+          </button>
+        ) : (
+          <>
+            Lawyer at ADOORA?{" "}
+            <button type="button" onClick={() => setMode("lawyer")} className="font-semibold text-gold-deep underline underline-offset-4">
+              Lawyer login
+            </button>
+          </>
+        )}
+      </p>
+    </>
   );
 }

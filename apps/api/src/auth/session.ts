@@ -3,8 +3,31 @@ import type { Request, Response } from "express";
 import { prisma } from "../db.js";
 import { sha256 } from "../lib/crypto.js";
 import { clientIp, userAgent } from "../lib/http.js";
-import { SESSION_COOKIE, clearCookie, readCookie, setCookie } from "../lib/cookies.js";
+import { clearCookie, readCookie, sessionCookie, setCookie } from "../lib/cookies.js";
 import type { UserRole } from "../../generated/prisma/client.js";
+
+/**
+ * The three signed-in areas. Each has its own sign-in page, its own session
+ * cookie and its own sessions, so one person (an owner, say) can be signed in
+ * to all three at once in the same browser, and signing out of one leaves
+ * the others alone:
+ *
+ *   admin   /admin    owners, admins, editors
+ *   lawyer  /lawyer   lawyers, and owners/admins for the cases assigned to them
+ *   client  /dashboard  any client account
+ */
+export type Area = "admin" | "lawyer" | "client";
+export const AREAS: readonly Area[] = ["admin", "lawyer", "client"];
+
+/** Which firm roles may open a staff area. Checked at sign-in and on every request. */
+const STAFF_AREA_ROLES: Record<"admin" | "lawyer", readonly UserRole[]> = {
+  admin: ["OWNER", "ADMIN", "EDITOR"],
+  lawyer: ["LAWYER", "OWNER", "ADMIN"],
+};
+
+export function staffAllowed(role: UserRole, area: Area): area is "admin" | "lawyer" {
+  return area !== "client" && STAFF_AREA_ROLES[area].includes(role);
+}
 
 /** Who is making the request. Staff and clients never share a shape. */
 export type Principal =
@@ -13,7 +36,13 @@ export type Principal =
       id: string;
       email: string;
       name: string;
+      /**
+       * The role the request acts with. In the lawyer area this is always
+       * LAWYER, whatever the account's own role, so an owner or admin there
+       * sees exactly what a lawyer sees: the cases assigned to them.
+       */
       role: UserRole;
+      area: "admin" | "lawyer";
       avatarUrl: string | null;
       sessionId: string | null;
     }
@@ -31,7 +60,7 @@ export type Principal =
 /**
  * Session lifetimes. Staff sessions are a working day, because a staff
  * account can open every case it is assigned; clients get a week, because
- * they visit rarely and see only their own matters.
+ * they visit rarely and see only their own cases.
  */
 const STAFF_TTL_SECONDS = 12 * 60 * 60;
 const CLIENT_TTL_SECONDS = 7 * 24 * 60 * 60;
@@ -44,6 +73,7 @@ export async function startSession(
   res: Response,
   who: { userId: string } | { clientId: string },
   method: "google" | "password" | "otp",
+  area: Area,
 ) {
   const token = randomBytes(32).toString("base64url");
   const ttl = "userId" in who ? STAFF_TTL_SECONDS : CLIENT_TTL_SECONDS;
@@ -54,18 +84,19 @@ export async function startSession(
       userId: "userId" in who ? who.userId : null,
       clientId: "clientId" in who ? who.clientId : null,
       method,
+      area,
       expiresAt: new Date(Date.now() + ttl * 1000),
       ipAddress: clientIp(req),
       userAgent: userAgent(req),
     },
   });
 
-  setCookie(res, SESSION_COOKIE, token, { maxAgeSeconds: ttl });
+  setCookie(res, sessionCookie(area), token, { maxAgeSeconds: ttl });
 }
 
-/** Resolves the session cookie to a principal, or null. */
-export async function readSession(req: Request): Promise<Principal | null> {
-  const token = readCookie(req, SESSION_COOKIE);
+/** Resolves an area's session cookie to a principal, or null. */
+export async function readSession(req: Request, area: Area): Promise<Principal | null> {
+  const token = readCookie(req, sessionCookie(area));
   if (!token || token.length > 100) return null;
 
   const session = await prisma.session.findUnique({
@@ -73,7 +104,8 @@ export async function readSession(req: Request): Promise<Principal | null> {
     include: { user: true, client: true },
   });
 
-  if (!session || session.revokedAt || session.expiresAt <= new Date()) return null;
+  // A session opens only the area it was started in.
+  if (!session || session.area !== area || session.revokedAt || session.expiresAt <= new Date()) return null;
 
   if (Date.now() - session.lastSeenAt.getTime() > TOUCH_INTERVAL_MS) {
     // Not awaited: a failed touch must never fail the request.
@@ -83,19 +115,21 @@ export async function readSession(req: Request): Promise<Principal | null> {
   }
 
   if (session.user) {
-    if (!session.user.isActive) return null;
+    // Rechecked every request, so a role change takes effect at once.
+    if (!session.user.isActive || !staffAllowed(session.user.role, area)) return null;
     return {
       kind: "staff",
       id: session.user.id,
       email: session.user.email,
       name: session.user.name,
-      role: session.user.role,
+      role: area === "lawyer" ? "LAWYER" : session.user.role,
+      area,
       avatarUrl: session.user.avatarUrl,
       sessionId: session.id,
     };
   }
 
-  if (session.client) {
+  if (session.client && area === "client") {
     if (!session.client.isActive) return null;
     return {
       kind: "client",
@@ -111,15 +145,16 @@ export async function readSession(req: Request): Promise<Principal | null> {
   return null;
 }
 
-export async function endSession(req: Request, res: Response) {
-  const token = readCookie(req, SESSION_COOKIE);
+/** Signs out of one area only. */
+export async function endSession(req: Request, res: Response, area: Area) {
+  const token = readCookie(req, sessionCookie(area));
   if (token) {
     await prisma.session.updateMany({
       where: { tokenHash: sha256(token), revokedAt: null },
       data: { revokedAt: new Date() },
     });
   }
-  clearCookie(res, SESSION_COOKIE);
+  clearCookie(res, sessionCookie(area));
 }
 
 /** Signs an account out everywhere — used when it is deactivated. */
@@ -128,4 +163,31 @@ export async function revokeAllSessions(who: { userId: string } | { clientId: st
     where: { ...who, revokedAt: null },
     data: { revokedAt: new Date() },
   });
+}
+
+/**
+ * Which area a request acts in. The website's portal pages say so on every
+ * call (the `x-adoora-area` header); a plain link such as a document download
+ * carries `?area=` instead, and failing both the page it came from decides.
+ * A request with none of these acts in no area and is anonymous.
+ */
+export function requestArea(req: Request): Area | null {
+  const header = req.get("x-adoora-area");
+  if (header && (AREAS as readonly string[]).includes(header)) return header as Area;
+
+  const query = typeof req.query.area === "string" ? req.query.area : null;
+  if (query && (AREAS as readonly string[]).includes(query)) return query as Area;
+
+  const referer = req.get("referer");
+  if (referer) {
+    try {
+      const path = new URL(referer).pathname;
+      if (path === "/admin" || path.startsWith("/admin/")) return "admin";
+      if (path === "/lawyer" || path.startsWith("/lawyer/")) return "lawyer";
+      if (path === "/dashboard" || path.startsWith("/dashboard/")) return "client";
+    } catch {
+      // Not a URL: no area.
+    }
+  }
+  return null;
 }

@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { api, ApiError, googleSignInUrl } from "@/lib/portal/api";
+import { api, ApiError, googleSignInUrl, type Area } from "@/lib/portal/api";
 import { refreshSession } from "@/lib/portal/session";
 import { Button, ErrorNote, GoogleMark } from "@/components/portal/ui";
 
@@ -20,7 +20,9 @@ export const SIGN_IN_ERRORS: Record<string, string> = {
   signup_closed: "New accounts are created by the firm. Please contact us and we will set one up for you.",
   use_admin_login: "This account is an owner's or administrator's. Please sign in at the admin console.",
   use_lawyer_login: "Lawyers sign in on the lawyer sign-in page.",
-  not_staff: "This Google account is not a member of the firm. Clients sign in on the client sign-in page.",
+  not_staff: "This email is not registered with the firm. Please ask the firm's administrator to add you, or sign in as a client.",
+  staff_not_registered: "This email or mobile number is not registered with the firm. Please ask the firm's administrator to add it on the Team page.",
+  not_allowed_here: "Your firm account does not have access to this sign-in. Please ask the firm's administrator.",
   otp_unavailable: "Mobile sign-in is not available right now. Please use Google, or try again later.",
   otp_invalid: "That code could not be verified. Please try again.",
   otp_failed: "We could not complete the mobile sign-in. Please try again.",
@@ -337,14 +339,32 @@ function PhoneOtp({
  * - Google creates or opens the account by email; the dashboard then asks
  *   for a mobile number if the account has none (see `PhonePrompt`).
  */
-export function ClientSignIn({ next, initialError = null }: { next: string; initialError?: string | null }) {
+/**
+ * The sign-in form for any of the three areas: a mobile OTP, or Google.
+ *
+ * - client (the default): open to anyone. A new number goes on to two
+ *   details and becomes a new account; a known one signs straight in.
+ * - lawyer, admin: only an email or mobile number registered on the Team
+ *   page, with a role allowed there. Nothing is created.
+ */
+export function ClientSignIn({
+  next,
+  initialError = null,
+  audience = "client",
+}: {
+  next: string;
+  initialError?: string | null;
+  audience?: Area;
+}) {
   const config = useWidgetConfig();
   const [signup, setSignup] = useState<{ token: string; phone: string } | null>(null);
+  const firm = audience !== "client";
 
   async function signIn(accessToken: string) {
     const result = await api<{ redirect?: string; needsSignup?: boolean; signupToken?: string; phone?: string }>("/auth/otp", {
       method: "POST",
-      body: { accessToken, next },
+      body: { accessToken, next, audience },
+      area: audience,
     });
     if (result.needsSignup && result.signupToken) setSignup({ token: result.signupToken, phone: result.phone ?? "" });
     else if (result.redirect) window.location.assign(result.redirect);
@@ -361,7 +381,11 @@ export function ClientSignIn({ next, initialError = null }: { next: string; init
             config={config}
             onVerified={signIn}
             verifyLabel="Verify and continue"
-            hint="We will text you a one-time code. New here? The same code creates your account."
+            hint={
+              firm
+                ? "Use the mobile number registered with the firm. We will text you a one-time code."
+                : "We will text you a one-time code. New here? The same code creates your account."
+            }
           />
           <div className="my-5 flex items-center gap-3 text-xs font-semibold text-slate">
             <span className="h-px flex-1 bg-line" />
@@ -371,7 +395,7 @@ export function ClientSignIn({ next, initialError = null }: { next: string; init
         </>
       )}
       <a
-        href={googleSignInUrl(next)}
+        href={googleSignInUrl(next, audience)}
         className={`flex w-full items-center justify-center gap-3 rounded-lg border border-[#dadce0] bg-white px-5 py-3 text-sm font-semibold text-[#1f1f1f] transition hover:bg-[#f8f9fa] ${config ? "" : "mt-2"}`}
       >
         <GoogleMark className="h-5 w-5" />

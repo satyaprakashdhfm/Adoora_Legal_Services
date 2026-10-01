@@ -145,8 +145,11 @@ model Session {
   user       User?     @relation(fields: [userId], references: [id], onDelete: Cascade)
   clientId   String?   @db.Uuid
   client     Client?   @relation(fields: [clientId], references: [id], onDelete: Cascade)
-  /// "google" or "password".
+  /// "google", "otp" or "password".
   method     String
+  /// "admin", "lawyer" or "client": the one area this session opens. Each
+  /// area has its own cookie, so a person can be signed in to all three.
+  area       String?
   expiresAt  DateTime
   lastSeenAt DateTime  @default(now())
   revokedAt  DateTime?

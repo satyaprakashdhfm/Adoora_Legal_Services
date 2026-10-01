@@ -3,7 +3,7 @@ import jwt from "jsonwebtoken";
 import { appUrl, corsOrigins, jwtSecret } from "../env.js";
 import { prisma } from "../db.js";
 import { HttpError } from "../lib/http.js";
-import { readSession, type Principal } from "../auth/session.js";
+import { readSession, requestArea, type Principal } from "../auth/session.js";
 import type { UserRole } from "../../generated/prisma/client.js";
 
 export type AuthClaims = {
@@ -35,7 +35,8 @@ const SAFE_METHODS = new Set(["GET", "HEAD", "OPTIONS"]);
 /**
  * Identifies the caller, from either credential the API accepts:
  *
- * - the session cookie, used by the website's dashboards; or
+ * - the session cookie of the area the request acts in (admin, lawyer or
+ *   client; see `requestArea`), used by the website's dashboards; or
  * - a bearer token from `POST /api/admin/auth/login`, for scripts and API
  *   clients. The token is still checked against the user row, so a
  *   deactivated account stops working at once rather than at expiry.
@@ -67,11 +68,13 @@ export const authenticate: RequestHandler = async (req, _res, next) => {
         email: user.email,
         name: user.name,
         role: user.role,
+        area: "admin",
         avatarUrl: user.avatarUrl,
         sessionId: null,
       };
     } else {
-      const principal = await readSession(req);
+      const area = requestArea(req);
+      const principal = area ? await readSession(req, area) : null;
 
       if (principal && !SAFE_METHODS.has(req.method)) {
         const origin = req.get("origin");

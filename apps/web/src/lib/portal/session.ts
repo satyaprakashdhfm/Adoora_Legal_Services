@@ -1,78 +1,82 @@
 "use client";
 
-import { useSyncExternalStore } from "react";
+import { useCallback, useSyncExternalStore } from "react";
 import { usePathname } from "next/navigation";
-import { api, type SessionUser } from "@/lib/portal/api";
+import { api, areaOfPath, currentArea, type Area, type SessionUser } from "@/lib/portal/api";
+
+export { areaOfPath, type Area } from "@/lib/portal/api";
 
 /**
  * The signed-in account, shared by the header and the dashboards.
  *
- * One request per page load, however many components ask: the first caller
- * starts it and everyone subscribes to the same result. `undefined` means
- * "not known yet", `null` means "signed out" — the difference matters, so a
- * guard does not bounce someone to the sign-in page before it knows.
+ * There are three areas, each with its own sign-in and its own session, and
+ * one person may be signed in to all three at once:
+ *
+ *   /admin      owners, admins (and editors)          /admin/login
+ *   /lawyer     lawyers, owners and admins: their cases /lawyer/login
+ *   /dashboard  clients (and the public site's header)  /login
+ *
+ * So the state is kept per area, and a page reads the area it belongs to.
+ * One request per area per page load, however many components ask.
+ * `undefined` means "not known yet", `null` means "signed out" — the
+ * difference matters, so a guard does not bounce someone to the sign-in page
+ * before it knows.
  */
 
 type State = SessionUser | null | undefined;
 
-let state: State = undefined;
-let inflight: Promise<void> | null = null;
+const states: Record<Area, State> = { admin: undefined, lawyer: undefined, client: undefined };
+const inflight: Partial<Record<Area, Promise<void>>> = {};
 const listeners = new Set<() => void>();
 
-function emit(next: State) {
-  state = next;
+function emit(area: Area, next: State) {
+  states[area] = next;
   listeners.forEach((listener) => listener());
 }
 
-export function refreshSession(): Promise<void> {
-  inflight ??= api<{ user: SessionUser | null }>("/auth/me")
-    .then((result) => emit(result.user))
-    .catch(() => emit(null))
+export function refreshSession(area: Area = currentArea()): Promise<void> {
+  inflight[area] ??= api<{ user: SessionUser | null }>("/auth/me", { area })
+    .then((result) => emit(area, result.user))
+    .catch(() => emit(area, null))
     .finally(() => {
-      inflight = null;
+      delete inflight[area];
     });
-  return inflight;
+  return inflight[area]!;
 }
 
-function subscribe(listener: () => void) {
-  listeners.add(listener);
-  if (state === undefined) void refreshSession();
-  return () => listeners.delete(listener);
-}
-
+/** The session of the area the current page belongs to. */
 export function useSession(): State {
-  return useSyncExternalStore(
-    subscribe,
-    () => state,
-    () => undefined,
+  const area = areaOfPath(usePathname() ?? "/");
+  const subscribe = useCallback(
+    (listener: () => void) => {
+      listeners.add(listener);
+      if (states[area] === undefined) void refreshSession(area);
+      return () => {
+        listeners.delete(listener);
+      };
+    },
+    [area],
   );
+  return useSyncExternalStore(subscribe, () => states[area], () => undefined);
 }
 
+/** Signs out of this page's area only; the other two stay signed in. */
 export async function signOut() {
-  await api("/auth/logout", { method: "POST" }).catch(() => undefined);
-  emit(null);
+  const area = currentArea();
+  await api("/auth/logout", { method: "POST", area }).catch(() => undefined);
+  emit(area, null);
   // A full load, not a client navigation: nothing from the signed-in
   // session should survive in memory.
-  // eslint-disable-next-line @next/next/no-location-assign-relative-destination
-  window.location.assign("/");
+  window.location.assign(area === "client" ? "/" : LOGIN_PAGE[area]);
 }
 
 export function isFirmAdmin(user: State) {
   return user?.kind === "staff" && (user.role === "OWNER" || user.role === "ADMIN");
 }
 
-/**
- * The three signed-in areas, each with its own sign-in page:
- *
- *   /admin      owners, admins (and editors)   /admin/login
- *   /lawyer     lawyers — their assigned cases /lawyer/login
- *   /dashboard  clients                        /login
- */
-export type Area = "admin" | "lawyer" | "client";
-
 export function areaOf(user: SessionUser): Area {
   if (user.kind === "client") return "client";
-  return user.role === "LAWYER" ? "lawyer" : "admin";
+  return user.area ?? (user.role === "LAWYER" ? "lawyer" : "admin");
 }
 
 const HOMES: Record<Area, string> = { admin: "/admin", lawyer: "/lawyer", client: "/dashboard" };
@@ -84,15 +88,8 @@ export function homeFor(user: SessionUser) {
   return HOMES[areaOf(user)];
 }
 
-/** The area a path belongs to. */
-export function areaOfPath(pathname: string): Area {
-  return pathname.startsWith("/admin") ? "admin" : pathname.startsWith("/lawyer") ? "lawyer" : "client";
-}
-
-/** Sign out, then open another area's sign-in page — for switching accounts. */
+/** Open another area's sign-in page. Sessions are independent, so nothing is signed out. */
 export async function switchTo(area: Area) {
-  await api("/auth/logout", { method: "POST" }).catch(() => undefined);
-  emit(null);
   window.location.assign(LOGIN_PAGE[area]);
 }
 

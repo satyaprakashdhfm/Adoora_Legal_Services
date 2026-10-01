@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { api, ApiError, downloadUrl, type DocumentRecord, type SessionUser } from "@/lib/portal/api";
+import { AREA_HEADER, api, ApiError, currentArea, downloadUrl, type DocumentRecord, type SessionUser } from "@/lib/portal/api";
 import { ACCEPTED_UPLOADS, DOCUMENT_CATEGORIES, labelFor } from "@/lib/portal/legal";
 import { formatBytes, formatDate } from "@/lib/portal/format";
 import { Breadcrumbs, FolderTile, MoveSelect, SIDE_LABEL, SIDES, SourceTag, countSide, filesIn, sideHint, type Folder, type Side } from "@/components/portal/document-folders";
@@ -29,6 +29,7 @@ function uploadWithProgress(url: string, body: FormData, onProgress: (fraction: 
     const xhr = new XMLHttpRequest();
     xhr.open("POST", url);
     xhr.withCredentials = true;
+    xhr.setRequestHeader(AREA_HEADER, currentArea());
     xhr.upload.onprogress = (event) => {
       if (event.lengthComputable) onProgress(event.loaded / event.total);
     };

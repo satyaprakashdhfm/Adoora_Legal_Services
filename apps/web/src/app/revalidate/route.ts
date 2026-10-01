@@ -14,7 +14,8 @@ const ALLOWED = new Set([PEOPLE_TAG, JOBS_TAG, ARTICLES_TAG]);
 
 export async function POST(request: Request) {
   const me = await fetch(`${apiOrigin}/api/auth/me`, {
-    headers: { cookie: request.headers.get("cookie") ?? "" },
+    // The console's session: the admin area's cookie.
+    headers: { cookie: request.headers.get("cookie") ?? "", "x-adoora-area": "admin" },
     cache: "no-store",
   })
     .then((response) => (response.ok ? response.json() : null))
