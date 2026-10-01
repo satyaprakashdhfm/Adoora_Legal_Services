@@ -17,6 +17,7 @@ import { queriesRouter } from "./routes/queries.js";
 import { websiteAdminRouter, websitePublicRouter } from "./routes/website.js";
 import { articlesAdminRouter, articlesPublicRouter } from "./routes/articles.js";
 import { leadsRouter } from "./routes/leads.js";
+import { docsRouter } from "./routes/docs.js";
 import { authenticate } from "./middleware/auth.js";
 import { errorHandler, notFound } from "./middleware/error.js";
 
@@ -68,6 +69,8 @@ export function createApp() {
   // Articles are the one large JSON body (a long piece runs to ~50 KB); the
   // parser that runs first wins, so this sits before the general one.
   app.use("/api/admin/articles", express.json({ limit: "512kb" }));
+  // A documentation chapter can run long.
+  app.use("/api/admin/docs", express.json({ limit: "512kb" }));
   app.use(express.json({ limit: "64kb" }));
 
   app.use(
@@ -108,6 +111,7 @@ export function createApp() {
   app.use("/api/admin", websiteAdminRouter);
   app.use("/api/admin", articlesAdminRouter);
   app.use("/api/admin", leadsRouter);
+  app.use("/api/admin", docsRouter);
   app.use("/api/cases", casesRouter);
   app.use("/api/documents", documentsRouter);
   app.use("/api/queries", queriesRouter);

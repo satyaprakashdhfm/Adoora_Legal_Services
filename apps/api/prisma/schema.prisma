@@ -947,3 +947,34 @@ model TrendingLead {
   @@index([status, score])
   @@index([lastSeenAt])
 }
+
+/// The firm's own documentation, read and edited in the admin console
+/// (Documentation). One row per chapter; the body is Markdown, whose ## and
+/// ### headings make the chapter's contents in the sidebar.
+model DocPage {
+  id            String   @id @default(uuid()) @db.Uuid
+  title         String
+  body          String   @db.Text
+  /// Order in the sidebar, lowest first.
+  position      Int
+  /// Who saved it last. Kept as plain values, not a relation, so removing a
+  /// person never touches the documentation.
+  updatedById   String?  @db.Uuid
+  updatedByName String?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@index([position])
+}
+
+/// Pictures used in the documentation (screenshots), referenced from a
+/// page's Markdown as `docimg:<id>`. Served only to signed-in console users.
+model DocImage {
+  id        String   @id @default(uuid()) @db.Uuid
+  /// For the bundled screenshots: the name they were seeded under.
+  name      String?
+  data      Bytes
+  mimeType  String
+  bytes     Int
+  createdAt DateTime @default(now())
+}
