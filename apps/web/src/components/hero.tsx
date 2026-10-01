@@ -270,16 +270,18 @@ export function Hero({ images }: { images: (string | null)[] }) {
         return (
           <div
             key={slide.eyebrow}
-            className={`hero-copy absolute inset-x-0 bottom-0 bg-gradient-to-t from-ink-deep via-ink-deep/90 to-transparent pb-24 pt-12 ${
+            className={`hero-copy absolute inset-x-0 bottom-0 bg-gradient-to-t from-ink-deep via-ink-deep/90 to-transparent pb-24 pt-12 lg:pb-6 ${
               isActive ? "opacity-100" : "pointer-events-none opacity-0"
             }`}
             aria-hidden={!isActive}
           >
             {/* The eyebrow takes its own row, so the heading and the description
-                start on the same line, left and right. */}
+                start on the same line, left and right. On wide screens the band
+                sits low: the slide controls fill the space under the heading
+                (reserved by its bottom padding), level with the buttons. */}
             <div className="container-page grid gap-y-3 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)] lg:items-start lg:gap-x-12">
               <p className="eyebrow text-gold-bright lg:col-span-2">{slide.eyebrow}</p>
-              <h1 className="font-serif text-2xl font-semibold leading-[1.15] tracking-tight text-balance sm:text-3xl xl:text-[2.4rem]">
+              <h1 className="font-serif text-2xl font-semibold leading-[1.15] tracking-tight text-balance sm:text-3xl lg:pb-[4.5rem] xl:text-[2.4rem]">
                 {titleCase(slide.heading)}{" "}
                 <span className="text-gold-bright">{titleCase(slide.accent)}</span>
               </h1>

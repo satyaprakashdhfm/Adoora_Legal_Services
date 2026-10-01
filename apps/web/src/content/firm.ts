@@ -28,9 +28,9 @@ export const firm = {
 
   /* Short lines used as pull quotes on the home page. They describe how the
      firm works; they are not claims about outcomes — see `legal.ts`. */
-  heroQuote: "Sound legal counsel for a stronger tomorrow.",
+  heroQuote: "Legal Expertise. Trusted Guidance. Lasting Protection.",
   ctaQuote: "Practical advice. Lasting impact.",
-  signOff: "Sound counsel for what's next.",
+  signOff: "Legal Expertise. Trusted Guidance. Lasting Protection.",
 
   /**
    * Social profiles, shown in the header's top ribbon, the mobile menu and

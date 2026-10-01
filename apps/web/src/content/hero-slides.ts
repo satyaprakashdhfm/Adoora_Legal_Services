@@ -45,8 +45,8 @@ export type HeroSlide = {
 export const heroSlides: HeroSlide[] = [
   {
     eyebrow: "Our people",
-    heading: "The people behind",
-    accent: "your case",
+    heading: "Experienced minds,",
+    accent: "trusted counsels",
     body: "Our advocates bring courtroom experience and commercial judgement to every case, working as one team across Hyderabad, Bengaluru and Guntur.",
     href: "/about#people",
     cta: "Meet the team",

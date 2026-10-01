@@ -84,23 +84,30 @@ export default async function CareersPage() {
           />
           <div className="space-y-5 leading-relaxed text-ink-soft">
             <p>
-              Teams are small, which means associates are on cases rather than
-              adjacent to them. You will be in the client call, not reading the
-              note afterwards. That is the main thing we offer, and it is also
-              the main demand — the work assumes you will get to grips with the
-              commercial context, not only the legal question.
+              We work in small, closely connected teams, which means lawyers are
+              involved in the work rather than being on the sidelines. You will
+              work directly with senior lawyers, participate in client
+              discussions, contribute to drafts and research, and be involved in
+              the thinking behind a case.
             </p>
             <p>
-              We are candid in review. Drafting comes back marked up, and the
-              reasoning behind each change is explained. Lawyers who want to
-              improve quickly tend to find that useful; it is worth knowing in
-              advance that it is how the firm works.
+              The work is varied, and so is the responsibility. You may be
+              working through a legal question, preparing a draft, discussing an
+              issue with a client, or helping shape the approach to a case. We
+              expect you to understand the facts properly, ask questions, and
+              think through the reasoning before forming a view.
             </p>
             <p>
-              Because practices overlap, you will see how a corporate case
-              becomes an employment question or a dispute. Associates who want
-              to specialise can, but not before spending time across the areas
-              that touch their own.
+              We are direct about feedback. Work is reviewed closely, and you
+              will understand not just what needs to change, but why. We believe
+              that is one of the best ways to develop good legal judgment, and we
+              expect lawyers to be open to feedback and willing to keep learning.
+            </p>
+            <p>
+              As you grow, the expectation is that you take on more
+              responsibility and become increasingly independent in your work.
+              The aim is not simply to give you more work, but to give you the
+              opportunity to become a thoughtful, capable lawyer.
             </p>
           </div>
         </div>
