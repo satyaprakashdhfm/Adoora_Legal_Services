@@ -62,13 +62,4 @@ export const footerNav = [
       { label: "Contact Us", href: "/contact" },
     ],
   },
-  {
-    heading: "Legal",
-    links: [
-      { label: "Disclaimer", href: "/disclaimer" },
-      { label: "Privacy Policy", href: "/privacy" },
-      { label: "Cookie Policy", href: "/cookies" },
-      { label: "Terms of Use", href: "/terms" },
-    ],
-  },
 ];
