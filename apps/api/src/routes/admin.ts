@@ -14,6 +14,7 @@ import {
 import { z } from "zod";
 import { addSampleData, removeSampleData, sampleDataStatus } from "../demo/sample-data.js";
 import { audit } from "../lib/audit.js";
+import { adminEmails } from "../env.js";
 import { revokeAllSessions } from "../auth/session.js";
 import {
   applicationPatchSchema,
@@ -280,6 +281,25 @@ function assertCanManageRole(actorRole: UserRole, ...roles: (UserRole | undefine
     throw new HttpError(403, "Only an owner can manage owner and admin accounts.", "forbidden");
   }
 }
+
+/**
+ * GET /api/admin/access — the emails in the server's ADMIN_EMAILS setting.
+ * Each becomes an Owner the first time it signs in at /admin/login with
+ * Google; `role` is the account it already has, if any. (Everyone else's
+ * access is their role on the Team page.)
+ */
+adminRouter.get("/access", requireAuth, requireRole("OWNER", "ADMIN"), async (_req, res) => {
+  const accounts = await prisma.user.findMany({
+    where: { email: { in: adminEmails, mode: "insensitive" } },
+    select: { email: true, role: true, isActive: true },
+  });
+  res.json({
+    serverEmails: adminEmails.map((email) => {
+      const account = accounts.find((a) => a.email.toLowerCase() === email);
+      return { email, role: account?.role ?? null, isActive: account?.isActive ?? null };
+    }),
+  });
+});
 
 adminRouter.get(
   "/users",
