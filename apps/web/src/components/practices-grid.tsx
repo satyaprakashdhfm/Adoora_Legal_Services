@@ -96,9 +96,11 @@ function Card({ item }: { item: PracticeGridItem }) {
         />
       </div>
 
+      {/* A solid disc: a see-through one let the photograph's own lines show
+          through the arrow on phones, where the blur is not always drawn. */}
       <span
         aria-hidden="true"
-        className="mt-4 flex h-8 w-8 items-center justify-center rounded-full border border-gold-bright/70 bg-ink-deep/60 text-gold-bright backdrop-blur-sm transition duration-300 group-hover:border-gold-bright group-hover:bg-gold-bright group-hover:text-ink-deep"
+        className="mt-4 flex h-8 w-8 items-center justify-center rounded-full border border-gold-bright/70 bg-ink-deep text-gold-bright shadow-sm shadow-black/30 transition duration-300 group-hover:border-gold-bright group-hover:bg-gold-bright group-hover:text-ink-deep"
       >
         <ArrowIcon className="h-3.5 w-3.5 transition duration-300 group-hover:translate-x-0.5" />
       </span>

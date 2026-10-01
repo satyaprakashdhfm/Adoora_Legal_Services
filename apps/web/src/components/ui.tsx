@@ -432,10 +432,12 @@ export function PageHero({
           header copy fits in 24rem, so every band is the same height and
           the statue sits in the same place — article pages, with a cover
           beside the title, are the one exception and grow to fit. */}
+      {/* On phones the frame is centred on the statue instead (about 70%
+          across the picture), made wide enough to still reach both edges. */}
       {heroBg && (
         <div
           aria-hidden="true"
-          className="absolute inset-y-0 right-0 h-full"
+          className="absolute inset-y-0 right-0 h-full max-sm:left-1/2 max-sm:right-auto max-sm:min-w-[170vw] max-sm:-translate-x-[70%]"
           style={{ aspectRatio: heroSize ? `${heroSize.width} / ${heroSize.height}` : "8 / 3" }}
         >
           <Image src={heroBg} alt="" fill priority quality={90} sizes="1100px" className="object-cover object-right" />

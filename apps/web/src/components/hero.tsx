@@ -3,11 +3,26 @@
 import { titleCase } from "@/lib/title-case";
 import Image from "next/image";
 import Link from "next/link";
-import { useEffect, useRef, useState, type PointerEvent as ReactPointerEvent } from "react";
+import { useEffect, useMemo, useRef, useState, useSyncExternalStore, type PointerEvent as ReactPointerEvent } from "react";
 import { heroSlides } from "@/content/hero-slides";
 import { firm } from "@/content/firm";
 
 const ROTATE_MS = 7000;
+
+/* Phones show the team photograph a few people at a time (see `peopleCount`). */
+const PHONE_QUERY = "(max-width: 639px)";
+const PEOPLE_PER_FRAME = 3;
+
+function subscribePhone(onChange: () => void) {
+  const query = window.matchMedia(PHONE_QUERY);
+  query.addEventListener("change", onChange);
+  return () => query.removeEventListener("change", onChange);
+}
+
+/** How many frames a slide takes on a phone: one, or one per three people. */
+function phoneFrames(slide: (typeof heroSlides)[number]) {
+  return slide.people && slide.peopleCount ? Math.max(1, Math.ceil(slide.peopleCount / PEOPLE_PER_FRAME)) : 1;
+}
 
 /** Right-pointing arrow used on the primary calls to action, and on the
     prev/next controls (flipped for prev). */
@@ -32,7 +47,19 @@ function Arrow({ className = "" }: { className?: string }) {
  * navy gradient carries that slide on its own.
  */
 export function Hero({ images }: { images: (string | null)[] }) {
-  const [index, setIndex] = useState(0);
+  /* The slideshow steps through `steps`: one per slide, except that on a
+     phone the team slide becomes one step per frame of three people. */
+  const phone = useSyncExternalStore(subscribePhone, () => window.matchMedia(PHONE_QUERY).matches, () => false);
+  const steps = useMemo(
+    () =>
+      heroSlides.flatMap((slide, slideIndex) =>
+        Array.from({ length: phone ? phoneFrames(slide) : 1 }, (_, frame) => ({ slideIndex, frame })),
+      ),
+    [phone],
+  );
+  const [position, setPosition] = useState(0);
+  const step = steps[position % steps.length];
+  const index = step.slideIndex;
   /* The slideshow holds while the cursor is over the hero, while keyboard
      focus is inside it, and during a drag. Kept apart so ending one (a
      click's pointer-up, say) cannot restart the rotation while another
@@ -56,20 +83,20 @@ export function Hero({ images }: { images: (string | null)[] }) {
     if (paused || reducedMotion.current) return;
 
     const timer = window.setInterval(
-      () => setIndex((current) => (current + 1) % heroSlides.length),
+      () => setPosition((current) => ((current % steps.length) + 1) % steps.length),
       ROTATE_MS,
     );
     return () => window.clearInterval(timer);
-  }, [paused]);
+  }, [paused, steps.length]);
 
   const active = heroSlides[index];
 
   function goNext() {
-    setIndex((current) => (current + 1) % heroSlides.length);
+    setPosition((current) => ((current % steps.length) + 1) % steps.length);
   }
 
   function goPrev() {
-    setIndex((current) => (current - 1 + heroSlides.length) % heroSlides.length);
+    setPosition((current) => ((current % steps.length) - 1 + steps.length) % steps.length);
   }
 
   /*
@@ -167,6 +194,15 @@ export function Hero({ images }: { images: (string | null)[] }) {
                 slideIndex === index ? "opacity-100" : "opacity-0"
               }`}
             >
+              {slide.people && phoneFrames(slide) > 1 && (
+                /* Phones: the row three people at a time, one frame per step. */
+                <PhoneFrames
+                  src={src}
+                  aspect={slide.imageAspect ?? "2125 / 740"}
+                  frames={phoneFrames(slide)}
+                  active={slideIndex === index ? step.frame : -1}
+                />
+              )}
               {slide.people ? (
                 /* The team at its own proportions across the full width,
                    pinned to the top: nobody is cut off at the sides, and the
@@ -176,7 +212,9 @@ export function Hero({ images }: { images: (string | null)[] }) {
                    phone the whole row would be a thin strip, so there it fills
                    the top half instead, centred on the middle of the team. */
                 <div
-                  className="absolute inset-x-0 top-0 h-1/2 sm:h-auto sm:[aspect-ratio:var(--hero-aspect)]"
+                  className={`absolute inset-x-0 top-0 h-1/2 sm:h-auto sm:[aspect-ratio:var(--hero-aspect)] ${
+                    phoneFrames(slide) > 1 ? "max-sm:hidden" : ""
+                  }`}
                   style={{ "--hero-aspect": slide.imageAspect } as React.CSSProperties}
                 >
                   {image}
@@ -325,15 +363,17 @@ export function Hero({ images }: { images: (string | null)[] }) {
               <Arrow className="-scale-x-100" />
             </button>
           )}
-          {heroSlides.map((slide, slideIndex) => {
-            const isActive = slideIndex === index;
+          {steps.map((item, stepIndex) => {
+            const slide = heroSlides[item.slideIndex];
+            const isActive = stepIndex === position % steps.length;
+            const frames = phone ? phoneFrames(slide) : 1;
 
             return (
               <button
-                key={slide.eyebrow}
+                key={`${slide.eyebrow}-${item.frame}`}
                 type="button"
-                onClick={() => setIndex(slideIndex)}
-                aria-label={`Show slide ${slideIndex + 1}: ${slide.eyebrow}`}
+                onClick={() => setPosition(stepIndex)}
+                aria-label={`Show slide ${stepIndex + 1}: ${slide.eyebrow}${frames > 1 ? ` (${item.frame + 1} of ${frames})` : ""}`}
                 aria-current={isActive}
                 className="group flex h-11 items-center"
               >
@@ -341,8 +381,8 @@ export function Hero({ images }: { images: (string | null)[] }) {
                   aria-hidden="true"
                   className={`block h-0.5 transition-all ${
                     isActive
-                      ? "w-12 bg-gold"
-                      : "w-8 bg-white/25 group-hover:bg-white/50"
+                      ? "w-8 bg-gold sm:w-12"
+                      : "w-5 bg-white/25 group-hover:bg-white/50 sm:w-8"
                   }`}
                 />
               </button>
@@ -364,5 +404,40 @@ export function Hero({ images }: { images: (string | null)[] }) {
         </div>
       </div>
     </section>
+  );
+}
+
+/**
+ * The team photograph on a phone, in frames of three people: each frame is
+ * a box with the proportions of its share of the row, full width at the top
+ * of the hero, with the photograph positioned so only that share shows.
+ * The frames cross-fade like the slides do.
+ */
+function PhoneFrames({ src, aspect, frames, active }: { src: string; aspect: string; frames: number; active: number }) {
+  const [width, height] = aspect.split("/").map((part) => Number(part.trim()));
+  const frameAspect = `${width / frames} / ${height}`;
+
+  return (
+    <div className="sm:hidden">
+      {Array.from({ length: frames }, (_, frame) => (
+        <div
+          key={frame}
+          className={`hero-slide absolute inset-x-0 top-0 ${frame === active ? "opacity-100" : "opacity-0"}`}
+          style={{ aspectRatio: frameAspect }}
+        >
+          <Image
+            src={src}
+            alt=""
+            fill
+            sizes={`${frames * 100}vw`}
+            className="object-cover"
+            style={{ objectPosition: `${(frame / (frames - 1)) * 100}% top` }}
+            loading="eager"
+            fetchPriority="low"
+          />
+          <div className="absolute inset-x-0 bottom-0 h-1/4 bg-gradient-to-t from-ink-mid to-transparent" />
+        </div>
+      ))}
+    </div>
   );
 }

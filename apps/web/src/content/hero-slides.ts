@@ -36,6 +36,12 @@ export type HeroSlide = {
    * is shown whole at these proportions, so update it with the picture.
    */
   imageAspect?: string;
+  /**
+   * How many people stand in the team photograph. On phones the row is too
+   * small to show whole, so it is shown three people at a time, one slide
+   * each (six people: two slides). Update it with the picture.
+   */
+  peopleCount?: number;
 };
 
 /**
@@ -54,6 +60,7 @@ export const heroSlides: HeroSlide[] = [
     imageNote: "The team: six lawyers in a row, head-and-shoulders, against a navy backdrop.",
     people: true,
     imageAspect: "2125 / 740",
+    peopleCount: 6,
   },
   {
     eyebrow: "Pro bono",
