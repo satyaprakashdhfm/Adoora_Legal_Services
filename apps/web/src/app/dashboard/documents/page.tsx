@@ -11,6 +11,7 @@ export default function DashboardDocuments() {
   const client = user.kind === "client";
   const base = usePortalBase();
   const [refresh, setRefresh] = useState(0);
+  const [openCase, setOpenCase] = useState<string | null>(null);
 
   return (
     <div className="space-y-6">
@@ -21,9 +22,9 @@ export default function DashboardDocuments() {
             ? "A folder for each of your cases, with what you have sent to the firm and what your lawyers have shared with you."
             : "A folder for each case assigned to you, plus the firm's Team shared folder."
         }
-        actions={<UploadButton onUploaded={() => setRefresh((n) => n + 1)} />}
+        actions={<UploadButton caseReference={openCase} onUploaded={() => setRefresh((n) => n + 1)} />}
       />
-      <DocumentDrive key={refresh} basePath={base} staff={!client} />
+      <DocumentDrive key={refresh} basePath={base} staff={!client} onCaseChange={setOpenCase} />
     </div>
   );
 }

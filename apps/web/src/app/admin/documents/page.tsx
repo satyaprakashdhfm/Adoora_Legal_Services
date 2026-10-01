@@ -13,15 +13,16 @@ import { PageTitle } from "@/components/portal/ui";
  */
 export default function AdminDocuments() {
   const [refresh, setRefresh] = useState(0);
+  const [openCase, setOpenCase] = useState<string | null>(null);
   return (
     <div className="space-y-6">
       <PageTitle
         eyebrow="Documents"
         title="Documents"
         description="Open a case folder to see what the client sent, what the firm has shared with them, and internal papers. Upload into any folder, or to a case from here."
-        actions={<UploadButton onUploaded={() => setRefresh((n) => n + 1)} />}
+        actions={<UploadButton caseReference={openCase} onUploaded={() => setRefresh((n) => n + 1)} />}
       />
-      <DocumentDrive key={refresh} basePath="/admin" staff />
+      <DocumentDrive key={refresh} basePath="/admin" staff onCaseChange={setOpenCase} />
     </div>
   );
 }

@@ -113,8 +113,22 @@ function FileList({
   );
 }
 
-export function DocumentDrive({ basePath, staff }: { basePath: string; staff: boolean }) {
+export function DocumentDrive({
+  basePath,
+  staff,
+  onCaseChange,
+}: {
+  basePath: string;
+  staff: boolean;
+  /** Told which case folder is open (null outside one), so the page's own
+      "Upload document" button starts on that case. */
+  onCaseChange?: (reference: string | null) => void;
+}) {
   const [location, setLocation] = useState<Location>({ kind: "root" });
+  const openCaseReference = location.kind === "case" ? location.case.reference : null;
+  useEffect(() => {
+    onCaseChange?.(openCaseReference);
+  }, [openCaseReference, onCaseChange]);
   const [query, setQuery] = useState("");
   const [cases, setCases] = useState<CaseSummary[] | null>(null);
   const [teamCount, setTeamCount] = useState<number | null>(null);

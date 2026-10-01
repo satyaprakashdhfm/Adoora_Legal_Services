@@ -10,16 +10,25 @@ import { Button, EmptyState, Field, Modal, Select, Spinner } from "@/components/
 
 /**
  * "Upload document" from anywhere in the dashboard, not only from inside a
- * case. Every document belongs to a case — that is what decides who can see
- * it — so the dialog asks which matter it is for first. A client with no
- * matter yet is sent to open one.
+ * case. Every document belongs to a case (that is what decides who can see
+ * it), so the dialog asks which case it is for first. A client with no case
+ * yet is told to contact the firm.
+ *
+ * The case is chosen afresh every time the dialog opens: the one the page is
+ * showing (`caseReference`, e.g. the case folder open in the Documents
+ * drive), else the only case if there is just one, else nothing, so the
+ * person has to pick. It never carries over an earlier choice, which once
+ * sent files to a case other than the one on screen.
  */
 export function UploadButton({
   onUploaded,
   tone = "primary",
+  caseReference = null,
 }: {
   onUploaded?: () => void;
   tone?: "primary" | "secondary";
+  /** The case the page is currently showing, if any. */
+  caseReference?: string | null;
 }) {
   const user = useUser();
   const client = user.kind === "client";
@@ -35,14 +44,25 @@ export function UploadButton({
         // Closed matters are not somewhere new papers should go.
         const usable = page.data.filter((c) => !["CLOSED", "WITHDRAWN"].includes(c.status));
         setCases(usable);
-        setReference((current) => current || usable[0]?.reference || "");
+        setReference(
+          caseReference && usable.some((c) => c.reference === caseReference)
+            ? caseReference
+            : usable.length === 1
+              ? usable[0].reference
+              : "",
+        );
       })
       .catch(() => setCases([]));
-  }, [open]);
+  }, [open, caseReference]);
+
+  /* Only ever upload to a case that is in the list on screen. */
+  const target = cases?.find((c) => c.reference === reference) ?? null;
 
   function close() {
     setOpen(false);
     setDone(null);
+    setCases(null);
+    setReference("");
   }
 
   return (
@@ -80,22 +100,26 @@ export function UploadButton({
               <Select
                 value={reference}
                 onChange={(e) => setReference(e.target.value)}
+                placeholder="Choose a case"
+                promptOnly
                 options={cases.map((c) => ({
                   value: c.reference,
                   label: [c.title, courtNumber(c), c.reference].filter(Boolean).join(" · "),
                 }))}
               />
             </Field>
-            {reference && (
+            {target ? (
               <UploadForm
-                key={reference}
-                action={`/api/cases/${encodeURIComponent(reference)}/documents`}
+                key={target.reference}
+                action={`/api/cases/${encodeURIComponent(target.reference)}/documents`}
                 staff={!client}
                 onDone={() => {
-                  setDone(`Added to ${cases.find((c) => c.reference === reference)?.title ?? reference}`);
+                  setDone(`Added to ${target.title} (${target.reference})`);
                   onUploaded?.();
                 }}
               />
+            ) : (
+              <p className="text-sm text-slate">Choose the case this document belongs to.</p>
             )}
           </div>
         )}
