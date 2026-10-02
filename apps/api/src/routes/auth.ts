@@ -14,6 +14,7 @@ import { endSession, requestArea, staffAllowed, startSession, type Area } from "
 import { otpWidgetConfig, samePhone, verifyOtpAccessToken, type VerifiedIdentity } from "../auth/msg91.js";
 import type { UserRole } from "../../generated/prisma/client.js";
 import { PASSWORD_SIGN_IN, SHARED_CASE, TEMP_ACCOUNTS } from "../auth/temp-accounts.js";
+import { findSharedCase } from "../demo/sample-data.js";
 
 /**
  * Three sign-ins, completely independent. Each has its own session and
@@ -228,7 +229,7 @@ authRouter.post("/login", loginLimiter, async (req, res) => {
     throw new HttpError(401, "That username or password is not right.", "invalid_credentials");
   }
 
-  const shared = await prisma.case.findUnique({ where: { reference: SHARED_CASE }, select: { id: true } });
+  const shared = await findSharedCase(SHARED_CASE);
 
   if (account.area === "client") {
     const client =

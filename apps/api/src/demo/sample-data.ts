@@ -783,3 +783,59 @@ export async function trimSampleDataOnStartup() {
     logger.error({ err: error }, "Sample data could not be trimmed");
   }
 }
+
+// ---------------------------------------------------------------------------
+// The one case everyone tries the portals on
+// ---------------------------------------------------------------------------
+
+/** Prof. P.L. Vishweshwer Rao v. The State of Telangana, found by its title (spellings vary). */
+const ONE_CASE_TITLE = { OR: [{ title: { contains: "vishweshw", mode: "insensitive" as const } }, { title: { contains: "vishwesw", mode: "insensitive" as const } }] };
+const TEST_LAWYER_EMAILS = ["info@adooralegalservices.com", "pradeep.test@adoora.invalid", "surya.test@adoora.invalid", "anshu.test@adoora.invalid"];
+const TEST_CLIENT = { email: "kiran.client@adoora.invalid", name: "Kiran Kumar (Demo client)" };
+
+/** The case the temporary logins are put on: the Vishweshwer Rao case, or the sample case if it is not there. */
+export async function findSharedCase(fallbackReference: string) {
+  const matches = await prisma.case.findMany({ where: ONE_CASE_TITLE, select: { id: true }, take: 2 });
+  if (matches.length === 1) return matches[0]!;
+  return prisma.case.findUnique({ where: { reference: fallbackReference }, select: { id: true } });
+}
+
+/**
+ * Once, at start-up: keeps only the Vishweshwer Rao case. Every other case
+ * goes, with its files and queries. The test lawyers (Ganesh, Pradeep
+ * Reddy, Surya, Anshu Sharma) and the demo client (Kiran Kumar) are put on
+ * it. Nothing happens until exactly one case with that title exists, so it
+ * waits for the case to be added and never guesses between two.
+ */
+export async function keepOnlyOneCaseOnStartup() {
+  try {
+    if (await prisma.auditLog.findFirst({ where: { action: "cases.kept_one" }, select: { id: true } })) return;
+    const matches = await prisma.case.findMany({ where: ONE_CASE_TITLE, select: { id: true, reference: true, title: true } });
+    if (matches.length !== 1) {
+      logger.warn({ found: matches.length }, "Keep one case: need exactly one Vishweshwer Rao case; nothing changed");
+      return;
+    }
+    const kept = matches[0]!;
+
+    const dropped = (await prisma.case.findMany({ where: { id: { not: kept.id } }, select: { id: true } })).map((c) => c.id);
+    const versions = await prisma.documentVersion.findMany({ where: { document: { caseId: { in: dropped } } }, select: { storageKey: true } });
+    await prisma.courtOrder.updateMany({ where: { caseId: { in: dropped } }, data: { documentId: null } });
+    await prisma.document.deleteMany({ where: { caseId: { in: dropped } } });
+    await prisma.clientQuery.deleteMany({ where: { caseId: { in: dropped } } });
+    await prisma.case.deleteMany({ where: { id: { in: dropped } } });
+    for (const version of versions) await storage.delete(version.storageKey).catch(() => undefined);
+
+    const lawyers = await prisma.user.findMany({ where: { email: { in: TEST_LAWYER_EMAILS } }, select: { id: true } });
+    await prisma.caseAssignment.createMany({ data: lawyers.map((u) => ({ caseId: kept.id, userId: u.id, role: "ASSOCIATE" as const })), skipDuplicates: true });
+    const client =
+      (await prisma.client.findUnique({ where: { email: TEST_CLIENT.email }, select: { id: true } })) ??
+      (await prisma.client.create({ data: { ...TEST_CLIENT, emailVerifiedAt: new Date() }, select: { id: true } }));
+    await prisma.caseClient.createMany({ data: [{ caseId: kept.id, clientId: client.id }], skipDuplicates: true });
+
+    const summary = { kept: kept.reference, title: kept.title, deletedCases: dropped.length, files: versions.length, lawyers: lawyers.length };
+    await prisma.auditLog.create({ data: { action: "cases.kept_one", entityType: "Case", entityId: kept.id, metadata: summary } });
+    logger.info(summary, "Kept only the Vishweshwer Rao case");
+  } catch (error) {
+    logger.error({ err: error }, "Keep one case failed");
+  }
+}
