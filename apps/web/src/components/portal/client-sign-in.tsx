@@ -196,17 +196,22 @@ const primaryButton =
 /**
  * Proves a mobile number with MSG91's OTP widget: number, Send OTP, code,
  * Verify. Hands the widget's access token to `onVerified`, whose errors
- * (ApiError codes) are shown here. Used for signing in, signing up and
- * adding a number after a Google sign-in.
+ * (ApiError codes) are shown here. Used for signing in and for adding a
+ * number after a Google sign-in.
+ *
+ * `beforeSend` runs before any code is texted; if it throws (an unregistered
+ * number, say), its error is shown and nothing is sent.
  */
 function PhoneOtp({
   config,
   onVerified,
+  beforeSend,
   verifyLabel,
   hint,
 }: {
   config: WidgetConfig;
   onVerified: (accessToken: string) => Promise<void>;
+  beforeSend?: (phone: string) => Promise<void>;
   verifyLabel: string;
   hint: string;
 }) {
@@ -249,6 +254,14 @@ function PhoneOtp({
     setBusy(true);
     setError(null);
     setDetail(null);
+    if (!resend && beforeSend) {
+      try {
+        await beforeSend(phone);
+      } catch (cause) {
+        fail(errorCode(cause));
+        return;
+      }
+    }
     try {
       await ensureWidget(widget, config);
     } catch {
@@ -372,21 +385,16 @@ function PhoneOtp({
 }
 
 /**
- * The client sign-in and sign-up: mobile OTP first, Google underneath. Used
- * by the popup the header's Login button opens, and by the /login page.
+ * The sign-in form for any of the three areas: a mobile OTP, or Google. Used
+ * by the popup the header's Login button opens and by the three login pages.
  *
- * - A known number signs straight in.
- * - A new number asks for name and email, then creates the account.
- * - Google creates or opens the account by email; the dashboard then asks
- *   for a mobile number if the account has none (see `PhonePrompt`).
- */
-/**
- * The sign-in form for any of the three areas: a mobile OTP, or Google.
- *
- * - client (the default): open to anyone. A new number goes on to two
- *   details and becomes a new account; a known one signs straight in.
+ * - client (the default): only clients the firm has added (Admin console →
+ *   Clients). Anyone else is sent to the Contact page.
  * - lawyer, admin: only an email or mobile number registered on the Team
- *   page, with a role allowed there. Nothing is created.
+ *   page, with a role allowed there.
+ *
+ * Nothing is created by signing in, and a number that would not sign in is
+ * refused before any code is texted to it.
  */
 export function ClientSignIn({
   next,
@@ -399,6 +407,11 @@ export function ClientSignIn({
 }) {
   const config = useWidgetConfig();
   const firm = audience !== "client";
+
+  /** Only a number registered for this page is sent a code. */
+  async function checkNumber(phone: string) {
+    await api("/auth/otp/check", { method: "POST", body: { phone, audience }, area: audience });
+  }
 
   async function signIn(accessToken: string) {
     const result = await api<{ redirect?: string }>("/auth/otp", {
@@ -417,6 +430,7 @@ export function ClientSignIn({
           <PhoneOtp
             config={config}
             onVerified={signIn}
+            beforeSend={checkNumber}
             verifyLabel="Verify and continue"
             hint={
               firm

@@ -43,6 +43,10 @@
   --color-sand: #e4c8b6;
   --color-sand-line: #d3b29c;
   --color-sand-wash: #f6ece4;
+  /* The home page "Our people" slide: paper brown, deepening to the right
+     where the High Court drawing sits faintly behind the text. */
+  --color-parchment: #f3e7d9;
+  --color-parchment-deep: #e7d3be;
   /* A lighter navy than ink-mid, for a feature card among pale ones. */
   --color-navy-soft: #243d6e;
   /* The pale ground of the inner-page header photograph (hero-bg-other),

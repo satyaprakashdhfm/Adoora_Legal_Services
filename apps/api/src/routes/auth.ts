@@ -11,7 +11,7 @@ import { z } from "zod";
 import { OAUTH_COOKIE, clearCookie, readCookie, setCookie, signValue, verifySignedValue } from "../lib/cookies.js";
 import { beginGoogleSignIn, completeGoogleSignIn, type GoogleIdentity, type OAuthState } from "../auth/google.js";
 import { endSession, requestArea, staffAllowed, startSession, type Area } from "../auth/session.js";
-import { otpWidgetConfig, samePhone, verifyOtpAccessToken } from "../auth/msg91.js";
+import { otpWidgetConfig, samePhone, verifyOtpAccessToken, type VerifiedIdentity } from "../auth/msg91.js";
 import type { UserRole } from "../../generated/prisma/client.js";
 
 /**
@@ -27,12 +27,13 @@ import type { UserRole } from "../../generated/prisma/client.js";
  * (OTP), and only with a role allowed there. In the lawyer area an owner or
  * admin works as a lawyer: the cases assigned to them.
  *
- * The client sign-in is open: a new number or Google account becomes a new
- * client account, an existing one signs in. The same email or number may
- * also belong to a firm account; the page used decides which opens.
+ * The client sign-in admits only clients the firm has added. The same email
+ * or number may also belong to a firm account; the page used decides which
+ * opens.
  *
- * Firm accounts are never created by signing in (bar the ADMIN_EMAILS
- * bootstrap, on the console's page): an admin adds them first.
+ * No account is created by signing in (bar the ADMIN_EMAILS bootstrap, on
+ * the console's page): an admin adds it first. A mobile number is checked
+ * (`/otp/check`) before the page has MSG91 text it a code.
  */
 export const authRouter = Router();
 
@@ -80,15 +81,85 @@ authRouter.get("/providers", (_req, res) => {
   res.json({ google: googleEnabled, password: true, otp: otpWidgetConfig() });
 });
 
+/** A sign-in check: generous enough for typos, tight enough that numbers cannot be trawled. */
+const checkLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  limit: 20,
+  standardHeaders: "draft-7",
+  legacyHeaders: false,
+  message: {
+    error: "rate_limited",
+    message: "Too many sign-in attempts. Please try again shortly.",
+  },
+});
+
 /**
- * POST /api/auth/otp — client sign-in with a mobile number, verified by the
- * MSG91 widget. The body carries the widget's access token, which MSG91
- * confirms server to server before anything else happens.
+ * The team member a verified number or email signs in on a firm page: on the
+ * Team page, with a role allowed there, and active. Throws the reason otherwise.
+ */
+async function staffForOtp(identity: VerifiedIdentity, audience: "admin" | "lawyer") {
+  const select = { id: true, email: true, name: true, role: true, isActive: true, avatarUrl: true, phone: true } as const;
+  const matches =
+    identity.kind === "email"
+      ? await prisma.user.findMany({ where: { email: identity.email }, select })
+      : (await prisma.user.findMany({ where: { phone: { not: null } }, select })).filter((u) => samePhone(u.phone, identity.digits));
+  const allowed = matches.filter((u) => staffAllowed(u.role, audience));
+  if (allowed.length === 0) {
+    const code = matches.length ? "not_allowed_here" : "staff_not_registered";
+    throw new HttpError(403, code, code);
+  }
+  if (allowed.length > 1) throw new HttpError(409, "phone_ambiguous", "phone_ambiguous");
+  const user = allowed[0]!;
+  if (!user.isActive) throw new HttpError(403, "account_inactive", "account_inactive");
+  return user;
+}
+
+/**
+ * The client account a verified number or email opens, matched on what the
+ * firm holds for them. A firm account on the same number or email is separate
+ * and signs in at its own page.
+ */
+async function clientForOtp(identity: VerifiedIdentity) {
+  const matches =
+    identity.kind === "email"
+      ? await prisma.client.findMany({ where: { email: identity.email }, select: { id: true, isActive: true } })
+      : (await prisma.client.findMany({ where: { phone: { not: null } }, select: { id: true, phone: true, isActive: true } })).filter((c) =>
+          samePhone(c.phone, identity.digits),
+        );
+
+  // Clients are added by the firm (Admin console → Clients); a number or
+  // email it has not added opens nothing, and the page sends them to Contact.
+  if (matches.length === 0) throw new HttpError(403, "client_not_registered", "client_not_registered");
+  // Two clients on one number: the firm has to say which account it is.
+  if (matches.length > 1) throw new HttpError(409, "phone_ambiguous", "phone_ambiguous");
+  const client = matches[0]!;
+  if (!client.isActive) throw new HttpError(403, "account_inactive", "account_inactive");
+  return client;
+}
+
+/**
+ * POST /api/auth/otp/check — before the page asks MSG91 to text a code: would
+ * this number sign in here? An unregistered number gets the same refusal the
+ * sign-in would give, and no SMS is sent. `{ ok: true }` otherwise.
+ */
+authRouter.post("/otp/check", checkLimiter, async (req, res) => {
+  const digits = typeof req.body?.phone === "string" ? req.body.phone.replace(/\D/g, "").slice(-10) : "";
+  if (!/^[6-9]\d{9}$/.test(digits)) throw new HttpError(400, "otp_send_failed", "otp_send_failed");
+  const identity: VerifiedIdentity = { kind: "phone", digits };
+  const audience = audienceOf(req.body?.audience);
+  if (audience === "client") await clientForOtp(identity);
+  else await staffForOtp(identity, audience);
+  res.json({ ok: true });
+});
+
+/**
+ * POST /api/auth/otp — sign-in with a mobile number, verified by the MSG91
+ * widget. The body carries the widget's access token, which MSG91 confirms
+ * server to server before anything else happens.
  *
- * Only existing client accounts are admitted, matched on the phone number
- * the firm holds for them: a Client needs an email, which a phone number
- * alone cannot give, so new clients still join through Google. A number that
- * belongs to a firm account is sent to the console's sign-in instead.
+ * Only accounts the firm has added are admitted: on the firm's pages a
+ * member of the team, on the clients' page a client. The page has already
+ * asked `/otp/check`; the verified number is checked again here.
  */
 authRouter.post("/otp", loginLimiter, async (req, res) => {
   const accessToken = typeof req.body?.accessToken === "string" ? req.body.accessToken.trim() : "";
@@ -97,22 +168,8 @@ authRouter.post("/otp", loginLimiter, async (req, res) => {
   const identity = await verifyOtpAccessToken(accessToken);
   const audience = audienceOf(req.body?.audience);
 
-  // The firm's pages: a registered member of the team, with a role allowed there.
   if (audience !== "client") {
-    const select = { id: true, email: true, name: true, role: true, isActive: true, avatarUrl: true, phone: true } as const;
-    const matches =
-      identity.kind === "email"
-        ? await prisma.user.findMany({ where: { email: identity.email }, select })
-        : (await prisma.user.findMany({ where: { phone: { not: null } }, select })).filter((u) => samePhone(u.phone, identity.digits));
-    const allowed = matches.filter((u) => staffAllowed(u.role, audience));
-    if (allowed.length === 0) {
-      const code = matches.length ? "not_allowed_here" : "staff_not_registered";
-      throw new HttpError(403, code, code);
-    }
-    if (allowed.length > 1) throw new HttpError(409, "phone_ambiguous", "phone_ambiguous");
-    const user = allowed[0]!;
-    if (!user.isActive) throw new HttpError(403, "account_inactive", "account_inactive");
-
+    const user = await staffForOtp(identity, audience);
     await prisma.user.update({ where: { id: user.id }, data: { lastLoginAt: new Date() } });
     await startSession(req, res, { userId: user.id }, "otp", audience);
     req.principal = {
@@ -130,23 +187,7 @@ authRouter.post("/otp", loginLimiter, async (req, res) => {
     return;
   }
 
-  // Client accounts only: a firm account on the same number or email is
-  // separate and signs in at its own page.
-  const matches =
-    identity.kind === "email"
-      ? await prisma.client.findMany({ where: { email: identity.email }, select: { id: true, isActive: true } })
-      : (await prisma.client.findMany({ where: { phone: { not: null } }, select: { id: true, phone: true, isActive: true } })).filter((c) =>
-          samePhone(c.phone, identity.digits),
-        );
-
-  // Clients are added by the firm (Admin console → Clients); a number or
-  // email it has not added opens nothing, and the page sends them to Contact.
-  if (matches.length === 0) throw new HttpError(403, "client_not_registered", "client_not_registered");
-  // Two clients on one number: the firm has to say which account it is.
-  if (matches.length > 1) throw new HttpError(409, "phone_ambiguous", "phone_ambiguous");
-  const client = matches[0]!;
-  if (!client.isActive) throw new HttpError(403, "account_inactive", "account_inactive");
-
+  const client = await clientForOtp(identity);
   const updated = await prisma.client.update({
     where: { id: client.id },
     data: { lastLoginAt: new Date(), phoneVerifiedAt: new Date() },

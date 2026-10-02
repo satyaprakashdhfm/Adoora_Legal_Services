@@ -116,7 +116,7 @@ export default async function Home() {
 
       {/* The team, below the about band — the profiles marked for the home
           page in the admin console, one per slide, auto-advancing. */}
-      <section className="border-y border-sand-line/60 bg-sand-wash">
+      <section className="border-y border-line bg-paper-warm">
         <div className="container-page pb-8 pt-6 sm:pb-10 sm:pt-7">
           <div className="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
             <SectionHeading

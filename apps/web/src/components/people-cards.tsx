@@ -4,9 +4,10 @@ import { publicImage } from "@/lib/public-image";
 import { AutoSlider } from "@/components/auto-slider";
 
 /**
- * The home page's "Our people" band: one person per slide, portrait on the
- * left over soft beige blocks, and on the right the name, designation,
- * a short introduction and four credentials.
+ * The home page's "Our people" band: one person per slide on a paper-brown
+ * card, with the Telangana High Court drawn faintly behind the text. Portrait
+ * on the left inside a thin gold arc; on the right the name, designation, a
+ * short introduction and four credentials.
  * Slides advance on their own and pause under the cursor (`auto-slider.tsx`).
  *
  * The portrait falls back to a silhouette on navy until `photo` is set on the
@@ -28,14 +29,21 @@ function PersonSlide({ person }: { person: Person }) {
   const photo = person.photoUrl ?? (person.photo ? publicImage(person.photo) : null);
 
   return (
-    <article className="grid h-full items-center gap-6 rounded-2xl border border-sand-line bg-sand px-5 py-6 shadow-sm sm:px-8 md:grid-cols-[minmax(0,5fr)_minmax(0,7fr)] md:gap-10 lg:gap-14 lg:px-14 lg:py-9">
-      {/* Portrait, with soft beige blocks set off behind it — one low on the
-          left, one high on the right, a short one under its foot. */}
+    <article className="relative isolate grid h-full items-center gap-6 overflow-hidden rounded-2xl border border-sand-line bg-[linear-gradient(100deg,var(--color-parchment)_0%,var(--color-parchment)_42%,var(--color-parchment-deep)_100%)] px-5 py-6 shadow-[0_18px_40px_-24px_rgb(110_72_40/0.45)] sm:px-8 md:grid-cols-[minmax(0,5fr)_minmax(0,7fr)] md:gap-10 lg:gap-14 lg:px-14 lg:py-9">
+      {/* The High Court, faint, low on the right behind the text. */}
+      <Image
+        src="/hc-telangana.png"
+        alt=""
+        width={434}
+        height={260}
+        className="pointer-events-none absolute -bottom-3 -right-6 -z-10 w-[85%] max-w-[40rem] select-none opacity-[0.11] md:w-[58%]"
+      />
+
+      {/* Portrait inside a thin gold arc, with a soft gold disc behind its top corner. */}
       <div className="relative mx-auto w-full max-w-[12rem] sm:max-w-[17rem] lg:max-w-[21rem]">
-        <div aria-hidden="true" className="absolute -left-5 bottom-[3%] top-[22%] w-2/5 rounded-md bg-gold/20 sm:-left-8" />
-        <div aria-hidden="true" className="absolute -right-4 top-[4%] h-[82%] w-1/3 rounded-md bg-gold/20 sm:-right-6" />
-        <div aria-hidden="true" className="absolute -bottom-3 right-[5%] h-6 w-1/4 rounded-md bg-gold/15" />
-        <div className="relative aspect-[15/16] overflow-hidden rounded-md shadow-lg shadow-ink/15">
+        <div aria-hidden="true" className="absolute -left-[18%] -top-[14%] aspect-square w-[78%] rounded-full bg-gold/10" />
+        <div aria-hidden="true" className="absolute -left-[12%] -top-[9%] aspect-square w-[124%] rounded-full border border-gold/45" />
+        <div className="relative aspect-[15/16] overflow-hidden rounded-xl shadow-[0_20px_40px_-18px_rgb(30_40_70/0.45)]">
           {photo ? (
             <Image
               src={photo}
@@ -84,15 +92,15 @@ function SpotlightBody({ spotlight }: { spotlight: Spotlight }) {
         {spotlight.summary}
       </p>
 
-      {/* Two by two: icon in a beige disc with its text beside it, stacked
+      {/* Two by two: icon in a sand disc with its text beside it, stacked
           and centred on phones. */}
-      <ul className="mt-6 grid grid-cols-2 gap-x-6 gap-y-5 border-t border-line pt-6">
+      <ul className="mt-6 grid grid-cols-2 gap-x-6 gap-y-5 border-t border-sand-line/70 pt-6">
         {spotlight.credentials.map((item) => (
           <li
             key={item.title}
             className="flex flex-col items-center gap-2 text-center md:flex-row md:gap-3 md:text-left"
           >
-            <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-paper/55">
+            <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full border border-sand-line/60 bg-sand/45">
               <CredentialIcon name={item.icon} />
             </span>
             <span>

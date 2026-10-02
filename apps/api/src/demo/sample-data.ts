@@ -159,6 +159,25 @@ export async function removeSampleData() {
  * is an extra, real client account to link the first two sample cases to —
  * for example your own, to see the client dashboard with data in it.
  */
+/**
+ * The firm's people trying the portals out (migration 20261009000000_test_access):
+ * the first two sample cases on their client accounts, the first three
+ * assigned to them in the lawyer workspace. The migration links them when the
+ * sample data is already there; this does it when it is added later.
+ */
+const TEST_ACCESS_EMAILS = ["info@adooralegalservices.com", "surya.test@adoora.invalid", "pradeep.test@adoora.invalid", "anshu.test@adoora.invalid"];
+
+async function linkTestAccess() {
+  const cases = await prisma.case.findMany({ where: { reference: { in: [...CASE_REFS.slice(0, 3)] } }, select: { id: true, reference: true } });
+  const [clients, users] = await Promise.all([
+    prisma.client.findMany({ where: { email: { in: TEST_ACCESS_EMAILS } }, select: { id: true } }),
+    prisma.user.findMany({ where: { email: { in: TEST_ACCESS_EMAILS } }, select: { id: true } }),
+  ]);
+  const forClients = cases.filter((c) => c.reference !== CASE_REFS[2]);
+  await prisma.caseClient.createMany({ data: clients.flatMap((cl) => forClients.map((c) => ({ caseId: c.id, clientId: cl.id }))), skipDuplicates: true });
+  await prisma.caseAssignment.createMany({ data: users.flatMap((u) => cases.map((c) => ({ caseId: c.id, userId: u.id }))), skipDuplicates: true });
+}
+
 export async function addSampleData(clientEmail?: string) {
   const existing = await prisma.case.count({ where: { reference: { in: [...CASE_REFS] } } });
   if (existing === CASE_REFS.length) {
@@ -638,6 +657,8 @@ export async function addSampleData(clientEmail?: string) {
     { reference: "APP-DEMX04", name: "Divya Teja (Demo)", email: demoEmail("divya.t"), phone: "+91 90000 30004", role: jobs[1]!.title, experience: "3rd-year law student", enrolment: null, message: "Third-year student with moot court experience; available from December.", status: "NEW" as const, createdAt: day(-1) },
   ];
   for (const a of applications) await prisma.careerApplication.create({ data: { ...a, consent: true, consentAt } });
+
+  await linkTestAccess();
 
   const summary = { cases: CASE_REFS.length, documents: files.length + 1, clients: 4, lawyers: 3, queries: queries.length, enquiries: enquiries.length, jobs: jobs.length, applications: applications.length };
   logger.info(summary, "Sample data added");

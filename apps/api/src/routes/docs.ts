@@ -32,11 +32,27 @@ const pageSelect = { id: true, title: true, body: true, position: true, updatedA
  * to a guide that already exists. A guide seeded later already has them.
  * `add` takes the chapter from `DEFAULT_DOC_PAGES` by its title.
  */
-const GUIDE_UPDATES: { key: string; remove?: string[]; add?: { title: string; after: string }[] }[] = [
+const GUIDE_UPDATES: {
+  key: string;
+  remove?: string[];
+  add?: { title: string; after: string }[];
+  /** A sentence changed in a chapter; skipped where the firm has already reworded it. */
+  replace?: { title: string; from: string; to: string }[];
+}[] = [
   {
     key: "2026-10-step-by-step",
     remove: ["What it costs to run", "Behind the scenes, in plain terms", "Where things are kept in the project", "Current limits and next steps"],
     add: [{ title: "Step by step: jobs, articles, enquiries and more", after: "Cases and the court's own record" }],
+  },
+  {
+    key: "2026-10-otp-precheck",
+    replace: [
+      {
+        title: "Signing in",
+        from: "and is taken to the Contact page.",
+        to: "and is taken to the Contact page. A mobile number nobody has added is refused straight away, before any code is texted to it, on all three sign-in pages.",
+      },
+    ],
   },
 ];
 
@@ -111,6 +127,12 @@ async function syncGuide() {
           await tx.docPage.updateMany({ where: { position: { gte: position } }, data: { position: { increment: 1 } } });
           const ids = await bundledImages(tx, [page.body]);
           await tx.docPage.create({ data: { title, body: withImages(page.body, ids), position, updatedByName: "ADOORA guide" } });
+        }
+        for (const { title, from, to } of update.replace ?? []) {
+          const page = await tx.docPage.findFirst({ where: { title }, select: { id: true, body: true } });
+          if (page?.body.includes(from) && !page.body.includes(to)) {
+            await tx.docPage.update({ where: { id: page.id }, data: { body: page.body.replace(from, to) } });
+          }
         }
         await tx.docGuideUpdate.create({ data: { key: update.key } });
       }
