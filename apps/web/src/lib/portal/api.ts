@@ -175,6 +175,9 @@ export type VersionSummary = {
   createdAt: string;
 };
 
+/** A case's three folders: Internal (firm only), From client, From court. */
+export type DocumentSection = "INTERNAL" | "CLIENT" | "COURT";
+
 export type DocumentRecord = {
   id: string;
   reference: string;
@@ -182,11 +185,13 @@ export type DocumentRecord = {
   category: string;
   description: string | null;
   visibility: Visibility;
+  /** Which of the case's three folders; visibility follows it. */
+  section?: DocumentSection;
   currentVersion: number;
   uploadedByClientId?: string | null;
-  /** Saved from the court's website — tagged "From the court". */
+  /** Saved from the court's website (tagged "Court website"); in From court. */
   fromCourt?: boolean;
-  /** A folder the firm made inside Case files / Internal; null = the top. */
+  /** A folder the firm made inside one of the three; null = the top. */
   folderId?: string | null;
   createdAt: string;
   updatedAt: string;
@@ -281,7 +286,7 @@ export type CourtOrder = {
   orderType: string;
   fileName: string;
   summary: string | null;
-  /** The saved PDF (Documents → From the court), once fetched. */
+  /** The saved PDF (Documents → From court), once fetched. */
   documentReference: string | null;
 };
 

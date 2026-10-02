@@ -1,36 +1,37 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { api, downloadUrl, type CaseSummary, type DocumentRecord, type Page } from "@/lib/portal/api";
 import { DOCUMENT_CATEGORIES, labelFor } from "@/lib/portal/legal";
 import { courtNumber, formatBytes, formatDate } from "@/lib/portal/format";
+import { Breadcrumbs, FolderTile, MoveSelect, SourceTag, countSection, filesIn, sectionHint, sectionLabel, sectionTone, sectionsFor, type Folder, type Section } from "@/components/portal/document-folders";
+import { CaseUpload, type Place } from "@/components/portal/upload-button";
 import { UploadForm } from "@/components/portal/documents-panel";
-import { Breadcrumbs, FolderTile, MoveSelect, SIDE_LABEL, SIDES, SourceTag, sideHint, type Folder, type Side } from "@/components/portal/document-folders";
 import { Button, Card, EmptyState, ErrorNote, Input, Modal, Spinner, StatusBadge } from "@/components/portal/ui";
 
 /**
  * Documents as a drive: folders, not one long list.
  *
  *   Documents
- *   ├── Team shared              staff only — templates, precedents, forms
+ *   ├── Internal                 staff only: the whole firm's templates,
+ *   │                            precedents and forms
  *   └── <one folder per case>
- *       ├── Case files           everything the client sees: court orders,
- *       │   └── <firm folders>   their own uploads, what the firm shares
- *       └── Internal             the firm's working papers
- *           └── <firm folders>
+ *       ├── Internal             the firm's working papers
+ *       ├── From client          what the client sends, what the firm shares
+ *       └── From court           court orders and filed papers
+ *           (each with any folders the firm made inside it)
  *
- * The two sides are the documents' visibility, so the admin console, a
- * lawyer's dashboard and the client's dashboard all read the same files.
- * The firm can make folders inside either side; a file moved into one takes
- * that side's visibility. Clients see only Case files. Each file is tagged
- * with where it came from: the court, the client or the firm.
+ * The admin console, a lawyer's dashboard and the client's dashboard all
+ * read the same files. Clients see From court and their Client files. A
+ * file moved into a folder takes that folder's section. Each file is tagged
+ * with where it came from: the court's website, the client or the firm.
  */
 
 type Location =
   | { kind: "root" }
   | { kind: "team" }
-  | { kind: "case"; case: CaseSummary; side?: Side; folder?: Folder };
+  | { kind: "case"; case: CaseSummary; side?: Section; folder?: Folder };
 
 /** A file-type badge from the extension: PDF, DOC, XLS, IMG, TXT. */
 function FileIcon({ filename }: { filename?: string }) {
@@ -56,7 +57,7 @@ function FileList({
     return <EmptyState title="No files here yet" />;
   }
 
-  async function move(doc: DocumentRecord, body: { folderId: string | null; visibility?: Side }) {
+  async function move(doc: DocumentRecord, body: { folderId: string | null; section?: Section }) {
     setError(null);
     try {
       await api(`/documents/${encodeURIComponent(doc.reference)}`, { method: "PATCH", body });
@@ -116,19 +117,24 @@ function FileList({
 export function DocumentDrive({
   basePath,
   staff,
-  onCaseChange,
+  onPlaceChange,
 }: {
   basePath: string;
   staff: boolean;
-  /** Told which case folder is open (null outside one), so the page's own
-      "Upload document" button starts on that case. */
-  onCaseChange?: (reference: string | null) => void;
+  /** Told where the drive is (case, section, folder), so the page's own
+      "Upload document" button starts there. */
+  onPlaceChange?: (place: Place | null) => void;
 }) {
   const [location, setLocation] = useState<Location>({ kind: "root" });
   const openCaseReference = location.kind === "case" ? location.case.reference : null;
+  const openSection = location.kind === "case" ? location.side : undefined;
+  const openFolderId = location.kind === "case" ? location.folder?.id : undefined;
+  const inTeam = location.kind === "team";
   useEffect(() => {
-    onCaseChange?.(openCaseReference);
-  }, [openCaseReference, onCaseChange]);
+    onPlaceChange?.(
+      inTeam ? { caseReference: null, team: true } : openCaseReference ? { caseReference: openCaseReference, section: openSection, folderId: openFolderId } : null,
+    );
+  }, [inTeam, openCaseReference, openSection, openFolderId, onPlaceChange]);
   const [query, setQuery] = useState("");
   const [cases, setCases] = useState<CaseSummary[] | null>(null);
   const [teamCount, setTeamCount] = useState<number | null>(null);
@@ -195,15 +201,8 @@ export function DocumentDrive({
   }, [caseRef, version]);
   const caseFolders = folders && folders.key === `${caseRef}#${version}` ? folders.list : null;
 
-  const bySide = useMemo(() => {
-    const groups: Record<Side, DocumentRecord[]> = { CLIENT: [], INTERNAL: [] };
-    for (const doc of files ?? []) groups[doc.visibility === "INTERNAL" ? "INTERNAL" : "CLIENT"].push(doc);
-    return groups;
-  }, [files]);
-
   const goRoot = () => setLocation({ kind: "root" });
-  // A client has one side only, so a case opens straight into it.
-  const openCase = (c: CaseSummary) => setLocation(staff ? { kind: "case", case: c } : { kind: "case", case: c, side: "CLIENT" });
+  const openCase = (c: CaseSummary) => setLocation({ kind: "case", case: c });
 
   const [naming, setNaming] = useState<{ mode: "new" | "rename"; name: string } | null>(null);
   const [folderError, setFolderError] = useState<string | null>(null);
@@ -215,7 +214,7 @@ export function DocumentDrive({
     const base = `/cases/${encodeURIComponent(location.case.reference)}/folders`;
     try {
       if (naming.mode === "new") {
-        await api<Folder>(base, { method: "POST", body: { name: naming.name, visibility: location.side } });
+        await api<Folder>(base, { method: "POST", body: { name: naming.name, section: location.side } });
       } else if (location.folder) {
         const renamed = await api<Folder>(`${base}/${location.folder.id}`, { method: "PATCH", body: { name: naming.name } });
         setLocation({ ...location, folder: renamed });
@@ -229,33 +228,21 @@ export function DocumentDrive({
 
   async function deleteFolder() {
     if (location.kind !== "case" || !location.folder) return;
-    if (!window.confirm(`Delete the folder “${location.folder.name}”? Its files are kept and move up to ${SIDE_LABEL[location.folder.visibility]}.`)) return;
+    if (!window.confirm(`Delete the folder “${location.folder.name}”? Its files are kept and move up to ${sectionLabel(location.folder.section, staff)}.`)) return;
     try {
       await api(`/cases/${encodeURIComponent(location.case.reference)}/folders/${location.folder.id}`, { method: "DELETE" });
-      setLocation({ kind: "case", case: location.case, side: location.folder.visibility });
+      setLocation({ kind: "case", case: location.case, side: location.folder.section });
       refresh();
     } catch (cause) {
       setError((cause as Error).message);
     }
   }
 
-  // Where an upload goes, from where you are. Clients upload into Case files only.
-  const upload =
-    location.kind === "team"
-      ? { action: "/api/documents/team", visibility: "INTERNAL" as const, label: "Team shared", folderId: undefined }
-      : location.kind === "case" && location.side && (staff || location.side === "CLIENT")
-        ? {
-            action: `/api/cases/${encodeURIComponent(location.case.reference)}/documents`,
-            visibility: location.side,
-            label: location.folder?.name ?? SIDE_LABEL[location.side],
-            folderId: location.folder?.id,
-          }
-        : null;
+  // Uploading from inside a case asks which folder, starting on the one open.
+  // Clients upload into Client files only.
+  const mayUpload = location.kind === "team" || (location.kind === "case" && (staff || !location.side || location.side === "CLIENT"));
 
-  const shownFiles =
-    location.kind === "case" && location.side
-      ? bySide[location.side].filter((doc) => (location.folder ? doc.folderId === location.folder.id : !doc.folderId || !caseFolders?.some((f) => f.id === doc.folderId)))
-      : [];
+  const shownFiles = location.kind === "case" && location.side && caseFolders ? filesIn(files ?? [], location.side, location.folder ?? null, caseFolders) : [];
 
   return (
     <Card>
@@ -265,17 +252,17 @@ export function DocumentDrive({
             location.kind === "root"
               ? [{ label: "Documents" }]
               : location.kind === "team"
-                ? [{ label: "Documents", onClick: goRoot }, { label: "Team shared" }]
+                ? [{ label: "Documents", onClick: goRoot }, { label: "Internal" }]
                 : [
                     { label: "Documents", onClick: goRoot },
-                    location.side && staff
+                    location.side
                       ? { label: location.case.reference, onClick: () => setLocation({ kind: "case", case: location.case }) }
                       : { label: location.case.reference },
-                    ...(location.side && staff
+                    ...(location.side
                       ? [
                           location.folder
-                            ? { label: SIDE_LABEL[location.side], onClick: () => setLocation({ kind: "case", case: location.case, side: location.side }) }
-                            : { label: SIDE_LABEL[location.side] },
+                            ? { label: sectionLabel(location.side, staff), onClick: () => setLocation({ kind: "case", case: location.case, side: location.side }) }
+                            : { label: sectionLabel(location.side, staff) },
                         ]
                       : []),
                     ...(location.folder ? [{ label: location.folder.name }] : []),
@@ -303,7 +290,7 @@ export function DocumentDrive({
               New folder
             </Button>
           )}
-          {upload && <Button size="sm" onClick={() => setUploading(true)}>Upload here</Button>}
+          {mayUpload && <Button size="sm" onClick={() => setUploading(true)}>Upload</Button>}
         </div>
       </div>
 
@@ -324,10 +311,10 @@ export function DocumentDrive({
             <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-3">
               {staff && !query && (
                 <FolderTile
-                  title="Team shared"
-                  subtitle="Templates, precedents and forms for the whole firm"
+                  title="Internal"
+                  subtitle="The whole firm's templates, precedents and forms. Firm only"
                   count={teamCount ?? undefined}
-                  tone="ink"
+                  tone="slate"
                   onOpen={() => setLocation({ kind: "team" })}
                 />
               )}
@@ -355,14 +342,14 @@ export function DocumentDrive({
           {!files ? (
             <Spinner />
           ) : (
-            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-              {SIDES.map((side) => (
+            <div className={`grid grid-cols-1 gap-3 sm:grid-cols-2 ${staff ? "lg:grid-cols-3" : ""}`}>
+              {sectionsFor(staff).map((side) => (
                 <FolderTile
                   key={side}
-                  title={SIDE_LABEL[side]}
-                  subtitle={sideHint(side, staff)}
-                  count={bySide[side].length}
-                  tone={side === "INTERNAL" ? "slate" : "gold"}
+                  title={sectionLabel(side, staff)}
+                  subtitle={sectionHint(side, staff)}
+                  count={countSection(files, side)}
+                  tone={sectionTone(side)}
                   onOpen={() => setLocation({ kind: "case", case: location.case, side })}
                 />
               ))}
@@ -376,16 +363,16 @@ export function DocumentDrive({
           <Spinner />
         ) : (
           <>
-            {!location.folder && caseFolders.some((f) => f.visibility === location.side) && (
+            {!location.folder && caseFolders.some((f) => f.section === location.side) && (
               <div className="grid grid-cols-1 gap-3 border-b border-line p-4 sm:grid-cols-2 sm:p-5 xl:grid-cols-3">
                 {caseFolders
-                  .filter((folder) => folder.visibility === location.side)
+                  .filter((folder) => folder.section === location.side)
                   .map((folder) => (
                     <FolderTile
                       key={folder.id}
                       title={folder.name}
-                      count={bySide[location.side!].filter((doc) => doc.folderId === folder.id).length}
-                      tone={location.side === "INTERNAL" ? "slate" : "gold"}
+                      count={files.filter((doc) => doc.folderId === folder.id).length}
+                      tone={sectionTone(location.side!)}
                       onOpen={() => setLocation({ kind: "case", case: location.case, side: location.side, folder })}
                     />
                   ))}
@@ -397,13 +384,21 @@ export function DocumentDrive({
       )}
       {location.kind === "team" && (files ? <FileList documents={files} staff={staff} /> : <Spinner />)}
 
-      <Modal open={uploading} onClose={() => setUploading(false)} title={upload ? `Upload to ${upload.label}` : "Upload"}>
-        {uploading && upload && (
+      <Modal open={uploading} onClose={() => setUploading(false)} title={location.kind === "team" ? "Upload to Internal (the whole firm)" : "Upload a document"}>
+        {uploading && location.kind === "team" && (
           <UploadForm
-            action={upload.action}
+            action="/api/documents/team"
+            onDone={() => {
+              setUploading(false);
+              refresh();
+            }}
+          />
+        )}
+        {uploading && location.kind === "case" && (
+          <CaseUpload
+            caseReference={location.case.reference}
             staff={staff}
-            fixedVisibility={upload.visibility}
-            folderId={upload.folderId}
+            initial={location.side ? { section: location.side, folderId: location.folder?.id } : undefined}
             onDone={() => {
               setUploading(false);
               refresh();
@@ -417,8 +412,8 @@ export function DocumentDrive({
           <form onSubmit={saveFolder} className="space-y-4">
             {location.kind === "case" && location.side && naming.mode === "new" && (
               <p className="text-sm text-ink-soft">
-                Inside <span className="font-semibold">{SIDE_LABEL[location.side]}</span>
-                {location.side === "CLIENT" ? " — the client can see it and its files." : " — the client never sees it."}
+                Inside <span className="font-semibold">{sectionLabel(location.side, staff)}</span>
+                {location.side === "INTERNAL" ? ". The client never sees it." : ". The client can see it and its files."}
               </p>
             )}
             <Input autoFocus maxLength={80} value={naming.name} onChange={(e) => setNaming({ ...naming, name: e.target.value })} placeholder="e.g. Pleadings, Evidence, Correspondence" />

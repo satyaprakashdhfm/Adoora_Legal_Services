@@ -38,6 +38,8 @@ const GUIDE_UPDATES: {
   add?: { title: string; after: string }[];
   /** A sentence changed in a chapter; skipped where the firm has already reworded it. */
   replace?: { title: string; from: string; to: string }[];
+  /** Chapters replaced by their bundled text, unless someone at the firm has edited them. */
+  rewrite?: string[];
 }[] = [
   {
     key: "2026-10-step-by-step",
@@ -52,6 +54,18 @@ const GUIDE_UPDATES: {
         from: "and is taken to the Contact page.",
         to: "and is taken to the Contact page. A mobile number nobody has added is refused straight away, before any code is texted to it, on all three sign-in pages.",
       },
+    ],
+  },
+  {
+    key: "2026-10-document-folders",
+    rewrite: [
+      "The admin console, section by section",
+      "Cases and the court's own record",
+      "Step by step: jobs, articles, enquiries and more",
+      "Documents",
+      "The lawyer workspace",
+      "The client dashboard",
+      "Glossary",
     ],
   },
 ];
@@ -133,6 +147,13 @@ async function syncGuide() {
           if (page?.body.includes(from) && !page.body.includes(to)) {
             await tx.docPage.update({ where: { id: page.id }, data: { body: page.body.replace(from, to) } });
           }
+        }
+        for (const title of update.rewrite ?? []) {
+          const page = DEFAULT_DOC_PAGES.find((p) => p.title === title);
+          const stored = await tx.docPage.findFirst({ where: { title, updatedByName: "ADOORA guide" }, select: { id: true } });
+          if (!page || !stored) continue;
+          const ids = await bundledImages(tx, [page.body]);
+          await tx.docPage.update({ where: { id: stored.id }, data: { body: withImages(page.body, ids) } });
         }
         await tx.docGuideUpdate.create({ data: { key: update.key } });
       }

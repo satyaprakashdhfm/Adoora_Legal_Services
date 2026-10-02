@@ -532,7 +532,16 @@ enum DocumentCategory {
   OTHER
 }
 
-/// A document on a case, or — with no case — in the firm's "Team shared"
+/// Where a document sits: each case has these three folders. Internal is
+/// firm only; the other two are shared with the client. A document with no
+/// case is in the firm-wide Internal folder.
+enum DocumentSection {
+  INTERNAL // firm only
+  CLIENT // "From client": what the client sends, and what the firm shares
+  COURT // "From court": orders and other court papers
+}
+
+/// A document on a case, or — with no case — in the firm-wide "Internal"
 /// folder (templates, precedents, forms), which only staff can see. The
 /// bytes live in object storage, one object per version, so nothing is ever
 /// overwritten in place.
@@ -548,6 +557,8 @@ model Document {
   category       DocumentCategory @default(OTHER)
   description    String?          @db.Text
   visibility     Visibility       @default(CLIENT)
+  /// Which of the case's three folders. `visibility` always follows it.
+  section        DocumentSection  @default(CLIENT)
   currentVersion Int              @default(1)
 
   uploadedByUserId   String? @db.Uuid
@@ -568,8 +579,8 @@ model Document {
   fromCourt  Boolean     @default(false)
   courtOrder CourtOrder?
 
-  /// A folder the firm made inside "Client access" or "Internal"; none = the
-  /// top of it. The document's visibility always matches its folder's.
+  /// A folder the firm made inside one of the three; none = the top of it.
+  /// The document's section and visibility always match its folder's.
   folderId String?         @db.Uuid
   folder   DocumentFolder? @relation(fields: [folderId], references: [id], onDelete: SetNull)
 
@@ -578,20 +589,21 @@ model Document {
   @@index([createdAt])
 }
 
-/// A folder inside a case's "Client access" (CLIENT) or "Internal — team
-/// only" (INTERNAL). Made by the firm; clients see the CLIENT ones.
+/// A folder the firm made inside one of a case's three (Internal, From
+/// client, From court). Clients see those outside Internal.
 model DocumentFolder {
   id          String     @id @default(uuid()) @db.Uuid
   caseId      String     @db.Uuid
   case        Case       @relation(fields: [caseId], references: [id], onDelete: Cascade)
   name        String
   visibility  Visibility
+  section     DocumentSection @default(CLIENT)
   createdById String?    @db.Uuid
   createdBy   User?      @relation(fields: [createdById], references: [id], onDelete: SetNull)
   createdAt   DateTime   @default(now())
   documents   Document[]
 
-  @@unique([caseId, visibility, name])
+  @@unique([caseId, section, name])
 }
 
 model DocumentVersion {

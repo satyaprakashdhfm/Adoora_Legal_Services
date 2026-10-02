@@ -50,7 +50,7 @@ export function visibilityScope(principal: Principal) {
 
 /**
  * Documents the caller may see: those on cases in their scope, plus — for
- * the firm's case staff — the "Team shared" folder (documents with no case),
+ * the firm's case staff — the firm-wide "Internal" folder (documents with no case),
  * which clients never see.
  */
 export function documentScope(principal: Principal): Prisma.DocumentWhereInput {

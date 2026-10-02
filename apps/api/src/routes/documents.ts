@@ -22,6 +22,7 @@ import {
   documentListSchema,
   documentPatchSchema,
   documentUploadSchema,
+  sectionVisibility,
 } from "../portal-schemas.js";
 import type { Principal } from "../auth/session.js";
 import type { Prisma } from "../../generated/prisma/client.js";
@@ -106,15 +107,17 @@ export async function uploadDocument(
   const fields = documentUploadSchema.parse(req.body ?? {});
   const stored = await storeFile(req, target.id);
 
-  // A folder decides where it goes; clients' uploads are always visible to them.
+  // A folder decides where it goes; a client's upload always goes to From
+  // client (or a folder the firm made there).
   const folder = fields.folderId
-    ? await prisma.documentFolder.findFirst({ where: { id: fields.folderId, caseId: target.id }, select: { id: true, visibility: true } })
+    ? await prisma.documentFolder.findFirst({ where: { id: fields.folderId, caseId: target.id }, select: { id: true, section: true } })
     : null;
-  if (fields.folderId && (!folder || (principal.kind === "client" && folder.visibility !== "CLIENT"))) {
+  if (fields.folderId && (!folder || (principal.kind === "client" && folder.section !== "CLIENT"))) {
     await discard(stored.storageKey);
     throw new HttpError(400, "That folder is not part of this case.", "bad_folder");
   }
-  const visibility = principal.kind === "client" ? "CLIENT" : (folder?.visibility ?? fields.visibility);
+  const section = principal.kind === "client" ? "CLIENT" : (folder?.section ?? fields.section);
+  const visibility = sectionVisibility(section);
   const title = fields.title ?? stored.filename.replace(/\.[^.]+$/, "");
 
   try {
@@ -135,6 +138,7 @@ export async function uploadDocument(
           category: fields.category,
           description: fields.description ?? null,
           visibility,
+          section,
           folderId: folder?.id ?? null,
           ...uploader(principal),
           versions: { create: { version: 1, ...stored, ...uploader(principal) } },
@@ -173,7 +177,7 @@ export async function uploadDocument(
 
 /**
  * Saves a PDF fetched from the court's website into the case's documents —
- * the "From the court" folder, visible to the client. Nobody is recorded as
+ * the "From court" folder, visible to the client. Nobody is recorded as
  * its uploader (the court is the source); who fetched it goes in the audit
  * log. Returns the new document's id.
  */
@@ -217,6 +221,7 @@ export async function saveCourtDocument(
           category: file.category,
           description: file.description,
           visibility: "CLIENT",
+          section: "COURT",
           fromCourt: true,
           versions: { create: { version: 1, ...stored } },
         },
@@ -237,9 +242,9 @@ export async function saveCourtDocument(
 }
 
 /**
- * POST /api/documents/team — a document in the firm's "Team shared" folder:
+ * POST /api/documents/team — a document in the firm-wide "Internal" folder:
  * templates, precedents, checklists. Not on any case, never visible to a
- * client, and always internal.
+ * client.
  */
 documentsRouter.post("/team", uploadMiddleware, async (req, res) => {
   const principal = req.principal!;
@@ -260,6 +265,7 @@ documentsRouter.post("/team", uploadMiddleware, async (req, res) => {
             category: fields.category,
             description: fields.description ?? null,
             visibility: "INTERNAL",
+            section: "INTERNAL",
             ...uploader(principal),
             versions: { create: { version: 1, ...stored, ...uploader(principal) } },
           },
@@ -372,18 +378,24 @@ documentsRouter.patch("/:reference", async (req, res) => {
   const found = await findVisibleDocument(principal, String(req.params.reference));
   const { folderId, ...input } = documentPatchSchema.parse(req.body);
 
-  // Moving into a folder: the folder's visibility comes with it. A change of
-  // visibility on its own takes the document to the top of the other side.
-  const data: Prisma.DocumentUncheckedUpdateInput = { ...input };
+  // Moving into a folder: the folder's section comes with it. A change of
+  // section on its own takes the document to the top of that section.
+  // Visibility always follows the section.
+  const { section, ...rest } = input;
+  const data: Prisma.DocumentUncheckedUpdateInput = { ...rest };
   if (folderId) {
-    const folder = await prisma.documentFolder.findFirst({ where: { id: folderId, caseId: found.caseId ?? undefined }, select: { visibility: true } });
+    const folder = await prisma.documentFolder.findFirst({ where: { id: folderId, caseId: found.caseId ?? undefined }, select: { section: true } });
     if (!found.caseId || !folder) throw new HttpError(400, "That folder is not part of this document's case.", "bad_folder");
     data.folderId = folderId;
-    data.visibility = folder.visibility;
-  } else if (folderId === null) {
-    data.folderId = null;
-  } else if (input.visibility && input.visibility !== found.visibility) {
-    data.folderId = null;
+    data.section = folder.section;
+    data.visibility = sectionVisibility(folder.section);
+  } else {
+    if (folderId === null) data.folderId = null;
+    if (section && found.caseId) {
+      if (section !== found.section) data.folderId = null;
+      data.section = section;
+      data.visibility = sectionVisibility(section);
+    }
   }
 
   const updated = await prisma.document.update({ where: { id: found.id }, data });

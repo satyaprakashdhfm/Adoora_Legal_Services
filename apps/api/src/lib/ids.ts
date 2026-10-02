@@ -34,7 +34,7 @@ export function makeDocumentReference(caseReference: string, seq: number): strin
   return `${caseReference}-D${String(seq).padStart(3, "0")}`;
 }
 
-/** A document in the "Team shared" folder, which belongs to no case. */
+/** A document in the firm-wide "Internal" folder, which belongs to no case. */
 export function makeTeamDocumentReference(): string {
   return `${FIRM_PREFIX}-TEAM-${randomCode(6)}`;
 }

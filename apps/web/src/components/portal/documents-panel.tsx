@@ -4,7 +4,8 @@ import { useEffect, useRef, useState } from "react";
 import { AREA_HEADER, api, ApiError, currentArea, downloadUrl, type DocumentRecord, type SessionUser } from "@/lib/portal/api";
 import { ACCEPTED_UPLOADS, DOCUMENT_CATEGORIES, labelFor } from "@/lib/portal/legal";
 import { formatBytes, formatDate } from "@/lib/portal/format";
-import { Breadcrumbs, FolderTile, MoveSelect, SIDE_LABEL, SIDES, SourceTag, countSide, filesIn, sideHint, type Folder, type Side } from "@/components/portal/document-folders";
+import { Breadcrumbs, FolderTile, MoveSelect, SourceTag, countSection, filesIn, sectionHint, sectionLabel, sectionTone, sectionsFor, type Folder, type Section } from "@/components/portal/document-folders";
+import { CaseUpload } from "@/components/portal/upload-button";
 import {
   Badge,
   Button,
@@ -50,18 +51,16 @@ function uploadWithProgress(url: string, body: FormData, onProgress: (fraction: 
 
 export function UploadForm({
   action,
-  staff,
   newVersionOf,
   onDone,
-  fixedVisibility,
+  fixedSection,
   folderId,
 }: {
   action: string;
-  staff: boolean;
   newVersionOf?: string;
   onDone: () => void;
-  /** Set by the folder being uploaded into; hides the "Who can see it" choice. */
-  fixedVisibility?: "CLIENT" | "INTERNAL";
+  /** Which of the case's three folders it goes in (chosen before this form). */
+  fixedSection?: Section;
   /** A folder the firm made inside the case; the upload is filed in it. */
   folderId?: string;
 }) {
@@ -137,20 +136,8 @@ export function UploadForm({
           <Field label="Note" className="sm:col-span-2">
             <Textarea name="description" rows={2} maxLength={2000} />
           </Field>
-          {fixedVisibility && <input type="hidden" name="visibility" value={fixedVisibility} />}
+          {fixedSection && <input type="hidden" name="section" value={fixedSection} />}
           {folderId && <input type="hidden" name="folderId" value={folderId} />}
-          {staff && !fixedVisibility && (
-            <Field label="Who can see it" className="sm:col-span-2">
-              <Select
-                name="visibility"
-                defaultValue="CLIENT"
-                options={[
-                  { value: "CLIENT", label: "Shared with the client" },
-                  { value: "INTERNAL", label: "Internal — firm only" },
-                ]}
-              />
-            </Field>
-          )}
         </div>
       )}
 
@@ -179,12 +166,12 @@ export function UploadForm({
  * A case's documents, in the same folders as the Documents drive:
  *
  *   Documents
- *   ├── Case files     shared with the client (court PDFs, client uploads, firm files)
- *   │   └── <firm folders>
- *   └── Internal       firm only
- *       └── <firm folders>
+ *   ├── Internal       firm only
+ *   ├── From client    what the client sends, and what the firm shares
+ *   └── From court     court orders and filed papers
+ *       (each with any folders the firm made inside it)
  *
- * Clients have Case files only, so they open straight into it.
+ * Clients see From court and their own Client files (From client).
  */
 export function DocumentsPanel({
   caseReference,
@@ -202,7 +189,7 @@ export function DocumentsPanel({
   onChange: () => void;
 }) {
   const staff = user.kind === "staff";
-  const [side, setSide] = useState<Side | null>(staff ? null : "CLIENT");
+  const [side, setSide] = useState<Section | null>(null);
   const [folder, setFolder] = useState<Folder | null>(null);
   const [uploadOpen, setUploadOpen] = useState(false);
   const [versionOf, setVersionOf] = useState<DocumentRecord | null>(null);
@@ -240,7 +227,7 @@ export function DocumentsPanel({
     setFolderError(null);
     try {
       if (naming.mode === "new") {
-        await api<Folder>(folderBase, { method: "POST", body: { name: naming.name, visibility: side } });
+        await api<Folder>(folderBase, { method: "POST", body: { name: naming.name, section: side } });
       } else if (folder) {
         setFolder(await api<Folder>(`${folderBase}/${folder.id}`, { method: "PATCH", body: { name: naming.name } }));
       }
@@ -253,7 +240,7 @@ export function DocumentsPanel({
 
   async function deleteFolder() {
     if (!folder) return;
-    if (!window.confirm(`Delete the folder “${folder.name}”? Its files are kept and move up to ${SIDE_LABEL[folder.visibility]}.`)) return;
+    if (!window.confirm(`Delete the folder “${folder.name}”? Its files are kept and move up to ${sectionLabel(folder.section, staff)}.`)) return;
     try {
       await api(`${folderBase}/${folder.id}`, { method: "DELETE" });
       setFolder(null);
@@ -264,20 +251,22 @@ export function DocumentsPanel({
     }
   }
 
-  const open = (next: Side | null, inFolder: Folder | null = null) => {
+  const open = (next: Section | null, inFolder: Folder | null = null) => {
     setSide(next);
     setFolder(inFolder);
     setNotice(null);
   };
 
   const trail = [
-    side && staff ? { label: "Documents", onClick: () => open(null) } : { label: "Documents" },
-    ...(side ? [folder ? { label: SIDE_LABEL[side], onClick: () => open(side) } : { label: SIDE_LABEL[side] }] : []),
+    side ? { label: "Documents", onClick: () => open(null) } : { label: "Documents" },
+    ...(side ? [folder ? { label: sectionLabel(side, staff), onClick: () => open(side) } : { label: sectionLabel(side, staff) }] : []),
     ...(folder ? [{ label: folder.name }] : []),
   ];
 
   const here = side && folders ? filesIn(documents, side, folder, folders) : [];
-  const subfolders = side && !folder ? (folders ?? []).filter((f) => f.visibility === side) : [];
+  const subfolders = side && !folder ? (folders ?? []).filter((f) => f.section === side) : [];
+  // Clients upload into Client files only.
+  const mayUpload = staff || !side || side === "CLIENT";
 
   return (
     <div>
@@ -290,9 +279,8 @@ export function DocumentsPanel({
               : "Files you upload are encrypted and seen only by you and the lawyers on this case."}
           </p>
         </div>
-        {side && (
-          <div className="flex flex-wrap items-center gap-2">
-            {canEdit && folder && (
+        <div className="flex flex-wrap items-center gap-2">
+            {side && canEdit && folder && (
               <>
                 <Button size="sm" tone="ghost" onClick={() => setNaming({ mode: "rename", name: folder.name })}>
                   Rename
@@ -302,14 +290,13 @@ export function DocumentsPanel({
                 </Button>
               </>
             )}
-            {canEdit && !folder && (
+            {side && canEdit && !folder && (
               <Button size="sm" tone="secondary" onClick={() => setNaming({ mode: "new", name: "" })}>
                 New folder
               </Button>
             )}
-            <Button size="sm" onClick={() => setUploadOpen(true)}>Upload here</Button>
+            {mayUpload && <Button size="sm" onClick={() => setUploadOpen(true)}>Upload</Button>}
           </div>
-        )}
       </div>
 
       <div className="space-y-3 px-5 pt-4 empty:hidden">
@@ -318,14 +305,14 @@ export function DocumentsPanel({
       </div>
 
       {!side && (
-        <div className="grid gap-3 p-5 sm:grid-cols-2">
-          {SIDES.map((s) => (
+        <div className={`grid gap-3 p-5 sm:grid-cols-2 ${staff ? "lg:grid-cols-3" : ""}`}>
+          {sectionsFor(staff).map((s) => (
             <FolderTile
               key={s}
-              title={SIDE_LABEL[s]}
-              subtitle={sideHint(s, staff)}
-              count={countSide(documents, s)}
-              tone={s === "INTERNAL" ? "slate" : "gold"}
+              title={sectionLabel(s, staff)}
+              subtitle={sectionHint(s, staff)}
+              count={countSection(documents, s)}
+              tone={sectionTone(s)}
               onOpen={() => open(s)}
             />
           ))}
@@ -339,7 +326,7 @@ export function DocumentsPanel({
               key={f.id}
               title={f.name}
               count={documents.filter((doc) => doc.folderId === f.id).length}
-              tone={side === "INTERNAL" ? "slate" : "gold"}
+              tone={sectionTone(side)}
               onOpen={() => open(side, f)}
             />
           ))}
@@ -350,9 +337,13 @@ export function DocumentsPanel({
         <EmptyState title={subfolders.length ? "No loose files here" : "No files here yet"}>
           {side === "INTERNAL"
             ? "Working papers the client should not see."
-            : staff
-              ? "Court PDFs, the client's uploads and anything the firm shares land here."
-              : "Upload the papers you have — notices, agreements, court orders, identity documents."}
+            : side === "COURT"
+              ? staff
+                ? "Order PDFs from the court's website land here, and papers as filed."
+                : "Court orders and the papers filed in your case appear here."
+              : staff
+                ? "The client's uploads, and anything the firm shares with them."
+                : "Upload the papers you have: notices, agreements, identity documents."}
         </EmptyState>
       )}
 
@@ -395,29 +386,12 @@ export function DocumentsPanel({
                       New version
                     </Button>
                   )}
-                  {canEdit && folders && folders.length > 0 && (
+                  {canEdit && folders && (
                     <MoveSelect
                       doc={doc}
                       folders={folders}
                       onMove={(body) => void act(api(`/documents/${doc.reference}`, { method: "PATCH", body }), `${doc.reference} moved.`)}
                     />
-                  )}
-                  {canEdit && (
-                    <Button
-                      tone="ghost"
-                      size="sm"
-                      onClick={() =>
-                        void act(
-                          api(`/documents/${doc.reference}`, {
-                            method: "PATCH",
-                            body: { visibility: doc.visibility === "CLIENT" ? "INTERNAL" : "CLIENT" },
-                          }),
-                          doc.visibility === "CLIENT" ? `${doc.reference} moved to Internal.` : `${doc.reference} moved to Case files — the client can see it.`,
-                        )
-                      }
-                    >
-                      {doc.visibility === "CLIENT" ? "Make internal" : "Share with client"}
-                    </Button>
                   )}
                   {canManage && (
                     <Button
@@ -439,13 +413,12 @@ export function DocumentsPanel({
         </ul>
       )}
 
-      <Modal open={uploadOpen} onClose={() => setUploadOpen(false)} title={`Upload to ${folder?.name ?? (side ? SIDE_LABEL[side] : "the case")}`}>
-        {uploadOpen && side && (
-          <UploadForm
-            action={`/api/cases/${encodeURIComponent(caseReference)}/documents`}
+      <Modal open={uploadOpen} onClose={() => setUploadOpen(false)} title="Upload a document">
+        {uploadOpen && (
+          <CaseUpload
+            caseReference={caseReference}
             staff={staff}
-            fixedVisibility={side}
-            folderId={folder?.id}
+            initial={side ? { section: side, folderId: folder?.id } : undefined}
             onDone={() => {
               setUploadOpen(false);
               setNotice("Document uploaded.");
@@ -463,7 +436,6 @@ export function DocumentsPanel({
             </p>
             <UploadForm
               action={`/api/documents/${encodeURIComponent(versionOf.reference)}/versions`}
-              staff={staff}
               newVersionOf={versionOf.reference}
               onDone={() => {
                 setVersionOf(null);
@@ -480,8 +452,8 @@ export function DocumentsPanel({
           <form onSubmit={saveFolder} className="space-y-4">
             {side && naming.mode === "new" && (
               <p className="text-sm text-ink-soft">
-                Inside <span className="font-semibold">{SIDE_LABEL[side]}</span>
-                {side === "CLIENT" ? " — the client can see it and its files." : " — the client never sees it."}
+                Inside <span className="font-semibold">{sectionLabel(side, staff)}</span>
+                {side === "INTERNAL" ? ". The client never sees it." : ". The client can see it and its files."}
               </p>
             )}
             <Input autoFocus maxLength={80} value={naming.name} onChange={(e) => setNaming({ ...naming, name: e.target.value })} placeholder="e.g. Pleadings, Evidence, Correspondence" />

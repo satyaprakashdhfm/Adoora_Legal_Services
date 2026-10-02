@@ -2,27 +2,28 @@
 
 import { useState } from "react";
 import { DocumentDrive } from "@/components/portal/document-drive";
-import { UploadButton } from "@/components/portal/upload-button";
+import { UploadButton, type Place } from "@/components/portal/upload-button";
 import { PageTitle } from "@/components/portal/ui";
 
 /**
- * Documents as folders — a folder per case, each split into what the
- * client sent, what the firm shared, and internal papers, plus the firm's
- * "Team shared" folder. The same files the client and lawyer dashboards
- * show: an upload here appears there, and theirs appear here.
+ * Documents as folders: a folder per case, each with Internal, From client
+ * and From court inside, plus the firm-wide Internal folder. The same files
+ * the client and lawyer dashboards show: an upload here appears there, and
+ * theirs appear here. Uploading is only done here and in a case's Documents
+ * tab, and always asks which folder.
  */
 export default function AdminDocuments() {
   const [refresh, setRefresh] = useState(0);
-  const [openCase, setOpenCase] = useState<string | null>(null);
+  const [place, setPlace] = useState<Place | null>(null);
   return (
     <div className="space-y-6">
       <PageTitle
         eyebrow="Documents"
         title="Documents"
-        description="Open a case folder to see what the client sent, what the firm has shared with them, and internal papers. Upload into any folder, or to a case from here."
-        actions={<UploadButton caseReference={openCase} onUploaded={() => setRefresh((n) => n + 1)} />}
+        description="Every case has three folders: Internal (the firm only), From client and From court. Internal at the top is for the whole firm. Upload document asks which case and which folder."
+        actions={<UploadButton place={place} onUploaded={() => setRefresh((n) => n + 1)} />}
       />
-      <DocumentDrive key={refresh} basePath="/admin" staff onCaseChange={setOpenCase} />
+      <DocumentDrive key={refresh} basePath="/admin" staff onPlaceChange={setPlace} />
     </div>
   );
 }

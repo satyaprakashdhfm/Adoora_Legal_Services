@@ -13,7 +13,7 @@ import type { DocumentCategory, Visibility } from "../../generated/prisma/client
  *
  *   people     emails @demo.adoora.test, names end "(Demo)"
  *   cases      references ALS-2026-DEMX01 … DEMX06, titles start "[Demo]"
- *   documents  on those cases, plus ALS-TEAM-DEMX01 in Team shared
+ *   documents  on those cases, plus ALS-TEAM-DEMX01 in the firm-wide Internal
  *   queries    QRY-DEMX…      enquiries  ENQ-DEMX…
  *   jobs       slugs demo-…   applications APP-DEMX…
  *   profiles   slugs demo-…   (never shown on the website)
@@ -85,10 +85,12 @@ type DemoDoc = {
   byClientId?: string;
   byUserId?: string | null;
   fromCourt?: boolean;
+  /** A court paper the firm uploaded itself: in From court, not fetched. */
+  inCourtFolder?: boolean;
   folderId?: string;
 };
 
-/** Files a document on a case (or Team shared, with no caseId) and returns its id. */
+/** Files a document on a case (or the firm-wide Internal, with no caseId) and returns its id. */
 async function addDocument(caseRow: { id: string; reference: string } | null, seq: number, doc: DemoDoc) {
   const version = await storeVersion(caseRow ? `cases/${caseRow.id}` : "team", doc.file, pdf(["DEMO DOCUMENT - FICTIONAL", "", ...doc.lines]));
   const who = doc.byClientId ? { uploadedByClientId: doc.byClientId } : { uploadedByUserId: doc.byUserId ?? null };
@@ -100,6 +102,7 @@ async function addDocument(caseRow: { id: string; reference: string } | null, se
       title: doc.title,
       category: doc.category,
       visibility: doc.visibility,
+      section: doc.visibility === "INTERNAL" ? "INTERNAL" : doc.fromCourt || doc.inCourtFolder ? "COURT" : "CLIENT",
       fromCourt: doc.fromCourt ?? false,
       folderId: doc.folderId ?? null,
       ...who,
@@ -558,28 +561,31 @@ export async function addSampleData(clientEmail?: string) {
   });
 
   // --- Documents: tags, folders and court orders ------------------------------------------
-  const folder = (caseId: string, name: string, visibility: Visibility) =>
-    prisma.documentFolder.create({ data: { caseId, name, visibility, createdById: kavya.id }, select: { id: true } });
-  const pleadings = await folder(suit.id, "Pleadings", "CLIENT");
+  const folder = (caseId: string, name: string, section: "INTERNAL" | "CLIENT" | "COURT") =>
+    prisma.documentFolder.create({
+      data: { caseId, name, section, visibility: section === "INTERNAL" ? "INTERNAL" : "CLIENT", createdById: kavya.id },
+      select: { id: true },
+    });
+  const pleadings = await folder(suit.id, "Pleadings", "COURT");
   const research = await folder(suit.id, "Research", "INTERNAL");
   await folder(writ.id, "Correspondence", "CLIENT");
 
   const files: [{ id: string; reference: string }, DemoDoc][] = [
     [writ, { title: "Trade licence (copy)", category: "EVIDENCE", visibility: "CLIENT", file: "trade-licence.pdf", lines: ["Trade Licence No. TL/DEMO/2019/0042"], byClientId: ananya.id }],
-    [writ, { title: "Writ petition as filed", category: "PETITION", visibility: "CLIENT", file: "writ-petition.pdf", lines: ["W.P. No. 4521 of 2026 (Demo)"], byUserId: kavya.id }],
+    [writ, { title: "Writ petition as filed", category: "PETITION", visibility: "CLIENT", file: "writ-petition.pdf", lines: ["W.P. No. 4521 of 2026 (Demo)"], byUserId: kavya.id, inCourtFolder: true }],
     [writ, { title: "Interim order", category: "ORDER", visibility: "CLIENT", file: "interim-order.pdf", lines: ["Sealing of the premises is stayed until the next date."], fromCourt: true }],
     [writ, { title: "Research note — natural justice", category: "OTHER", visibility: "INTERNAL", file: "research-note.pdf", lines: ["INTERNAL", "Cancellation without a show-cause notice: authorities."], byUserId: arjun.id }],
     [consumer, { title: "Allotment letter", category: "AGREEMENT", visibility: "CLIENT", file: "allotment-letter.pdf", lines: ["Allotment of Flat 804, Tower B (Demo)"], byClientId: ananya.id }],
     [consumer, { title: "Payment receipts", category: "FINANCIAL", visibility: "CLIENT", file: "payment-receipts.pdf", lines: ["Receipts totalling Rs. 38,50,000 (Demo)"], byClientId: ananya.id }],
-    [consumer, { title: "Consumer complaint as filed", category: "PETITION", visibility: "CLIENT", file: "consumer-complaint.pdf", lines: ["C.C. No. 312 of 2026 (Demo)"], byUserId: kavya.id }],
-    [suit, { title: "Plaint as filed", category: "PETITION", visibility: "CLIENT", file: "plaint.pdf", lines: ["C.O.S. No. 118 of 2026 (Demo)"], byUserId: arjun.id, folderId: pleadings.id }],
+    [consumer, { title: "Consumer complaint as filed", category: "PETITION", visibility: "CLIENT", file: "consumer-complaint.pdf", lines: ["C.C. No. 312 of 2026 (Demo)"], byUserId: kavya.id, inCourtFolder: true }],
+    [suit, { title: "Plaint as filed", category: "PETITION", visibility: "CLIENT", file: "plaint.pdf", lines: ["C.O.S. No. 118 of 2026 (Demo)"], byUserId: arjun.id, folderId: pleadings.id, inCourtFolder: true }],
     [suit, { title: "Invoices and lorry receipts", category: "EVIDENCE", visibility: "CLIENT", file: "invoices.pdf", lines: ["Invoices and LRs for the lost consignment (Demo)"], byClientId: sunrise.id }],
     [suit, { title: "Case law on carrier liability", category: "OTHER", visibility: "INTERNAL", file: "carrier-liability.pdf", lines: ["INTERNAL", "Liability of common carriers: notes."], byUserId: arjun.id, folderId: research.id }],
     [suit, { title: "Order dated summons", category: "ORDER", visibility: "CLIENT", file: "summons-order.pdf", lines: ["Summons issued to the defendant (Demo)."], fromCourt: true }],
     [labour, { title: "Termination letter", category: "EVIDENCE", visibility: "CLIENT", file: "termination-letter.pdf", lines: ["Termination letter (Demo)"], byClientId: priya.id }],
-    [labour, { title: "Claim statement", category: "PLEADING", visibility: "CLIENT", file: "claim-statement.pdf", lines: ["I.D. No. 44 of 2025 (Demo)"], byUserId: arjun.id }],
+    [labour, { title: "Claim statement", category: "PLEADING", visibility: "CLIENT", file: "claim-statement.pdf", lines: ["I.D. No. 44 of 2025 (Demo)"], byUserId: arjun.id, inCourtFolder: true }],
     [tax, { title: "Order-in-appeal", category: "ORDER", visibility: "CLIENT", file: "order-in-appeal.pdf", lines: ["Appeal allowed. Demand set aside (Demo)."], fromCourt: true }],
-    [tax, { title: "Appeal memorandum", category: "PETITION", visibility: "CLIENT", file: "appeal-memo.pdf", lines: ["GST Appeal No. 209 of 2025 (Demo)"], byUserId: sneha.id }],
+    [tax, { title: "Appeal memorandum", category: "PETITION", visibility: "CLIENT", file: "appeal-memo.pdf", lines: ["GST Appeal No. 209 of 2025 (Demo)"], byUserId: sneha.id, inCourtFolder: true }],
     [advisory, { title: "Sale deeds (1996 onwards)", category: "AGREEMENT", visibility: "CLIENT", file: "sale-deeds.pdf", lines: ["Chain of sale deeds (Demo)"], byClientId: priya.id }],
     [advisory, { title: "Draft title opinion", category: "OTHER", visibility: "INTERNAL", file: "draft-opinion.pdf", lines: ["INTERNAL - DRAFT", "Title opinion, Plot 27 (Demo)"], byUserId: kavya.id }],
   ];

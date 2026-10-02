@@ -124,7 +124,7 @@ function summaryMessage(s: Summary) {
     s.remaining ? `${s.remaining} more on the next update` : null,
     `${s.hearings} hearing${s.hearings === 1 ? "" : "s"} on record`,
   ].filter(Boolean);
-  return `Updated from the court's website: ${parts.join(" · ")}.${changed} The PDFs are in Documents → Case files.`;
+  return `Updated from the court's website: ${parts.join(" · ")}.${changed} The PDFs are in Documents → From court.`;
 }
 
 /**
@@ -328,7 +328,7 @@ export function CourtRecordPanel({ record, onSynced }: { record: CaseDetail; onS
                 You type its captcha; it is free.
               </p>
             ) : (
-              <p className="text-xs text-slate">Your lawyers update this from the court&apos;s own record; order PDFs are in Documents → Case files.</p>
+              <p className="text-xs text-slate">Your lawyers update this from the court&apos;s own record; order PDFs are in Documents → From court.</p>
             )}
             <PriceLine record={record} />
           </div>

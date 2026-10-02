@@ -7,7 +7,6 @@ import { usePortalBase, useUser } from "@/lib/portal/session";
 import { courtNumber, daysUntil, firstName, formatDate } from "@/lib/portal/format";
 import { CaseList } from "@/components/portal/case-list";
 import { DocumentList } from "@/components/portal/document-list";
-import { UploadButton } from "@/components/portal/upload-button";
 import { NoCaseYet } from "@/components/portal/no-case-yet";
 import { Card, CardHeader, PageTitle, StatTile } from "@/components/portal/ui";
 
@@ -16,14 +15,12 @@ export default function DashboardOverview() {
   const client = user.kind === "client";
   const base = usePortalBase();
   const [cases, setCases] = useState<CaseSummary[] | null>(null);
-  /* Bumped after an upload, so the counts and Recent documents refresh. */
-  const [refresh, setRefresh] = useState(0);
 
   useEffect(() => {
     api<Page<CaseSummary>>("/cases?limit=100")
       .then((page) => setCases(page.data))
       .catch(() => setCases([]));
-  }, [refresh]);
+  }, []);
 
   const open = cases?.filter((c) => !["CLOSED", "DISPOSED", "WITHDRAWN"].includes(c.status)) ?? [];
   const documents = cases?.reduce((sum, c) => sum + c._count.documents, 0) ?? 0;
@@ -41,13 +38,8 @@ export default function DashboardOverview() {
         title={`Welcome, ${firstName(user.name)}`}
         description={
           client
-            ? "Follow your cases, upload documents for your lawyers, and see every hearing and order as the firm records it. Questions go to the firm under Queries."
+            ? "Follow your cases and see every hearing and order as the firm records it. Send papers to your lawyers under Documents, and questions under Queries."
             : "The cases assigned to you: update them from the court, keep their documents, and answer your clients' queries."
-        }
-        actions={
-          <>
-            {(!client || (cases?.length ?? 0) > 0) && <UploadButton onUploaded={() => setRefresh((n) => n + 1)} />}
-          </>
         }
       />
 
@@ -88,7 +80,6 @@ export default function DashboardOverview() {
       <div>
         <h2 className="mb-3 font-serif text-xl font-semibold text-ink">Your cases</h2>
         <CaseList
-          key={refresh}
           basePath={base}
           staff={!client}
           emptyAction={client ? <NoCaseYet /> : undefined}
@@ -100,7 +91,7 @@ export default function DashboardOverview() {
           <h2 className="font-serif text-xl font-semibold text-ink">Recent documents</h2>
           <Link href={`${base}/documents`} className="text-sm font-semibold text-gold-deep hover:underline">All documents →</Link>
         </div>
-        <DocumentList basePath={base} staff={!client} compact limit={5} refreshKey={refresh} />
+        <DocumentList basePath={base} staff={!client} compact limit={5} />
       </div>
 
     </div>

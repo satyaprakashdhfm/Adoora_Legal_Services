@@ -56,6 +56,10 @@ export const documentCategory = z.enum([
   "NOTICE", "CORRESPONDENCE", "AGREEMENT", "IDENTITY", "FINANCIAL", "OTHER",
 ]);
 export const visibility = z.enum(["CLIENT", "INTERNAL"]);
+/** A case's three folders: Internal (firm only), From client, From court. */
+export const documentSection = z.enum(["INTERNAL", "CLIENT", "COURT"]);
+/** Who can see what is in a section: Internal is firm only, the others the client too. */
+export const sectionVisibility = (section: z.infer<typeof documentSection>): "INTERNAL" | "CLIENT" => (section === "INTERNAL" ? "INTERNAL" : "CLIENT");
 export const updateKind = z.enum(["NOTE", "HEARING", "ORDER", "FILING"]);
 
 export const partySchema = z.object({
@@ -195,8 +199,9 @@ export const documentUploadSchema = z.object({
   title: optionalText(200),
   category: documentCategory.default("OTHER"),
   description: optionalText(2000),
-  visibility: visibility.default("CLIENT"),
-  /** A folder of the case; the document takes the folder's visibility. */
+  /** Which of the case's three folders. Clients' uploads always go to From client. */
+  section: documentSection.default("CLIENT"),
+  /** A folder of the case; the document takes the folder's section. */
   folderId: z.string().uuid().optional().or(z.literal("").transform(() => undefined)),
 });
 
@@ -204,14 +209,15 @@ export const documentPatchSchema = z.object({
   title: z.string().trim().min(1).max(200).optional(),
   category: documentCategory.optional(),
   description: optionalText(2000),
-  visibility: visibility.optional(),
-  /** Move into a folder (its visibility follows), or null for the top. */
+  /** Move to the top of another of the three folders. */
+  section: documentSection.optional(),
+  /** Move into a folder (its section follows), or null for the top. */
   folderId: z.string().uuid().nullable().optional(),
 });
 
 export const folderSchema = z.object({
   name: z.string().trim().min(1, "Give the folder a name.").max(80),
-  visibility: visibility,
+  section: documentSection,
 });
 
 export const folderRenameSchema = z.object({
@@ -222,7 +228,7 @@ export const documentListSchema = z.object({
   q: z.string().trim().max(120).optional(),
   category: documentCategory.optional(),
   case: z.string().trim().max(40).optional(),
-  /** `1`: only the firm's "Team shared" folder. */
+  /** `1`: only the firm-wide "Internal" folder (documents on no case). */
   team: z.enum(["1"]).optional(),
   folder: z.enum(["client", "firm", "internal", "court"]).optional(),
   cursor: z.string().uuid().optional(),

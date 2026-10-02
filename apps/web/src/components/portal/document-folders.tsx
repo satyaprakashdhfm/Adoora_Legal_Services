@@ -1,28 +1,49 @@
-import type { DocumentRecord } from "@/lib/portal/api";
+import type { DocumentRecord, DocumentSection } from "@/lib/portal/api";
 
 /**
- * The pieces the Documents drive and a case's Documents tab share: every case
- * has two folders, "Case files" (the client sees them) and "Internal" (the
- * firm only), and the firm can make its own folders inside either.
+ * The pieces the Documents drive and a case's Documents tab share. Every case
+ * has three folders:
+ *
+ *   Internal       the firm only
+ *   From client    what the client sends, and what the firm shares with them
+ *   From court     court orders (fetched automatically) and filed papers
+ *
+ * The client sees the last two, as "From court" and "Client files". The firm
+ * can make its own folders inside any of the three.
  */
 
-export type Side = "CLIENT" | "INTERNAL";
-export type Folder = { id: string; name: string; visibility: Side };
+export type Section = DocumentSection;
+export type Folder = { id: string; name: string; section: Section; visibility: "CLIENT" | "INTERNAL" };
 
-export const SIDES: Side[] = ["CLIENT", "INTERNAL"];
+/** In the order each side sees them. */
+export const sectionsFor = (staff: boolean): Section[] => (staff ? ["INTERNAL", "CLIENT", "COURT"] : ["COURT", "CLIENT"]);
 
-export const SIDE_LABEL: Record<Side, string> = { CLIENT: "Case files", INTERNAL: "Internal" };
+export function sectionLabel(section: Section, staff: boolean) {
+  if (section === "INTERNAL") return "Internal";
+  if (section === "COURT") return "From court";
+  return staff ? "From client" : "Client files";
+}
 
-export function sideHint(side: Side, staff: boolean) {
-  if (side === "INTERNAL") return "Firm only — the client does not see these";
-  return staff ? "Shared with the client: court orders, their uploads, the firm's files" : "Court orders, your uploads and what the firm shares with you";
+export function sectionHint(section: Section, staff: boolean) {
+  if (section === "INTERNAL") return "Firm only. The client never sees these";
+  if (section === "COURT") return staff ? "Court orders and filed papers. The client sees these" : "Court orders and the papers filed in your case";
+  return staff ? "What the client sends, and what the firm shares with them" : "What you send to the firm, and what it shares with you";
+}
+
+export const sectionTone = (section: Section) => (section === "INTERNAL" ? "slate" : section === "COURT" ? "ink" : "gold") as "slate" | "ink" | "gold";
+
+/** The section a document sits in (older records without one: from its visibility). */
+export function sectionOf(doc: DocumentRecord): Section {
+  if (doc.section) return doc.section;
+  if (doc.visibility === "INTERNAL") return "INTERNAL";
+  return doc.fromCourt ? "COURT" : "CLIENT";
 }
 
 /** Where a file came from, shown on its row. */
 export function sourceOf(doc: DocumentRecord): { label: string; tone: string } {
-  if (doc.fromCourt) return { label: "From the court", tone: "bg-sky-50 text-sky-800" };
-  if (doc.uploadedByClientId || (doc.uploadedByClient && !doc.uploadedByUser)) return { label: "From the client", tone: "bg-amber-50 text-amber-800" };
-  return { label: "From the firm", tone: "bg-paper-tint text-ink-soft" };
+  if (doc.fromCourt) return { label: "Court website", tone: "bg-sky-50 text-sky-800" };
+  if (doc.uploadedByClientId || (doc.uploadedByClient && !doc.uploadedByUser)) return { label: "Sent by the client", tone: "bg-amber-50 text-amber-800" };
+  return { label: "Added by the firm", tone: "bg-paper-tint text-ink-soft" };
 }
 
 export function SourceTag({ doc }: { doc: DocumentRecord }) {
@@ -30,17 +51,42 @@ export function SourceTag({ doc }: { doc: DocumentRecord }) {
   return <span className={`rounded px-1.5 py-0.5 text-[0.65rem] font-semibold ${source.tone}`}>{source.label}</span>;
 }
 
-/** Files in one place: a side's top level, or one of the firm's folders. */
-export function filesIn(documents: DocumentRecord[], side: Side, folder: Folder | null, folders: Folder[]) {
+/** Files in one place: a section's top level, or one of the firm's folders. */
+export function filesIn(documents: DocumentRecord[], section: Section, folder: Folder | null, folders: Folder[]) {
   return documents.filter((doc) => {
-    if ((doc.visibility === "INTERNAL" ? "INTERNAL" : "CLIENT") !== side) return false;
+    if (sectionOf(doc) !== section) return false;
     if (folder) return doc.folderId === folder.id;
     return !doc.folderId || !folders.some((f) => f.id === doc.folderId);
   });
 }
 
-export function countSide(documents: DocumentRecord[], side: Side) {
-  return documents.filter((doc) => (doc.visibility === "INTERNAL" ? "INTERNAL" : "CLIENT") === side).length;
+export function countSection(documents: DocumentRecord[], section: Section) {
+  return documents.filter((doc) => sectionOf(doc) === section).length;
+}
+
+/**
+ * Every place in a case a file can go, as `section:X` or `folder:<id>`, for
+ * the upload dialog's Folder box and the Move to box.
+ */
+export function placeOptions(folders: Folder[], staff: boolean, sections: Section[] = sectionsFor(staff)) {
+  return sections.map((section) => ({
+    section,
+    label: sectionLabel(section, staff),
+    options: [
+      { value: `section:${section}`, label: sectionLabel(section, staff) },
+      ...folders
+        .filter((folder) => folder.section === section)
+        .map((folder) => ({ value: `folder:${folder.id}`, label: `${sectionLabel(section, staff)} / ${folder.name}` })),
+    ],
+  }));
+}
+
+/** `section:X` or `folder:<id>` back to where it is. */
+export function parsePlace(value: string, folders: Folder[]): { section: Section; folderId?: string } | null {
+  const [kind, id] = value.split(":");
+  if (kind === "section" && (id === "INTERNAL" || id === "CLIENT" || id === "COURT")) return { section: id };
+  const folder = kind === "folder" ? folders.find((f) => f.id === id) : undefined;
+  return folder ? { section: folder.section, folderId: folder.id } : null;
 }
 
 const FOLDER_ICON = "M2.5 5.5a1 1 0 011-1h4l1.5 1.5h7.5a1 1 0 011 1v8.5a1 1 0 01-1 1h-13a1 1 0 01-1-1z";
@@ -70,7 +116,7 @@ export function FolderTile({
       </svg>
       <span className="min-w-0 flex-1">
         <span className="block truncate text-sm font-semibold text-ink group-hover:text-gold-deep">{title}</span>
-        {subtitle && <span className="mt-0.5 block truncate text-xs text-slate">{subtitle}</span>}
+        {subtitle && <span className="mt-0.5 block text-xs text-slate">{subtitle}</span>}
         {count !== undefined && (
           <span className="mt-1.5 block text-xs font-semibold text-ink-soft">
             {count === 0 ? "Empty" : `${count} file${count === 1 ? "" : "s"}`}
@@ -100,29 +146,26 @@ export function Breadcrumbs({ trail }: { trail: { label: string; onClick?: () =>
   );
 }
 
-/** "Move to" for staff: either side's top, or any of the case's folders. */
-export function MoveSelect({ doc, folders, onMove }: { doc: DocumentRecord; folders: Folder[]; onMove: (body: { folderId: string | null; visibility?: Side }) => void }) {
-  const here = doc.folderId && folders.some((f) => f.id === doc.folderId) ? `folder:${doc.folderId}` : `side:${doc.visibility}`;
+/** "Move to" for staff: the top of any of the three, or any of the case's folders. */
+export function MoveSelect({ doc, folders, onMove }: { doc: DocumentRecord; folders: Folder[]; onMove: (body: { folderId: string | null; section?: Section }) => void }) {
+  const here = doc.folderId && folders.some((f) => f.id === doc.folderId) ? `folder:${doc.folderId}` : `section:${sectionOf(doc)}`;
   return (
     <select
       aria-label="Move to"
       value={here}
       onChange={(event) => {
-        const [kind, value] = event.target.value.split(":");
-        onMove(kind === "folder" ? { folderId: value } : { folderId: null, visibility: value as Side });
+        const place = parsePlace(event.target.value, folders);
+        if (place) onMove(place.folderId ? { folderId: place.folderId } : { folderId: null, section: place.section });
       }}
-      className="max-w-[11rem] rounded-md border border-line bg-white px-2 py-1 text-xs font-normal text-ink-soft"
+      className="max-w-[12rem] rounded-md border border-line bg-white px-2 py-1 text-xs font-normal text-ink-soft"
     >
-      {SIDES.map((side) => (
-        <optgroup key={side} label={SIDE_LABEL[side]}>
-          <option value={`side:${side}`}>{SIDE_LABEL[side]}</option>
-          {folders
-            .filter((folder) => folder.visibility === side)
-            .map((folder) => (
-              <option key={folder.id} value={`folder:${folder.id}`}>
-                {SIDE_LABEL[side]} / {folder.name}
-              </option>
-            ))}
+      {placeOptions(folders, true).map((group) => (
+        <optgroup key={group.section} label={group.label}>
+          {group.options.map((option) => (
+            <option key={option.value} value={option.value}>
+              {option.label}
+            </option>
+          ))}
         </optgroup>
       ))}
     </select>
