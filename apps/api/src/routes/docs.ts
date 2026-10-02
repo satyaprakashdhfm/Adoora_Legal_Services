@@ -81,6 +81,10 @@ const GUIDE_UPDATES: {
       "Glossary",
     ],
   },
+  {
+    key: "2026-10-test-logins-and-deleting",
+    rewrite: ["Signing in", "Step by step: jobs, articles, enquiries and more", "Documents"],
+  },
 ];
 
 type Tx = Parameters<Parameters<typeof prisma.$transaction>[0]>[0];
