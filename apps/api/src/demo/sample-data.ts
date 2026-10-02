@@ -790,7 +790,7 @@ export async function trimSampleDataOnStartup() {
 
 /** Prof. P.L. Vishweshwer Rao v. The State of Telangana, found by its title (spellings vary). */
 const ONE_CASE_TITLE = { OR: [{ title: { contains: "vishweshw", mode: "insensitive" as const } }, { title: { contains: "vishwesw", mode: "insensitive" as const } }] };
-const TEST_LAWYER_EMAILS = ["info@adooralegalservices.com", "pradeep.test@adoora.invalid", "surya.test@adoora.invalid", "anshu.test@adoora.invalid"];
+const TEST_LAWYER_EMAILS = ["info@adooralegalservices.com", "pradeep.test@adoora.invalid", "anshu.test@adoora.invalid"];
 const TEST_CLIENT = { email: "kiran.client@adoora.invalid", name: "Kiran Kumar (Demo client)" };
 
 /** The case the temporary logins are put on: the Vishweshwer Rao case, or the sample case if it is not there. */
@@ -803,7 +803,7 @@ export async function findSharedCase(fallbackReference: string) {
 /**
  * Once, at start-up: keeps only the Vishweshwer Rao case. Every other case
  * goes, with its files and queries. The test lawyers (Ganesh, Pradeep
- * Reddy, Surya, Anshu Sharma) and the demo client (Kiran Kumar) are put on
+ * Reddy, Anshu Sharma) and the demo client (Kiran Kumar) are put on
  * it. Nothing happens until exactly one case with that title exists, so it
  * waits for the case to be added and never guesses between two.
  */
@@ -837,5 +837,38 @@ export async function keepOnlyOneCaseOnStartup() {
     logger.info(summary, "Kept only the Vishweshwer Rao case");
   } catch (error) {
     logger.error({ err: error }, "Keep one case failed");
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Only the test people, with no personal emails or numbers
+// ---------------------------------------------------------------------------
+
+/** The firm accounts kept: Ganesh (the firm's main address), Pradeep Reddy and Anshu Sharma. */
+const KEPT_STAFF = ["info@adooralegalservices.com", "pradeep.test@adoora.invalid", "anshu.test@adoora.invalid"];
+
+/**
+ * Once, at start-up: every other firm account and every client but the demo
+ * client (Kiran Kumar) is deleted, with the website profiles of the deleted
+ * firm accounts, so no personal email or number is left in the console.
+ * Ganesh becomes the owner. Cases and files are kept.
+ */
+export async function keepOnlyTestPeopleOnStartup() {
+  try {
+    if (await prisma.auditLog.findFirst({ where: { action: "accounts.test_only" }, select: { id: true } })) return;
+
+    const goneStaff = (
+      await prisma.user.findMany({ where: { OR: [{ email: null }, { email: { notIn: KEPT_STAFF } }] }, select: { id: true } })
+    ).map((u) => u.id);
+    const profiles = await prisma.lawyerProfile.deleteMany({ where: { userId: { in: goneStaff } } });
+    const staff = await prisma.user.deleteMany({ where: { id: { in: goneStaff } } });
+    const clients = await prisma.client.deleteMany({ where: { OR: [{ email: null }, { email: { not: TEST_CLIENT.email } }] } });
+    await prisma.user.updateMany({ where: { email: "info@adooralegalservices.com" }, data: { role: "OWNER" } });
+
+    const summary = { staff: staff.count, profiles: profiles.count, clients: clients.count };
+    await prisma.auditLog.create({ data: { action: "accounts.test_only", entityType: "User", metadata: summary } });
+    logger.info(summary, "Kept only the test people");
+  } catch (error) {
+    logger.error({ err: error }, "Keeping only the test people failed");
   }
 }

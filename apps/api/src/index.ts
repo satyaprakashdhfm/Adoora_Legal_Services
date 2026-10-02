@@ -3,7 +3,7 @@ import { env } from "./env.js";
 import { logger } from "./logger.js";
 import { prisma } from "./db.js";
 import { startScheduler } from "./jobs/scheduler.js";
-import { keepOnlyOneCaseOnStartup, seedSampleDataOnStartup, trimSampleDataOnStartup } from "./demo/sample-data.js";
+import { keepOnlyOneCaseOnStartup, keepOnlyTestPeopleOnStartup, seedSampleDataOnStartup, trimSampleDataOnStartup } from "./demo/sample-data.js";
 
 const app = createApp();
 
@@ -15,7 +15,8 @@ const server = app.listen(env.PORT, () => {
   startScheduler();
   void seedSampleDataOnStartup(env.SAMPLE_DATA)
     .then(() => trimSampleDataOnStartup())
-    .then(() => keepOnlyOneCaseOnStartup());
+    .then(() => keepOnlyOneCaseOnStartup())
+    .then(() => keepOnlyTestPeopleOnStartup());
 });
 
 /**

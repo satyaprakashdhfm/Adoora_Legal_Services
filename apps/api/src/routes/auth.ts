@@ -213,6 +213,8 @@ authRouter.post("/otp", loginLimiter, async (req, res) => {
  * missing; a firm account is never lowered (an owner stays an owner). Each
  * sign-in also puts the person on the shared sample case, if it exists.
  */
+/** Logins taken away: Surya's are no longer needed. */
+const WITHDRAWN = ["surya.admin", "surya.lawyer"];
 const DUMMY_HASH = "$2b$10$invalidinvalidinvalidinvalidinvalidinvalidinvalidinval";
 
 authRouter.post("/login", loginLimiter, async (req, res) => {
@@ -221,7 +223,7 @@ authRouter.post("/login", loginLimiter, async (req, res) => {
   const password = typeof req.body?.password === "string" ? req.body.password : "";
   const audience = audienceOf(req.body?.audience);
 
-  const account = TEMP_ACCOUNTS.find((a) => a.username === username && a.area === audience);
+  const account = TEMP_ACCOUNTS.find((a) => a.username === username && a.area === audience && !WITHDRAWN.includes(a.username));
   // Always compare, so the time taken does not reveal which usernames exist.
   const matches = await bcrypt.compare(password, account?.passwordHash ?? DUMMY_HASH);
   if (!account || !matches) {

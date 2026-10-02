@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { api, refreshWebsite, type LawyerProfile, type StaffRole } from "@/lib/portal/api";
 import { useUser } from "@/lib/portal/session";
+import { PASSWORD_ONLY } from "@/lib/portal/sign-in-mode";
 import { formatDate } from "@/lib/portal/format";
 import { practiceAreas } from "@/content/practice-areas";
 import { Avatar, Badge, Button, Card, EmptyState, ErrorNote, Field, Input, Modal, PageTitle, Select, Spinner, Table, Td, Textarea, Th } from "@/components/portal/ui";
@@ -57,7 +58,8 @@ function SignInAccess({ users }: { users: StaffRow[] }) {
   const lawyers = active
     .filter((u) => u.role === "LAWYER" || u.role === "OWNER" || u.role === "ADMIN")
     .sort((a, b) => ["LAWYER", "ADMIN", "OWNER"].indexOf(a.role) - ["LAWYER", "ADMIN", "OWNER"].indexOf(b.role));
-  const pending = (serverEmails ?? []).filter((entry) => !entry.role);
+  // Google sign-in is off while the test logins are in use, so these addresses cannot sign in; not listed.
+  const pending = PASSWORD_ONLY ? [] : (serverEmails ?? []).filter((entry) => !entry.role);
 
   const row = (u: StaffRow) => (
     <li key={u.id} className="flex flex-wrap items-center justify-between gap-2 py-2.5">
