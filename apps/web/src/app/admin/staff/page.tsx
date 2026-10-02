@@ -208,6 +208,10 @@ function PersonForm({
     event.preventDefault();
     const form = new FormData(event.currentTarget);
     const data = Object.fromEntries(form) as Record<string, string>;
+    if (onWebsite && form.get("featured") === "on" && !data.summary?.trim()) {
+      setError("To feature someone on the home page, write their home page introduction first. It is the text shown beside the portrait.");
+      return;
+    }
     setSaving(true);
     setError(null);
     try {
@@ -250,7 +254,7 @@ function PersonForm({
           memberships: lines(data.memberships ?? ""),
           bio: paragraphs(data.bio ?? ""),
           featured: form.get("featured") === "on",
-          sortOrder: Number(data.sortOrder || 0),
+          ...(data.sortOrder ? { sortOrder: Number(data.sortOrder) } : {}),
         });
         if (hasAccount) body.email = data.publicEmail;
       }
@@ -364,7 +368,7 @@ function PersonForm({
             <Input name="enrolledSince" type="number" min={1950} max={2100} defaultValue={profile?.enrolledSince ?? ""} />
           </Field>
           <Field label="Display order" hint="Lower numbers come first.">
-            <Input name="sortOrder" type="number" min={0} max={9999} defaultValue={profile?.sortOrder ?? 0} />
+            <Input name="sortOrder" type="number" min={0} max={9999} defaultValue={profile?.sortOrder ?? ""} placeholder="Last" />
           </Field>
           <div className="sm:col-span-2">
             <p className="text-xs font-semibold uppercase tracking-wide text-ink-soft">Practices</p>

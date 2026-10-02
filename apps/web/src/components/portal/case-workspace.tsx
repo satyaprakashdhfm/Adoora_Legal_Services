@@ -12,6 +12,7 @@ import { DocumentsPanel } from "@/components/portal/documents-panel";
 import { Timeline } from "@/components/portal/timeline";
 import { Avatar, Badge, Button, Card, CardHeader, EmptyState, ErrorNote, Spinner, StatusBadge, SuccessNote } from "@/components/portal/ui";
 import { PeoplePicker, TeamPicker, personDetail, type TeamEntry } from "@/components/portal/people-picker";
+import { DeleteDialog } from "@/components/portal/delete-dialog";
 
 type Tab = "overview" | "court" | "documents" | "timeline" | "edit";
 
@@ -246,10 +247,44 @@ export function CaseWorkspace({ reference, user, basePath }: { reference: string
           <div className="space-y-6">
             <TeamCard record={record} onChange={load} />
             {record.canManage && <ClientsCard record={record} onChange={load} />}
+            {record.canManage && <DeleteCaseCard record={record} basePath={basePath} />}
           </div>
         </div>
       )}
     </div>
+  );
+}
+
+/** Owners and administrators: delete the case, after a confirmation that lists what goes with it. */
+function DeleteCaseCard({ record, basePath }: { record: CaseDetail; basePath: string }) {
+  const [open, setOpen] = useState(false);
+  const files = record.documents.length;
+  const count = (n: number, one: string, many: string) => `${n} ${n === 1 ? one : many}`;
+  return (
+    <Card className="border-red-200 p-5">
+      <h2 className="font-serif text-base font-semibold text-ink">Delete this case</h2>
+      <p className="mt-1 text-xs text-slate">Removes the case and every file on it, for everyone. This cannot be undone.</p>
+      <Button tone="danger" size="sm" className="mt-3" onClick={() => setOpen(true)}>
+        Delete case
+      </Button>
+      <DeleteDialog
+        open={open}
+        onClose={() => setOpen(false)}
+        title={`Delete ${record.reference}?`}
+        goes={[
+          <><strong>{record.title}</strong> itself</>,
+          <>All files related to this case: <strong>{count(files, "file", "files")}</strong> in Internal, Client and From court, with every earlier version</>,
+          <>Its hearings ({record.hearings.length}), court orders ({record.orders.length}), timeline, folders and client queries</>,
+          <>Access for its lawyers and clients: it disappears from their dashboards</>,
+        ]}
+        stays={["The lawyer and client accounts themselves, and their other cases"]}
+        actionLabel="Delete case and all its files"
+        onConfirm={async () => {
+          await api(`/cases/${encodeURIComponent(record.reference)}`, { method: "DELETE" });
+          window.location.assign(`${basePath}/cases`);
+        }}
+      />
+    </Card>
   );
 }
 

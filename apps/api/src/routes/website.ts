@@ -185,7 +185,10 @@ websiteAdminRouter.post("/profiles", ...adminOnly, async (req, res) => {
   const slug = await freeSlug(input.slug ?? input.name, async (s) =>
     Boolean(await prisma.lawyerProfile.findUnique({ where: { slug: s }, select: { id: true } })),
   );
-  const created = await prisma.lawyerProfile.create({ data: { ...input, slug }, select: profileSelect });
+  // Without an order given, a new profile goes after everyone already listed.
+  const last = input.sortOrder === undefined ? await prisma.lawyerProfile.aggregate({ _max: { sortOrder: true } }) : null;
+  const sortOrder = input.sortOrder ?? Math.min((last?._max.sortOrder ?? -10) + 10, 9999);
+  const created = await prisma.lawyerProfile.create({ data: { ...input, slug, sortOrder }, select: profileSelect });
   await audit(req, "profile.created", "LawyerProfile", created.id, { slug });
   res.status(201).json(serialiseProfile(created));
 });

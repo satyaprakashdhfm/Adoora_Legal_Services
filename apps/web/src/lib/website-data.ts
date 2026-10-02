@@ -65,6 +65,13 @@ type ApiProfile = {
 /** The home page trio the static roster featured, for the fallback. */
 const STATIC_FEATURED = ["ganesh-raghavendra", "vidya-sagar", "kondal-rao"];
 
+/** The firm's studio portraits in public/ (people1-3), each for its own person. */
+export const STUDIO_PORTRAITS: Record<string, string> = {
+  "ganesh-raghavendra": "people1",
+  "vidya-sagar": "people2",
+  "kondal-rao": "people3",
+};
+
 function initials(name: string): string {
   return name
     .replace(/^adv\.?\s+/i, "")
@@ -257,10 +264,15 @@ function toInsight(article: ApiArticle): Insight {
  */
 export async function getInsights(): Promise<Insight[]> {
   const result = await fromApi<{ data: ApiArticle[] }>("/public/articles", ARTICLES_TAG);
-  const fromConsole = (result?.data ?? []).map(toInsight);
+  const articles = result?.data ?? [];
+  const fromConsole = articles.map(toInsight);
   const taken = new Set(fromConsole.map((insight) => insight.slug));
+  // Newest first. Console articles carry the exact publishing time, so two
+  // published the same day still come out latest first.
+  const publishedAt = new Map(articles.map((article) => [article.slug, article.publishedAt ?? article.updatedAt]));
+  const when = (insight: Insight) => publishedAt.get(insight.slug) ?? `${insight.date}T00:00:00.000Z`;
   return [...fromConsole, ...bundledInsights.filter((insight) => !taken.has(insight.slug))].sort((a, b) =>
-    b.date.localeCompare(a.date),
+    when(b).localeCompare(when(a)),
   );
 }
 

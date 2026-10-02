@@ -568,6 +568,25 @@ adminRouter.patch(
   },
 );
 
+/**
+ * Deletes a client account for good: their sign-ins and the queries they
+ * raised go with it. Their cases stay with the firm, and files they uploaded
+ * stay on those cases.
+ */
+adminRouter.delete(
+  "/clients/:id",
+  requireAuth,
+  requireRole("OWNER", "ADMIN"),
+  async (req, res) => {
+    const id = z.string().uuid().parse(req.params.id);
+    await revokeAllSessions({ clientId: id });
+    const deleted = await prisma.client.delete({ where: { id }, select: { name: true } }).catch(() => null);
+    if (!deleted) throw new HttpError(404, "Client not found.", "not_found");
+    await audit(req, "client.deleted", "Client", null, { id, name: deleted.name });
+    res.json({ ok: true });
+  },
+);
+
 // ---------------------------------------------------------------------------
 // Audit log
 // ---------------------------------------------------------------------------

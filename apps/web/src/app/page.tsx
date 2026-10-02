@@ -7,7 +7,7 @@ import { PracticesGrid } from "@/components/practices-grid";
 import { CityIcon } from "@/components/city-icon";
 import { OurApproach } from "@/components/our-approach";
 import { firm, firmOverview, differentiators, offices } from "@/content/firm";
-import { getFeaturedPeople, getInsights } from "@/lib/website-data";
+import { getFeaturedPeople, getInsights, STUDIO_PORTRAITS } from "@/lib/website-data";
 import { PeopleCards } from "@/components/people-cards";
 import { practiceAreas } from "@/content/practice-areas";
 import { heroSlides } from "@/content/hero-slides";
@@ -51,11 +51,12 @@ const practiceGridOrder = [
 ];
 
 export default async function Home() {
-  /* Profiles marked "Show on the home page" in the admin console. The first
-     three take the firm's studio portraits (people1–3 in public/), in order,
-     unless a portrait has been uploaded for that person in the console. */
-  const featuredPeople = (await getFeaturedPeople()).map((person, index) =>
-    index < 3 && !person.photoUrl ? { ...person, photo: `people${index + 1}` } : person,
+  /* Profiles marked "Feature on the home page" in the admin console. The
+     founder and the two partners use the firm's studio portraits (people1-3
+     in public/) unless a portrait has been uploaded for them in the console;
+     anyone else shows their uploaded portrait. */
+  const featuredPeople = (await getFeaturedPeople()).map((person) =>
+    !person.photoUrl && STUDIO_PORTRAITS[person.slug] ? { ...person, photo: STUDIO_PORTRAITS[person.slug] } : person,
   );
   const latestInsights = (await getInsights()).slice(0, 3);
   const practiceGridItems = practiceGridOrder

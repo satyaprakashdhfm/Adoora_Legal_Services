@@ -35,6 +35,7 @@ import { uploadDocument, uploadMiddleware } from "./documents.js";
 import { placementFields, placesForViewer } from "../lib/places.js";
 import type { Principal } from "../auth/session.js";
 import type { Prisma } from "../../generated/prisma/client.js";
+import { storage } from "../storage/index.js";
 
 /**
  * Cases, for both dashboards. The same endpoints serve clients, lawyers and
@@ -765,6 +766,30 @@ casesRouter.get("/:reference", async (req, res) => {
   await audit(req, "case.view", "Case", found.id, { reference: found.reference });
   res.set("Cache-Control", "no-store");
   res.json(serialiseCase(principal, record));
+});
+
+/**
+ * DELETE /api/cases/:reference — owners and administrators only. Deletes the
+ * case for good, with every file on it (all versions, in every folder), its
+ * queries, hearings, orders, timeline and folders. The console asks first.
+ */
+casesRouter.delete("/:reference", async (req, res) => {
+  const principal = req.principal!;
+  if (!isFirmAdmin(principal)) throw notFound();
+  const found = await prisma.case.findUnique({ where: { reference: String(req.params.reference) }, select: { id: true, reference: true, title: true } });
+  if (!found) throw notFound();
+
+  const versions = await prisma.documentVersion.findMany({ where: { document: { caseId: found.id } }, select: { storageKey: true } });
+  await prisma.$transaction([
+    prisma.courtOrder.updateMany({ where: { caseId: found.id }, data: { documentId: null } }),
+    prisma.document.deleteMany({ where: { caseId: found.id } }),
+    prisma.clientQuery.deleteMany({ where: { caseId: found.id } }),
+    prisma.case.delete({ where: { id: found.id } }),
+  ]);
+  for (const version of versions) await storage.delete(version.storageKey).catch(() => undefined);
+
+  await audit(req, "case.deleted", "Case", found.id, { reference: found.reference, title: found.title, files: versions.length });
+  res.json({ ok: true, files: versions.length });
 });
 
 casesRouter.patch("/:reference", async (req, res) => {

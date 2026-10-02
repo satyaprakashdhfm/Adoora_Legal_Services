@@ -5,6 +5,7 @@ import { useCallback, useEffect, useState } from "react";
 import { api, type CaseSummary, type Page } from "@/lib/portal/api";
 import { courtNumber } from "@/lib/portal/format";
 import { PeoplePicker } from "@/components/portal/people-picker";
+import { DeleteDialog } from "@/components/portal/delete-dialog";
 import { formatDate } from "@/lib/portal/format";
 import {
   Avatar,
@@ -77,6 +78,7 @@ function ClientForm({ initial, onSaved }: { initial?: ClientRow; onSaved: () => 
   const [saving, setSaving] = useState(false);
   const [caseIds, setCaseIds] = useState<string[]>(() => initial?.cases.map((c) => c.id) ?? []);
   const [kind, setKind] = useState<ClientRow["kind"]>(initial?.kind ?? "INDIVIDUAL");
+  const [deleting, setDeleting] = useState(false);
   const organisation = kind === "ORGANISATION";
 
   async function submit(event: React.FormEvent<HTMLFormElement>) {
@@ -160,10 +162,37 @@ function ClientForm({ initial, onSaved }: { initial?: ClientRow; onSaved: () => 
           <Select name="isActive" defaultValue={String(initial.isActive)} options={[{ value: "true", label: "Active" }, { value: "false", label: "Deactivated" }]} />
         </Field>
       )}
-      <div className="space-y-3 sm:col-span-2">
-        <ErrorNote>{error}</ErrorNote>
-        <Button type="submit" disabled={saving}>{saving ? "Saving…" : initial ? "Save client" : "Add client"}</Button>
+      <div className="flex flex-wrap items-end justify-between gap-3 sm:col-span-2">
+        <div className="space-y-3">
+          <ErrorNote>{error}</ErrorNote>
+          <Button type="submit" disabled={saving}>{saving ? "Saving…" : initial ? "Save client" : "Add client"}</Button>
+        </div>
+        {initial && (
+          <Button tone="danger" size="sm" onClick={() => setDeleting(true)}>
+            Delete client
+          </Button>
+        )}
       </div>
+      {initial && (
+        <DeleteDialog
+          open={deleting}
+          onClose={() => setDeleting(false)}
+          title={`Delete ${initial.name}?`}
+          goes={[
+            <>The client account of <strong>{initial.name}</strong>: they can no longer sign in, and are signed out now</>,
+            "The queries they raised, with the firm's replies",
+            initial.cases.length
+              ? `Their access to ${initial.cases.length === 1 ? "1 case" : `${initial.cases.length} cases`}`
+              : "Nothing else: no cases are linked",
+          ]}
+          stays={["The cases themselves, and every file on them, including files this client uploaded"]}
+          actionLabel="Delete client"
+          onConfirm={async () => {
+            await api(`/admin/clients/${initial.id}`, { method: "DELETE" });
+            onSaved();
+          }}
+        />
+      )}
     </form>
   );
 }
