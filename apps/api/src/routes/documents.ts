@@ -11,6 +11,7 @@ import { checkUpload, contentDisposition, isInlineSafe } from "../lib/files.js";
 import { makeDocumentReference, makeTeamDocumentReference } from "../lib/ids.js";
 import { ObjectNotFoundError, storage, storageFor } from "../storage/index.js";
 import { requireSignedIn } from "../middleware/auth.js";
+import { checkPlaces, placeKey, placementFields, placesForViewer } from "../lib/places.js";
 import {
   documentScope,
   findVisibleDocument,
@@ -22,7 +23,6 @@ import {
   documentListSchema,
   documentPatchSchema,
   documentUploadSchema,
-  sectionVisibility,
 } from "../portal-schemas.js";
 import type { Principal } from "../auth/session.js";
 import type { Prisma } from "../../generated/prisma/client.js";
@@ -107,17 +107,24 @@ export async function uploadDocument(
   const fields = documentUploadSchema.parse(req.body ?? {});
   const stored = await storeFile(req, target.id);
 
-  // A folder decides where it goes; a client's upload always goes to From
-  // client (or a folder the firm made there).
-  const folder = fields.folderId
-    ? await prisma.documentFolder.findFirst({ where: { id: fields.folderId, caseId: target.id }, select: { id: true, section: true } })
-    : null;
-  if (fields.folderId && (!folder || (principal.kind === "client" && folder.section !== "CLIENT"))) {
+  // Where it goes: the firm may choose several folders; a client's upload
+  // always goes to Client (or one folder the firm made there).
+  let placement: ReturnType<typeof placementFields>;
+  try {
+    const requested =
+      principal.kind === "staff" && fields.places
+        ? fields.places.split(",")
+        : [placeKey(principal.kind === "client" ? "CLIENT" : fields.section, fields.folderId)];
+    const places = await checkPlaces(target.id, requested);
+    if (principal.kind === "client" && (places.length !== 1 || !places[0]!.startsWith("CLIENT"))) {
+      throw new HttpError(400, "That folder is not part of this case.", "bad_folder");
+    }
+    placement = placementFields(places);
+  } catch (error) {
     await discard(stored.storageKey);
-    throw new HttpError(400, "That folder is not part of this case.", "bad_folder");
+    throw error;
   }
-  const section = principal.kind === "client" ? "CLIENT" : (folder?.section ?? fields.section);
-  const visibility = sectionVisibility(section);
+  const visibility = placement.visibility;
   const title = fields.title ?? stored.filename.replace(/\.[^.]+$/, "");
 
   try {
@@ -137,9 +144,7 @@ export async function uploadDocument(
           title,
           category: fields.category,
           description: fields.description ?? null,
-          visibility,
-          section,
-          folderId: folder?.id ?? null,
+          ...placement,
           ...uploader(principal),
           versions: { create: { version: 1, ...stored, ...uploader(principal) } },
         },
@@ -220,8 +225,7 @@ export async function saveCourtDocument(
           title: file.title.slice(0, 200),
           category: file.category,
           description: file.description,
-          visibility: "CLIENT",
-          section: "COURT",
+          ...placementFields(["COURT"]),
           fromCourt: true,
           versions: { create: { version: 1, ...stored } },
         },
@@ -264,8 +268,7 @@ documentsRouter.post("/team", uploadMiddleware, async (req, res) => {
             title,
             category: fields.category,
             description: fields.description ?? null,
-            visibility: "INTERNAL",
-            section: "INTERNAL",
+            ...placementFields(["INTERNAL"]),
             ...uploader(principal),
             versions: { create: { version: 1, ...stored, ...uploader(principal) } },
           },
@@ -338,7 +341,7 @@ documentsRouter.get("/", async (req, res) => {
   const hasMore = documents.length > query.limit;
   const page = hasMore ? documents.slice(0, query.limit) : documents;
   res.set("Cache-Control", "no-store");
-  res.json({ data: page, nextCursor: hasMore ? page[page.length - 1]?.id : null });
+  res.json({ data: page.map((doc) => placesForViewer(principal, doc)), nextCursor: hasMore ? page[page.length - 1]?.id : null });
 });
 
 documentsRouter.get("/:reference", async (req, res) => {
@@ -362,7 +365,7 @@ documentsRouter.get("/:reference", async (req, res) => {
 
   res.set("Cache-Control", "no-store");
   res.json({
-    ...found,
+    ...placesForViewer(principal, found),
     versions,
     canEdit: isCaseStaff(principal),
     canDelete: isFirmAdmin(principal),
@@ -378,24 +381,20 @@ documentsRouter.patch("/:reference", async (req, res) => {
   const found = await findVisibleDocument(principal, String(req.params.reference));
   const { folderId, ...input } = documentPatchSchema.parse(req.body);
 
-  // Moving into a folder: the folder's section comes with it. A change of
-  // section on its own takes the document to the top of that section.
-  // Visibility always follows the section.
-  const { section, ...rest } = input;
+  // Moving: `places` lists every folder it should be in from now on (one or
+  // several). The older single-folder forms still work: a folder, or the top
+  // of a section. Visibility always follows the places.
+  const { section, places, ...rest } = input;
   const data: Prisma.DocumentUncheckedUpdateInput = { ...rest };
-  if (folderId) {
-    const folder = await prisma.documentFolder.findFirst({ where: { id: folderId, caseId: found.caseId ?? undefined }, select: { section: true } });
-    if (!found.caseId || !folder) throw new HttpError(400, "That folder is not part of this document's case.", "bad_folder");
-    data.folderId = folderId;
-    data.section = folder.section;
-    data.visibility = sectionVisibility(folder.section);
-  } else {
-    if (folderId === null) data.folderId = null;
-    if (section && found.caseId) {
-      if (section !== found.section) data.folderId = null;
-      data.section = section;
-      data.visibility = sectionVisibility(section);
+  const requested = places ?? (folderId || folderId === null || section ? [placeKey(section ?? found.section, folderId)] : null);
+  if (requested) {
+    if (!found.caseId) throw new HttpError(400, "Files in the firm-wide Internal folder stay there.", "bad_folder");
+    if (folderId && !places) {
+      const folder = await prisma.documentFolder.findFirst({ where: { id: folderId, caseId: found.caseId }, select: { section: true } });
+      if (!folder) throw new HttpError(400, "That folder is not part of this document's case.", "bad_folder");
+      requested[0] = placeKey(folder.section, folderId);
     }
+    Object.assign(data, placementFields(await checkPlaces(found.caseId, requested)));
   }
 
   const updated = await prisma.document.update({ where: { id: found.id }, data });

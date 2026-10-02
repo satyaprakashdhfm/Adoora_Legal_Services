@@ -16,7 +16,7 @@ import { Avatar, Badge, Button, Card, EmptyState, ErrorNote, Field, Input, Modal
 
 type StaffRow = {
   id: string;
-  email: string;
+  email: string | null;
   name: string;
   role: StaffRole;
   isActive: boolean;
@@ -214,14 +214,14 @@ function PersonForm({
       // 1. The sign-in account.
       let userId = user?.id ?? created.current.userId ?? null;
       if (hasAccount && !seniorLocked) {
-        const account = { name: data.name, phone: data.phone, barEnrolment: data.enrolment };
+        const account = { name: data.name, phone: data.phone, barEnrolment: data.enrolment, ...(user?.email ? {} : { email: data.email ?? "" }) };
         if (userId) {
           await api(`/admin/users/${userId}`, {
             method: "PATCH",
             body: self ? account : { ...account, role: access, isActive: data.isActive !== "false" },
           });
         } else {
-          const result = await api<{ id: string }>("/admin/users", { method: "POST", body: { ...account, email: data.email, role: access } });
+          const result = await api<{ id: string }>("/admin/users", { method: "POST", body: { ...account, role: access } });
           userId = created.current.userId = result.id;
         }
       }
@@ -304,15 +304,14 @@ function PersonForm({
       <Field label="Position" required>
         <Input name="designation" required minLength={2} maxLength={160} placeholder="e.g. Senior Associate" defaultValue={profile?.designation ?? ""} />
       </Field>
+      <Field label="Mobile number" required={hasAccount} hint={hasAccount ? "They sign in with an OTP sent to this number." : "Optional."}>
+        <Input name="phone" type="tel" required={hasAccount} minLength={hasAccount ? 10 : undefined} maxLength={32} defaultValue={user?.phone ?? profile?.phone ?? ""} />
+      </Field>
       <Field
         label="Email"
-        required={hasAccount}
-        hint={user ? "The sign-in email cannot be changed." : hasAccount ? "They sign in with this address — no password to send." : "Optional."}
+        hint={user?.email ? "The sign-in email cannot be changed." : hasAccount ? "Optional. With it, they can also sign in with Google." : "Optional."}
       >
-        <Input name="email" type="email" required={hasAccount} disabled={Boolean(user)} defaultValue={user?.email ?? profile?.email ?? ""} />
-      </Field>
-      <Field label="Phone">
-        <Input name="phone" type="tel" maxLength={32} defaultValue={user?.phone ?? profile?.phone ?? ""} />
+        <Input name="email" type="email" disabled={Boolean(user?.email)} defaultValue={user?.email ?? profile?.email ?? ""} />
       </Field>
       <Field label="Bar Council enrolment no.">
         <Input name="enrolment" maxLength={80} placeholder="e.g. TS/1234/2015" defaultValue={user?.barEnrolment ?? profile?.enrolment ?? ""} />

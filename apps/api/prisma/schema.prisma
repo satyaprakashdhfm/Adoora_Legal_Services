@@ -31,7 +31,8 @@ enum UserRole {
 /// audience's access to a client.
 model User {
   id           String    @id @default(uuid()) @db.Uuid
-  email        String    @unique
+  /// Optional: someone may sign in with their mobile number only.
+  email        String?   @unique
   name         String
   /// Null for accounts that only ever sign in with Google.
   passwordHash String?
@@ -103,7 +104,8 @@ enum ClientKind {
 /// the account is waiting when the client arrives.
 model Client {
   id           String     @id @default(uuid()) @db.Uuid
-  email        String     @unique
+  /// Optional: a client may sign in with their mobile number only.
+  email        String?    @unique
   name         String
   kind         ClientKind @default(INDIVIDUAL)
   /// Organisation name when the client acts for a company.
@@ -537,7 +539,7 @@ enum DocumentCategory {
 /// case is in the firm-wide Internal folder.
 enum DocumentSection {
   INTERNAL // firm only
-  CLIENT // "From client": what the client sends, and what the firm shares
+  CLIENT // "Client": what the client sends, and what the firm shares
   COURT // "From court": orders and other court papers
 }
 
@@ -557,8 +559,11 @@ model Document {
   category       DocumentCategory @default(OTHER)
   description    String?          @db.Text
   visibility     Visibility       @default(CLIENT)
-  /// Which of the case's three folders. `visibility` always follows it.
+  /// The first of `places`: which of the case's three folders.
   section        DocumentSection  @default(CLIENT)
+  /// Every place the document sits: "COURT", "COURT/<folder id>" and so on
+  /// (see lib/places.ts). Visibility is INTERNAL only if all are in Internal.
+  places         String[]         @default([])
   currentVersion Int              @default(1)
 
   uploadedByUserId   String? @db.Uuid
@@ -589,8 +594,8 @@ model Document {
   @@index([createdAt])
 }
 
-/// A folder the firm made inside one of a case's three (Internal, From
-/// client, From court). Clients see those outside Internal.
+/// A folder the firm made inside one of a case's three (Internal,
+/// Client, From court). Clients see those outside Internal.
 model DocumentFolder {
   id          String     @id @default(uuid()) @db.Uuid
   caseId      String     @db.Uuid

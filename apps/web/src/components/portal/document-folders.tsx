@@ -1,15 +1,20 @@
+"use client";
+
+import { useState } from "react";
 import type { DocumentRecord, DocumentSection } from "@/lib/portal/api";
+import { Button, ErrorNote, Modal } from "@/components/portal/ui";
 
 /**
  * The pieces the Documents drive and a case's Documents tab share. Every case
  * has three folders:
  *
- *   Internal       the firm only
- *   From client    what the client sends, and what the firm shares with them
- *   From court     court orders (fetched automatically) and filed papers
+ *   Internal      the firm only
+ *   Client        what the client sends, and what the firm shares with them
+ *   From court    court orders (fetched automatically) and filed papers
  *
- * The client sees the last two, as "From court" and "Client files". The firm
- * can make its own folders inside any of the three.
+ * The client sees the last two. The firm can make its own folders inside
+ * any of the three, and one file can sit in several places at once (say
+ * Internal and From court). A place is "COURT" or "COURT/<folder id>".
  */
 
 export type Section = DocumentSection;
@@ -18,10 +23,8 @@ export type Folder = { id: string; name: string; section: Section; visibility: "
 /** In the order each side sees them. */
 export const sectionsFor = (staff: boolean): Section[] => (staff ? ["INTERNAL", "CLIENT", "COURT"] : ["COURT", "CLIENT"]);
 
-export function sectionLabel(section: Section, staff: boolean) {
-  if (section === "INTERNAL") return "Internal";
-  if (section === "COURT") return "From court";
-  return staff ? "From client" : "Client files";
+export function sectionLabel(section: Section) {
+  return section === "INTERNAL" ? "Internal" : section === "COURT" ? "From court" : "Client";
 }
 
 export function sectionHint(section: Section, staff: boolean) {
@@ -32,11 +35,13 @@ export function sectionHint(section: Section, staff: boolean) {
 
 export const sectionTone = (section: Section) => (section === "INTERNAL" ? "slate" : section === "COURT" ? "ink" : "gold") as "slate" | "ink" | "gold";
 
-/** The section a document sits in (older records without one: from its visibility). */
-export function sectionOf(doc: DocumentRecord): Section {
-  if (doc.section) return doc.section;
-  if (doc.visibility === "INTERNAL") return "INTERNAL";
-  return doc.fromCourt ? "COURT" : "CLIENT";
+const sectionOfPlace = (place: string) => place.split("/")[0] as Section;
+
+/** Every place a document sits (older records: the one folder it was in). */
+export function placesOf(doc: DocumentRecord): string[] {
+  if (doc.places?.length) return doc.places;
+  const section: Section = doc.section ?? (doc.visibility === "INTERNAL" ? "INTERNAL" : doc.fromCourt ? "COURT" : "CLIENT");
+  return [doc.folderId ? `${section}/${doc.folderId}` : section];
 }
 
 /** Where a file came from, shown on its row. */
@@ -51,42 +56,78 @@ export function SourceTag({ doc }: { doc: DocumentRecord }) {
   return <span className={`rounded px-1.5 py-0.5 text-[0.65rem] font-semibold ${source.tone}`}>{source.label}</span>;
 }
 
-/** Files in one place: a section's top level, or one of the firm's folders. */
+/**
+ * Files in one place: a section's top level, or one of the firm's folders.
+ * A place in a folder that no longer exists counts as the section's top.
+ */
 export function filesIn(documents: DocumentRecord[], section: Section, folder: Folder | null, folders: Folder[]) {
-  return documents.filter((doc) => {
-    if (sectionOf(doc) !== section) return false;
-    if (folder) return doc.folderId === folder.id;
-    return !doc.folderId || !folders.some((f) => f.id === doc.folderId);
-  });
+  return documents.filter((doc) =>
+    placesOf(doc).some((place) => {
+      const [placeSection, folderId] = place.split("/");
+      if (placeSection !== section) return false;
+      if (folder) return folderId === folder.id;
+      return !folderId || !folders.some((f) => f.id === folderId);
+    }),
+  );
 }
 
 export function countSection(documents: DocumentRecord[], section: Section) {
-  return documents.filter((doc) => sectionOf(doc) === section).length;
+  return documents.filter((doc) => placesOf(doc).some((place) => sectionOfPlace(place) === section)).length;
 }
 
-/**
- * Every place in a case a file can go, as `section:X` or `folder:<id>`, for
- * the upload dialog's Folder box and the Move to box.
- */
-export function placeOptions(folders: Folder[], staff: boolean, sections: Section[] = sectionsFor(staff)) {
+/** Every place in a case a file can go, grouped by section. */
+export function placeOptions(folders: Folder[], sections: Section[]) {
   return sections.map((section) => ({
     section,
-    label: sectionLabel(section, staff),
+    label: sectionLabel(section),
     options: [
-      { value: `section:${section}`, label: sectionLabel(section, staff) },
-      ...folders
-        .filter((folder) => folder.section === section)
-        .map((folder) => ({ value: `folder:${folder.id}`, label: `${sectionLabel(section, staff)} / ${folder.name}` })),
+      { value: section, label: sectionLabel(section) },
+      ...folders.filter((folder) => folder.section === section).map((folder) => ({ value: `${section}/${folder.id}`, label: folder.name })),
     ],
   }));
 }
 
-/** `section:X` or `folder:<id>` back to where it is. */
-export function parsePlace(value: string, folders: Folder[]): { section: Section; folderId?: string } | null {
-  const [kind, id] = value.split(":");
-  if (kind === "section" && (id === "INTERNAL" || id === "CLIENT" || id === "COURT")) return { section: id };
-  const folder = kind === "folder" ? folders.find((f) => f.id === id) : undefined;
-  return folder ? { section: folder.section, folderId: folder.id } : null;
+/** Tick one or more places. Folders the firm made sit beside their section. */
+export function FolderChecklist({
+  folders,
+  sections,
+  value,
+  onChange,
+}: {
+  folders: Folder[];
+  sections: Section[];
+  value: string[];
+  onChange: (places: string[]) => void;
+}) {
+  const toggle = (place: string) => onChange(value.includes(place) ? value.filter((p) => p !== place) : [...value, place]);
+  return (
+    <div className="space-y-3">
+      {placeOptions(folders, sections).map((group) => (
+        <fieldset key={group.section}>
+          <legend className="text-xs font-semibold text-ink-soft">
+            {group.label}
+            <span className="ml-1.5 font-normal text-slate">{group.section === "INTERNAL" ? "· firm only" : "· the client sees it"}</span>
+          </legend>
+          <div className="mt-1.5 flex flex-wrap gap-2">
+            {group.options.map((option) => {
+              const checked = value.includes(option.value);
+              return (
+                <label
+                  key={option.value}
+                  className={`inline-flex cursor-pointer items-center gap-2 rounded-md border px-3 py-1.5 text-sm transition ${
+                    checked ? "border-gold bg-gold/10 font-semibold text-ink" : "border-line-strong bg-white text-ink-soft hover:border-gold"
+                  }`}
+                >
+                  <input type="checkbox" checked={checked} onChange={() => toggle(option.value)} className="h-4 w-4 accent-[var(--color-gold)]" />
+                  {option.label}
+                </label>
+              );
+            })}
+          </div>
+        </fieldset>
+      ))}
+    </div>
+  );
 }
 
 const FOLDER_ICON = "M2.5 5.5a1 1 0 011-1h4l1.5 1.5h7.5a1 1 0 011 1v8.5a1 1 0 01-1 1h-13a1 1 0 01-1-1z";
@@ -146,28 +187,55 @@ export function Breadcrumbs({ trail }: { trail: { label: string; onClick?: () =>
   );
 }
 
-/** "Move to" for staff: the top of any of the three, or any of the case's folders. */
-export function MoveSelect({ doc, folders, onMove }: { doc: DocumentRecord; folders: Folder[]; onMove: (body: { folderId: string | null; section?: Section }) => void }) {
-  const here = doc.folderId && folders.some((f) => f.id === doc.folderId) ? `folder:${doc.folderId}` : `section:${sectionOf(doc)}`;
+/**
+ * "Move to" for the firm: tick every folder the file should be in (one or
+ * several), then Save. Unticking a folder takes it out of that one.
+ */
+export function MoveButton({ doc, folders, onMove }: { doc: DocumentRecord; folders: Folder[]; onMove: (body: { places: string[] }) => Promise<void> }) {
+  const [places, setPlaces] = useState<string[] | null>(null);
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  async function save() {
+    if (!places?.length) return;
+    setSaving(true);
+    setError(null);
+    try {
+      await onMove({ places });
+      setPlaces(null);
+    } catch (cause) {
+      setError((cause as Error).message);
+    } finally {
+      setSaving(false);
+    }
+  }
+
   return (
-    <select
-      aria-label="Move to"
-      value={here}
-      onChange={(event) => {
-        const place = parsePlace(event.target.value, folders);
-        if (place) onMove(place.folderId ? { folderId: place.folderId } : { folderId: null, section: place.section });
-      }}
-      className="max-w-[12rem] rounded-md border border-line bg-white px-2 py-1 text-xs font-normal text-ink-soft"
-    >
-      {placeOptions(folders, true).map((group) => (
-        <optgroup key={group.section} label={group.label}>
-          {group.options.map((option) => (
-            <option key={option.value} value={option.value}>
-              {option.label}
-            </option>
-          ))}
-        </optgroup>
-      ))}
-    </select>
+    <>
+      <Button tone="ghost" size="sm" onClick={() => setPlaces(placesOf(doc))}>
+        Move to
+      </Button>
+      <Modal open={places !== null} onClose={() => setPlaces(null)} title={`Move ${doc.title}`}>
+        {places && (
+          <div className="space-y-5">
+            <p className="text-sm text-ink-soft">Tick every folder this file should be in. It can be in more than one.</p>
+            <FolderChecklist folders={folders} sections={sectionsFor(true)} value={places} onChange={setPlaces} />
+            {places.length > 0 && places.every((place) => sectionOfPlace(place) === "INTERNAL") && (
+              <p className="text-xs text-slate">Only in Internal: the client will not see this file.</p>
+            )}
+            <ErrorNote>{error}</ErrorNote>
+            <div className="flex flex-wrap items-center gap-2">
+              <Button onClick={() => void save()} disabled={!places.length || saving}>
+                {saving ? "Saving…" : "Save"}
+              </Button>
+              <Button tone="ghost" onClick={() => setPlaces(null)}>
+                Cancel
+              </Button>
+              {!places.length && <span className="text-xs text-slate">Choose at least one folder.</span>}
+            </div>
+          </div>
+        )}
+      </Modal>
+    </>
   );
 }

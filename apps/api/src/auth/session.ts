@@ -34,7 +34,8 @@ export type Principal =
   | {
       kind: "staff";
       id: string;
-      email: string;
+      /** None for someone who signs in with their mobile number only. */
+      email: string | null;
       name: string;
       /**
        * The role the request acts with. In the lawyer area this is always
@@ -49,7 +50,8 @@ export type Principal =
   | {
       kind: "client";
       id: string;
-      email: string;
+      /** None for someone who signs in with their mobile number only. */
+      email: string | null;
       name: string;
       avatarUrl: string | null;
       sessionId: string;

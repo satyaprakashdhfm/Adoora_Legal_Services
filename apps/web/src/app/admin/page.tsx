@@ -103,9 +103,9 @@ export default function AdminOverview() {
 type SampleStatus = { cases: number; clients: number; staff: number; jobs: number; applications: number; enquiries: number; present: boolean };
 
 /**
- * Owners only: fictional sample records (every name ends "(Demo)", every case
- * title starts "[Demo]") for showing the system, and one button to take them
- * all out before real work starts.
+ * Owners only: one fictional sample case (title starting "[Demo]") with a
+ * job, an application and an enquiry, for showing the system; a button to
+ * share it with everyone; and one to take it all out before real work starts.
  */
 function SampleDataCard() {
   const [status, setStatus] = useState<SampleStatus | null>(null);
@@ -121,11 +121,20 @@ function SampleDataCard() {
     void load();
   }, []);
 
-  async function run(method: "POST" | "DELETE") {
+  async function run(method: "POST" | "DELETE" | "SHARE") {
     if (method === "DELETE" && !window.confirm("Remove all sample data? Only records marked (Demo) / [Demo] are deleted; real records are not touched.")) return;
     setBusy(true);
     setError(null);
     try {
+      if (method === "SHARE") {
+        const shared = await api<{ staff: number; clients: number; linked: number }>("/admin/sample-data/share", { method: "POST" });
+        setMessage(
+          shared.linked
+            ? `Shared: the sample case is now with all ${shared.staff} firm members and ${shared.clients} clients.`
+            : "Everyone already has the sample case.",
+        );
+        return;
+      }
       const result = await api<{ message?: string }>("/admin/sample-data", { method });
       setMessage(method === "DELETE" ? "Sample data removed." : (result.message ?? "Sample data added."));
       await load();
@@ -140,20 +149,25 @@ function SampleDataCard() {
     <Card>
       <CardHeader
         title="Sample data"
-        description="Fictional records for showing the system: every name ends “(Demo)” and every case title starts “[Demo]”. Remove them before real work starts."
+        description="One fictional case, “[Demo] Sri Lakshmi Traders”, with files from the court, the client and the firm, shared with every firm member and client so everyone can try the portals. Remove it before real work starts."
       />
       <div className="space-y-3 px-5 py-4 text-sm">
         {status && (
           <p className="text-ink-soft">
             {status.present
-              ? `In the system now: ${status.cases} cases, ${status.clients} clients, ${status.staff} lawyers, ${status.enquiries} enquiries, ${status.jobs} job openings, ${status.applications} applications.`
+              ? `In the system now: ${status.cases} sample case, ${status.clients} sample client, ${status.staff} sample lawyers, ${status.enquiries} enquiry, ${status.jobs} job opening, ${status.applications} application.`
               : "No sample data in the system."}
           </p>
         )}
         {message && <p className="text-emerald-800">{message}</p>}
         <ErrorNote>{error}</ErrorNote>
         <div className="flex flex-wrap gap-2">
-          {status && status.cases < 6 && (
+          {status && status.cases > 0 && (
+            <Button size="sm" disabled={busy} onClick={() => void run("SHARE")}>
+              {busy ? "Working…" : "Share with everyone"}
+            </Button>
+          )}
+          {status && status.cases === 0 && (
             <Button size="sm" tone="secondary" disabled={busy} onClick={() => void run("POST")}>
               {busy ? "Working…" : "Add sample data"}
             </Button>

@@ -6,7 +6,7 @@ import { useUser } from "@/lib/portal/session";
 import { courtNumber } from "@/lib/portal/format";
 import { UploadForm } from "@/components/portal/documents-panel";
 import { NoCaseYet } from "@/components/portal/no-case-yet";
-import { parsePlace, placeOptions, type Folder, type Section } from "@/components/portal/document-folders";
+import { FolderChecklist, sectionsFor, type Folder, type Section } from "@/components/portal/document-folders";
 import { Button, EmptyState, ErrorNote, Field, Modal, Select, Spinner } from "@/components/portal/ui";
 
 /** Where the Documents page is looking, so an upload starts there. */
@@ -16,10 +16,10 @@ export type Place = { caseReference: string | null; team?: boolean; section?: Se
 const FIRM_WIDE = "__firm";
 
 /**
- * Upload into one of a case's folders: the person always chooses the folder
- * (Internal, From client, From court, or one the firm made inside them).
- * Clients can upload only into Client files. `initial` preselects where the
- * person is; it never guesses otherwise.
+ * Upload into a case: the person ticks the folder, or several (Internal,
+ * Client, From court, or folders the firm made inside them). Clients can
+ * upload only into Client. `initial` preselects where the person is; it
+ * never guesses otherwise.
  */
 export function CaseUpload({
   caseReference,
@@ -34,8 +34,12 @@ export function CaseUpload({
 }) {
   const [folders, setFolders] = useState<Folder[] | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [place, setPlace] = useState(() =>
-    initial?.folderId ? `folder:${initial.folderId}` : initial?.section && (staff || initial.section === "CLIENT") ? `section:${initial.section}` : staff ? "" : "section:CLIENT",
+  const [places, setPlaces] = useState<string[]>(() =>
+    initial?.section && (staff || initial.section === "CLIENT")
+      ? [initial.folderId ? `${initial.section}/${initial.folderId}` : initial.section]
+      : staff
+        ? []
+        : ["CLIENT"],
   );
 
   useEffect(() => {
@@ -49,22 +53,26 @@ export function CaseUpload({
   if (error) return <ErrorNote>{error}</ErrorNote>;
   if (!folders) return <Spinner />;
 
-  const options = placeOptions(folders, staff, staff ? undefined : ["CLIENT"]).flatMap((group) => group.options);
-  const chosen = parsePlace(place, folders);
-
   return (
     <div className="space-y-5">
-      <Field label="Folder" required hint={staff ? "Internal is firm only. The client sees From client and From court." : undefined}>
-        <Select value={place} onChange={(e) => setPlace(e.target.value)} placeholder="Choose a folder" promptOnly options={options} />
-      </Field>
-      {chosen ? (
-        <UploadForm
-          key={place}
-          action={`/api/cases/${encodeURIComponent(caseReference)}/documents`}
-          fixedSection={chosen.section}
-          folderId={chosen.folderId}
-          onDone={onDone}
-        />
+      {staff ? (
+        <div>
+          <p className="text-sm font-semibold text-ink">
+            Folders <span className="text-gold-deep">*</span>
+          </p>
+          <p className="mb-2.5 mt-0.5 text-xs text-slate">Tick one or more. Internal is firm only; the client sees Client and From court.</p>
+          <FolderChecklist folders={folders} sections={sectionsFor(true)} value={places} onChange={setPlaces} />
+        </div>
+      ) : (
+        folders.some((f) => f.section === "CLIENT") && (
+          <div>
+            <p className="mb-2.5 text-sm font-semibold text-ink">Folder</p>
+            <FolderChecklist folders={folders} sections={["CLIENT"]} value={places} onChange={(next) => setPlaces(next.slice(-1))} />
+          </div>
+        )
+      )}
+      {places.length ? (
+        <UploadForm action={`/api/cases/${encodeURIComponent(caseReference)}/documents`} places={places} onDone={onDone} />
       ) : (
         <p className="text-sm text-slate">Choose the folder this document goes in.</p>
       )}

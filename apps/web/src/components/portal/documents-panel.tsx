@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { AREA_HEADER, api, ApiError, currentArea, downloadUrl, type DocumentRecord, type SessionUser } from "@/lib/portal/api";
 import { ACCEPTED_UPLOADS, DOCUMENT_CATEGORIES, labelFor } from "@/lib/portal/legal";
 import { formatBytes, formatDate } from "@/lib/portal/format";
-import { Breadcrumbs, FolderTile, MoveSelect, SourceTag, countSection, filesIn, sectionHint, sectionLabel, sectionTone, sectionsFor, type Folder, type Section } from "@/components/portal/document-folders";
+import { Breadcrumbs, FolderTile, MoveButton, SourceTag, countSection, filesIn, sectionHint, sectionLabel, sectionTone, sectionsFor, type Folder, type Section } from "@/components/portal/document-folders";
 import { CaseUpload } from "@/components/portal/upload-button";
 import {
   Badge,
@@ -53,16 +53,13 @@ export function UploadForm({
   action,
   newVersionOf,
   onDone,
-  fixedSection,
-  folderId,
+  places,
 }: {
   action: string;
   newVersionOf?: string;
   onDone: () => void;
-  /** Which of the case's three folders it goes in (chosen before this form). */
-  fixedSection?: Section;
-  /** A folder the firm made inside the case; the upload is filed in it. */
-  folderId?: string;
+  /** Every folder it goes in (chosen before this form): "COURT", "COURT/<folder id>"… */
+  places?: string[];
 }) {
   const fileRef = useRef<HTMLInputElement>(null);
   const [file, setFile] = useState<File | null>(null);
@@ -136,8 +133,7 @@ export function UploadForm({
           <Field label="Note" className="sm:col-span-2">
             <Textarea name="description" rows={2} maxLength={2000} />
           </Field>
-          {fixedSection && <input type="hidden" name="section" value={fixedSection} />}
-          {folderId && <input type="hidden" name="folderId" value={folderId} />}
+          {places && <input type="hidden" name="places" value={places.join(",")} />}
         </div>
       )}
 
@@ -167,11 +163,11 @@ export function UploadForm({
  *
  *   Documents
  *   ├── Internal       firm only
- *   ├── From client    what the client sends, and what the firm shares
+ *   ├── Client         what the client sends, and what the firm shares
  *   └── From court     court orders and filed papers
  *       (each with any folders the firm made inside it)
  *
- * Clients see From court and their own Client files (From client).
+ * Clients see From court and Client. A file can sit in several at once.
  */
 export function DocumentsPanel({
   caseReference,
@@ -240,7 +236,7 @@ export function DocumentsPanel({
 
   async function deleteFolder() {
     if (!folder) return;
-    if (!window.confirm(`Delete the folder “${folder.name}”? Its files are kept and move up to ${sectionLabel(folder.section, staff)}.`)) return;
+    if (!window.confirm(`Delete the folder “${folder.name}”? Its files are kept and move up to ${sectionLabel(folder.section)}.`)) return;
     try {
       await api(`${folderBase}/${folder.id}`, { method: "DELETE" });
       setFolder(null);
@@ -259,13 +255,13 @@ export function DocumentsPanel({
 
   const trail = [
     side ? { label: "Documents", onClick: () => open(null) } : { label: "Documents" },
-    ...(side ? [folder ? { label: sectionLabel(side, staff), onClick: () => open(side) } : { label: sectionLabel(side, staff) }] : []),
+    ...(side ? [folder ? { label: sectionLabel(side), onClick: () => open(side) } : { label: sectionLabel(side) }] : []),
     ...(folder ? [{ label: folder.name }] : []),
   ];
 
   const here = side && folders ? filesIn(documents, side, folder, folders) : [];
   const subfolders = side && !folder ? (folders ?? []).filter((f) => f.section === side) : [];
-  // Clients upload into Client files only.
+  // Clients upload into Client only.
   const mayUpload = staff || !side || side === "CLIENT";
 
   return (
@@ -309,7 +305,7 @@ export function DocumentsPanel({
           {sectionsFor(staff).map((s) => (
             <FolderTile
               key={s}
-              title={sectionLabel(s, staff)}
+              title={sectionLabel(s)}
               subtitle={sectionHint(s, staff)}
               count={countSection(documents, s)}
               tone={sectionTone(s)}
@@ -387,10 +383,10 @@ export function DocumentsPanel({
                     </Button>
                   )}
                   {canEdit && folders && (
-                    <MoveSelect
+                    <MoveButton
                       doc={doc}
                       folders={folders}
-                      onMove={(body) => void act(api(`/documents/${doc.reference}`, { method: "PATCH", body }), `${doc.reference} moved.`)}
+                      onMove={(body) => act(api(`/documents/${doc.reference}`, { method: "PATCH", body }), `${doc.reference} moved.`)}
                     />
                   )}
                   {canManage && (
@@ -452,7 +448,7 @@ export function DocumentsPanel({
           <form onSubmit={saveFolder} className="space-y-4">
             {side && naming.mode === "new" && (
               <p className="text-sm text-ink-soft">
-                Inside <span className="font-semibold">{sectionLabel(side, staff)}</span>
+                Inside <span className="font-semibold">{sectionLabel(side)}</span>
                 {side === "INTERNAL" ? ". The client never sees it." : ". The client can see it and its files."}
               </p>
             )}

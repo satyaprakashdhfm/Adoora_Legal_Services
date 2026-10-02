@@ -17,6 +17,14 @@ type NavItem = { href: string; label: string; icon: string; exact?: boolean };
  * the lawyer profiles the website shows — which the cases use too, through
  * the account each profile is linked to).
  */
+/**
+ * SEO & Analytics is kept out of the menu until the firm is ready to use it
+ * (its own domain, Search Console and Analytics connected). The page itself
+ * is still there at /admin/seo; set this to true to show it again.
+ */
+const SHOW_SEO = false;
+const SEO: NavItem = { href: "/admin/seo", label: "SEO & Analytics", icon: "M3 16.5h14M5.5 13.5V10M9 13.5V6.5M12.5 13.5V9M16 13.5V4" };
+
 const NAV: { title: string; items: NavItem[] }[] = [
   {
     title: "Clients & court cases",
@@ -37,7 +45,7 @@ const NAV: { title: string; items: NavItem[] }[] = [
       { href: "/admin/profiles", label: "Lawyer profiles", icon: "M4 3.5h12v13H4zM10 9.5a2.2 2.2 0 100-4.4 2.2 2.2 0 000 4.4zM6.5 14c.4-1.9 1.8-3 3.5-3s3.1 1.1 3.5 3" },
 
       { href: "/admin/articles", label: "Articles", icon: "M4 3.5h9l3 3v10H4zM7 8h6M7 11h6M7 14h4" },
-      { href: "/admin/seo", label: "SEO & Analytics", icon: "M3 16.5h14M5.5 13.5V10M9 13.5V6.5M12.5 13.5V9M16 13.5V4" },
+      ...(SHOW_SEO ? [SEO] : []),
     ],
   },
 ];

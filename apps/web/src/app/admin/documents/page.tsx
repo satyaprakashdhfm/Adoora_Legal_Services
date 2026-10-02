@@ -6,7 +6,7 @@ import { UploadButton, type Place } from "@/components/portal/upload-button";
 import { PageTitle } from "@/components/portal/ui";
 
 /**
- * Documents as folders: a folder per case, each with Internal, From client
+ * Documents as folders: a folder per case, each with Internal, Client
  * and From court inside, plus the firm-wide Internal folder. The same files
  * the client and lawyer dashboards show: an upload here appears there, and
  * theirs appear here. Uploading is only done here and in a case's Documents
@@ -20,7 +20,7 @@ export default function AdminDocuments() {
       <PageTitle
         eyebrow="Documents"
         title="Documents"
-        description="Every case has three folders: Internal (the firm only), From client and From court. Internal at the top is for the whole firm. Upload document asks which case and which folder."
+        description="Every case has three folders: Internal (the firm only), Client and From court. Internal at the top is for the whole firm. Upload document asks which case and which folders."
         actions={<UploadButton place={place} onUploaded={() => setRefresh((n) => n + 1)} />}
       />
       <DocumentDrive key={refresh} basePath="/admin" staff onPlaceChange={setPlace} />

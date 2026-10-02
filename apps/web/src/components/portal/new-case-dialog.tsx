@@ -7,58 +7,10 @@ import { api, type CnrLookup } from "@/lib/portal/api";
 import { useUser } from "@/lib/portal/session";
 import { CaseForm } from "@/components/portal/case-form";
 import { CourtCaptcha } from "@/components/portal/court-captcha";
-import { Button, ErrorNote, Field, Input, Modal, Select, type ButtonTone } from "@/components/portal/ui";
+import { Button, ErrorNote, Field, Input, Modal, type ButtonTone } from "@/components/portal/ui";
+import { PeoplePicker, TeamPicker, personDetail, type TeamEntry } from "@/components/portal/people-picker";
 
-type Person = { id: string; name: string; email: string; role?: string; isActive: boolean };
-type TeamEntry = { userId: string; role: "LEAD" | "ASSOCIATE" | "SUPPORT" };
-
-const ROLE_OPTIONS = [
-  { value: "LEAD", label: "Lead counsel" },
-  { value: "ASSOCIATE", label: "Associate" },
-  { value: "SUPPORT", label: "Support" },
-];
-
-/** Any number of lawyers on the case, each with their role on it. */
-function TeamPicker({ lawyers, value, onChange }: { lawyers: Person[]; value: TeamEntry[]; onChange: (next: TeamEntry[]) => void }) {
-  const available = lawyers.filter((l) => !value.some((v) => v.userId === l.id));
-  return (
-    <div className="space-y-2">
-      {value.map((entry, index) => {
-        const person = lawyers.find((l) => l.id === entry.userId);
-        return (
-          <div key={entry.userId} className="flex items-center gap-2 rounded-md border border-line bg-paper-warm px-3 py-2">
-            <p className="min-w-0 flex-1 truncate text-sm">
-              <span className="font-semibold text-ink">{person?.name ?? "…"}</span>{" "}
-              <span className="text-xs text-slate">{person?.email}</span>
-            </p>
-            <Select
-              aria-label="Role on the case"
-              value={entry.role}
-              onChange={(e) => onChange(value.map((v, i) => (i === index ? { ...v, role: e.target.value as TeamEntry["role"] } : v)))}
-              options={ROLE_OPTIONS}
-              className="w-36"
-            />
-            <button type="button" onClick={() => onChange(value.filter((_, i) => i !== index))} className="text-xs text-slate hover:text-red-700">
-              Remove
-            </button>
-          </div>
-        );
-      })}
-      {available.length > 0 && (
-        <Select
-          aria-label="Add a lawyer"
-          value=""
-          onChange={(e) =>
-            e.target.value &&
-            onChange([...value, { userId: e.target.value, role: value.some((v) => v.role === "LEAD") ? "ASSOCIATE" : "LEAD" }])
-          }
-          placeholder={value.length ? "+ Add another lawyer" : "+ Add a lawyer"}
-          options={available.map((l) => ({ value: l.id, label: `${l.name} (${l.role?.toLowerCase()})` }))}
-        />
-      )}
-    </div>
-  );
-}
+type Person = { id: string; name: string; email: string | null; phone?: string | null; role?: string; isActive: boolean };
 
 /**
  * Opening a case, in a dialog, from either dashboard.
@@ -88,7 +40,7 @@ function NewCaseFlow({ admin, onDone }: { admin: boolean; onDone: (reference: st
   const [lawyers, setLawyers] = useState<Person[]>([]);
   const [clients, setClients] = useState<Person[]>([]);
   const [team, setTeam] = useState<TeamEntry[]>([]);
-  const [clientId, setClientId] = useState("");
+  const [clientIds, setClientIds] = useState<string[]>([]);
 
   useEffect(() => {
     if (!admin) return;
@@ -244,16 +196,22 @@ function NewCaseFlow({ admin, onDone }: { admin: boolean; onDone: (reference: st
               <legend className="font-serif text-base font-semibold text-ink">Team and client</legend>
               <div className="grid gap-4 pt-4 sm:grid-cols-2">
                 {/* Not a <Field>: that is a <label>, and this holds several controls. */}
-                <div className="sm:col-span-2">
+                <div>
                   <p className="text-xs font-semibold uppercase tracking-wide text-ink-soft">Lawyers on the case</p>
-                  <div className="mt-1.5">
-                    <TeamPicker lawyers={lawyers} value={team} onChange={setTeam} />
-                  </div>
-                  <p className="mt-1 text-xs text-slate">Add as many as the case needs. Each sees the case on their dashboard.</p>
+                  <p className="mb-2 mt-0.5 text-xs text-slate">Tick as many as the case needs. Each sees it in the lawyer workspace.</p>
+                  <TeamPicker lawyers={lawyers.map((l) => ({ id: l.id, name: l.name, detail: personDetail(l) }))} value={team} onChange={setTeam} />
                 </div>
-                <Field label="Client account" hint="The client sees the case on their dashboard once linked.">
-                  <Select value={clientId} onChange={(e) => setClientId(e.target.value)} placeholder="Link later" options={clients.map((c) => ({ value: c.id, label: `${c.name} — ${c.email}` }))} />
-                </Field>
+                <div>
+                  <p className="text-xs font-semibold uppercase tracking-wide text-ink-soft">Client accounts</p>
+                  <p className="mb-2 mt-0.5 text-xs text-slate">Tick every client who should see this case. You can also link them later.</p>
+                  <PeoplePicker
+                    people={clients.map((c) => ({ id: c.id, name: c.name, detail: personDetail({ phone: c.phone, email: c.email }) }))}
+                    value={clientIds}
+                    onChange={setClientIds}
+                    label="Client accounts"
+                    empty="No clients yet. Add them under Clients."
+                  />
+                </div>
               </div>
             </fieldset>
           ) : undefined
@@ -265,7 +223,7 @@ function NewCaseFlow({ admin, onDone }: { admin: boolean; onDone: (reference: st
               ? {
                   ...payload,
                   assignments: team,
-                  clientIds: clientId ? [clientId] : [],
+                  clientIds,
                 }
               : payload,
           });

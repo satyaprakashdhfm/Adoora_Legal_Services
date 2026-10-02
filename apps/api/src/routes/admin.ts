@@ -12,10 +12,25 @@ import {
   type AuthClaims,
 } from "../middleware/auth.js";
 import { z } from "zod";
-import { addSampleData, removeSampleData, sampleDataStatus } from "../demo/sample-data.js";
+import { addSampleData, removeSampleData, sampleDataStatus, shareCasesForTesting } from "../demo/sample-data.js";
 import { audit } from "../lib/audit.js";
 import { adminEmails } from "../env.js";
 import { revokeAllSessions } from "../auth/session.js";
+import { samePhone } from "../auth/msg91.js";
+
+/**
+ * A mobile number already on another account of the same kind. Two accounts
+ * on one number would each refuse the other's OTP sign-in, so it is refused
+ * here instead. (A firm account and a client account may share one.)
+ */
+async function phoneOnAnother(kind: "user" | "client", phone: string, exceptId?: string) {
+  const digits = phone.replace(/\D/g, "");
+  const rows =
+    kind === "user"
+      ? await prisma.user.findMany({ where: { phone: { not: null }, NOT: exceptId ? { id: exceptId } : undefined }, select: { phone: true } })
+      : await prisma.client.findMany({ where: { phone: { not: null }, NOT: exceptId ? { id: exceptId } : undefined }, select: { phone: true } });
+  return rows.some((row) => samePhone(row.phone, digits));
+}
 import {
   applicationPatchSchema,
   auditQuerySchema,
@@ -191,7 +206,7 @@ adminRouter.get(
       prisma.subscriber.count({ where: { confirmedAt: { not: null } } }),
       prisma.case.groupBy({ by: ["status"], _count: { _all: true } }),
       prisma.clientQuery.count({ where: { status: "OPEN" } }),
-      prisma.client.count({ where: { isActive: true, ...(await notStaff()) } }),
+      prisma.client.count({ where: { isActive: true } }),
       prisma.user.count({ where: { isActive: true, role: "LAWYER" } }),
       prisma.case.findMany({
         where: {
@@ -295,7 +310,7 @@ adminRouter.get("/access", requireAuth, requireRole("OWNER", "ADMIN"), async (_r
   });
   res.json({
     serverEmails: adminEmails.map((email) => {
-      const account = accounts.find((a) => a.email.toLowerCase() === email);
+      const account = accounts.find((a) => a.email?.toLowerCase() === email);
       return { email, role: account?.role ?? null, isActive: account?.isActive ?? null };
     }),
   });
@@ -357,12 +372,15 @@ adminRouter.post(
     const input = staffCreateSchema.parse(req.body);
     assertCanManageRole(req.auth!.role, input.role);
 
-    // A client account with the same email is fine: the two sign in at separate pages.
-    if (await prisma.user.findUnique({ where: { email: input.email } })) {
+    // A client account with the same email or number is fine: the two sign in at separate pages.
+    if (input.email && (await prisma.user.findUnique({ where: { email: input.email } }))) {
       throw new HttpError(409, "A staff account with that email already exists.", "email_in_use");
     }
+    if (await phoneOnAnother("user", input.phone)) {
+      throw new HttpError(409, "Someone on the team already has that mobile number.", "phone_in_use");
+    }
 
-    // No password: the new member signs in with Google using this email.
+    // No password: the new member signs in with an OTP on this number, or Google with the email.
     const user = await prisma.user.create({ data: input });
     await audit(req, "user.created", "User", user.id, { role: user.role });
     res.status(201).json({ id: user.id });
@@ -384,6 +402,16 @@ adminRouter.patch(
     if (id === req.auth!.sub && (input.isActive === false || (input.role && input.role !== target.role))) {
       throw new HttpError(400, "You cannot change your own role or deactivate yourself.", "self_change");
     }
+    if (input.phone && (await phoneOnAnother("user", input.phone, id))) {
+      throw new HttpError(409, "Someone on the team already has that mobile number.", "phone_in_use");
+    }
+    // An email can be added to an account that has none; it is never changed.
+    if (input.email) {
+      if (target.email) delete input.email;
+      else if (await prisma.user.findUnique({ where: { email: input.email } })) {
+        throw new HttpError(409, "A staff account with that email already exists.", "email_in_use");
+      }
+    }
 
     const updated = await prisma.user.update({ where: { id }, data: input });
     if (input.isActive === false) await revokeAllSessions({ userId: id });
@@ -400,17 +428,6 @@ adminRouter.patch(
 // ---------------------------------------------------------------------------
 // Clients
 // ---------------------------------------------------------------------------
-
-/**
- * A firm member's own Google account can also have a client row — signed
- * in once before their staff account existed. Sign-in always resolves them
- * as staff, so that row is never used; it is kept out of the client list,
- * the pickers and the counts rather than shown as a client.
- */
-async function notStaff(): Promise<Prisma.ClientWhereInput> {
-  const staff = await prisma.user.findMany({ select: { email: true } });
-  return staff.length ? { email: { notIn: staff.map((u) => u.email.toLowerCase()) } } : {};
-}
 
 async function assertCasesExist(caseIds: string[]) {
   if (!caseIds.length) return;
@@ -429,7 +446,6 @@ adminRouter.get(
     const clients = await prisma.client.findMany({
       where: {
         AND: [
-          await notStaff(),
           query.q
             ? {
                 OR: [
@@ -482,9 +498,12 @@ adminRouter.post(
   async (req, res) => {
     const input = clientCreateSchema.parse(req.body);
 
-    // A firm account with the same email is fine: the two sign in at separate pages.
-    if (await prisma.client.findUnique({ where: { email: input.email } })) {
+    // A firm account with the same email or number is fine: the two sign in at separate pages.
+    if (input.email && (await prisma.client.findUnique({ where: { email: input.email } }))) {
       throw new HttpError(409, "A client with that email already exists.", "email_in_use");
+    }
+    if (await phoneOnAnother("client", input.phone)) {
+      throw new HttpError(409, "Another client already has that mobile number.", "phone_in_use");
     }
 
     const { caseIds = [], ...fields } = input;
@@ -493,7 +512,7 @@ adminRouter.post(
     const client = await prisma.client.create({
       data: {
         ...fields,
-        emailVerifiedAt: new Date(),
+        emailVerifiedAt: fields.email ? new Date() : null,
         cases: caseIds.length
           ? { createMany: { data: [...new Set(caseIds)].map((caseId) => ({ caseId })) } }
           : undefined,
@@ -514,6 +533,17 @@ adminRouter.patch(
 
     const { caseIds, ...fields } = input;
     if (caseIds) await assertCasesExist(caseIds);
+    if (fields.phone && (await phoneOnAnother("client", fields.phone, id))) {
+      throw new HttpError(409, "Another client already has that mobile number.", "phone_in_use");
+    }
+    // An email can be added to a client that has none; it is never changed.
+    if (fields.email) {
+      const current = await prisma.client.findUnique({ where: { id }, select: { email: true } });
+      if (current?.email) delete fields.email;
+      else if (await prisma.client.findUnique({ where: { email: fields.email } })) {
+        throw new HttpError(409, "A client with that email already exists.", "email_in_use");
+      }
+    }
 
     // A number the firm types in is not one the client has proven by OTP.
     const before = fields.phone !== undefined ? await prisma.client.findUnique({ where: { id }, select: { phone: true } }) : null;
@@ -581,6 +611,13 @@ adminRouter.post("/sample-data", requireAuth, requireRole("OWNER"), async (req, 
   const result = await addSampleData(typeof req.body?.clientEmail === "string" ? req.body.clientEmail : undefined);
   await audit(req, "sample_data.added", "SampleData", null, result);
   res.status(result.added ? 201 : 200).json(result);
+});
+
+/** Gives the sample case to everyone again (after more people are added), and a lawyer and client to any case without one. */
+adminRouter.post("/sample-data/share", requireAuth, requireRole("OWNER"), async (req, res) => {
+  const result = await shareCasesForTesting();
+  await audit(req, "sample_data.shared", "SampleData", null, result);
+  res.json(result);
 });
 
 adminRouter.delete("/sample-data", requireAuth, requireRole("OWNER"), async (req, res) => {

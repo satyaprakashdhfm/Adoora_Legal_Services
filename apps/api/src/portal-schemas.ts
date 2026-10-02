@@ -56,7 +56,7 @@ export const documentCategory = z.enum([
   "NOTICE", "CORRESPONDENCE", "AGREEMENT", "IDENTITY", "FINANCIAL", "OTHER",
 ]);
 export const visibility = z.enum(["CLIENT", "INTERNAL"]);
-/** A case's three folders: Internal (firm only), From client, From court. */
+/** A case's three folders: Internal (firm only), Client, From court. */
 export const documentSection = z.enum(["INTERNAL", "CLIENT", "COURT"]);
 /** Who can see what is in a section: Internal is firm only, the others the client too. */
 export const sectionVisibility = (section: z.infer<typeof documentSection>): "INTERNAL" | "CLIENT" => (section === "INTERNAL" ? "INTERNAL" : "CLIENT");
@@ -199,8 +199,10 @@ export const documentUploadSchema = z.object({
   title: optionalText(200),
   category: documentCategory.default("OTHER"),
   description: optionalText(2000),
-  /** Which of the case's three folders. Clients' uploads always go to From client. */
+  /** Which of the case's three folders. Clients' uploads always go to Client. */
   section: documentSection.default("CLIENT"),
+  /** Every place it goes, comma separated ("INTERNAL,COURT/<folder id>"). */
+  places: optionalText(2000),
   /** A folder of the case; the document takes the folder's section. */
   folderId: z.string().uuid().optional().or(z.literal("").transform(() => undefined)),
 });
@@ -211,6 +213,8 @@ export const documentPatchSchema = z.object({
   description: optionalText(2000),
   /** Move to the top of another of the three folders. */
   section: documentSection.optional(),
+  /** Every place it should be in from now on (see lib/places.ts). */
+  places: z.array(z.string().trim().max(100)).min(1, "Choose at least one folder.").max(30).optional(),
   /** Move into a folder (its section follows), or null for the top. */
   folderId: z.string().uuid().nullable().optional(),
 });
@@ -238,14 +242,25 @@ export const documentListSchema = z.object({
 // Admin console ------------------------------------------------------------
 
 const email = z.string().trim().toLowerCase().email("Please enter a valid email address.").max(254);
+/** Optional email: left blank, the person signs in with their mobile number. */
+const optionalEmail = z
+  .union([z.literal(""), email])
+  .optional()
+  .transform((value) => value || undefined);
+/** A mobile number, as typed; it must have at least ten digits. Required: it is how they sign in. */
+const phone = z
+  .string({ error: "Please enter a mobile number." })
+  .trim()
+  .max(32)
+  .refine((value) => value.replace(/\D/g, "").length >= 10, "Please enter a mobile number with at least 10 digits.");
 
 export const staffRole = z.enum(["OWNER", "ADMIN", "LAWYER", "EDITOR"]);
 
 export const staffCreateSchema = z.object({
-  email,
+  email: optionalEmail,
   name: z.string().trim().min(2).max(120),
   role: staffRole,
-  phone: optionalText(32),
+  phone,
   barEnrolment: optionalText(80),
 });
 
@@ -253,16 +268,18 @@ export const staffPatchSchema = z.object({
   name: z.string().trim().min(2).max(120).optional(),
   role: staffRole.optional(),
   isActive: z.boolean().optional(),
-  phone: optionalText(32),
+  phone: phone.optional(),
+  /** Only for an account with no email yet; a sign-in email is never changed. */
+  email: optionalEmail,
   barEnrolment: optionalText(80),
 });
 
 export const clientCreateSchema = z.object({
-  email,
+  email: optionalEmail,
   name: z.string().trim().min(2).max(200),
   kind: z.enum(["INDIVIDUAL", "ORGANISATION"]).default("INDIVIDUAL"),
   organisation: optionalText(200),
-  phone: optionalText(32),
+  phone,
   address: optionalText(1000),
   /** Cases to give the new client access to. */
   caseIds: z.array(z.string().uuid()).max(50).optional(),
@@ -272,7 +289,9 @@ export const clientPatchSchema = z.object({
   name: z.string().trim().min(2).max(200).optional(),
   kind: z.enum(["INDIVIDUAL", "ORGANISATION"]).optional(),
   organisation: optionalText(200),
-  phone: optionalText(32),
+  phone: phone.optional(),
+  /** Only for a client with no email yet; a sign-in email is never changed. */
+  email: optionalEmail,
   address: optionalText(1000),
   isActive: z.boolean().optional(),
   /** When present, the complete set of cases the client can see. */

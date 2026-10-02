@@ -1,5 +1,6 @@
 import { randomUUID } from "node:crypto";
 import { prisma } from "../db.js";
+import { placeKey, placementFields } from "../lib/places.js";
 import { logger } from "../logger.js";
 import { encryptDocument, sha256 } from "../lib/crypto.js";
 import { storage } from "../storage/index.js";
@@ -101,10 +102,8 @@ async function addDocument(caseRow: { id: string; reference: string } | null, se
       seq,
       title: doc.title,
       category: doc.category,
-      visibility: doc.visibility,
-      section: doc.visibility === "INTERNAL" ? "INTERNAL" : doc.fromCourt || doc.inCourtFolder ? "COURT" : "CLIENT",
+      ...placementFields([placeKey(doc.visibility === "INTERNAL" ? "INTERNAL" : doc.fromCourt || doc.inCourtFolder ? "COURT" : "CLIENT", doc.folderId)]),
       fromCourt: doc.fromCourt ?? false,
-      folderId: doc.folderId ?? null,
       ...who,
       versions: { create: { ...version, ...who } },
     },
@@ -182,12 +181,11 @@ async function linkTestAccess() {
 }
 
 export async function addSampleData(clientEmail?: string) {
-  const existing = await prisma.case.count({ where: { reference: { in: [...CASE_REFS] } } });
-  if (existing === CASE_REFS.length) {
-    return { added: false, message: "Sample data is already there. Remove it first to add it again." };
+  if (await prisma.case.findFirst({ where: { reference: KEPT_CASE }, select: { id: true } })) {
+    return { added: false, message: "The sample case is already there. Remove it first to add it again." };
   }
-  // An earlier, smaller sample (the first two cases only): replace it.
-  if (existing) await removeSampleData();
+  // Leftovers of an earlier sample: replace them.
+  if ((await sampleDataStatus()).present) await removeSampleData();
 
   // --- The team: three sample lawyers, not shown on the website -----------
   const lawyerSpecs = [
@@ -665,10 +663,13 @@ export async function addSampleData(clientEmail?: string) {
   for (const a of applications) await prisma.careerApplication.create({ data: { ...a, consent: true, consentAt } });
 
   await linkTestAccess();
+  // Built as a full set (the cases reference each other's people), then cut
+  // down to the one case and shared with everyone.
+  const trimmed = await trimSampleData();
+  const shared = await shareCasesForTesting();
 
-  const summary = { cases: CASE_REFS.length, documents: files.length + 1, clients: 4, lawyers: 3, queries: queries.length, enquiries: enquiries.length, jobs: jobs.length, applications: applications.length };
-  logger.info(summary, "Sample data added");
-  return { added: true, message: "Sample data added.", summary };
+  logger.info({ trimmed, shared }, "Sample data added");
+  return { added: true, message: "Sample case added and shared with everyone.", summary: { trimmed, shared } };
 }
 
 /**
@@ -685,5 +686,100 @@ export async function seedSampleDataOnStartup(setting: string | undefined) {
     await prisma.auditLog.create({ data: { action: "sample_data.seeded", entityType: "SampleData", metadata: result } });
   } catch (error) {
     logger.error({ err: error }, "Sample data could not be added");
+  }
+}
+
+// ---------------------------------------------------------------------------
+// One sample case, shared with everyone, for showing and testing the portals
+// ---------------------------------------------------------------------------
+
+/**
+ * The sample case kept: a writ in the High Court with a file from each
+ * source (the court's website, the client, the firm) and an internal note.
+ */
+const KEPT_CASE = CASE_REFS[0];
+const KEPT_JOB = "demo-associate-litigation";
+const notDemo = { OR: [{ email: null }, { NOT: { email: { endsWith: `@${DEMO_DOMAIN}` } } }] };
+
+/**
+ * Cuts the sample set down to the one case above, with its people, and one
+ * job opening, application and enquiry, so every section still has an
+ * example. The other sample cases go, with their files and queries, and so
+ * do sample lawyers and clients who are not on the kept case.
+ */
+export async function trimSampleData() {
+  const kept = await prisma.case.findFirst({ where: { reference: KEPT_CASE }, select: { id: true } });
+  const dropped = (await prisma.case.findMany({ where: { reference: { in: CASE_REFS.filter((ref) => ref !== KEPT_CASE) } }, select: { id: true } })).map((c) => c.id);
+
+  // The one sample query moves onto the kept case, for its client.
+  if (kept) {
+    const keptClient = await prisma.caseClient.findFirst({ where: { caseId: kept.id, client: { email: { endsWith: `@${DEMO_DOMAIN}` } } }, select: { clientId: true } });
+    if (keptClient) await prisma.clientQuery.updateMany({ where: { reference: "QRY-DEMX01" }, data: { caseId: kept.id, clientId: keptClient.clientId } });
+  }
+
+  const versions = await prisma.documentVersion.findMany({ where: { document: { caseId: { in: dropped } } }, select: { storageKey: true } });
+  await prisma.courtOrder.updateMany({ where: { caseId: { in: dropped } }, data: { documentId: null } });
+  await prisma.document.deleteMany({ where: { caseId: { in: dropped } } });
+  await prisma.clientQuery.deleteMany({
+    where: { OR: [{ caseId: { in: dropped } }, { reference: { startsWith: "QRY-DEMX" }, NOT: { reference: "QRY-DEMX01" } }] },
+  });
+  await prisma.case.deleteMany({ where: { id: { in: dropped } } });
+
+  const keptLawyers = kept ? (await prisma.caseAssignment.findMany({ where: { caseId: kept.id }, select: { userId: true } })).map((a) => a.userId) : [];
+  const keptClients = kept ? (await prisma.caseClient.findMany({ where: { caseId: kept.id }, select: { clientId: true } })).map((c) => c.clientId) : [];
+  const goneLawyers = (await prisma.user.findMany({ where: { email: { endsWith: `@${DEMO_DOMAIN}` }, id: { notIn: keptLawyers } }, select: { id: true } })).map((u) => u.id);
+  await prisma.lawyerProfile.deleteMany({ where: { userId: { in: goneLawyers } } });
+  const staff = await prisma.user.deleteMany({ where: { id: { in: goneLawyers } } });
+  const clients = await prisma.client.deleteMany({ where: { email: { endsWith: `@${DEMO_DOMAIN}` }, id: { notIn: keptClients } } });
+  const jobs = await prisma.jobOpening.deleteMany({ where: { slug: { startsWith: "demo-", not: KEPT_JOB } } });
+  const applications = await prisma.careerApplication.deleteMany({ where: { reference: { startsWith: "APP-DEMX", not: "APP-DEMX01" } } });
+  const enquiries = await prisma.enquiry.deleteMany({ where: { reference: { startsWith: "ENQ-DEMX", not: "ENQ-DEMX01" } } });
+  for (const version of versions) await storage.delete(version.storageKey).catch(() => undefined);
+
+  const summary = { cases: dropped.length, files: versions.length, staff: staff.count, clients: clients.count, jobs: jobs.count, applications: applications.count, enquiries: enquiries.count };
+  logger.info(summary, "Sample data trimmed to one case");
+  return summary;
+}
+
+/**
+ * So everyone can try the portals: the sample case goes to every active
+ * firm member (on it as a lawyer) and every active client account. Each
+ * other case with no lawyer, or no client, gets one at random. Only adds;
+ * nobody already on a case is taken off it.
+ */
+export async function shareCasesForTesting() {
+  const staff = (await prisma.user.findMany({ where: { isActive: true, role: { in: ["OWNER", "ADMIN", "LAWYER"] }, ...notDemo }, select: { id: true } })).map((u) => u.id);
+  const clients = (await prisma.client.findMany({ where: { isActive: true, ...notDemo }, select: { id: true } })).map((c) => c.id);
+  const cases = await prisma.case.findMany({
+    select: { id: true, reference: true, _count: { select: { assignments: true, clients: true } } },
+  });
+  const pick = (ids: string[]) => ids[Math.floor(Math.random() * ids.length)]!;
+
+  let linked = 0;
+  for (const c of cases) {
+    const lawyers = c.reference === KEPT_CASE ? staff : c._count.assignments === 0 && staff.length ? [pick(staff)] : [];
+    const people = c.reference === KEPT_CASE ? clients : c._count.clients === 0 && clients.length ? [pick(clients)] : [];
+    const added = await prisma.caseAssignment.createMany({ data: lawyers.map((userId) => ({ caseId: c.id, userId, role: "ASSOCIATE" as const })), skipDuplicates: true });
+    const addedClients = await prisma.caseClient.createMany({ data: people.map((clientId) => ({ caseId: c.id, clientId })), skipDuplicates: true });
+    linked += added.count + addedClients.count;
+  }
+  logger.info({ cases: cases.length, staff: staff.length, clients: clients.length, linked }, "Cases shared for testing");
+  return { cases: cases.length, staff: staff.length, clients: clients.length, linked };
+}
+
+/**
+ * Once, at start-up: trims a full sample set already in the system and
+ * shares what is left. Recorded in the audit log so it never runs again
+ * (the console's Share button repeats the sharing on demand).
+ */
+export async function trimSampleDataOnStartup() {
+  try {
+    if (await prisma.auditLog.findFirst({ where: { action: "sample_data.trimmed" }, select: { id: true } })) return;
+    if (!(await prisma.case.findFirst({ where: { reference: KEPT_CASE }, select: { id: true } }))) return;
+    const trimmed = await trimSampleData();
+    const shared = await shareCasesForTesting();
+    await prisma.auditLog.create({ data: { action: "sample_data.trimmed", entityType: "SampleData", metadata: { trimmed, shared } } });
+  } catch (error) {
+    logger.error({ err: error }, "Sample data could not be trimmed");
   }
 }

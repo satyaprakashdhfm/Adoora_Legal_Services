@@ -5,7 +5,7 @@ import { useEffect, useState } from "react";
 import { api, downloadUrl, type CaseSummary, type DocumentRecord, type Page } from "@/lib/portal/api";
 import { DOCUMENT_CATEGORIES, labelFor } from "@/lib/portal/legal";
 import { courtNumber, formatBytes, formatDate } from "@/lib/portal/format";
-import { Breadcrumbs, FolderTile, MoveSelect, SourceTag, countSection, filesIn, sectionHint, sectionLabel, sectionTone, sectionsFor, type Folder, type Section } from "@/components/portal/document-folders";
+import { Breadcrumbs, FolderTile, MoveButton, SourceTag, countSection, filesIn, sectionHint, sectionLabel, sectionTone, sectionsFor, type Folder, type Section } from "@/components/portal/document-folders";
 import { CaseUpload, type Place } from "@/components/portal/upload-button";
 import { UploadForm } from "@/components/portal/documents-panel";
 import { Button, Card, EmptyState, ErrorNote, Input, Modal, Spinner, StatusBadge } from "@/components/portal/ui";
@@ -18,13 +18,13 @@ import { Button, Card, EmptyState, ErrorNote, Input, Modal, Spinner, StatusBadge
  *   │                            precedents and forms
  *   └── <one folder per case>
  *       ├── Internal             the firm's working papers
- *       ├── From client          what the client sends, what the firm shares
+ *       ├── Client               what the client sends, what the firm shares
  *       └── From court           court orders and filed papers
  *           (each with any folders the firm made inside it)
  *
  * The admin console, a lawyer's dashboard and the client's dashboard all
- * read the same files. Clients see From court and their Client files. A
- * file moved into a folder takes that folder's section. Each file is tagged
+ * read the same files. Clients see From court and Client. A file can sit
+ * in several folders at once (Move to). Each file is tagged
  * with where it came from: the court's website, the client or the firm.
  */
 
@@ -57,7 +57,7 @@ function FileList({
     return <EmptyState title="No files here yet" />;
   }
 
-  async function move(doc: DocumentRecord, body: { folderId: string | null; section?: Section }) {
+  async function move(doc: DocumentRecord, body: { places: string[] }) {
     setError(null);
     try {
       await api(`/documents/${encodeURIComponent(doc.reference)}`, { method: "PATCH", body });
@@ -98,7 +98,7 @@ function FileList({
                 </p>
               </div>
               <div className="flex shrink-0 items-center gap-3 text-xs font-semibold">
-                {staff && folders && <MoveSelect doc={doc} folders={folders} onMove={(body) => void move(doc, body)} />}
+                {staff && folders && <MoveButton doc={doc} folders={folders} onMove={(body) => move(doc, body)} />}
                 {viewable && (
                   <a href={downloadUrl(doc.reference, { inline: true })} target="_blank" rel="noopener" className="text-gold-deep hover:underline">
                     View
@@ -228,7 +228,7 @@ export function DocumentDrive({
 
   async function deleteFolder() {
     if (location.kind !== "case" || !location.folder) return;
-    if (!window.confirm(`Delete the folder “${location.folder.name}”? Its files are kept and move up to ${sectionLabel(location.folder.section, staff)}.`)) return;
+    if (!window.confirm(`Delete the folder “${location.folder.name}”? Its files are kept and move up to ${sectionLabel(location.folder.section)}.`)) return;
     try {
       await api(`/cases/${encodeURIComponent(location.case.reference)}/folders/${location.folder.id}`, { method: "DELETE" });
       setLocation({ kind: "case", case: location.case, side: location.folder.section });
@@ -239,7 +239,7 @@ export function DocumentDrive({
   }
 
   // Uploading from inside a case asks which folder, starting on the one open.
-  // Clients upload into Client files only.
+  // Clients upload into Client only.
   const mayUpload = location.kind === "team" || (location.kind === "case" && (staff || !location.side || location.side === "CLIENT"));
 
   const shownFiles = location.kind === "case" && location.side && caseFolders ? filesIn(files ?? [], location.side, location.folder ?? null, caseFolders) : [];
@@ -261,8 +261,8 @@ export function DocumentDrive({
                     ...(location.side
                       ? [
                           location.folder
-                            ? { label: sectionLabel(location.side, staff), onClick: () => setLocation({ kind: "case", case: location.case, side: location.side }) }
-                            : { label: sectionLabel(location.side, staff) },
+                            ? { label: sectionLabel(location.side), onClick: () => setLocation({ kind: "case", case: location.case, side: location.side }) }
+                            : { label: sectionLabel(location.side) },
                         ]
                       : []),
                     ...(location.folder ? [{ label: location.folder.name }] : []),
@@ -346,7 +346,7 @@ export function DocumentDrive({
               {sectionsFor(staff).map((side) => (
                 <FolderTile
                   key={side}
-                  title={sectionLabel(side, staff)}
+                  title={sectionLabel(side)}
                   subtitle={sectionHint(side, staff)}
                   count={countSection(files, side)}
                   tone={sectionTone(side)}
@@ -412,7 +412,7 @@ export function DocumentDrive({
           <form onSubmit={saveFolder} className="space-y-4">
             {location.kind === "case" && location.side && naming.mode === "new" && (
               <p className="text-sm text-ink-soft">
-                Inside <span className="font-semibold">{sectionLabel(location.side, staff)}</span>
+                Inside <span className="font-semibold">{sectionLabel(location.side)}</span>
                 {location.side === "INTERNAL" ? ". The client never sees it." : ". The client can see it and its files."}
               </p>
             )}

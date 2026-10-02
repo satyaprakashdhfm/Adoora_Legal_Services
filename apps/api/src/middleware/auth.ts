@@ -8,7 +8,7 @@ import type { UserRole } from "../../generated/prisma/client.js";
 
 export type AuthClaims = {
   sub: string;
-  email: string;
+  email: string | null;
   role: UserRole;
 };
 

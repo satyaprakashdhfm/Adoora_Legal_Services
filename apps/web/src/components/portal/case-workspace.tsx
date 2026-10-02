@@ -10,7 +10,8 @@ import { CaseForm } from "@/components/portal/case-form";
 import { CourtRecordPanel, CourtStatusCard } from "@/components/portal/court-record";
 import { DocumentsPanel } from "@/components/portal/documents-panel";
 import { Timeline } from "@/components/portal/timeline";
-import { Avatar, Badge, Button, Card, CardHeader, EmptyState, ErrorNote, Select, Spinner, StatusBadge, SuccessNote } from "@/components/portal/ui";
+import { Avatar, Badge, Button, Card, CardHeader, EmptyState, ErrorNote, Spinner, StatusBadge, SuccessNote } from "@/components/portal/ui";
+import { PeoplePicker, TeamPicker, personDetail, type TeamEntry } from "@/components/portal/people-picker";
 
 type Tab = "overview" | "court" | "documents" | "timeline" | "edit";
 
@@ -252,12 +253,12 @@ export function CaseWorkspace({ reference, user, basePath }: { reference: string
   );
 }
 
-type StaffOption = { id: string; name: string; role: string; isActive: boolean };
+type StaffOption = { id: string; name: string; role: string; isActive: boolean; phone?: string | null; email?: string | null };
 
 function TeamCard({ record, onChange }: { record: CaseDetail; onChange: () => void }) {
   const [editing, setEditing] = useState(false);
   const [staff, setStaff] = useState<StaffOption[]>([]);
-  const [draft, setDraft] = useState(record.assignments.map((a) => ({ userId: a.user.id, role: a.role })));
+  const [draft, setDraft] = useState<TeamEntry[]>(record.assignments.map((a) => ({ userId: a.user.id, role: a.role as TeamEntry["role"] })));
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -277,8 +278,6 @@ function TeamCard({ record, onChange }: { record: CaseDetail; onChange: () => vo
       setError((cause as Error).message);
     }
   }
-
-  const available = staff.filter((s) => !draft.some((d) => d.userId === s.id));
 
   return (
     <Card>
@@ -306,37 +305,15 @@ function TeamCard({ record, onChange }: { record: CaseDetail; onChange: () => vo
         )
       ) : (
         <div className="space-y-3 px-5 py-4">
-          {draft.map((entry, index) => {
-            const person = staff.find((s) => s.id === entry.userId) ?? record.assignments.find((a) => a.user.id === entry.userId)?.user;
-            return (
-              /* The name on its own line: beside the role box it was squeezed
-                 out of sight in this narrow card. */
-              <div key={entry.userId} className="rounded-md border border-line bg-paper-warm px-3 py-2.5">
-                <p className="truncate text-sm font-semibold text-ink">{person?.name ?? "…"}</p>
-                <div className="mt-2 flex items-center gap-3">
-                  <div className="min-w-0 flex-1">
-                    <Select
-                      aria-label={`Role on case: ${person?.name ?? "lawyer"}`}
-                      value={entry.role}
-                      onChange={(e) => setDraft(draft.map((d, i) => (i === index ? { ...d, role: e.target.value } : d)))}
-                      options={[{ value: "LEAD", label: "Lead" }, { value: "ASSOCIATE", label: "Associate" }, { value: "SUPPORT", label: "Support" }]}
-                    />
-                  </div>
-                  <button type="button" onClick={() => setDraft(draft.filter((_, i) => i !== index))} className="shrink-0 text-xs text-slate hover:text-red-700">Remove</button>
-                </div>
-              </div>
-            );
-          })}
-          {available.length > 0 && (
-            <Select
-              aria-label="Add lawyer"
-              value=""
-              onChange={(e) => e.target.value && setDraft([...draft, { userId: e.target.value, role: draft.length ? "ASSOCIATE" : "LEAD" }])}
-              placeholder="+ Add a lawyer"
-              promptOnly
-              options={available.map((s) => ({ value: s.id, label: `${s.name} (${s.role.toLowerCase()})` }))}
-            />
-          )}
+          <TeamPicker
+            lawyers={[
+              ...staff.map((u) => ({ id: u.id, name: u.name, detail: personDetail(u) })),
+              // Someone on the case who is no longer listed (deactivated) stays visible here.
+              ...record.assignments.filter((a) => !staff.some((u) => u.id === a.user.id)).map((a) => ({ id: a.user.id, name: a.user.name })),
+            ]}
+            value={draft}
+            onChange={setDraft}
+          />
           <ErrorNote>{error}</ErrorNote>
           <div className="flex gap-2">
             <Button size="sm" onClick={() => void save()}>Save team</Button>
@@ -348,7 +325,7 @@ function TeamCard({ record, onChange }: { record: CaseDetail; onChange: () => vo
   );
 }
 
-type ClientOption = { id: string; name: string; email: string; isActive: boolean };
+type ClientOption = { id: string; name: string; email: string | null; phone?: string | null; isActive: boolean };
 
 function ClientsCard({ record, onChange }: { record: CaseDetail; onChange: () => void }) {
   const [editing, setEditing] = useState(false);
@@ -389,31 +366,24 @@ function ClientsCard({ record, onChange }: { record: CaseDetail; onChange: () =>
             {record.clients!.map((c) => (
               <li key={c.id} className="px-5 py-3">
                 <p className="text-sm font-semibold text-ink">{c.name}</p>
-                <p className="text-xs text-slate">{c.email}{c.phone ? ` · ${c.phone}` : ""}</p>
+                <p className="text-xs text-slate">{[c.phone, c.email].filter(Boolean).join(" · ")}</p>
               </li>
             ))}
           </ul>
         )
       ) : (
         <div className="space-y-3 px-5 py-4">
-          {draft.map((id) => {
-            const client = options.find((o) => o.id === id) ?? record.clients?.find((c) => c.id === id);
-            return (
-              <div key={id} className="flex items-center justify-between gap-2">
-                <p className="truncate text-sm">{client?.name ?? "…"} <span className="text-xs text-slate">{client?.email}</span></p>
-                <button type="button" onClick={() => setDraft(draft.filter((d) => d !== id))} className="text-xs text-slate hover:text-red-700">Remove</button>
-              </div>
-            );
-          })}
-          <Select
-            aria-label="Add client"
-            value=""
-            onChange={(e) => e.target.value && setDraft([...draft, e.target.value])}
-            placeholder="+ Link a client account"
-            promptOnly
-            options={options.filter((o) => o.isActive && !draft.includes(o.id)).map((o) => ({ value: o.id, label: `${o.name} — ${o.email}` }))}
+          <PeoplePicker
+            people={[
+              ...options.filter((o) => o.isActive || draft.includes(o.id)).map((o) => ({ id: o.id, name: o.name, detail: personDetail({ phone: o.phone, email: o.email }) })),
+              ...(record.clients ?? []).filter((c) => !options.some((o) => o.id === c.id)).map((c) => ({ id: c.id, name: c.name })),
+            ]}
+            value={draft}
+            onChange={setDraft}
+            label="Client accounts"
+            empty="No clients yet. Add them under Clients."
           />
-          <p className="text-xs text-slate">Not listed? Add the client under Clients first, using the email they will sign in with.</p>
+          <p className="text-xs text-slate">Tick every client who should see this case. Not listed? Add them under Clients first.</p>
           <ErrorNote>{error}</ErrorNote>
           <div className="flex gap-2">
             <Button size="sm" onClick={() => void save()}>Save access</Button>

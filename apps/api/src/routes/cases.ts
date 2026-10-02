@@ -32,6 +32,7 @@ import {
   sectionVisibility,
 } from "../portal-schemas.js";
 import { uploadDocument, uploadMiddleware } from "./documents.js";
+import { placementFields, placesForViewer } from "../lib/places.js";
 import type { Principal } from "../auth/session.js";
 import type { Prisma } from "../../generated/prisma/client.js";
 
@@ -343,6 +344,7 @@ function serialiseCase(
     // The parts of the court's record with no column of their own (FIR,
     // category, tagged matters…), read from the latest stored response.
     courtFacts: latest ? readCourtRecord(latest.cnr, latest.payload).facts : [],
+    documents: record.documents.map((doc) => placesForViewer(principal, doc)),
     // Clients see who is on their team, but not the other clients on a
     // shared matter or anything marked internal.
     clients: staff ? record.clients.map((entry) => entry.client) : undefined,
@@ -912,7 +914,7 @@ casesRouter.post("/:reference/documents", uploadMiddleware, async (req, res) => 
 });
 
 // ---------------------------------------------------------------------------
-// Folders the firm makes inside a case's Internal, From client and From court
+// Folders the firm makes inside a case's Internal, Client and From court
 // ---------------------------------------------------------------------------
 
 /** GET /api/cases/:reference/folders — clients get those outside Internal. */
@@ -968,9 +970,18 @@ casesRouter.patch("/:reference/folders/:id", async (req, res) => {
 casesRouter.delete("/:reference/folders/:id", async (req, res) => {
   const principal = req.principal!;
   const found = await findEditableCase(principal, String(req.params.reference));
-  const existing = await prisma.documentFolder.findFirst({ where: { id: String(req.params.id), caseId: found.id }, select: { id: true, name: true } });
+  const existing = await prisma.documentFolder.findFirst({ where: { id: String(req.params.id), caseId: found.id }, select: { id: true, name: true, section: true } });
   if (!existing) throw new HttpError(404, "Folder not found.", "not_found");
-  await prisma.documentFolder.delete({ where: { id: existing.id } });
+  // Its files move up to the top of its section, wherever else they also are.
+  const key = `${existing.section}/${existing.id}`;
+  await prisma.$transaction(async (tx) => {
+    const inside = await tx.document.findMany({ where: { caseId: found.id, places: { has: key } }, select: { id: true, places: true } });
+    for (const doc of inside) {
+      const places = [...new Set(doc.places.map((place) => (place === key ? existing.section : place)))];
+      await tx.document.update({ where: { id: doc.id }, data: placementFields(places) });
+    }
+    await tx.documentFolder.delete({ where: { id: existing.id } });
+  });
   await audit(req, "folder.delete", "DocumentFolder", existing.id, { reference: found.reference, name: existing.name });
   res.status(204).end();
 });

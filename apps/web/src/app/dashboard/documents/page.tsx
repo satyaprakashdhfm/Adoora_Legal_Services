@@ -19,8 +19,8 @@ export default function DashboardDocuments() {
         title="Documents"
         description={
           client
-            ? "A folder for each of your cases, with From court (orders and filed papers) and Client files (what you send and what your lawyers share with you)."
-            : "A folder for each case assigned to you, with Internal, From client and From court inside, plus the firm-wide Internal folder."
+            ? "A folder for each of your cases, with From court (orders and filed papers) and Client (what you send and what your lawyers share with you)."
+            : "A folder for each case assigned to you, with Internal, Client and From court inside, plus the firm-wide Internal folder."
         }
         actions={<UploadButton place={place} onUploaded={() => setRefresh((n) => n + 1)} />}
       />

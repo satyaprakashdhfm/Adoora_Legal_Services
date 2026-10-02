@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
 import { api, type CaseSummary, type Page } from "@/lib/portal/api";
 import { courtNumber } from "@/lib/portal/format";
+import { PeoplePicker } from "@/components/portal/people-picker";
 import { formatDate } from "@/lib/portal/format";
 import {
   Avatar,
@@ -27,7 +28,8 @@ import {
 
 type ClientRow = {
   id: string;
-  email: string;
+  /** None when they sign in with their mobile number only. */
+  email: string | null;
   name: string;
   kind: "INDIVIDUAL" | "ORGANISATION";
   organisation: string | null;
@@ -58,38 +60,15 @@ function CasePicker({ value, onChange }: { value: string[]; onChange: (ids: stri
       .catch(() => setCases([]));
   }, []);
 
-  const label = (c: CaseSummary) => [c.reference, c.title, courtNumber(c)].filter(Boolean).join(" · ");
-
+  if (cases === null) return <p className="text-sm text-slate">Loading cases…</p>;
   return (
-    <div className="space-y-2">
-      {value.length > 0 && (
-        <ul className="space-y-1.5">
-          {value.map((id) => {
-            const c = cases?.find((item) => item.id === id);
-            return (
-              <li key={id} className="flex items-center justify-between gap-3 rounded-md border border-line bg-paper-warm px-3 py-2 text-sm">
-                <span className="min-w-0 truncate">
-                  <span className="font-mono text-xs font-semibold text-gold-deep">{c?.reference ?? "…"}</span>{" "}
-                  {c?.title}
-                </span>
-                <button type="button" onClick={() => onChange(value.filter((v) => v !== id))} className="shrink-0 text-xs text-slate hover:text-red-700">
-                  Remove
-                </button>
-              </li>
-            );
-          })}
-        </ul>
-      )}
-      <Select
-        aria-label="Link a case"
-        value=""
-        onChange={(e) => e.target.value && onChange([...value, e.target.value])}
-        placeholder={cases === null ? "Loading cases…" : cases.length === 0 ? "No cases yet" : "+ Link a case"}
-        promptOnly
-        options={(cases ?? []).filter((c) => !value.includes(c.id)).map((c) => ({ value: c.id, label: label(c) }))}
-        disabled={!cases?.length}
-      />
-    </div>
+    <PeoplePicker
+      people={cases.map((c) => ({ id: c.id, name: c.title, detail: [c.reference, courtNumber(c)].filter(Boolean).join(" · ") }))}
+      value={value}
+      onChange={onChange}
+      label="Cases this client can see"
+      empty="No cases yet."
+    />
   );
 }
 
@@ -109,7 +88,7 @@ function ClientForm({ initial, onSaved }: { initial?: ClientRow; onSaved: () => 
       if (initial) {
         await api(`/admin/clients/${initial.id}`, {
           method: "PATCH",
-          body: { name: data.name, kind, organisation: data.organisation ?? "", phone: data.phone, address: data.address ?? "", isActive: data.isActive === "true", caseIds },
+          body: { name: data.name, kind, organisation: data.organisation ?? "", phone: data.phone, address: data.address ?? "", isActive: data.isActive === "true", caseIds, ...(initial?.email ? {} : { email: data.email ?? "" }) },
         });
       } else {
         await api("/admin/clients", { method: "POST", body: { ...data, kind, caseIds } });
@@ -149,11 +128,15 @@ function ClientForm({ initial, onSaved }: { initial?: ClientRow; onSaved: () => 
       <Field label={organisation ? "Contact person" : "Name"} required>
         <Input name="name" required minLength={2} defaultValue={initial?.name} />
       </Field>
-      <Field label="Phone">
-        <Input name="phone" type="tel" defaultValue={initial?.phone ?? ""} />
+      <Field label="Mobile number" required hint="They sign in with an OTP sent to this number.">
+        <Input name="phone" type="tel" required minLength={10} maxLength={32} defaultValue={initial?.phone ?? ""} />
       </Field>
-      <Field label="Email" required className="sm:col-span-2" hint={initial ? "The sign-in email cannot be changed." : "The address they will sign in with."}>
-        <Input name="email" type="email" required defaultValue={initial?.email} disabled={Boolean(initial)} />
+      <Field
+        label="Email"
+        className="sm:col-span-2"
+        hint={initial?.email ? "The sign-in email cannot be changed." : "Optional. With it, they can also sign in with Google."}
+      >
+        <Input name="email" type="email" defaultValue={initial?.email ?? ""} disabled={Boolean(initial?.email)} />
       </Field>
       {organisation && (
         <Field label="Office address" className="sm:col-span-2">

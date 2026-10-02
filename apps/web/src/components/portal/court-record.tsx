@@ -4,7 +4,7 @@ import { useState } from "react";
 import { api, downloadUrl, type CaseDetail, type CourtHearing, type CourtOrder } from "@/lib/portal/api";
 import { formatDate, formatDateTime } from "@/lib/portal/format";
 import { CourtCaptcha } from "@/components/portal/court-captcha";
-import { Badge, Button, Card, CardHeader, EmptyState, ErrorNote, Modal, Table, Td, Th } from "@/components/portal/ui";
+import { Badge, Button, Card, CardHeader, EmptyState, ErrorNote, Input, Modal, Table, Td, Th } from "@/components/portal/ui";
 
 type SyncResult = {
   case: CaseDetail;
@@ -266,6 +266,51 @@ function OrderLine({ order }: { order: CourtOrder }) {
   );
 }
 
+/**
+ * A case opened without a CNR (a matter not yet in court, or filed later):
+ * the firm adds the CNR here, or under Edit details, and Update from court
+ * appears straight away.
+ */
+function AddCnr({ record, onSynced }: { record: CaseDetail; onSynced: OnSynced }) {
+  const [cnr, setCnr] = useState("");
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const valid = /^[A-Z0-9]{16}$/.test(cnr);
+
+  async function save(event: React.FormEvent) {
+    event.preventDefault();
+    if (!valid) return;
+    setSaving(true);
+    setError(null);
+    try {
+      const path = `/cases/${encodeURIComponent(record.reference)}`;
+      await api(path, { method: "PATCH", body: { cnrNumber: cnr } });
+      const updated = await api<CaseDetail>(path);
+      onSynced(updated, `CNR ${cnr} saved. Click Update from court to read the court's record.`);
+    } catch (cause) {
+      setError((cause as Error).message);
+      setSaving(false);
+    }
+  }
+
+  return (
+    <form onSubmit={save} className="mx-auto mt-5 flex max-w-md flex-col gap-2 text-left sm:flex-row">
+      <Input
+        aria-label="CNR number"
+        value={cnr}
+        onChange={(e) => setCnr(e.target.value.replace(/[\s-]/g, "").toUpperCase())}
+        maxLength={16}
+        placeholder="16-character CNR, e.g. HBHC01…"
+        className="font-mono uppercase"
+      />
+      <Button type="submit" disabled={!valid || saving} className="shrink-0">
+        {saving ? "Saving…" : "Save CNR"}
+      </Button>
+      {error && <div className="sm:basis-full"><ErrorNote>{error}</ErrorNote></div>}
+    </form>
+  );
+}
+
 export function CourtRecordPanel({ record, onSynced }: { record: CaseDetail; onSynced: OnSynced }) {
   const { rebuild, syncing, error } = useCourtSync(record, onSynced);
 
@@ -275,8 +320,9 @@ export function CourtRecordPanel({ record, onSynced }: { record: CaseDetail; onS
       <Card>
         <EmptyState title="No CNR on this case">
           {record.canEdit
-            ? "Add the CNR under Edit details, then check the court's record here."
+            ? "Once the court gives this case a CNR, enter it here (or under Edit details). Update from court then reads the court's record: status, hearings and orders."
             : "Once the firm records the court's CNR number, the hearing history and orders appear here."}
+          {record.canEdit && <AddCnr record={record} onSynced={onSynced} />}
         </EmptyState>
       </Card>
     );

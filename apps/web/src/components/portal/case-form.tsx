@@ -329,6 +329,16 @@ export function CaseForm({
         )}
       </Section>
 
+      {/* A matter opened before it reaches court gets its CNR here later; Update
+          from court then fills in the court, the case number and the hearings. */}
+      {!inLitigation && staff && (
+        <Section title="CNR number" description="When the case is filed and the court gives it a CNR, enter it here. Update from court (on the Court record tab) then fills in the court, the case number and the hearings.">
+          <Field label="CNR number" className="sm:col-span-2" hint="16 characters, printed on eCourts case status pages, e.g. HBHC01… for the Telangana High Court.">
+            <Input value={form.cnrNumber} onChange={(e) => set("cnrNumber", e.target.value.toUpperCase())} maxLength={20} className="font-mono uppercase" />
+          </Field>
+        </Section>
+      )}
+
       {inLitigation && (
         <Section title="Case number" description={staff ? "The court's numbering, once it exists. The firm's own reference never changes." : "If the case is already filed, whatever you have from the court papers."}>
           <Field label="Case type" hint={caseTypes.length ? "Pick a suggestion or type the court's abbreviation." : undefined}>

@@ -68,6 +68,19 @@ const GUIDE_UPDATES: {
       "Glossary",
     ],
   },
+  {
+    key: "2026-10-folders-people",
+    rewrite: [
+      "Signing in",
+      "The admin console, section by section",
+      "Cases and the court's own record",
+      "Step by step: jobs, articles, enquiries and more",
+      "Documents",
+      "The lawyer workspace",
+      "The client dashboard",
+      "Glossary",
+    ],
+  },
 ];
 
 type Tx = Parameters<Parameters<typeof prisma.$transaction>[0]>[0];

@@ -122,7 +122,7 @@ export type StaffRole = "OWNER" | "ADMIN" | "LAWYER" | "EDITOR";
 export type SessionUser = {
   kind: "staff" | "client";
   id: string;
-  email: string;
+  email: string | null;
   name: string;
   avatarUrl: string | null;
   role: StaffRole | null;
@@ -175,7 +175,7 @@ export type VersionSummary = {
   createdAt: string;
 };
 
-/** A case's three folders: Internal (firm only), From client, From court. */
+/** A case's three folders: Internal (firm only), Client, From court. */
 export type DocumentSection = "INTERNAL" | "CLIENT" | "COURT";
 
 export type DocumentRecord = {
@@ -185,8 +185,10 @@ export type DocumentRecord = {
   category: string;
   description: string | null;
   visibility: Visibility;
-  /** Which of the case's three folders; visibility follows it. */
+  /** The first of `places`: which of the case's three folders. */
   section?: DocumentSection;
+  /** Every place it sits: "COURT", "COURT/<folder id>"… A client gets only theirs. */
+  places?: string[];
   currentVersion: number;
   uploadedByClientId?: string | null;
   /** Saved from the court's website (tagged "Court website"); in From court. */
@@ -245,13 +247,13 @@ export type CaseDetail = Omit<CaseSummary, "assignments" | "clients" | "_count">
   /** The rest of the court's record (FIR, category, tagged matters…), as label/value pairs. */
   courtFacts: { label: string; value: string }[];
   parties: Party[];
-  clients?: { id: string; name: string; email: string; organisation: string | null; phone: string | null }[];
+  clients?: { id: string; name: string; email: string | null; organisation: string | null; phone: string | null }[];
   assignments: {
     role: string;
     user: {
       id: string;
       name: string;
-      email: string;
+      email: string | null;
       role?: StaffRole;
       barEnrolment?: string | null;
       /** From the lawyer's website profile, when they have one. */
@@ -345,7 +347,7 @@ export type LawyerProfile = {
   published: boolean;
   sortOrder: number;
   userId: string | null;
-  user?: { id: string; name: string; email: string; role: StaffRole } | null;
+  user?: { id: string; name: string; email: string | null; role: StaffRole } | null;
 };
 
 export type JobOpening = {
