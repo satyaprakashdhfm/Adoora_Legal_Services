@@ -36,5 +36,7 @@ export const TEMP_ACCOUNTS: readonly TempAccount[] = [
   { username: "pradeep.lawyer", passwordHash: "$2b$10$5yjlNI6uEwEaVTmHBUGL8.6Jtjy9PDzxXVrqYwYuOR3ckY4XwwKVC", area: "lawyer", name: "Pradeep Reddy", email: "pradeep.test@adoora.invalid" },
   { username: "surya.admin", passwordHash: "$2b$10$V3j8R8qF60eeN3yEA8xQyOCF7vcApaKc9qvLuZ0BTq1Ujh1cUeSO2", area: "admin", name: "Surya", email: "surya.test@adoora.invalid" },
   { username: "surya.lawyer", passwordHash: "$2b$10$P.mtYD99bUePKo2/5h8R/ON9fINDVAyKc05sZzn6jebRLqhAgQxVW", area: "lawyer", name: "Surya", email: "surya.test@adoora.invalid" },
+  { username: "anshu.admin", passwordHash: "$2b$10$Fx.EVaD0KduS0CkaOzjXE.Q9IU1kFYfgxfCBPJ7IJciq54n3TXDYG", area: "admin", name: "Anshu Sharma", email: "anshu.test@adoora.invalid" },
+  { username: "anshu.lawyer", passwordHash: "$2b$10$O1DV5MpUpjNZVTZE8GnIrerCYgTgY1lZl49A9DZwGD6dgOMidcOuu", area: "lawyer", name: "Anshu Sharma", email: "anshu.test@adoora.invalid" },
   { username: "kiran.client", passwordHash: "$2b$10$N1MqMvOS9fBQ/1MbYiZNJ.l7F6OmzwOkOkkH0zKPtC.NwWB.KydtG", area: "client", name: "Kiran Kumar (Demo client)", email: "kiran.client@adoora.invalid" },
 ];
