@@ -13,6 +13,7 @@ import { beginGoogleSignIn, completeGoogleSignIn, type GoogleIdentity, type OAut
 import { endSession, requestArea, staffAllowed, startSession, type Area } from "../auth/session.js";
 import { otpWidgetConfig, samePhone, verifyOtpAccessToken, type VerifiedIdentity } from "../auth/msg91.js";
 import type { UserRole } from "../../generated/prisma/client.js";
+import { PASSWORD_SIGN_IN, SHARED_CASE, TEMP_ACCOUNTS } from "../auth/temp-accounts.js";
 
 /**
  * Three sign-ins, completely independent. Each has its own session and
@@ -199,6 +200,73 @@ authRouter.post("/otp", loginLimiter, async (req, res) => {
   await audit(req, "auth.login", "Client", updated.id, { method: "otp" });
 
   res.json({ redirect: landingFor("client", safeNext(req.body?.next)) });
+});
+
+/**
+ * POST /api/auth/login {username, password, audience} — the temporary
+ * username and password sign-in (auth/temp-accounts.ts). A username works
+ * only on its own page: the admin one at the console, the lawyer one at the
+ * lawyer workspace, the client one at the client sign-in.
+ *
+ * The account is found by its email, and created the first time if it is
+ * missing; a firm account is never lowered (an owner stays an owner). Each
+ * sign-in also puts the person on the shared sample case, if it exists.
+ */
+const DUMMY_HASH = "$2b$10$invalidinvalidinvalidinvalidinvalidinvalidinvalidinval";
+
+authRouter.post("/login", loginLimiter, async (req, res) => {
+  if (!PASSWORD_SIGN_IN) throw new HttpError(404, "Not found.", "not_found");
+  const username = typeof req.body?.username === "string" ? req.body.username.trim().toLowerCase() : "";
+  const password = typeof req.body?.password === "string" ? req.body.password : "";
+  const audience = audienceOf(req.body?.audience);
+
+  const account = TEMP_ACCOUNTS.find((a) => a.username === username && a.area === audience);
+  // Always compare, so the time taken does not reveal which usernames exist.
+  const matches = await bcrypt.compare(password, account?.passwordHash ?? DUMMY_HASH);
+  if (!account || !matches) {
+    logger.warn({ ip: clientIp(req), area: audience }, "Failed username sign-in");
+    throw new HttpError(401, "That username or password is not right.", "invalid_credentials");
+  }
+
+  const shared = await prisma.case.findUnique({ where: { reference: SHARED_CASE }, select: { id: true } });
+
+  if (account.area === "client") {
+    const client =
+      (await prisma.client.findUnique({ where: { email: account.email } })) ??
+      (await prisma.client.create({ data: { email: account.email, name: account.name, emailVerifiedAt: new Date() } }));
+    if (!client.isActive) throw new HttpError(403, "account_inactive", "account_inactive");
+    if (shared) await prisma.caseClient.createMany({ data: [{ caseId: shared.id, clientId: client.id }], skipDuplicates: true });
+    await prisma.client.update({ where: { id: client.id }, data: { lastLoginAt: new Date() } });
+    await startSession(req, res, { clientId: client.id }, "password", "client");
+    req.principal = { kind: "client", id: client.id, email: client.email, name: client.name, avatarUrl: client.avatarUrl, sessionId: "" };
+    await audit(req, "auth.login", "Client", client.id, { method: "username" });
+    res.json({ redirect: landingFor("client", safeNext(req.body?.next)) });
+    return;
+  }
+
+  const existing = await prisma.user.findUnique({ where: { email: account.email } });
+  const user = existing
+    ? existing.role === "OWNER" || existing.role === "ADMIN"
+      ? existing
+      : await prisma.user.update({ where: { id: existing.id }, data: { role: "ADMIN" } })
+    : await prisma.user.create({ data: { email: account.email, name: account.name, role: "ADMIN" } });
+  if (!user.isActive) throw new HttpError(403, "account_inactive", "account_inactive");
+  if (shared) await prisma.caseAssignment.createMany({ data: [{ caseId: shared.id, userId: user.id, role: "ASSOCIATE" }], skipDuplicates: true });
+
+  await prisma.user.update({ where: { id: user.id }, data: { lastLoginAt: new Date() } });
+  await startSession(req, res, { userId: user.id }, "password", account.area);
+  req.principal = {
+    kind: "staff",
+    id: user.id,
+    email: user.email,
+    name: user.name,
+    role: account.area === "lawyer" ? "LAWYER" : user.role,
+    area: account.area,
+    avatarUrl: user.avatarUrl,
+    sessionId: null,
+  };
+  await audit(req, "auth.login", "User", user.id, { method: "username", area: account.area });
+  res.json({ redirect: landingFor(account.area, safeNext(req.body?.next)) });
 });
 
 /** Is this number already on another client account? (A firm account may share it.) */

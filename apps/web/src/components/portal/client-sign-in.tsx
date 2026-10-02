@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { api, ApiError, googleSignInUrl, type Area } from "@/lib/portal/api";
 import { refreshSession } from "@/lib/portal/session";
 import { Button, ErrorNote, GoogleMark } from "@/components/portal/ui";
+import { PASSWORD_ONLY } from "@/lib/portal/sign-in-mode";
 
 /** What went wrong, in words a client can act on. Shown only after a failed attempt. */
 export const SIGN_IN_ERRORS: Record<string, string> = {
@@ -396,6 +397,79 @@ function PhoneOtp({
  * Nothing is created by signing in, and a number that would not sign in is
  * refused before any code is texted to it.
  */
+const fieldClass =
+  "mt-1.5 w-full rounded-lg border border-line-strong bg-white px-3 py-2.5 text-sm text-ink outline-none placeholder:text-slate-light focus:border-gold-deep focus:ring-2 focus:ring-gold/25";
+
+/** The temporary username and password sign-in (see lib/portal/sign-in-mode.ts). */
+function PasswordSignIn({ next, audience }: { next: string; audience: Area }) {
+  const [username, setUsername] = useState("");
+  const [password, setPassword] = useState("");
+  const [show, setShow] = useState(false);
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  async function submit(event: React.FormEvent) {
+    event.preventDefault();
+    if (!username.trim() || !password) return;
+    setBusy(true);
+    setError(null);
+    try {
+      const result = await api<{ redirect?: string }>("/auth/login", {
+        method: "POST",
+        body: { username, password, next, audience },
+        area: audience,
+      });
+      if (result.redirect) window.location.assign(result.redirect);
+    } catch (cause) {
+      setError(cause instanceof ApiError && cause.code === "invalid_credentials" ? "That username or password is not right." : (cause as Error).message);
+      setBusy(false);
+    }
+  }
+
+  return (
+    <form onSubmit={submit}>
+      {error && (
+        <div className="mb-4">
+          <ErrorNote>{error}</ErrorNote>
+        </div>
+      )}
+      <label htmlFor="signin-username" className="text-xs font-semibold text-ink-soft">
+        Username
+      </label>
+      <input
+        id="signin-username"
+        autoComplete="username"
+        autoCapitalize="none"
+        spellCheck={false}
+        value={username}
+        onChange={(event) => setUsername(event.target.value)}
+        placeholder={audience === "client" ? "e.g. kiran.client" : `e.g. name.${audience}`}
+        className={fieldClass}
+      />
+      <div className="mt-4 flex items-baseline justify-between">
+        <label htmlFor="signin-password" className="text-xs font-semibold text-ink-soft">
+          Password
+        </label>
+        <button type="button" onClick={() => setShow((value) => !value)} className="text-xs font-semibold text-gold-deep underline underline-offset-2">
+          {show ? "Hide" : "Show"}
+        </button>
+      </div>
+      <input
+        id="signin-password"
+        type={show ? "text" : "password"}
+        autoComplete="current-password"
+        value={password}
+        onChange={(event) => setPassword(event.target.value)}
+        className={fieldClass}
+      />
+      <button type="submit" disabled={!username.trim() || !password || busy} className={`${primaryButton} mt-5`}>
+        {busy ? "Signing in…" : "Sign in"}
+      </button>
+      <p className="mt-2 text-xs text-slate">Use the username and password the firm gave you for this page.</p>
+    </form>
+  );
+}
+
 export function ClientSignIn({
   next,
   initialError = null,
@@ -405,6 +479,18 @@ export function ClientSignIn({
   initialError?: string | null;
   audience?: Area;
 }) {
+  if (PASSWORD_ONLY) {
+    return (
+      <div className="text-left">
+        <ErrorBlock error={initialError} />
+        <PasswordSignIn next={next} audience={audience} />
+      </div>
+    );
+  }
+  return <OtpOrGoogleSignIn next={next} initialError={initialError} audience={audience} />;
+}
+
+function OtpOrGoogleSignIn({ next, initialError, audience }: { next: string; initialError: string | null; audience: Area }) {
   const config = useWidgetConfig();
   const firm = audience !== "client";
 
@@ -475,6 +561,10 @@ function askedLater() {
  * Google sign-in): verify one by OTP. "Later" hides it until the next visit.
  */
 export function PhonePrompt() {
+  return PASSWORD_ONLY ? null : <PhonePromptDialog />;
+}
+
+function PhonePromptDialog() {
   const config = useWidgetConfig();
   const [dismissed, setDismissed] = useState(false);
   const dialog = useRef<HTMLDialogElement>(null);

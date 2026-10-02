@@ -41,7 +41,7 @@ export function LoginPanel({ error, next, audience = "client" }: { error: string
       {user ? (
         <div className="mt-8 space-y-2 text-center text-sm">
           <p className="text-slate">
-            Signed in as <span className="font-semibold text-ink">{user.email}</span>.
+            Signed in as <span className="font-semibold text-ink">{user.email ?? user.name}</span>.
           </p>
           <Link href={homeFor(user)} className="inline-block font-semibold text-gold-deep underline underline-offset-4">
             Continue to your {AREA_LABEL[audience]}
