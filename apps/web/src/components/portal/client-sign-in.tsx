@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { api, ApiError, googleSignInUrl, type Area } from "@/lib/portal/api";
 import { refreshSession } from "@/lib/portal/session";
 import { Button, ErrorNote, GoogleMark } from "@/components/portal/ui";
-import { PASSWORD_ONLY } from "@/lib/portal/sign-in-mode";
+import { PASSWORD_ONLY, SHOW_TEST_LOGINS, TEST_LOGINS, type TestLogin } from "@/lib/portal/sign-in-mode";
 
 /** What went wrong, in words a client can act on. Shown only after a failed attempt. */
 export const SIGN_IN_ERRORS: Record<string, string> = {
@@ -466,7 +466,47 @@ function PasswordSignIn({ next, audience }: { next: string; audience: Area }) {
         {busy ? "Signing in…" : "Sign in"}
       </button>
       <p className="mt-2 text-xs text-slate">Use the username and password the firm gave you for this page.</p>
+      {SHOW_TEST_LOGINS && (
+        <TestLogins
+          audience={audience}
+          onPick={(login) => {
+            setUsername(login.username);
+            setPassword(login.password);
+            setShow(true);
+            setError(null);
+          }}
+        />
+      )}
     </form>
+  );
+}
+
+/** Testing only: this page's logins, each one tap to fill the form. */
+function TestLogins({ audience, onPick }: { audience: Area; onPick: (login: TestLogin) => void }) {
+  const logins = TEST_LOGINS.filter((login) => login.area === audience);
+  if (!logins.length) return null;
+  return (
+    <div className="mt-6 border-t border-line pt-5">
+      <p className="text-xs font-semibold text-ink-soft">Test logins</p>
+      <p className="mt-0.5 text-xs text-slate">Tap your name to fill the form, then Sign in.</p>
+      <div className="mt-3 grid gap-2 sm:grid-cols-2">
+        {logins.map((login) => (
+          <button
+            key={login.username}
+            type="button"
+            onClick={() => onPick(login)}
+            className="rounded-lg border border-line-strong bg-paper px-3 py-2.5 text-left transition hover:border-gold-deep active:scale-[0.98]"
+          >
+            <span className="block font-serif text-sm font-semibold text-navy">{login.name}</span>
+            <span className="mt-1 block font-mono text-[11px] leading-relaxed text-ink-soft">
+              {login.username}
+              <br />
+              {login.password}
+            </span>
+          </button>
+        ))}
+      </div>
+    </div>
   );
 }
 
