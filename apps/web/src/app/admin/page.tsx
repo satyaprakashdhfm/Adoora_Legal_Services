@@ -5,7 +5,8 @@ import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { api } from "@/lib/portal/api";
 import { useUser } from "@/lib/portal/session";
-import { courtNumber, formatDate } from "@/lib/portal/format";
+import { courtNumber, daysUntil, hearingCountdown } from "@/lib/portal/format";
+import { HearingDateChip } from "@/components/portal/next-hearing";
 import { NewCaseButton } from "@/components/portal/new-case-dialog";
 import { UrgentBanner, usePipeline } from "@/components/portal/trending";
 import { Button, ButtonLink, Card, CardHeader, EmptyState, ErrorNote, PageTitle, Spinner, StatTile } from "@/components/portal/ui";
@@ -78,16 +79,17 @@ export default function AdminOverview() {
           <EmptyState title="Nothing listed in the next fortnight" />
         ) : (
           <ul className="divide-y divide-line">
-            {stats.upcomingHearings.map((hearing) => (
+            {stats.upcomingHearings.map((hearing, index) => (
               <li key={hearing.reference}>
-                <Link href={`/admin/cases/${hearing.reference}`} className="grid gap-2 px-5 py-3 hover:bg-paper-warm sm:grid-cols-[8rem_1fr]">
-                  <p className="text-sm font-semibold text-gold-deep">{formatDate(hearing.nextHearingDate)}</p>
-                  <div className="min-w-0">
+                <Link href={`/admin/cases/${hearing.reference}`} className="flex items-center gap-4 px-5 py-3 hover:bg-paper-warm">
+                  <HearingDateChip date={hearing.nextHearingDate} tone={index === 0 ? "gold" : "soft"} />
+                  <div className="min-w-0 flex-1">
                     <p className="truncate text-sm font-semibold text-ink">{hearing.title}</p>
                     <p className="truncate text-xs text-slate">
                       {[hearing.reference, courtNumber(hearing), hearing.courtName, hearing.nextHearingPurpose].filter(Boolean).join(" · ")}
                     </p>
                   </div>
+                  <span className="portal-label shrink-0 text-xs font-semibold text-gold-deep">{hearingCountdown(daysUntil(hearing.nextHearingDate))}</span>
                 </Link>
               </li>
             ))}

@@ -29,7 +29,7 @@ export default function ContactPage() {
 
       <div className="container-page py-12 sm:py-14">
         <div className="grid gap-10 lg:grid-cols-[1.35fr_1fr] lg:gap-12">
-          <div className="relative isolate overflow-hidden rounded-2xl bg-ink p-7 text-white sm:p-10">
+          <div id="enquiry" className="relative isolate overflow-hidden rounded-2xl bg-ink p-7 text-white sm:p-10">
             {cardImage ? (
               <>
                 <Image

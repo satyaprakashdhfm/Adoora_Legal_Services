@@ -50,6 +50,22 @@ export function daysUntil(value: string | null | undefined): number | null {
   return Math.round((new Date(value.slice(0, 10)).getTime() - today) / 86_400_000);
 }
 
+/** "Today", "Tomorrow", "In 5 days" or "Date has passed", from `daysUntil`. */
+export function hearingCountdown(days: number | null): string | null {
+  if (days === null) return null;
+  if (days < 0) return "Date has passed";
+  if (days === 0) return "Today";
+  if (days === 1) return "Tomorrow";
+  return `In ${days} days`;
+}
+
+/** Cases with a hearing today or later, soonest first. */
+export function upcomingHearings<T extends { nextHearingDate: string | null }>(cases: T[]): (T & { nextHearingDate: string })[] {
+  return cases
+    .filter((c): c is T & { nextHearingDate: string } => (daysUntil(c.nextHearingDate) ?? -1) >= 0)
+    .sort((a, b) => a.nextHearingDate.localeCompare(b.nextHearingDate));
+}
+
 /** "Respondent No. 2" style label. */
 export function partyLabel(party: Pick<Party, "role" | "position">, sameRoleCount: number) {
   const role = labelFor(PARTY_ROLES, party.role);

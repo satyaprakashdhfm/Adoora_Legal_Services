@@ -313,10 +313,10 @@ export function SiteHeader() {
 
             <div className="flex items-center gap-3">
               <Link
-                href="/contact"
+                href="/contact#enquiry"
                 className="hidden items-center gap-2 whitespace-nowrap rounded-md bg-gold px-5 py-2.5 text-sm font-semibold text-ink-deep transition hover:bg-gold-bright lg:inline-flex"
               >
-                Request Consultation
+                Enquiry
                 <svg viewBox="0 0 16 16" aria-hidden="true" className="h-3.5 w-3.5">
                   <path
                     d="M2 8h11M9 4l4 4-4 4"
@@ -442,10 +442,10 @@ export function SiteHeader() {
                 <AccountControl variant="drawer" />
               </div>
               <Link
-                href="/contact"
+                href="/contact#enquiry"
                 className="block rounded-md bg-gold px-5 py-3 text-center text-sm font-semibold text-ink-deep"
               >
-                Request Consultation
+                Enquiry
               </Link>
               <div className="mt-4 flex flex-col gap-1.5 text-sm text-white/75">
                 <a href={firm.phoneHref}>{firm.phone}</a>

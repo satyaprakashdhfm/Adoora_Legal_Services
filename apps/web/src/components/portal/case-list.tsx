@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import { api, type CaseSummary, type Page } from "@/lib/portal/api";
 import { CASE_STATUSES, COURT_LEVELS, labelFor } from "@/lib/portal/legal";
-import { courtNumber, daysUntil, formatDate } from "@/lib/portal/format";
+import { courtNumber, daysUntil, formatDate, hearingCountdown } from "@/lib/portal/format";
 import { Button, Card, EmptyState, ErrorNote, Input, Select, Spinner, StatusBadge } from "@/components/portal/ui";
 
 /** Searchable case list. `staff` adds the client column and court filter. */
@@ -121,9 +121,20 @@ export function CaseList({
 
                   <div className="min-w-0 text-xs">
                     <p className="portal-label font-semibold uppercase tracking-wide text-slate">Next hearing</p>
-                    <p className={`mt-1 text-sm ${days !== null && days >= 0 && days <= 7 ? "font-semibold text-gold-deep" : "text-ink"}`}>
-                      {item.nextHearingDate ? formatDate(item.nextHearingDate) : "—"}
-                    </p>
+                    {item.nextHearingDate && days !== null && days >= 0 ? (
+                      <>
+                        <p
+                          className={`mt-1 inline-flex rounded-md px-2 py-0.5 text-sm font-semibold ${
+                            days <= 7 ? "bg-gold text-ink-deep" : "bg-gold/15 text-gold-deep ring-1 ring-gold/30"
+                          }`}
+                        >
+                          {formatDate(item.nextHearingDate)}
+                        </p>
+                        <p className="mt-0.5 text-slate">{hearingCountdown(days)}</p>
+                      </>
+                    ) : (
+                      <p className="mt-1 text-sm text-ink">{item.nextHearingDate ? formatDate(item.nextHearingDate) : "—"}</p>
+                    )}
                   </div>
 
                   <div className="min-w-0 text-xs">

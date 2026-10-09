@@ -5,9 +5,10 @@ import { useEffect, useState, type ReactNode } from "react";
 import { api, ApiError, type CaseDetail, type SessionUser } from "@/lib/portal/api";
 import { CASE_STAGES, COURT_LEVELS, labelFor } from "@/lib/portal/legal";
 import { practiceAreas } from "@/content/practice-areas";
-import { causeTitle, courtNumber, daysUntil, formatDate, partyLabel } from "@/lib/portal/format";
+import { causeTitle, courtNumber, formatDate, partyLabel } from "@/lib/portal/format";
 import { CaseForm } from "@/components/portal/case-form";
 import { CourtRecordPanel, CourtStatusCard } from "@/components/portal/court-record";
+import { NextHearingHighlight } from "@/components/portal/next-hearing";
 import { DocumentsPanel } from "@/components/portal/documents-panel";
 import { Timeline } from "@/components/portal/timeline";
 import { Avatar, Badge, Button, Card, CardHeader, EmptyState, ErrorNote, Spinner, StatusBadge, SuccessNote } from "@/components/portal/ui";
@@ -65,7 +66,6 @@ export function CaseWorkspace({ reference, user, basePath }: { reference: string
 
   const number = courtNumber(record);
   const title = causeTitle(record.parties);
-  const hearingIn = daysUntil(record.nextHearingDate);
   const parties = record.parties;
   const countByRole = (role: string) => parties.filter((p) => p.role === role).length;
   const onSynced = (updated: CaseDetail, message: string) => {
@@ -99,16 +99,7 @@ export function CaseWorkspace({ reference, user, basePath }: { reference: string
               {[number, record.courtName, record.bench].filter(Boolean).join(" · ") || labelFor(COURT_LEVELS, record.courtLevel)}
             </p>
           </div>
-          {record.nextHearingDate && (
-            <div className="w-full rounded-lg border border-gold/40 bg-gold/10 px-4 py-3 sm:w-auto sm:text-right">
-              <p className="portal-label text-xs font-semibold uppercase tracking-wide text-gold-deep">Next hearing</p>
-              <p className="font-serif text-lg font-semibold text-ink">{formatDate(record.nextHearingDate)}</p>
-              <p className="text-xs text-slate">
-                {hearingIn !== null && hearingIn >= 0 ? (hearingIn === 0 ? "Today" : `In ${hearingIn} day${hearingIn === 1 ? "" : "s"}`) : "Date has passed"}
-                {record.nextHearingPurpose && ` · ${record.nextHearingPurpose}`}
-              </p>
-            </div>
-          )}
+          {record.nextHearingDate && <NextHearingHighlight date={record.nextHearingDate} purpose={record.nextHearingPurpose} />}
         </div>
       </div>
 

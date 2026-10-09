@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { api, downloadUrl, type CaseDetail, type CourtHearing, type CourtOrder } from "@/lib/portal/api";
-import { formatDate, formatDateTime } from "@/lib/portal/format";
+import { daysUntil, formatDate, formatDateTime } from "@/lib/portal/format";
 import { CourtCaptcha } from "@/components/portal/court-captcha";
 import { Badge, Button, Card, CardHeader, EmptyState, ErrorNote, Input, Modal, Table, Td, Th } from "@/components/portal/ui";
 
@@ -315,6 +315,9 @@ export function CourtRecordPanel({ record, onSynced }: { record: CaseDetail; onS
   const { rebuild, syncing, error } = useCourtSync(record, onSynced);
 
   const hasHistory = record.hearings.length > 0 || record.orders.length > 0;
+  /* The row that set the case's next date gets it in gold, as on the case header. */
+  const isUpcomingNext = (date: string) =>
+    !!record.nextHearingDate && date.slice(0, 10) === record.nextHearingDate.slice(0, 10) && (daysUntil(date) ?? -1) >= 0;
   if (!record.cnrNumber && !hasHistory) {
     return (
       <Card>
@@ -437,7 +440,19 @@ export function CourtRecordPanel({ record, onSynced }: { record: CaseDetail; onS
                     ))}
                   </Td>
                   <Td className="text-xs">{entry.hearing?.judge ?? "—"}</Td>
-                  <Td className="whitespace-nowrap text-xs">{entry.hearing?.nextDate ? formatDate(entry.hearing.nextDate) : "—"}</Td>
+                  <Td className="whitespace-nowrap text-xs">
+                    {entry.hearing?.nextDate ? (
+                      isUpcomingNext(entry.hearing.nextDate) ? (
+                        <span className="inline-flex rounded-md bg-gold px-2 py-0.5 text-xs font-semibold text-ink-deep" title="The next hearing">
+                          {formatDate(entry.hearing.nextDate)}
+                        </span>
+                      ) : (
+                        formatDate(entry.hearing.nextDate)
+                      )
+                    ) : (
+                      "—"
+                    )}
+                  </Td>
                 </tr>
               ))}
             </tbody>
