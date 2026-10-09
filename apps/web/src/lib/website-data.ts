@@ -11,31 +11,52 @@ import type { PartnerItem } from "@/content/partners";
  * Fetched from the API with a five-minute revalidation, tagged so a save in
  * the console refreshes the pages straight away (see `app/revalidate`).
  *
- * When the API cannot be reached — notably during `next build` on Railway,
- * where the private network does not exist yet — profiles fall back to the
- * roster bundled in `people.ts`, so a page is never built empty; the next
- * revalidation replaces it with the live list. The same fallback covers the
- * interval before anyone has imported that roster into the console.
+ * The private network does not exist during `next build` on Railway, so the
+ * API's public address is tried when the private one cannot be reached;
+ * without it the pages were built with no partners or articles and showed
+ * that to the first visitors after every deploy. If neither answers,
+ * profiles fall back to the roster bundled in `people.ts` (also used before
+ * anyone has imported that roster into the console), and the next
+ * revalidation replaces whatever was built with the live data.
  */
 
-const apiOrigin = (process.env.API_INTERNAL_URL ?? process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:4000").replace(/\/$/, "");
+const trimmed = (value: string | undefined) => value?.trim().replace(/\/$/, "") || null;
+/** Railway gives every service the API's public domain, without a scheme. */
+const publicApi = trimmed(process.env.RAILWAY_SERVICE_ADOORA_API_URL);
+const apiOrigins = [
+  ...new Set(
+    [
+      trimmed(process.env.API_INTERNAL_URL),
+      trimmed(process.env.NEXT_PUBLIC_API_URL),
+      publicApi ? (publicApi.startsWith("http") ? publicApi : `https://${publicApi}`) : null,
+    ].filter((origin): origin is string => Boolean(origin)),
+  ),
+];
+if (apiOrigins.length === 0) apiOrigins.push("http://localhost:4000");
 
 export const PEOPLE_TAG = "website-people";
 export const JOBS_TAG = "website-jobs";
 export const ARTICLES_TAG = "website-articles";
 export const PARTNERS_TAG = "website-partners";
 
-/** The parsed body, or null when it is missing (404) or the API is unreachable. */
+/**
+ * The parsed body, or null when it is missing (404) or no address for the
+ * API answers. The next address is tried only when one cannot be reached at
+ * all; an answer, even an error, is final.
+ */
 async function fromApi<T>(path: string, tag: string): Promise<T | null> {
-  try {
-    const response = await fetch(`${apiOrigin}/api${path}`, {
-      next: { revalidate: 300, tags: [tag] },
-      signal: AbortSignal.timeout(4000),
-    });
-    return response.ok ? ((await response.json()) as T) : null;
-  } catch {
-    return null;
+  for (const origin of apiOrigins) {
+    try {
+      const response = await fetch(`${origin}/api${path}`, {
+        next: { revalidate: 300, tags: [tag] },
+        signal: AbortSignal.timeout(4000),
+      });
+      return response.ok ? ((await response.json()) as T) : null;
+    } catch {
+      // Unreachable from here (e.g. the private network during a build): try the next address.
+    }
   }
+  return null;
 }
 
 // ---------------------------------------------------------------------------
