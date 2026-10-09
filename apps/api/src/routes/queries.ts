@@ -49,8 +49,24 @@ queriesRouter.get("/", async (req, res) => {
   const principal = req.principal!;
   const query = queryListSchema.parse(req.query);
   const rows = await prisma.clientQuery.findMany({
-    where: { AND: [queryScope(principal), query.status ? { status: query.status } : {}] },
-    orderBy: [{ createdAt: "desc" }, { id: "desc" }],
+    where: {
+      AND: [
+        queryScope(principal),
+        query.status ? { status: query.status } : {},
+        query.q
+          ? {
+              OR: [
+                { subject: { contains: query.q, mode: "insensitive" } },
+                { message: { contains: query.q, mode: "insensitive" } },
+                { reference: { contains: query.q, mode: "insensitive" } },
+                { client: { name: { contains: query.q, mode: "insensitive" } } },
+                { case: { OR: [{ reference: { contains: query.q, mode: "insensitive" } }, { title: { contains: query.q, mode: "insensitive" } }] } },
+              ],
+            }
+          : {},
+      ],
+    },
+    orderBy: [{ createdAt: query.sort === "oldest" ? "asc" : "desc" }, { id: "desc" }],
     take: query.limit + 1,
     ...(query.cursor ? { cursor: { id: query.cursor }, skip: 1 } : {}),
     include,

@@ -4,12 +4,13 @@ import { z } from "zod";
 import { prisma } from "../db.js";
 import { HttpError } from "../lib/http.js";
 import { audit } from "../lib/audit.js";
+import { imageSize, imageType } from "../lib/images.js";
 import { requireAuth, requireRole } from "../middleware/auth.js";
 import type { Prisma } from "../../generated/prisma/client.js";
 
 /**
  * What the public website shows that the firm maintains from the console:
- * the lawyers it showcases, and its job openings.
+ * the lawyers it showcases, its job openings, and its partners' logos.
  *
  *   websitePublicRouter   /api/public/...   read-only, no sign-in, cacheable
  *   websiteAdminRouter    /api/admin/...    OWNER / ADMIN
@@ -249,14 +250,6 @@ const photoMiddleware: RequestHandler = (req, res, next) => {
   });
 };
 
-/** JPEG, PNG or WebP, by their magic bytes rather than the file name. */
-function imageType(buffer: Buffer): string | null {
-  if (buffer.length > 3 && buffer[0] === 0xff && buffer[1] === 0xd8 && buffer[2] === 0xff) return "image/jpeg";
-  if (buffer.subarray(0, 8).equals(Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]))) return "image/png";
-  if (buffer.subarray(0, 4).toString("ascii") === "RIFF" && buffer.subarray(8, 12).toString("ascii") === "WEBP") return "image/webp";
-  return null;
-}
-
 websiteAdminRouter.put("/profiles/:id/photo", ...adminOnly, photoMiddleware, async (req, res) => {
   const id = z.string().uuid().parse(req.params.id);
   const file = req.file;
@@ -402,4 +395,207 @@ websiteAdminRouter.delete("/jobs/:id", ...adminOnly, async (req, res) => {
   if (!deleted) throw new HttpError(404, "Job opening not found.", "not_found");
   await audit(req, "job.deleted", "JobOpening", id, { slug: deleted.slug });
   res.json({ ok: true });
+});
+
+// ---------------------------------------------------------------------------
+// Partners (the home page's "Our Partners" honeycomb)
+// ---------------------------------------------------------------------------
+
+/*
+ * Every logo sits in the same hexagon, so the console asks for one shape and
+ * size: a square, ideally 400 × 400 px on a transparent background. Anything
+ * square from 200 to 2000 px is accepted, so a logo exported a little larger
+ * or smaller still works; the website scales it down to fit.
+ */
+const LOGO_MAX_BYTES = 1024 * 1024;
+const LOGO_MIN_PX = 200;
+const LOGO_MAX_PX = 2000;
+
+const partnerSchema = z.object({
+  name: z.string().trim().min(2, "Please enter the name.").max(120),
+  website: z
+    .union([z.string().trim().url("Please enter a full web address, starting with https://"), z.literal(""), z.null()])
+    .optional()
+    .transform((value) => (value === "" ? null : value))
+    .refine((value) => !value || /^https?:\/\//i.test(value), "Please enter a web address starting with https://"),
+  published: z.boolean().optional(),
+});
+
+const partnerSelect = {
+  id: true,
+  name: true,
+  website: true,
+  logoType: true,
+  logoUpdatedAt: true,
+  published: true,
+  sortOrder: true,
+  clientId: true,
+  updatedAt: true,
+} satisfies Prisma.PartnerSelect;
+
+type PartnerRow = Prisma.PartnerGetPayload<{ select: typeof partnerSelect }>;
+
+function serialisePartner(partner: PartnerRow) {
+  const { logoType, logoUpdatedAt, ...rest } = partner;
+  return {
+    ...rest,
+    logoUrl: logoType && logoUpdatedAt ? `/api/public/partners/${partner.id}/logo?v=${logoUpdatedAt.getTime()}` : null,
+  };
+}
+
+/**
+ * Keeps an organisation client's entry in "Our Partners" in step with its
+ * "Show on the home page" tick in Clients: created on the first tick (at the
+ * end of the order), renamed with the organisation, and hidden, not deleted,
+ * when the tick is cleared or the client stops being an organisation, so a
+ * logo already uploaded is still there if it is ticked again.
+ */
+export async function syncClientPartner(
+  clientId: string,
+  client: { kind: "INDIVIDUAL" | "ORGANISATION"; organisation: string | null; name: string },
+  show: boolean | undefined,
+) {
+  const existing = await prisma.partner.findUnique({ where: { clientId }, select: { id: true, published: true } });
+  const shouldShow = client.kind === "ORGANISATION" && (show ?? existing?.published ?? false);
+  const name = (client.organisation ?? client.name).slice(0, 120);
+
+  if (existing) {
+    await prisma.partner.update({ where: { id: existing.id }, data: { name, published: shouldShow } });
+    return;
+  }
+  if (!shouldShow) return;
+  const last = await prisma.partner.aggregate({ _max: { sortOrder: true } });
+  await prisma.partner.create({
+    data: { clientId, name, published: true, sortOrder: Math.min((last._max.sortOrder ?? -10) + 10, 9999) },
+  });
+}
+
+/** The partner summary the Clients list shows beside an organisation. */
+export function clientPartnerSummary(partner: { id: string; published: boolean; logoType: string | null; logoUpdatedAt: Date | null } | null) {
+  if (!partner) return null;
+  return {
+    id: partner.id,
+    published: partner.published,
+    logoUrl: partner.logoType && partner.logoUpdatedAt ? `/api/public/partners/${partner.id}/logo?v=${partner.logoUpdatedAt.getTime()}` : null,
+  };
+}
+
+websitePublicRouter.get("/public/partners", async (_req, res) => {
+  const rows = await prisma.partner.findMany({
+    where: { published: true },
+    orderBy: [{ sortOrder: "asc" }, { createdAt: "asc" }],
+    select: partnerSelect,
+  });
+  res.set("Cache-Control", "public, max-age=60, stale-while-revalidate=300");
+  res.json({
+    data: rows.map((row) => {
+      const { published: _p, sortOrder: _s, updatedAt: _u, clientId: _c, ...partner } = serialisePartner(row);
+      return partner;
+    }),
+  });
+});
+
+websitePublicRouter.get("/public/partners/:id/logo", async (req, res) => {
+  const id = z.string().uuid().safeParse(req.params.id);
+  const found = id.success
+    ? await prisma.partner.findUnique({ where: { id: id.data }, select: { logoData: true, logoType: true, published: true } })
+    : null;
+  if (!found?.logoData || !found.logoType || !found.published) {
+    throw new HttpError(404, "No logo.", "not_found");
+  }
+  res.set({
+    "Content-Type": found.logoType,
+    "Cache-Control": "public, max-age=31536000, immutable",
+    "X-Content-Type-Options": "nosniff",
+  });
+  res.end(Buffer.from(found.logoData));
+});
+
+websiteAdminRouter.get("/partners", ...adminOnly, async (_req, res) => {
+  const rows = await prisma.partner.findMany({ orderBy: [{ sortOrder: "asc" }, { createdAt: "asc" }], select: partnerSelect });
+  res.set("Cache-Control", "no-store");
+  res.json({ data: rows.map(serialisePartner) });
+});
+
+websiteAdminRouter.post("/partners", ...adminOnly, async (req, res) => {
+  const input = partnerSchema.parse(req.body);
+  // A new partner goes after everyone already listed.
+  const last = await prisma.partner.aggregate({ _max: { sortOrder: true } });
+  const sortOrder = Math.min((last._max.sortOrder ?? -10) + 10, 9999);
+  const created = await prisma.partner.create({ data: { ...input, sortOrder }, select: partnerSelect });
+  await audit(req, "partner.created", "Partner", created.id, { name: created.name });
+  res.status(201).json(serialisePartner(created));
+});
+
+websiteAdminRouter.patch("/partners/:id", ...adminOnly, async (req, res) => {
+  const id = z.string().uuid().parse(req.params.id);
+  const input = partnerSchema.partial().parse(req.body);
+  const updated = await prisma.partner.update({ where: { id }, data: input, select: partnerSelect }).catch(() => null);
+  if (!updated) throw new HttpError(404, "Partner not found.", "not_found");
+  await audit(req, "partner.updated", "Partner", id, { changes: Object.keys(input) });
+  res.json(serialisePartner(updated));
+});
+
+/** The console's new order, as the full list of ids from first to last. */
+websiteAdminRouter.put("/partners/order", ...adminOnly, async (req, res) => {
+  const { ids } = z.object({ ids: z.array(z.string().uuid()).max(500) }).parse(req.body);
+  const known = await prisma.partner.count({ where: { id: { in: ids } } });
+  if (known !== ids.length || new Set(ids).size !== ids.length) {
+    throw new HttpError(409, "The list has changed since it was opened. Please reload and try again.", "stale_order");
+  }
+  await prisma.$transaction(ids.map((id, index) => prisma.partner.update({ where: { id }, data: { sortOrder: index * 10 } })));
+  await audit(req, "partner.reordered", "Partner", null, { count: ids.length });
+  res.json({ ok: true });
+});
+
+websiteAdminRouter.delete("/partners/:id", ...adminOnly, async (req, res) => {
+  const id = z.string().uuid().parse(req.params.id);
+  const deleted = await prisma.partner.delete({ where: { id }, select: { name: true } }).catch(() => null);
+  if (!deleted) throw new HttpError(404, "Partner not found.", "not_found");
+  await audit(req, "partner.deleted", "Partner", id, { name: deleted.name });
+  res.json({ ok: true });
+});
+
+const logoUpload = multer({ storage: multer.memoryStorage(), limits: { fileSize: LOGO_MAX_BYTES, files: 1 } });
+const logoMiddleware: RequestHandler = (req, res, next) => {
+  logoUpload.single("logo")(req, res, (error: unknown) => {
+    if (error instanceof multer.MulterError) {
+      next(new HttpError(error.code === "LIMIT_FILE_SIZE" ? 413 : 400, error.code === "LIMIT_FILE_SIZE" ? "Logos can be up to 1 MB." : "The logo could not be read.", "bad_logo"));
+      return;
+    }
+    next(error as Error | undefined);
+  });
+};
+
+websiteAdminRouter.put("/partners/:id/logo", ...adminOnly, logoMiddleware, async (req, res) => {
+  const id = z.string().uuid().parse(req.params.id);
+  const file = req.file;
+  if (!file) throw new HttpError(400, "Please choose a logo.", "no_file");
+  const type = imageType(file.buffer);
+  if (!type) throw new HttpError(415, "Please upload a PNG, WebP or JPEG image.", "bad_logo");
+  const size = imageSize(file.buffer, type);
+  if (!size) throw new HttpError(400, "The logo could not be read. Please export it again and retry.", "bad_logo");
+  if (size.width !== size.height) {
+    throw new HttpError(400, `Logos must be square (400 × 400 px is best). This one is ${size.width} × ${size.height} px.`, "logo_not_square");
+  }
+  if (size.width < LOGO_MIN_PX || size.width > LOGO_MAX_PX) {
+    throw new HttpError(400, `Logos must be between ${LOGO_MIN_PX} and ${LOGO_MAX_PX} px square (400 × 400 px is best). This one is ${size.width} px.`, "logo_size");
+  }
+
+  const updated = await prisma.partner
+    .update({ where: { id }, data: { logoData: new Uint8Array(file.buffer), logoType: type, logoUpdatedAt: new Date() }, select: partnerSelect })
+    .catch(() => null);
+  if (!updated) throw new HttpError(404, "Partner not found.", "not_found");
+  await audit(req, "partner.logo", "Partner", id, { bytes: file.size, width: size.width });
+  res.json(serialisePartner(updated));
+});
+
+websiteAdminRouter.delete("/partners/:id/logo", ...adminOnly, async (req, res) => {
+  const id = z.string().uuid().parse(req.params.id);
+  const updated = await prisma.partner
+    .update({ where: { id }, data: { logoData: null, logoType: null, logoUpdatedAt: null }, select: partnerSelect })
+    .catch(() => null);
+  if (!updated) throw new HttpError(404, "Partner not found.", "not_found");
+  await audit(req, "partner.logo_removed", "Partner", id, {});
+  res.json(serialisePartner(updated));
 });

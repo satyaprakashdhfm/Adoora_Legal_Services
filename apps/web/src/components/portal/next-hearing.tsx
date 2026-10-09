@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { AddToCalendar, type HearingForCalendar } from "@/components/portal/add-to-calendar";
 import { courtNumber, daysUntil, formatDate, hearingCountdown } from "@/lib/portal/format";
 
 /*
@@ -34,8 +35,19 @@ export function HearingDateChip({ date, tone = "gold" }: { date: string; tone?: 
   );
 }
 
-/** The case page's top-right block: the next date, how far off, and what it is for. */
-export function NextHearingHighlight({ date, purpose }: { date: string; purpose: string | null }) {
+/**
+ * The case page's top-right block: the next date, how far off, what it is
+ * for, and "Add to calendar" while the date is still ahead.
+ */
+export function NextHearingHighlight({
+  date,
+  purpose,
+  calendar,
+}: {
+  date: string;
+  purpose: string | null;
+  calendar: Omit<HearingForCalendar, "date" | "purpose">;
+}) {
   const days = daysUntil(date);
   const passed = days !== null && days < 0;
 
@@ -64,6 +76,9 @@ export function NextHearingHighlight({ date, purpose }: { date: string; purpose:
       </div>
       <p className="mt-2 font-serif text-2xl font-semibold tracking-tight">{formatDate(date)}</p>
       {purpose && <p className="mt-0.5 text-sm font-medium text-ink-deep/80">{purpose}</p>}
+      <div className="mt-3">
+        <AddToCalendar hearing={{ ...calendar, date, purpose }} />
+      </div>
     </div>
   );
 }

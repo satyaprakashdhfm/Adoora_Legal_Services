@@ -2,9 +2,32 @@
 
 import { use, useCallback, useEffect, useState } from "react";
 import { api, refreshWebsite, type JobOpening, type Page } from "@/lib/portal/api";
-import { formatDate, formatDateTime, toDateInput } from "@/lib/portal/format";
+import { formatBytes, formatDate, formatDateTime, toDateInput } from "@/lib/portal/format";
 import { practiceAreas } from "@/content/practice-areas";
 import { Badge, Button, Card, EmptyState, ErrorNote, Field, Input, Modal, PageTitle, Select, Spinner, Table, Td, Textarea, Th } from "@/components/portal/ui";
+import { ListToolbar } from "@/components/portal/list-toolbar";
+import { applicationRoles } from "@/content/careers";
+
+const OPENING_STATUS_FILTER = [
+  { value: "OPEN", label: "Open" },
+  { value: "DRAFT", label: "Draft" },
+  { value: "CLOSED", label: "Closed" },
+] as const;
+
+const OPENING_SORT = [
+  { value: "site", label: "Website order" },
+  { value: "newest", label: "Newest posted" },
+  { value: "title", label: "Title, A to Z" },
+  { value: "applications", label: "Most applications" },
+] as const;
+
+const APPLICATION_SORT = [
+  { value: "newest", label: "Newest first" },
+  { value: "oldest", label: "Oldest first" },
+  { value: "name", label: "Name, A to Z" },
+] as const;
+
+const ROLE_FILTER = applicationRoles.map((role) => ({ value: role, label: role }));
 
 const STATUSES = [
   { value: "DRAFT", label: "Draft — not on the website" },
@@ -113,15 +136,49 @@ function OpeningsTab({
     }
   }
 
+  const [query, setQuery] = useState("");
+  const [status, setStatus] = useState("");
+  const [sort, setSort] = useState("site");
+  // The list is short and loaded whole, so it is filtered and sorted here.
+  const shown = (rows ?? [])
+    .filter((job) => !status || job.status === status)
+    .filter((job) => {
+      const q = query.trim().toLowerCase();
+      return !q || [job.title, job.location, job.employmentType, job.experience].some((field) => field?.toLowerCase().includes(q));
+    })
+    .sort((a, b) =>
+      sort === "newest"
+        ? (b.publishedAt ?? "").localeCompare(a.publishedAt ?? "")
+        : sort === "title"
+          ? a.title.localeCompare(b.title)
+          : sort === "applications"
+            ? (b.applications ?? 0) - (a.applications ?? 0)
+            : 0,
+    );
+
   return (
     <>
       <Card>
+        {rows && rows.length > 0 && (
+          <ListToolbar
+            search={{ value: query, onChange: setQuery, placeholder: "Search role, location or type" }}
+            filters={[{ key: "status", label: "Status", value: status, options: OPENING_STATUS_FILTER, onChange: setStatus }]}
+            sort={{ value: sort, options: OPENING_SORT, onChange: setSort }}
+            count={`${shown.length} of ${rows.length} opening${rows.length === 1 ? "" : "s"}`}
+            onReset={() => {
+              setQuery("");
+              setStatus("");
+            }}
+          />
+        )}
         <ErrorNote>{error}</ErrorNote>
         {!rows ? (
           <Spinner />
+        ) : rows.length > 0 && shown.length === 0 ? (
+          <EmptyState title="No openings match">Try a shorter search, or clear the filters.</EmptyState>
         ) : rows.length === 0 ? (
           <EmptyState title="No job openings yet" action={<Button onClick={() => setEditing("new")}>Post a job</Button>}>
-            Until a role is posted, the careers page says there are no vacancies and invites speculative applications.
+            Until a role is posted, the careers page says there are no vacancies.
           </EmptyState>
         ) : (
           <Table>
@@ -135,7 +192,7 @@ function OpeningsTab({
               </tr>
             </thead>
             <tbody>
-              {rows.map((job) => (
+              {shown.map((job) => (
                 <tr key={job.id}>
                   <Td>
                     <p className="font-semibold">{job.title}</p>
@@ -193,8 +250,22 @@ type Application = {
   message: string;
   status: string;
   internalNote: string | null;
+  /** Sent with the form; older applications have none. */
+  resume: { filename: string; mimeType: string; sizeBytes: number } | null;
   createdAt: string;
 };
+
+/** A plain link carries no area header, so the area rides in the query. */
+const resumeUrl = (application: Application) => `/api/admin/applications/${application.id}/resume?area=admin`;
+
+function ResumeLink({ application }: { application: Application }) {
+  if (!application.resume) return <span className="text-xs text-slate">No résumé</span>;
+  return (
+    <a href={resumeUrl(application)} className="text-xs font-semibold text-gold-deep hover:underline" title={application.resume.filename}>
+      Résumé ({formatBytes(application.resume.sizeBytes)})
+    </a>
+  );
+}
 
 const APPLICATION_STATUSES = [
   { value: "NEW", label: "New" },
@@ -211,20 +282,39 @@ function ApplicationsTab({ onChange }: { onChange: () => void }) {
   const [open, setOpen] = useState<Application | null>(null);
   const [error, setError] = useState<string | null>(null);
 
+  const [query, setQuery] = useState("");
+  const [role, setRole] = useState("");
+  const [sort, setSort] = useState("newest");
+
+  const params = useCallback(
+    (extra: Record<string, string> = {}) => {
+      const search = new URLSearchParams({ limit: "50", sort, ...extra });
+      if (status) search.set("status", status);
+      if (role) search.set("role", role);
+      if (query.trim()) search.set("q", query.trim());
+      return search.toString();
+    },
+    [status, role, query, sort],
+  );
+
   const load = useCallback(() => {
-    api<Page<Application>>(`/admin/applications?limit=50${status ? `&status=${status}` : ""}`)
+    api<Page<Application>>(`/admin/applications?${params()}`)
       .then((page) => {
         setRows(page.data);
         setCursor(page.nextCursor);
+        setError(null);
       })
       .catch((cause: Error) => setError(cause.message));
-  }, [status]);
+  }, [params]);
 
-  useEffect(load, [load]);
+  useEffect(() => {
+    const timer = setTimeout(load, query ? 250 : 0);
+    return () => clearTimeout(timer);
+  }, [load, query]);
 
   async function more() {
     if (!cursor) return;
-    const page = await api<Page<Application>>(`/admin/applications?limit=50&cursor=${cursor}${status ? `&status=${status}` : ""}`);
+    const page = await api<Page<Application>>(`/admin/applications?${params({ cursor })}`);
     setRows((current) => [...(current ?? []), ...page.data]);
     setCursor(page.nextCursor);
   }
@@ -246,9 +336,20 @@ function ApplicationsTab({ onChange }: { onChange: () => void }) {
   return (
     <>
       <Card>
-        <div className="border-b border-line p-4 sm:max-w-xs">
-          <Select aria-label="Status" value={status} onChange={(e) => setStatus(e.target.value)} placeholder="All statuses" options={APPLICATION_STATUSES} />
-        </div>
+        <ListToolbar
+          search={{ value: query, onChange: setQuery, placeholder: "Search name, email, phone, reference or role" }}
+          filters={[
+            { key: "status", label: "Status", value: status, options: APPLICATION_STATUSES, onChange: setStatus },
+            { key: "role", label: "Role", value: role, options: ROLE_FILTER, onChange: setRole },
+          ]}
+          sort={{ value: sort, options: APPLICATION_SORT, onChange: setSort }}
+          count={rows ? `${rows.length}${cursor ? "+" : ""} application${rows.length === 1 ? "" : "s"}` : undefined}
+          onReset={() => {
+            setQuery("");
+            setStatus("");
+            setRole("");
+          }}
+        />
         <ErrorNote>{error}</ErrorNote>
         {!rows ? (
           <Spinner />
@@ -280,6 +381,7 @@ function ApplicationsTab({ onChange }: { onChange: () => void }) {
                   <Td className="text-sm">
                     {row.role}
                     <p className="text-xs text-slate">{row.experience}{row.enrolment ? ` · ${row.enrolment}` : ""}</p>
+                    <ResumeLink application={row} />
                   </Td>
                   <Td className="text-xs">{APPLICATION_STATUSES.find((s) => s.value === row.status)?.label}</Td>
                   <Td className="text-right">
@@ -303,6 +405,15 @@ function ApplicationsTab({ onChange }: { onChange: () => void }) {
             <div className="rounded-lg bg-paper-warm p-4 text-sm">
               <p className="text-xs text-slate">{open.role} · {open.experience} · {open.email} · {open.phone}</p>
               <p className="mt-2 whitespace-pre-line text-ink">{open.message}</p>
+              <p className="mt-3">
+                {open.resume ? (
+                  <a href={resumeUrl(open)} className="font-semibold text-gold-deep hover:underline">
+                    Download résumé: {open.resume.filename} ({formatBytes(open.resume.sizeBytes)})
+                  </a>
+                ) : (
+                  <span className="text-xs text-slate">Sent without a résumé.</span>
+                )}
+              </p>
             </div>
             <Field label="Status">
               <Select name="status" defaultValue={open.status} options={APPLICATION_STATUSES} />
@@ -337,7 +448,7 @@ export default function AdminJobs({ searchParams }: PageProps<"/admin/jobs">) {
     api<{ data: JobOpening[] }>("/admin/jobs")
       .then((result) => setRows(result.data))
       .catch((cause: Error) => setError(cause.message));
-    api<Page<Application>>("/admin/applications?limit=200&status=NEW")
+    api<Page<Application>>("/admin/applications?limit=100&status=NEW")
       .then((page) => setNewApplications(page.data.length))
       .catch(() => undefined);
   }, []);

@@ -1,5 +1,6 @@
-import { Router } from "express";
-import { randomBytes } from "node:crypto";
+import { Router, type RequestHandler } from "express";
+import { randomBytes, randomUUID } from "node:crypto";
+import multer from "multer";
 import rateLimit from "express-rate-limit";
 import { prisma } from "../db.js";
 import { logger } from "../logger.js";
@@ -8,7 +9,10 @@ import {
   enquirySchema,
   subscriberSchema,
 } from "../schemas.js";
-import { clientIp, makeReference, userAgent } from "../lib/http.js";
+import { clientIp, HttpError, makeReference, userAgent } from "../lib/http.js";
+import { checkUpload } from "../lib/files.js";
+import { encryptDocument } from "../lib/crypto.js";
+import { storage } from "../storage/index.js";
 
 /**
  * Public, unauthenticated endpoints used by the website forms.
@@ -63,36 +67,98 @@ publicRouter.post("/enquiries", formLimiter, async (req, res) => {
   });
 });
 
-publicRouter.post("/careers", formLimiter, async (req, res) => {
-  const input = careerSchema.parse(req.body);
+/*
+ * A résumé may come with an application: PDF or Word, up to 5 MB. It is
+ * checked by its contents (lib/files.ts), encrypted, and stored like a case
+ * document; the admin console downloads it from the application.
+ */
+const RESUME_MAX_MB = 5;
+const RESUME_TYPES = new Set([
+  "application/pdf",
+  "application/msword",
+  "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+]);
 
-  const application = await prisma.careerApplication.create({
-    data: {
-      reference: makeReference("APP"),
-      name: input.name,
-      email: input.email,
-      phone: input.phone,
-      role: input.role,
-      experience: input.experience,
-      enrolment: input.enrolment || null,
-      message: input.message,
-      consent: input.consent,
-      consentAt: new Date(),
-      ipAddress: clientIp(req),
-      userAgent: userAgent(req),
-    },
-    select: { reference: true },
+const resumeUpload = multer({
+  storage: multer.memoryStorage(),
+  limits: { fileSize: RESUME_MAX_MB * 1024 * 1024, files: 1, fields: 15, fieldSize: 8 * 1024 },
+});
+const resumeMiddleware: RequestHandler = (req, res, next) => {
+  resumeUpload.single("resume")(req, res, (error: unknown) => {
+    if (error instanceof multer.MulterError) {
+      next(
+        error.code === "LIMIT_FILE_SIZE"
+          ? new HttpError(413, `Résumés can be up to ${RESUME_MAX_MB} MB.`, "file_too_large")
+          : new HttpError(400, "The form could not be read. Please try again.", "bad_upload"),
+      );
+      return;
+    }
+    next(error as Error | undefined);
   });
+};
+
+async function storeResume(file: Express.Multer.File) {
+  const checked = checkUpload(file.originalname, file.buffer);
+  if (!checked.ok || !RESUME_TYPES.has(checked.mimeType)) {
+    throw new HttpError(415, checked.ok ? "Please attach your résumé as a PDF or Word document." : checked.reason, "file_rejected");
+  }
+  const encrypted = encryptDocument(file.buffer);
+  const key = `careers/${randomUUID()}`;
+  await storage.put(key, encrypted.ciphertext, "application/octet-stream");
+  return {
+    resumeKey: key,
+    resumeDriver: storage.name,
+    resumeFilename: checked.filename,
+    resumeMimeType: checked.mimeType,
+    resumeSize: file.size,
+    resumeEncKeyId: encrypted.encKeyId,
+    resumeWrapKey: encrypted.wrappedKey,
+    resumeIv: encrypted.iv,
+    resumeAuthTag: encrypted.authTag,
+  };
+}
+
+publicRouter.post("/careers", formLimiter, resumeMiddleware, async (req, res) => {
+  // A multipart form sends every field as text, the consent tick included.
+  const body = req.file ? { ...req.body, consent: req.body?.consent === "true" || req.body?.consent === "on" } : req.body;
+  const input = careerSchema.parse(body);
+  const resume = req.file ? await storeResume(req.file) : null;
+
+  const application = await prisma.careerApplication
+    .create({
+      data: {
+        reference: makeReference("APP"),
+        name: input.name,
+        email: input.email,
+        phone: input.phone,
+        role: input.role,
+        experience: input.experience,
+        enrolment: input.enrolment || null,
+        message: input.message,
+        consent: input.consent,
+        consentAt: new Date(),
+        ipAddress: clientIp(req),
+        userAgent: userAgent(req),
+        ...resume,
+      },
+      select: { reference: true },
+    })
+    .catch(async (error: unknown) => {
+      // The object went in first; without its row nothing would point at it.
+      if (resume) await storage.delete(resume.resumeKey).catch(() => undefined);
+      throw error;
+    });
 
   logger.info(
-    { reference: application.reference, role: input.role },
+    { reference: application.reference, role: input.role, resume: Boolean(resume) },
     "Career application received",
   );
 
   res.status(201).json({
     reference: application.reference,
-    message:
-      "Thank you. Please email your CV quoting this reference so we can consider it alongside your application.",
+    message: resume
+      ? "Thank you. Your application and résumé have reached us."
+      : "Thank you. Please email your CV quoting this reference so we can consider it alongside your application.",
   });
 });
 

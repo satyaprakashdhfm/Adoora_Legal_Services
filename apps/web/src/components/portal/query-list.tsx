@@ -5,6 +5,12 @@ import { useCallback, useEffect, useState } from "react";
 import { api, type CaseSummary, type ClientQuery, type Page } from "@/lib/portal/api";
 import { formatDateTime } from "@/lib/portal/format";
 import { Badge, Button, Card, EmptyState, ErrorNote, Field, Input, Modal, Select, Spinner, Textarea } from "@/components/portal/ui";
+import { ListToolbar } from "@/components/portal/list-toolbar";
+
+const QUERY_SORT = [
+  { value: "newest", label: "Newest first" },
+  { value: "oldest", label: "Oldest first" },
+] as const;
 
 const STATUSES = [
   { value: "OPEN", label: "Open" },
@@ -84,20 +90,37 @@ export function QueryList({ staff, basePath, refreshKey }: { staff: boolean; bas
   const [error, setError] = useState<string | null>(null);
   const [answering, setAnswering] = useState<ClientQuery | null>(null);
 
+  const [query, setQuery] = useState("");
+  const [sort, setSort] = useState("newest");
+
+  const params = useCallback(
+    (extra: Record<string, string> = {}) => {
+      const search = new URLSearchParams({ limit: "50", sort, ...extra });
+      if (status) search.set("status", status);
+      if (query.trim()) search.set("q", query.trim());
+      return search.toString();
+    },
+    [status, query, sort],
+  );
+
   const load = useCallback(() => {
-    api<Page<ClientQuery>>(`/queries?limit=50${status ? `&status=${status}` : ""}`)
+    api<Page<ClientQuery>>(`/queries?${params()}`)
       .then((page) => {
         setRows(page.data);
         setCursor(page.nextCursor);
+        setError(null);
       })
       .catch((cause: Error) => setError(cause.message));
-  }, [status]);
+  }, [params]);
 
-  useEffect(load, [load, refreshKey]);
+  useEffect(() => {
+    const timer = setTimeout(load, query ? 250 : 0);
+    return () => clearTimeout(timer);
+  }, [load, query, refreshKey]);
 
   async function more() {
     if (!cursor) return;
-    const page = await api<Page<ClientQuery>>(`/queries?limit=50&cursor=${cursor}${status ? `&status=${status}` : ""}`);
+    const page = await api<Page<ClientQuery>>(`/queries?${params({ cursor })}`);
     setRows((current) => [...(current ?? []), ...page.data]);
     setCursor(page.nextCursor);
   }
@@ -117,15 +140,22 @@ export function QueryList({ staff, basePath, refreshKey }: { staff: boolean; bas
 
   return (
     <Card>
-      <div className="border-b border-line p-4 sm:max-w-xs">
-        <Select aria-label="Status" value={status} onChange={(e) => setStatus(e.target.value)} placeholder="All queries" options={STATUSES} />
-      </div>
+      <ListToolbar
+        search={{ value: query, onChange: setQuery, placeholder: staff ? "Search subject, message, client or case" : "Search your queries" }}
+        filters={[{ key: "status", label: "Status", value: status, options: STATUSES, onChange: setStatus }]}
+        sort={{ value: sort, options: QUERY_SORT, onChange: setSort }}
+        count={rows ? `${rows.length}${cursor ? "+" : ""} quer${rows.length === 1 ? "y" : "ies"}` : undefined}
+        onReset={() => {
+          setQuery("");
+          setStatus("");
+        }}
+      />
       {error && <div className="p-4"><ErrorNote>{error}</ErrorNote></div>}
 
       {!rows ? (
         <Spinner />
       ) : rows.length === 0 ? (
-        <EmptyState title={status === "OPEN" ? "No open queries" : "No queries yet"}>
+        <EmptyState title={query.trim() ? "No matching queries" : status === "OPEN" ? "No open queries" : "No queries yet"}>
           {staff ? "Questions clients raise from their dashboard appear here." : "Ask your lawyers anything about your cases — the answer appears here."}
         </EmptyState>
       ) : (

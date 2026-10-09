@@ -87,7 +87,7 @@ export function CaseWorkspace({ reference, user, basePath }: { reference: string
         <Link href={`${basePath}/cases`} className="text-xs font-semibold text-slate hover:text-ink">
           ← All {user.kind === "client" ? "my cases" : "cases"}
         </Link>
-        <div className="mt-3 flex flex-wrap items-start justify-between gap-4">
+        <div className="mt-3 grid items-start gap-4 md:grid-cols-[minmax(0,1fr)_auto] md:gap-6">
           <div className="min-w-0">
             <div className="flex flex-wrap items-center gap-2">
               <span className="font-mono text-xs font-semibold text-gold-deep">{record.reference}</span>
@@ -99,7 +99,18 @@ export function CaseWorkspace({ reference, user, basePath }: { reference: string
               {[number, record.courtName, record.bench].filter(Boolean).join(" · ") || labelFor(COURT_LEVELS, record.courtLevel)}
             </p>
           </div>
-          {record.nextHearingDate && <NextHearingHighlight date={record.nextHearingDate} purpose={record.nextHearingPurpose} />}
+          {record.nextHearingDate && (
+            <NextHearingHighlight
+              date={record.nextHearingDate}
+              purpose={record.nextHearingPurpose}
+              calendar={{
+                reference: record.reference,
+                title: record.title,
+                location: [record.courtName, record.bench].filter(Boolean).join(", ") || null,
+                number,
+              }}
+            />
+          )}
         </div>
       </div>
 

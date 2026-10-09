@@ -6,8 +6,9 @@ import { InsightCard, SectionHeading } from "@/components/ui";
 import { PracticesGrid } from "@/components/practices-grid";
 import { CityIcon } from "@/components/city-icon";
 import { OurApproach } from "@/components/our-approach";
+import { PartnersHoneycomb } from "@/components/partners-honeycomb";
 import { firm, firmOverview, differentiators, offices } from "@/content/firm";
-import { getFeaturedPeople, getInsights, STUDIO_PORTRAITS } from "@/lib/website-data";
+import { getFeaturedPeople, getInsights, getPartners, STUDIO_PORTRAITS } from "@/lib/website-data";
 import { PeopleCards } from "@/components/people-cards";
 import { practiceAreas } from "@/content/practice-areas";
 import { heroSlides } from "@/content/hero-slides";
@@ -59,6 +60,7 @@ export default async function Home() {
     !person.photoUrl && STUDIO_PORTRAITS[person.slug] ? { ...person, photo: STUDIO_PORTRAITS[person.slug] } : person,
   );
   const latestInsights = (await getInsights()).slice(0, 3);
+  const partners = await getPartners();
   const practiceGridItems = practiceGridOrder
     .map((slug) => practiceAreas.find((area) => area.slug === slug))
     .filter((area): area is (typeof practiceAreas)[number] => Boolean(area))
@@ -215,6 +217,25 @@ export default async function Home() {
           </div>
         </div>
       </section>
+
+      {/* Our partners. The firm's mark in the centre of a honeycomb of the
+          logos added in the console (Website → Our Partners); see
+          PartnersHoneycomb for how odd and even counts are laid out. */}
+      {partners.length > 0 && (
+        <section id="partners" className="container-page pb-10 pt-2 sm:pb-12">
+          <div className="overflow-hidden rounded-2xl border border-line bg-[radial-gradient(ellipse_at_top,color-mix(in_oklab,var(--color-gold)_10%,transparent),transparent_60%),linear-gradient(180deg,var(--color-paper-warm),var(--color-paper))] px-4 py-10 sm:px-8 sm:py-12">
+            <SectionHeading
+              eyebrow="Clients"
+              title="Our Partners"
+              lead="Organisations we work alongside across Andhra Pradesh, Telangana and Karnataka."
+              align="center"
+            />
+            <div className="mt-10">
+              <PartnersHoneycomb partners={partners} />
+            </div>
+          </div>
+        </section>
+      )}
 
       {/* Locations and the careers teaser share one row — offices on the
           left, careers on the right. */}

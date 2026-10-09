@@ -14,6 +14,10 @@ import {
 import { z } from "zod";
 import { addSampleData, removeSampleData, sampleDataStatus, shareCasesForTesting } from "../demo/sample-data.js";
 import { audit } from "../lib/audit.js";
+import { clientPartnerSummary, syncClientPartner } from "./website.js";
+import { decryptDocument } from "../lib/crypto.js";
+import { contentDisposition } from "../lib/files.js";
+import { ObjectNotFoundError, storageFor } from "../storage/index.js";
 import { adminEmails } from "../env.js";
 import { revokeAllSessions } from "../auth/session.js";
 import { samePhone } from "../auth/msg91.js";
@@ -38,6 +42,7 @@ import {
   clientPatchSchema,
   enquiryPatchSchema,
   searchQuerySchema,
+  clientListQuerySchema,
   staffCreateSchema,
   staffPatchSchema,
 } from "../portal-schemas.js";
@@ -114,6 +119,13 @@ adminRouter.get("/me", requireAuth, (req, res) => {
   res.json({ user: req.auth });
 });
 
+/** Sort orders shared by the enquiry and application lists. */
+const LIST_ORDER = {
+  newest: [{ createdAt: "desc" }],
+  oldest: [{ createdAt: "asc" }],
+  name: [{ name: "asc" }],
+} as const satisfies Record<string, { createdAt?: "asc" | "desc"; name?: "asc" }[]>;
+
 adminRouter.get(
   "/enquiries",
   requireAuth,
@@ -122,10 +134,23 @@ adminRouter.get(
     const query = listQuerySchema.parse(req.query);
 
     const enquiries = await prisma.enquiry.findMany({
-      where: query.status
-        ? { status: query.status as EnquiryStatus }
-        : undefined,
-      orderBy: { createdAt: "desc" },
+      where: {
+        AND: [
+          query.status ? { status: query.status as EnquiryStatus } : {},
+          query.q
+            ? {
+                OR: [
+                  { name: { contains: query.q, mode: "insensitive" } },
+                  { email: { contains: query.q, mode: "insensitive" } },
+                  { phone: { contains: query.q.replace(/[\s-]/g, "") } },
+                  { reference: { contains: query.q, mode: "insensitive" } },
+                  { matterType: { contains: query.q, mode: "insensitive" } },
+                ],
+              }
+            : {},
+        ],
+      },
+      orderBy: [...LIST_ORDER[query.sort], { id: "desc" }],
       take: query.limit + 1,
       ...(query.cursor
         ? { cursor: { id: query.cursor }, skip: 1 }
@@ -161,10 +186,24 @@ adminRouter.get(
     const query = listQuerySchema.parse(req.query);
 
     const applications = await prisma.careerApplication.findMany({
-      where: query.status
-        ? { status: query.status as ApplicationStatus }
-        : undefined,
-      orderBy: { createdAt: "desc" },
+      where: {
+        AND: [
+          query.status ? { status: query.status as ApplicationStatus } : {},
+          query.role ? { role: { contains: query.role, mode: "insensitive" } } : {},
+          query.q
+            ? {
+                OR: [
+                  { name: { contains: query.q, mode: "insensitive" } },
+                  { email: { contains: query.q, mode: "insensitive" } },
+                  { phone: { contains: query.q.replace(/[\s-]/g, "") } },
+                  { reference: { contains: query.q, mode: "insensitive" } },
+                  { role: { contains: query.q, mode: "insensitive" } },
+                ],
+              }
+            : {},
+        ],
+      },
+      orderBy: [...LIST_ORDER[query.sort], { id: "desc" }],
       take: query.limit + 1,
       ...(query.cursor ? { cursor: { id: query.cursor }, skip: 1 } : {}),
     });
@@ -173,9 +212,55 @@ adminRouter.get(
     const page = hasMore ? applications.slice(0, query.limit) : applications;
 
     res.json({
-      data: page,
+      // The résumé's storage and key fields stay on the server.
+      data: page.map(
+        ({ resumeKey, resumeDriver: _d, resumeEncKeyId: _k, resumeWrapKey: _w, resumeIv: _i, resumeAuthTag: _t, resumeFilename, resumeMimeType, resumeSize, ...application }) => ({
+          ...application,
+          resume: resumeKey ? { filename: resumeFilename, mimeType: resumeMimeType, sizeBytes: resumeSize } : null,
+        }),
+      ),
       nextCursor: hasMore ? page[page.length - 1]?.id : null,
     });
+  },
+);
+
+adminRouter.get(
+  "/applications/:id/resume",
+  requireAuth,
+  requireRole("OWNER", "ADMIN"),
+  async (req, res) => {
+    const id = z.string().uuid().parse(req.params.id);
+    const found = await prisma.careerApplication.findUnique({ where: { id } });
+    if (!found?.resumeKey || !found.resumeDriver || !found.resumeEncKeyId || !found.resumeWrapKey || !found.resumeIv || !found.resumeAuthTag) {
+      throw new HttpError(404, "This application has no résumé.", "not_found");
+    }
+
+    let plaintext: Buffer;
+    try {
+      const ciphertext = await storageFor(found.resumeDriver).get(found.resumeKey);
+      plaintext = decryptDocument(ciphertext, {
+        encKeyId: found.resumeEncKeyId,
+        wrappedKey: found.resumeWrapKey,
+        iv: found.resumeIv,
+        authTag: found.resumeAuthTag,
+      });
+    } catch (error) {
+      if (error instanceof ObjectNotFoundError) {
+        logger.error({ reference: found.reference }, "Stored résumé object is missing");
+        throw new HttpError(410, "This résumé is no longer available in storage.", "object_missing");
+      }
+      throw error;
+    }
+
+    await audit(req, "application.resume_download", "CareerApplication", id, { reference: found.reference });
+    res.set({
+      "Content-Type": "application/octet-stream",
+      "Content-Length": String(plaintext.length),
+      "Content-Disposition": contentDisposition(found.resumeFilename ?? `${found.reference}-resume`, false),
+      "Cache-Control": "private, no-store",
+      "X-Content-Type-Options": "nosniff",
+    });
+    res.end(plaintext);
   },
 );
 
@@ -429,6 +514,12 @@ adminRouter.patch(
 // Clients
 // ---------------------------------------------------------------------------
 
+async function clientPartner(clientId: string) {
+  return clientPartnerSummary(
+    await prisma.partner.findUnique({ where: { clientId }, select: { id: true, published: true, logoType: true, logoUpdatedAt: true } }),
+  );
+}
+
 async function assertCasesExist(caseIds: string[]) {
   if (!caseIds.length) return;
   const found = await prisma.case.count({ where: { id: { in: caseIds } } });
@@ -437,27 +528,52 @@ async function assertCasesExist(caseIds: string[]) {
   }
 }
 
+/** Admin → Clients search: name, organisation, email, phone, or any linked case. */
+function clientSearch(q: string): Prisma.ClientWhereInput {
+  const text = { contains: q, mode: "insensitive" as const };
+  return {
+    OR: [
+      { name: text },
+      { email: text },
+      { organisation: text },
+      { phone: { contains: q.replace(/[\s-]/g, "") } },
+      {
+        cases: {
+          some: {
+            case: { OR: [{ reference: text }, { title: text }, { cnrNumber: text }, { caseNumber: text }, { courtName: text }] },
+          },
+        },
+      },
+    ],
+  };
+}
+
+const CLIENT_ORDER: Record<z.infer<typeof clientListQuerySchema>["sort"], Prisma.ClientOrderByWithRelationInput[]> = {
+  name: [{ isActive: "desc" }, { name: "asc" }],
+  "name-desc": [{ isActive: "desc" }, { name: "desc" }],
+  newest: [{ createdAt: "desc" }],
+  oldest: [{ createdAt: "asc" }],
+  "last-sign-in": [{ lastLoginAt: { sort: "desc", nulls: "last" } }, { name: "asc" }],
+  "most-cases": [{ cases: { _count: "desc" } }, { name: "asc" }],
+};
+
 adminRouter.get(
   "/clients",
   requireAuth,
   requireRole("OWNER", "ADMIN"),
   async (req, res) => {
-    const query = searchQuerySchema.parse(req.query);
+    const query = clientListQuerySchema.parse(req.query);
+    const filters: Prisma.ClientWhereInput[] = [
+      query.q ? clientSearch(query.q) : {},
+      query.kind ? { kind: query.kind } : {},
+      query.status ? { isActive: query.status === "active" } : {},
+      query.cases === "with" ? { cases: { some: {} } } : query.cases === "without" ? { cases: { none: {} } } : {},
+      query.signIn === "signed-in" ? { lastLoginAt: { not: null } } : query.signIn === "never" ? { lastLoginAt: null } : {},
+      query.website === "shown" ? { partner: { is: { published: true } } } : {},
+    ];
     const clients = await prisma.client.findMany({
-      where: {
-        AND: [
-          query.q
-            ? {
-                OR: [
-                  { name: { contains: query.q, mode: "insensitive" } },
-                  { email: { contains: query.q, mode: "insensitive" } },
-                  { organisation: { contains: query.q, mode: "insensitive" } },
-                ],
-              }
-            : {},
-        ],
-      },
-      orderBy: [{ isActive: "desc" }, { name: "asc" }],
+      where: { AND: filters },
+      orderBy: CLIENT_ORDER[query.sort],
       take: query.limit,
       ...(query.cursor ? { cursor: { id: query.cursor }, skip: 1 } : {}),
       select: {
@@ -478,14 +594,16 @@ adminRouter.get(
         cases: {
           select: { case: { select: { id: true, reference: true, title: true, status: true } } },
         },
+        partner: { select: { id: true, published: true, logoType: true, logoUpdatedAt: true } },
       },
     });
 
     res.json({
-      data: clients.map(({ googleSub, cases, ...client }) => ({
+      data: clients.map(({ googleSub, cases, partner, ...client }) => ({
         ...client,
         googleLinked: Boolean(googleSub),
         cases: cases.map((entry) => entry.case),
+        partner: clientPartnerSummary(partner),
       })),
     });
   },
@@ -506,7 +624,7 @@ adminRouter.post(
       throw new HttpError(409, "Another client already has that mobile number.", "phone_in_use");
     }
 
-    const { caseIds = [], ...fields } = input;
+    const { caseIds = [], showOnWebsite, ...fields } = input;
     await assertCasesExist(caseIds);
 
     const client = await prisma.client.create({
@@ -518,8 +636,9 @@ adminRouter.post(
           : undefined,
       },
     });
-    await audit(req, "client.created", "Client", client.id, { caseIds });
-    res.status(201).json({ id: client.id });
+    await syncClientPartner(client.id, client, showOnWebsite);
+    await audit(req, "client.created", "Client", client.id, { caseIds, showOnWebsite: showOnWebsite ?? false });
+    res.status(201).json({ id: client.id, partner: await clientPartner(client.id) });
   },
 );
 
@@ -531,7 +650,7 @@ adminRouter.patch(
     const id = z.string().uuid().parse(req.params.id);
     const input = clientPatchSchema.parse(req.body);
 
-    const { caseIds, ...fields } = input;
+    const { caseIds, showOnWebsite, ...fields } = input;
     if (caseIds) await assertCasesExist(caseIds);
     if (fields.phone && (await phoneOnAnother("client", fields.phone, id))) {
       throw new HttpError(409, "Another client already has that mobile number.", "phone_in_use");
@@ -562,9 +681,10 @@ adminRouter.patch(
       ]);
     }
     if (input.isActive === false) await revokeAllSessions({ clientId: id });
+    await syncClientPartner(id, updated, showOnWebsite);
 
     await audit(req, "client.updated", "Client", id, { changes: Object.keys(input) });
-    res.json({ id });
+    res.json({ id, partner: await clientPartner(id) });
   },
 );
 

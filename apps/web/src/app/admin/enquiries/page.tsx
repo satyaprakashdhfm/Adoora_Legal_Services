@@ -4,6 +4,13 @@ import { useCallback, useEffect, useState } from "react";
 import { api, type Page } from "@/lib/portal/api";
 import { formatDateTime } from "@/lib/portal/format";
 import { Button, Card, EmptyState, ErrorNote, Field, Input, Modal, PageTitle, Select, Spinner, Table, Td, Textarea, Th } from "@/components/portal/ui";
+import { ListToolbar } from "@/components/portal/list-toolbar";
+
+const SORT = [
+  { value: "newest", label: "Newest first" },
+  { value: "oldest", label: "Oldest first" },
+  { value: "name", label: "Name, A to Z" },
+] as const;
 
 type Enquiry = {
   id: string;
@@ -35,20 +42,37 @@ export default function AdminEnquiries() {
   const [open, setOpen] = useState<Enquiry | null>(null);
   const [error, setError] = useState<string | null>(null);
 
+  const [query, setQuery] = useState("");
+  const [sort, setSort] = useState("newest");
+
+  const params = useCallback(
+    (extra: Record<string, string> = {}) => {
+      const search = new URLSearchParams({ limit: "50", sort, ...extra });
+      if (status) search.set("status", status);
+      if (query.trim()) search.set("q", query.trim());
+      return search.toString();
+    },
+    [status, query, sort],
+  );
+
   const load = useCallback(() => {
-    api<Page<Enquiry>>(`/admin/enquiries?limit=50${status ? `&status=${status}` : ""}`)
+    api<Page<Enquiry>>(`/admin/enquiries?${params()}`)
       .then((page) => {
         setRows(page.data);
         setCursor(page.nextCursor);
+        setError(null);
       })
       .catch((cause: Error) => setError(cause.message));
-  }, [status]);
+  }, [params]);
 
-  useEffect(load, [load]);
+  useEffect(() => {
+    const timer = setTimeout(load, query ? 250 : 0);
+    return () => clearTimeout(timer);
+  }, [load, query]);
 
   async function more() {
     if (!cursor) return;
-    const page = await api<Page<Enquiry>>(`/admin/enquiries?limit=50&cursor=${cursor}${status ? `&status=${status}` : ""}`);
+    const page = await api<Page<Enquiry>>(`/admin/enquiries?${params({ cursor })}`);
     setRows((current) => [...(current ?? []), ...page.data]);
     setCursor(page.nextCursor);
   }
@@ -74,9 +98,16 @@ export default function AdminEnquiries() {
         description="From the contact form on the public website, sent by people who are not clients yet. Questions from signed-in clients are under Client queries. An enquiry is not a client: run the conflicts check before engaging, then open a case and add the client."
       />
       <Card>
-        <div className="border-b border-line p-4 sm:max-w-xs">
-          <Select aria-label="Status" value={status} onChange={(e) => setStatus(e.target.value)} placeholder="All statuses" options={STATUSES} />
-        </div>
+        <ListToolbar
+          search={{ value: query, onChange: setQuery, placeholder: "Search name, email, phone, reference or matter" }}
+          filters={[{ key: "status", label: "Status", value: status, options: STATUSES, onChange: setStatus }]}
+          sort={{ value: sort, options: SORT, onChange: setSort }}
+          count={rows ? `${rows.length}${cursor ? "+" : ""} enquir${rows.length === 1 ? "y" : "ies"}` : undefined}
+          onReset={() => {
+            setQuery("");
+            setStatus("");
+          }}
+        />
         <ErrorNote>{error}</ErrorNote>
         {!rows ? (
           <Spinner />

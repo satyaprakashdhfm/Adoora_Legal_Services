@@ -9,6 +9,21 @@ import { Breadcrumbs, FolderTile, MoveButton, SourceTag, countSection, filesIn, 
 import { CaseUpload, type Place } from "@/components/portal/upload-button";
 import { UploadForm } from "@/components/portal/documents-panel";
 import { Button, Card, EmptyState, ErrorNote, Input, Modal, Spinner, StatusBadge } from "@/components/portal/ui";
+import { ListToolbar } from "@/components/portal/list-toolbar";
+
+const FILE_SORT = [
+  { value: "newest", label: "Newest first" },
+  { value: "oldest", label: "Oldest first" },
+  { value: "name", label: "Name, A to Z" },
+  { value: "largest", label: "Largest first" },
+] as const;
+
+const FOLDER_SORT = [
+  { value: "updated", label: "Recently updated" },
+  { value: "next-hearing", label: "Next hearing, soonest" },
+  { value: "title", label: "Title, A to Z" },
+  { value: "newest", label: "Newest first" },
+] as const;
 
 /**
  * Documents as a drive: folders, not one long list.
@@ -53,9 +68,31 @@ function FileList({
   onMoved?: () => void;
 }) {
   const [error, setError] = useState<string | null>(null);
+  const [query, setQuery] = useState("");
+  const [category, setCategory] = useState("");
+  const [sort, setSort] = useState("newest");
   if (documents.length === 0) {
     return <EmptyState title="No files here yet" />;
   }
+
+  // A folder's files are all loaded, so they are searched and sorted here.
+  const categories = DOCUMENT_CATEGORIES.filter((option) => documents.some((doc) => doc.category === option.value));
+  const size = (doc: DocumentRecord) => doc.versions[0]?.sizeBytes ?? 0;
+  const shown = documents
+    .filter((doc) => !category || doc.category === category)
+    .filter((doc) => {
+      const q = query.trim().toLowerCase();
+      return !q || [doc.title, doc.reference, doc.versions[0]?.filename].some((field) => field?.toLowerCase().includes(q));
+    })
+    .sort((a, b) =>
+      sort === "oldest"
+        ? a.createdAt.localeCompare(b.createdAt)
+        : sort === "name"
+          ? a.title.localeCompare(b.title)
+          : sort === "largest"
+            ? size(b) - size(a)
+            : b.createdAt.localeCompare(a.createdAt),
+    );
 
   async function move(doc: DocumentRecord, body: { places: string[] }) {
     setError(null);
@@ -69,9 +106,20 @@ function FileList({
 
   return (
     <>
+      <ListToolbar
+        search={{ value: query, onChange: setQuery, placeholder: "Search file name, title or reference" }}
+        filters={categories.length > 1 ? [{ key: "category", label: "Type", value: category, options: categories, onChange: setCategory }] : []}
+        sort={{ value: sort, options: FILE_SORT, onChange: setSort }}
+        count={`${shown.length} of ${documents.length} file${documents.length === 1 ? "" : "s"}`}
+        onReset={() => {
+          setQuery("");
+          setCategory("");
+        }}
+      />
       {error && <div className="px-5 pt-3"><ErrorNote>{error}</ErrorNote></div>}
+      {shown.length === 0 && <EmptyState title="No files match">Try a shorter search, or clear the filters.</EmptyState>}
       <ul className="divide-y divide-line">
-        {documents.map((doc) => {
+        {shown.map((doc) => {
           const latest = doc.versions[0];
           const viewable = latest && /^(application\/pdf|image\/(png|jpeg|webp))$/.test(latest.mimeType);
           return (
@@ -136,6 +184,7 @@ export function DocumentDrive({
     );
   }, [inTeam, openCaseReference, openSection, openFolderId, onPlaceChange]);
   const [query, setQuery] = useState("");
+  const [folderSort, setFolderSort] = useState("updated");
   const [cases, setCases] = useState<CaseSummary[] | null>(null);
   const [teamCount, setTeamCount] = useState<number | null>(null);
   /* Files, keyed by the folder they were loaded for, so moving to another
@@ -152,6 +201,7 @@ export function DocumentDrive({
     const controller = new AbortController();
     const params = new URLSearchParams({ limit: "100" });
     if (query.trim()) params.set("q", query.trim());
+    if (folderSort !== "updated") params.set("sort", folderSort);
     const timer = setTimeout(() => {
       api<Page<CaseSummary>>(`/cases?${params}`, { signal: controller.signal })
         .then((page) => setCases(page.data))
@@ -166,7 +216,7 @@ export function DocumentDrive({
       clearTimeout(timer);
       controller.abort();
     };
-  }, [location.kind, query, staff, version]);
+  }, [location.kind, query, folderSort, staff, version]);
 
   // Inside a case or the team folder: its files. Subfolders of a case share
   // one list, split by `byFolder` below.
@@ -297,14 +347,18 @@ export function DocumentDrive({
       {error && <div className="p-4"><ErrorNote>{error}</ErrorNote></div>}
 
       {location.kind === "root" && (
+        <>
+        <ListToolbar
+          search={{
+            value: query,
+            onChange: setQuery,
+            placeholder: staff ? "Find a case folder by reference, title, case number, CNR, party or client" : "Find a case",
+          }}
+          sort={{ value: folderSort, options: FOLDER_SORT, onChange: setFolderSort }}
+          count={cases ? `${cases.length} case folder${cases.length === 1 ? "" : "s"}` : undefined}
+          onReset={() => setQuery("")}
+        />
         <div className="space-y-5 p-5">
-          <Input
-            type="search"
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            placeholder={staff ? "Find a case folder by reference, title, case number, CNR, party or client" : "Find a case"}
-            aria-label="Search folders"
-          />
           {!cases ? (
             <Spinner />
           ) : (
@@ -331,6 +385,7 @@ export function DocumentDrive({
             </div>
           )}
         </div>
+        </>
       )}
 
       {location.kind === "case" && !location.side && (

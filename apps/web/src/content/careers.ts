@@ -14,6 +14,12 @@ export type Role = {
  */
 export const roles: Role[] = [
   {
+    slug: "legal-intern",
+    title: "Legal Intern",
+    detail:
+      "Internships run throughout the year. Interns work alongside the firm's lawyers on live matters: legal research, first drafts of notes and pleadings, and attending court and client meetings where appropriate. Tell us your year of study and the months you are available.",
+  },
+  {
     slug: "corporate-advisory",
     title: "Associate — Corporate Advisory",
     detail:
@@ -34,6 +40,13 @@ export const speculativeRole: Role = {
   detail:
     "Tell us about the work you want to do and the experience you would bring to it, even though none of the roles above are an exact fit.",
 };
+
+/**
+ * The "Role" choices on the application form. The role a candidate clicked
+ * Apply on is selected for them (an internship selects "Intern"); they can
+ * change it here.
+ */
+export const applicationRoles = ["Intern", "Associate", "Senior Associate", "Lawyer"] as const;
 
 export const roleBySlug = new Map(
   [...roles, speculativeRole].map((role) => [role.slug, role]),

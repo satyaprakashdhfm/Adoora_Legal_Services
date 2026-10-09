@@ -7,6 +7,23 @@ import { PASSWORD_ONLY } from "@/lib/portal/sign-in-mode";
 import { formatDate } from "@/lib/portal/format";
 import { practiceAreas } from "@/content/practice-areas";
 import { Avatar, Badge, Button, Card, EmptyState, ErrorNote, Field, Input, Modal, PageTitle, Select, Spinner, Table, Td, Textarea, Th } from "@/components/portal/ui";
+import { ListToolbar } from "@/components/portal/list-toolbar";
+
+const ACCOUNT_FILTER = [
+  { value: "active", label: "Active" },
+  { value: "deactivated", label: "Deactivated" },
+] as const;
+const WEBSITE_FILTER = [
+  { value: "shown", label: "Shown" },
+  { value: "home", label: "On the home page" },
+  { value: "hidden", label: "Not shown" },
+] as const;
+const TEAM_SORT = [
+  { value: "name", label: "Name, A to Z" },
+  { value: "cases", label: "Most cases" },
+  { value: "last-sign-in", label: "Last signed in" },
+  { value: "newest", label: "Newest added" },
+] as const;
 
 /**
  * Everyone at the firm, in one list: people with a sign-in account and people
@@ -418,6 +435,11 @@ export default function AdminStaff() {
   const [error, setError] = useState<string | null>(null);
   const [editing, setEditing] = useState<Person | "new" | null>(null);
   const canManageSenior = me.role === "OWNER";
+  const [query, setQuery] = useState("");
+  const [access, setAccess] = useState("");
+  const [account, setAccount] = useState("");
+  const [website, setWebsite] = useState("");
+  const [sort, setSort] = useState("name");
 
   const load = useCallback(() => {
     api<{ data: StaffRow[] }>("/admin/users")
@@ -438,6 +460,37 @@ export default function AdminStaff() {
         ]
       : null;
 
+  // The team is loaded whole, so search, filters and sort run here.
+  const nameOf = (person: Person) => person.user?.name ?? person.profile?.name ?? "";
+  const shown = (people ?? [])
+    .filter((person) => !access || (person.user?.role ?? "NONE") === access)
+    .filter((person) => !account || (account === "active" ? person.user?.isActive !== false : person.user?.isActive === false))
+    .filter((person) =>
+      !website
+        ? true
+        : website === "hidden"
+          ? !person.profile?.published
+          : website === "home"
+            ? Boolean(person.profile?.published && person.profile.featured)
+            : Boolean(person.profile?.published),
+    )
+    .filter((person) => {
+      const q = query.trim().toLowerCase();
+      if (!q) return true;
+      const { user, profile } = person;
+      return [user?.name, profile?.name, user?.email, profile?.email, user?.phone, profile?.phone, profile?.designation, user?.barEnrolment]
+        .some((field) => field?.toLowerCase().includes(q));
+    })
+    .sort((a, b) =>
+      sort === "cases"
+        ? (b.user?._count.assignments ?? -1) - (a.user?._count.assignments ?? -1)
+        : sort === "last-sign-in"
+          ? (b.user?.lastLoginAt ?? "").localeCompare(a.user?.lastLoginAt ?? "")
+          : sort === "newest"
+            ? (b.user?.createdAt ?? "").localeCompare(a.user?.createdAt ?? "")
+            : nameOf(a).localeCompare(nameOf(b)),
+    );
+
   return (
     <div className="space-y-6">
       <PageTitle
@@ -450,11 +503,29 @@ export default function AdminStaff() {
       {users && <SignInAccess users={users} />}
 
       <Card>
+        <ListToolbar
+          search={{ value: query, onChange: setQuery, placeholder: "Search name, email, phone, position or enrolment" }}
+          filters={[
+            { key: "access", label: "Access", value: access, options: ROLES.map(({ value, label }) => ({ value, label })), onChange: setAccess },
+            { key: "account", label: "Account", value: account, options: ACCOUNT_FILTER, onChange: setAccount },
+            { key: "website", label: "Website", value: website, options: WEBSITE_FILTER, onChange: setWebsite },
+          ]}
+          sort={{ value: sort, options: TEAM_SORT, onChange: setSort }}
+          count={people ? `${shown.length} of ${people.length} ${people.length === 1 ? "person" : "people"}` : undefined}
+          onReset={() => {
+            setQuery("");
+            setAccess("");
+            setAccount("");
+            setWebsite("");
+          }}
+        />
         <ErrorNote>{error}</ErrorNote>
         {!people ? (
           <Spinner />
         ) : people.length === 0 ? (
           <EmptyState title="No one yet" />
+        ) : shown.length === 0 ? (
+          <EmptyState title="No one matches">Try a shorter search, or clear the filters.</EmptyState>
         ) : (
           <Table>
             <thead>
@@ -468,7 +539,7 @@ export default function AdminStaff() {
               </tr>
             </thead>
             <tbody>
-              {people.map((person) => {
+              {shown.map((person) => {
                 const { user, profile } = person;
                 const role = ROLES.find((r) => r.value === (user?.role ?? "NONE"));
                 return (

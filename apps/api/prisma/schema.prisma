@@ -133,6 +133,8 @@ model Client {
   versionsAdded   DocumentVersion[] @relation("VersionUploadedByClient")
   queries         ClientQuery[]
   courtLookups    CourtSnapshot[]   @relation("SnapshotFetchedByClient")
+  /// Its logo in the home page's "Our Partners", for an organisation.
+  partner         Partner?
 
   @@index([createdAt])
 }
@@ -659,6 +661,35 @@ enum ProfileGroup {
 /// changes. `userId` links the profile to that lawyer's sign-in account, so
 /// the same person is one person across the website, the cases and the
 /// client dashboard.
+/// A client or partner organisation for the home page's "Our Partners"
+/// honeycomb, maintained from the console (Website → Our Partners).
+model Partner {
+  id      String  @id @default(uuid()) @db.Uuid
+  name    String
+  /// Optional link from the logo to the organisation's own site.
+  website String?
+
+  /// The uploaded logo, stored inline like the lawyer portraits: a square
+  /// image of at most 1 MB (the console asks for 400 × 400 px).
+  logoData      Bytes?
+  logoType      String?
+  logoUpdatedAt DateTime?
+
+  /// Hidden from the website when false; kept for the record.
+  published Boolean @default(true)
+  sortOrder Int     @default(0)
+
+  /// Set when an organisation client was marked "Show on the home page" in
+  /// Clients; deleting the client takes its logo off the website too.
+  clientId String? @unique @db.Uuid
+  client   Client? @relation(fields: [clientId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([published, sortOrder])
+}
+
 model LawyerProfile {
   id            String       @id @default(uuid()) @db.Uuid
   slug          String       @unique
@@ -807,6 +838,18 @@ model CareerApplication {
   enrolment  String?
   message    String            @db.Text
   status     ApplicationStatus @default(NEW)
+
+  /// The résumé sent with the form (PDF or Word), encrypted and stored like
+  /// a case document; every field is null for applications sent without one.
+  resumeKey      String?
+  resumeDriver   String?
+  resumeFilename String?
+  resumeMimeType String?
+  resumeSize     Int?
+  resumeEncKeyId String?
+  resumeWrapKey  String?
+  resumeIv       String?
+  resumeAuthTag  String?
 
   consent   Boolean
   consentAt DateTime

@@ -2,7 +2,9 @@
 
 import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
-import { api, type CaseSummary, type Page } from "@/lib/portal/api";
+import { api, refreshWebsite, type CaseSummary, type Page } from "@/lib/portal/api";
+import { checkLogo, LOGO_GUIDE, LOGO_TYPES } from "@/lib/portal/partner-logo";
+import { ListToolbar } from "@/components/portal/list-toolbar";
 import { courtNumber } from "@/lib/portal/format";
 import { PeoplePicker } from "@/components/portal/people-picker";
 import { DeleteDialog } from "@/components/portal/delete-dialog";
@@ -44,7 +46,37 @@ type ClientRow = {
   emailVerifiedAt: string | null;
   phoneVerifiedAt: string | null;
   cases: { id: string; reference: string; title: string; status: string }[];
+  /** An organisation's entry in the home page's "Our Partners", if it has one. */
+  partner: ClientPartner | null;
 };
+
+type ClientPartner = { id: string; published: boolean; logoUrl: string | null };
+
+const KIND_FILTER = [
+  { value: "INDIVIDUAL", label: "Individuals" },
+  { value: "ORGANISATION", label: "Organisations" },
+] as const;
+const STATUS_FILTER = [
+  { value: "active", label: "Active" },
+  { value: "deactivated", label: "Deactivated" },
+] as const;
+const CASES_FILTER = [
+  { value: "with", label: "With cases" },
+  { value: "without", label: "No cases yet" },
+] as const;
+const SIGN_IN_FILTER = [
+  { value: "signed-in", label: "Has signed in" },
+  { value: "never", label: "Never signed in" },
+] as const;
+const WEBSITE_FILTER = [{ value: "shown", label: "On the home page" }] as const;
+const CLIENT_SORT = [
+  { value: "name", label: "Name, A to Z" },
+  { value: "name-desc", label: "Name, Z to A" },
+  { value: "newest", label: "Newest first" },
+  { value: "oldest", label: "Oldest first" },
+  { value: "last-sign-in", label: "Last signed in" },
+  { value: "most-cases", label: "Most cases" },
+] as const;
 
 /**
  * Which cases the client can see. Picking a case here is the same link as
@@ -80,21 +112,55 @@ function ClientForm({ initial, onSaved }: { initial?: ClientRow; onSaved: () => 
   const [kind, setKind] = useState<ClientRow["kind"]>(initial?.kind ?? "INDIVIDUAL");
   const [deleting, setDeleting] = useState(false);
   const organisation = kind === "ORGANISATION";
+  const [showOnWebsite, setShowOnWebsite] = useState(initial?.partner?.published ?? false);
+  const [logo, setLogo] = useState<File | null>(null);
+  const [logoPreview, setLogoPreview] = useState<string | null>(null);
+  const [logoError, setLogoError] = useState<string | null>(null);
+  const currentLogo = logoPreview ?? initial?.partner?.logoUrl ?? null;
+
+  useEffect(() => () => {
+    if (logoPreview) URL.revokeObjectURL(logoPreview);
+  }, [logoPreview]);
+
+  async function pickLogo(file: File | undefined) {
+    setLogo(null);
+    setLogoPreview(null);
+    setLogoError(null);
+    if (!file) return;
+    const problem = await checkLogo(file);
+    if (problem) {
+      setLogoError(problem);
+      return;
+    }
+    setLogo(file);
+    setLogoPreview(URL.createObjectURL(file));
+  }
 
   async function submit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
     const data = Object.fromEntries(new FormData(event.currentTarget)) as Record<string, string>;
     setSaving(true);
     setError(null);
+    const website = organisation && showOnWebsite;
+    if (website && !logo && !initial?.partner?.logoUrl) {
+      setLogoError("Please upload the organisation's logo to show it on the home page.");
+      setSaving(false);
+      return;
+    }
     try {
-      if (initial) {
-        await api(`/admin/clients/${initial.id}`, {
-          method: "PATCH",
-          body: { name: data.name, kind, organisation: data.organisation ?? "", phone: data.phone, address: data.address ?? "", isActive: data.isActive === "true", caseIds, ...(initial?.email ? {} : { email: data.email ?? "" }) },
-        });
-      } else {
-        await api("/admin/clients", { method: "POST", body: { ...data, kind, caseIds } });
+      const saved = initial
+        ? await api<{ id: string; partner: ClientPartner | null }>(`/admin/clients/${initial.id}`, {
+            method: "PATCH",
+            body: { name: data.name, kind, organisation: data.organisation ?? "", phone: data.phone, address: data.address ?? "", isActive: data.isActive === "true", caseIds, showOnWebsite: website, ...(initial?.email ? {} : { email: data.email ?? "" }) },
+          })
+        : await api<{ id: string; partner: ClientPartner | null }>("/admin/clients", { method: "POST", body: { ...data, kind, caseIds, showOnWebsite: website } });
+      if (website && logo && saved.partner) {
+        const upload = new FormData();
+        upload.set("logo", logo);
+        await api(`/admin/partners/${saved.partner.id}/logo`, { method: "PUT", body: upload });
       }
+      // The home page changes whenever the tick, the name or the logo might have.
+      if (website || initial?.partner) await refreshWebsite(["website-partners"]);
       onSaved();
     } catch (cause) {
       setError((cause as Error).message);
@@ -144,6 +210,45 @@ function ClientForm({ initial, onSaved }: { initial?: ClientRow; onSaved: () => 
         <Field label="Office address" className="sm:col-span-2">
           <Textarea name="address" rows={2} defaultValue={initial?.address ?? ""} />
         </Field>
+      )}
+      {organisation && (
+        <div className="rounded-lg border border-line bg-paper-warm p-4 sm:col-span-2">
+          <label className="flex items-start gap-3">
+            <input
+              type="checkbox"
+              checked={showOnWebsite}
+              onChange={(event) => {
+                setShowOnWebsite(event.target.checked);
+                setLogoError(null);
+              }}
+              className="mt-0.5 h-4 w-4 shrink-0 accent-gold"
+            />
+            <span>
+              <span className="block text-sm font-semibold text-ink">Show on the home page</span>
+              <span className="block text-xs text-slate">Adds the organisation&apos;s logo to Our Partners on the website. Untick to take it off again.</span>
+            </span>
+          </label>
+          {showOnWebsite && (
+            <div className="mt-4 flex items-start gap-4">
+              <div className="flex h-20 w-20 shrink-0 items-center justify-center overflow-hidden rounded-md border border-line bg-[repeating-conic-gradient(var(--color-paper-tint)_0_25%,white_0_50%)] bg-[length:12px_12px]">
+                {currentLogo ? (
+                  // eslint-disable-next-line @next/next/no-img-element -- a local preview or an uploaded logo
+                  <img src={currentLogo} alt="" className="h-16 w-16 object-contain" />
+                ) : (
+                  <span className="text-[10px] font-semibold uppercase text-slate">No logo</span>
+                )}
+              </div>
+              <div className="min-w-0 space-y-1.5">
+                <label className="inline-flex cursor-pointer items-center rounded-md border border-line-strong bg-white px-3 py-1.5 text-sm font-semibold text-ink transition hover:border-gold">
+                  {currentLogo ? "Choose another logo" : "Upload logo"} <span className="ml-1 text-gold-deep">*</span>
+                  <input type="file" accept={LOGO_TYPES.join(",")} className="sr-only" onChange={(e) => void pickLogo(e.target.files?.[0])} />
+                </label>
+                <p className="text-xs text-slate">{LOGO_GUIDE}</p>
+                {logoError && <p className="text-xs font-semibold text-red-700">{logoError}</p>}
+              </div>
+            </div>
+          )}
+        </div>
       )}
       {/* Not a <Field>: that is a <label>, and this holds several controls. */}
       <div className="sm:col-span-2">
@@ -200,21 +305,42 @@ function ClientForm({ initial, onSaved }: { initial?: ClientRow; onSaved: () => 
 export default function AdminClients() {
   const [rows, setRows] = useState<ClientRow[] | null>(null);
   const [query, setQuery] = useState("");
+  const [kind, setKind] = useState("");
+  const [status, setStatus] = useState("");
+  const [cases, setCases] = useState("");
+  const [signIn, setSignIn] = useState("");
+  const [website, setWebsite] = useState("");
+  const [sort, setSort] = useState("name");
   const [error, setError] = useState<string | null>(null);
   const [editing, setEditing] = useState<ClientRow | "new" | null>(null);
 
   const load = useCallback(() => {
-    const params = new URLSearchParams({ limit: "200" });
+    const params = new URLSearchParams({ limit: "200", sort });
     if (query.trim()) params.set("q", query.trim());
+    for (const [key, value] of Object.entries({ kind, status, cases, signIn, website })) if (value) params.set(key, value);
     api<{ data: ClientRow[] }>(`/admin/clients?${params}`)
-      .then((result) => setRows(result.data))
+      .then((result) => {
+        setRows(result.data);
+        setError(null);
+      })
       .catch((cause: Error) => setError(cause.message));
-  }, [query]);
+  }, [query, kind, status, cases, signIn, website, sort]);
 
   useEffect(() => {
     const timer = setTimeout(load, query ? 250 : 0);
     return () => clearTimeout(timer);
   }, [load, query]);
+
+  function reset() {
+    setQuery("");
+    setKind("");
+    setStatus("");
+    setCases("");
+    setSignIn("");
+    setWebsite("");
+  }
+
+  const filtered = Boolean(query.trim() || kind || status || cases || signIn || website);
 
   return (
     <div className="space-y-6">
@@ -226,14 +352,30 @@ export default function AdminClients() {
       />
 
       <Card>
-        <div className="border-b border-line p-4">
-          <Input type="search" value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Search by name, email or organisation" aria-label="Search clients" />
-        </div>
+        <ListToolbar
+          search={{ value: query, onChange: setQuery, placeholder: "Search by client, organisation, contact, or case" }}
+          filters={[
+            { key: "kind", label: "Type", value: kind, options: KIND_FILTER, onChange: setKind },
+            { key: "status", label: "Account", value: status, options: STATUS_FILTER, onChange: setStatus },
+            { key: "cases", label: "Cases", value: cases, options: CASES_FILTER, onChange: setCases },
+            { key: "signIn", label: "Sign-in", value: signIn, options: SIGN_IN_FILTER, onChange: setSignIn },
+            { key: "website", label: "Website", value: website, options: WEBSITE_FILTER, onChange: setWebsite },
+          ]}
+          sort={{ value: sort, options: CLIENT_SORT, onChange: setSort }}
+          count={rows ? `${rows.length} client${rows.length === 1 ? "" : "s"}${rows.length === 200 ? " (first 200)" : ""}` : undefined}
+          onReset={reset}
+        />
         <ErrorNote>{error}</ErrorNote>
         {!rows ? (
           <Spinner />
         ) : rows.length === 0 ? (
-          <EmptyState title="No clients yet" />
+          filtered ? (
+            <EmptyState title="No clients match" action={<Button tone="secondary" onClick={reset}>Clear filters</Button>}>
+              Try a shorter search, or clear the filters.
+            </EmptyState>
+          ) : (
+            <EmptyState title="No clients yet" />
+          )
         ) : (
           <Table>
             <thead>
@@ -254,6 +396,7 @@ export default function AdminClients() {
                       <div>
                         <p className="font-semibold">{row.name}</p>
                         {row.organisation && <p className="text-xs text-slate">{row.organisation}</p>}
+                        {row.partner?.published && <Badge tone="gold">On the home page</Badge>}
                         {!row.isActive && <Badge tone="red">Deactivated</Badge>}
                       </div>
                     </div>

@@ -95,6 +95,11 @@ export const loginSchema = z.object({
 
 export const listQuerySchema = z.object({
   status: z.string().trim().max(40).optional(),
+  /** Name, email, phone, reference, or the role / matter type. */
+  q: z.string().trim().max(120).optional(),
+  /** Applications only: the role applied for. */
+  role: z.string().trim().max(160).optional(),
+  sort: z.enum(["newest", "oldest", "name"]).default("newest"),
   /** Cursor pagination — stable under inserts, unlike offset. */
   cursor: z.string().uuid().optional(),
   limit: z.coerce.number().int().min(1).max(100).default(25),

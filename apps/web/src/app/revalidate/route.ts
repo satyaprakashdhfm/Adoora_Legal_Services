@@ -1,16 +1,16 @@
 import { revalidateTag } from "next/cache";
-import { ARTICLES_TAG, JOBS_TAG, PEOPLE_TAG } from "@/lib/website-data";
+import { ARTICLES_TAG, JOBS_TAG, PARTNERS_TAG, PEOPLE_TAG } from "@/lib/website-data";
 
 /**
  * POST /revalidate { "tags": ["website-people"] } — called by the admin
- * console after it saves a lawyer profile or a job opening, so the public
+ * console after it saves a lawyer profile, a job opening or a partner, so the public
  * pages show the change on their next visit instead of within five minutes.
  *
  * Only an owner or admin may call it: the caller's session cookie is passed
  * to the API's /auth/me and the role checked there.
  */
 const apiOrigin = (process.env.API_INTERNAL_URL ?? process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:4000").replace(/\/$/, "");
-const ALLOWED = new Set([PEOPLE_TAG, JOBS_TAG, ARTICLES_TAG]);
+const ALLOWED = new Set([PEOPLE_TAG, JOBS_TAG, ARTICLES_TAG, PARTNERS_TAG]);
 
 export async function POST(request: Request) {
   const me = await fetch(`${apiOrigin}/api/auth/me`, {

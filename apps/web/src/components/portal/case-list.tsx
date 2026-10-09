@@ -5,7 +5,22 @@ import { useEffect, useState } from "react";
 import { api, type CaseSummary, type Page } from "@/lib/portal/api";
 import { CASE_STATUSES, COURT_LEVELS, labelFor } from "@/lib/portal/legal";
 import { courtNumber, daysUntil, formatDate, hearingCountdown } from "@/lib/portal/format";
-import { Button, Card, EmptyState, ErrorNote, Input, Select, Spinner, StatusBadge } from "@/components/portal/ui";
+import { Button, Card, EmptyState, ErrorNote, Spinner, StatusBadge } from "@/components/portal/ui";
+import { ListToolbar } from "@/components/portal/list-toolbar";
+
+const HEARING_FILTER = [
+  { value: "week", label: "Within 7 days" },
+  { value: "month", label: "Within 30 days" },
+  { value: "none", label: "None listed" },
+] as const;
+
+const CASE_SORT = [
+  { value: "updated", label: "Recently updated" },
+  { value: "next-hearing", label: "Next hearing, soonest" },
+  { value: "newest", label: "Newest first" },
+  { value: "oldest", label: "Oldest first" },
+  { value: "title", label: "Title, A to Z" },
+] as const;
 
 /** Searchable case list. `staff` adds the client column and court filter. */
 export function CaseList({
@@ -24,6 +39,8 @@ export function CaseList({
   const [query, setQuery] = useState("");
   const [status, setStatus] = useState("");
   const [court, setCourt] = useState("");
+  const [hearing, setHearing] = useState("");
+  const [sort, setSort] = useState("updated");
   const [cases, setCases] = useState<CaseSummary[] | null>(null);
   const [cursor, setCursor] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -34,6 +51,8 @@ export function CaseList({
     if (query.trim()) params.set("q", query.trim());
     if (status) params.set("status", status);
     if (court) params.set("courtLevel", court);
+    if (hearing) params.set("hearing", hearing);
+    if (sort !== "updated") params.set("sort", sort);
     if (limit) params.set("limit", String(limit));
 
     // Debounce typing in the search box.
@@ -53,7 +72,7 @@ export function CaseList({
       clearTimeout(timer);
       controller.abort();
     };
-  }, [query, status, court, limit]);
+  }, [query, status, court, hearing, sort, limit]);
 
   async function loadMore() {
     if (!cursor) return;
@@ -61,6 +80,8 @@ export function CaseList({
     if (query.trim()) params.set("q", query.trim());
     if (status) params.set("status", status);
     if (court) params.set("courtLevel", court);
+    if (hearing) params.set("hearing", hearing);
+    if (sort !== "updated") params.set("sort", sort);
     const page = await api<Page<CaseSummary>>(`/cases?${params}`);
     setCases((current) => [...(current ?? []), ...page.data]);
     setCursor(page.nextCursor);
@@ -69,19 +90,26 @@ export function CaseList({
   return (
     <Card>
       {!compact && (
-        <div className="grid gap-3 border-b border-line p-4 sm:grid-cols-[1fr_11rem] lg:grid-cols-[1fr_11rem_15rem]">
-          <Input
-            type="search"
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            placeholder={staff ? "Search reference, title, case no., CNR, party or client" : "Search your cases"}
-            aria-label="Search cases"
-          />
-          <Select aria-label="Status" value={status} onChange={(e) => setStatus(e.target.value)} placeholder="All statuses" options={CASE_STATUSES} />
-          {staff && (
-            <Select aria-label="Forum" value={court} onChange={(e) => setCourt(e.target.value)} placeholder="All forums" options={COURT_LEVELS} className="max-sm:col-span-full" />
-          )}
-        </div>
+        <ListToolbar
+          search={{
+            value: query,
+            onChange: setQuery,
+            placeholder: staff ? "Search reference, title, case no., CNR, party or client" : "Search your cases",
+          }}
+          filters={[
+            { key: "status", label: "Status", value: status, options: CASE_STATUSES, onChange: setStatus },
+            ...(staff ? [{ key: "court", label: "Forum", value: court, options: COURT_LEVELS, onChange: setCourt }] : []),
+            { key: "hearing", label: "Next hearing", value: hearing, options: HEARING_FILTER, onChange: setHearing },
+          ]}
+          sort={{ value: sort, options: CASE_SORT, onChange: setSort }}
+          count={cases ? `${cases.length}${cursor ? "+" : ""} case${cases.length === 1 ? "" : "s"}` : undefined}
+          onReset={() => {
+            setQuery("");
+            setStatus("");
+            setCourt("");
+            setHearing("");
+          }}
+        />
       )}
 
       {error && <div className="p-4"><ErrorNote>{error}</ErrorNote></div>}
@@ -89,7 +117,7 @@ export function CaseList({
       {!cases ? (
         <Spinner />
       ) : cases.length === 0 ? (
-        <EmptyState title={query || status || court ? "No matching cases" : "No cases yet"} action={emptyAction}>
+        <EmptyState title={query || status || court || hearing ? "No matching cases" : "No cases yet"} action={emptyAction}>
           {!staff && !query && !status && !emptyAction && "When the firm links a case to your account, it appears in this list."}
         </EmptyState>
       ) : (

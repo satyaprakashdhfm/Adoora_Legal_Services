@@ -12,22 +12,26 @@ Deployed from `dev` at <https://adoora-api-production.up.railway.app>.
 | GET | `/health` | — | Liveness. Does not touch the database. |
 | GET | `/health/ready` | — | Readiness. Returns 503 if Postgres is unreachable. |
 | POST | `/api/enquiries` | — | Website contact form. Rate limited. |
-| POST | `/api/careers` | — | Careers application form. Rate limited. |
+| POST | `/api/careers` | — | Careers application form, multipart with an optional `resume` (PDF or Word, 5 MB), checked by content, encrypted and stored. JSON without a file is still accepted. Rate limited. |
 | POST | `/api/subscribers` | — | Newsletter sign-up (double opt-in). |
 | POST | `/api/admin/auth/login` | — | Staff sign-in, returns a bearer token. |
 | GET | `/api/admin/me` | Bearer | Current token claims. |
-| GET | `/api/admin/enquiries` | Bearer (OWNER/ADMIN) | Cursor-paginated enquiries. |
-| GET | `/api/admin/applications` | Bearer (OWNER/ADMIN) | Cursor-paginated applications. |
+| GET | `/api/admin/enquiries` | Bearer (OWNER/ADMIN) | Cursor-paginated enquiries. `?q=` `?status=` `?sort=newest\|oldest\|name`. |
+| GET | `/api/admin/applications` | Bearer (OWNER/ADMIN) | Cursor-paginated applications, with a `resume` summary. `?q=` `?status=` `?role=` `?sort=`. |
+| GET | `/api/admin/applications/:id/resume` | Staff (OWNER/ADMIN) | The decrypted résumé, as an attachment. Audited. |
 | GET | `/api/admin/stats` | Staff (OWNER/ADMIN) | Console counts and upcoming hearings. |
 | PATCH | `/api/admin/enquiries/:id` · `/api/admin/applications/:id` | Staff (OWNER/ADMIN) | Status and internal notes. |
 | GET POST PATCH | `/api/admin/users` | Staff (OWNER/ADMIN) | Lawyers and staff. Only an OWNER manages owners and admins. |
-| GET POST PATCH | `/api/admin/clients` | Staff (OWNER/ADMIN) | Client accounts, with `caseIds` to link cases. Staff emails are left out. Deactivating revokes sessions. |
+| GET POST PATCH | `/api/admin/clients` | Staff (OWNER/ADMIN) | Client accounts, with `caseIds` to link cases, and `showOnWebsite` to put an organisation in Our Partners. Staff emails are left out. Deactivating revokes sessions. List: `?q=` (name, organisation, email, phone, or any linked case), `?kind=` `?status=` `?cases=` `?signIn=` `?website=` `?sort=`. |
+| GET | `/api/public/partners` · `/api/public/partners/:id/logo` | — | The home page's Our Partners logos, in order. |
+| GET POST PATCH DELETE | `/api/admin/partners` | Staff (OWNER/ADMIN) | Our Partners. `PUT /api/admin/partners/order` sets the order; `PUT · DELETE /api/admin/partners/:id/logo` takes a square 200–2000 px PNG, WebP or JPEG up to 1 MB (400 × 400 px asked for). |
 | GET | `/api/admin/audit` | Staff (OWNER/ADMIN) | Audit log. |
 | GET | `/api/auth/google` → `/api/auth/google/callback` | — | Google sign-in (OIDC + PKCE). Sets the session cookie. |
 | POST | `/api/auth/password` | — | Staff password sign-in, session cookie. |
 | POST | `/api/auth/otp` | — | Client sign-in with mobile OTP: `{ accessToken, next }` from the MSG91 widget, verified with MSG91 server to server. Existing clients only, matched on phone. |
 | GET · POST | `/api/auth/me` · `/api/auth/logout` | Session | Current account; sign out. |
-| GET POST | `/api/cases` | Session | Cases in the caller's scope; create (clients create INTAKE matters). |
+| GET POST | `/api/cases` | Session | Cases in the caller's scope; create (clients create INTAKE matters). List: `?q=` `?status=` `?courtLevel=` `?hearing=week\|month\|none` `?sort=updated\|next-hearing\|newest\|oldest\|title`. |
+| GET | `/api/cases/:ref/next-hearing.ics` | Session (case) | The next hearing as an all-day calendar event, for "Add to calendar". |
 | GET PATCH | `/api/cases/:ref` | Session | Case detail (filtered by role); edit (lawyers on the case, admins). |
 | GET | `/api/cases/:cnr` | Staff (not EDITOR), clients | eCourtsIndia record by 16-character CNR, returned as a case-form `draft`. The response is stored. 20/min per account; clients also 15/hour. Audited. |
 | POST | `/api/cases/:ref/court-sync` | Session | "Check court status": queue an eCourts re-scrape (`POST /api/partner/case/{cnr}/refresh`), wait ~10 s, then fetch the case and apply it. Same limits. |

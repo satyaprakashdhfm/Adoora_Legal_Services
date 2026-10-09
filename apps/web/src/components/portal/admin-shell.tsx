@@ -42,6 +42,7 @@ const NAV: { title: string; items: NavItem[] }[] = [
     items: [
       { href: "/admin/enquiries", label: "Enquiries", icon: "M3 5h14v9H8l-4 3v-3H3z" },
       { href: "/admin/jobs", label: "Jobs", icon: "M3 7h14v9H3zM7.5 7V5h5v2M3 11h14" },
+      { href: "/admin/partners", label: "Our Partners", icon: "M10 2.5l6.5 3.75v7.5L10 17.5l-6.5-3.75v-7.5zM10 7.5l2.2 1.25v2.5L10 12.5l-2.2-1.25v-2.5z" },
       { href: "/admin/profiles", label: "Lawyer profiles", icon: "M4 3.5h12v13H4zM10 9.5a2.2 2.2 0 100-4.4 2.2 2.2 0 000 4.4zM6.5 14c.4-1.9 1.8-3 3.5-3s3.1 1.1 3.5 3" },
 
       { href: "/admin/articles", label: "Articles", icon: "M4 3.5h9l3 3v10H4zM7 8h6M7 11h6M7 14h4" },

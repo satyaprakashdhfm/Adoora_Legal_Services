@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { PageHero, SectionHeading } from "@/components/ui";
 import { ApplyDialog } from "@/components/apply-dialog";
-import { roles as staticRoles, speculativeRole } from "@/content/careers";
+import { roles as staticRoles } from "@/content/careers";
 import { getJobs, type Job } from "@/lib/website-data";
 import { practiceAreaBySlug } from "@/content/practice-areas";
 
@@ -57,7 +57,7 @@ export default async function CareersPage() {
       summary: role.detail,
       practiceArea: null,
       location: null,
-      employmentType: "Full-time",
+      employmentType: role.slug === "legal-intern" ? "Internship" : "Full-time",
       experience: null,
       responsibilities: [],
       requirements: [],
@@ -195,16 +195,6 @@ export default async function CareersPage() {
             </ul>
           )}
 
-          <p className="mt-8 text-sm text-ink-soft">
-            {jobs.length === 0 ? "You can still send a" : "If none of these fit but you think the firm is right for you, send a"}{" "}
-            <ApplyDialog
-              role={speculativeRole.title}
-              className="font-semibold text-gold-deep underline decoration-gold/40 underline-offset-4 transition hover:decoration-gold"
-            >
-              speculative application
-            </ApplyDialog>
-            .
-          </p>
         </div>
       </section>
     </>

@@ -172,6 +172,9 @@ export const caseListSchema = z.object({
   q: z.string().trim().max(120).optional(),
   status: caseStatus.optional(),
   courtLevel: courtLevel.optional(),
+  /** Next hearing within a week, within a month, or none listed. */
+  hearing: z.enum(["week", "month", "none"]).optional(),
+  sort: z.enum(["updated", "next-hearing", "newest", "oldest", "title"]).default("updated"),
   cursor: z.string().uuid().optional(),
   limit: z.coerce.number().int().min(1).max(100).default(50),
 });
@@ -283,6 +286,8 @@ export const clientCreateSchema = z.object({
   address: optionalText(1000),
   /** Cases to give the new client access to. */
   caseIds: z.array(z.string().uuid()).max(50).optional(),
+  /** An organisation's logo in the home page's "Our Partners". */
+  showOnWebsite: z.boolean().optional(),
 });
 
 export const clientPatchSchema = z.object({
@@ -296,6 +301,21 @@ export const clientPatchSchema = z.object({
   isActive: z.boolean().optional(),
   /** When present, the complete set of cases the client can see. */
   caseIds: z.array(z.string().uuid()).max(50).optional(),
+  /** An organisation's logo in the home page's "Our Partners". */
+  showOnWebsite: z.boolean().optional(),
+});
+
+/** Admin → Clients: search, filters and sort. */
+export const clientListQuerySchema = z.object({
+  q: z.string().trim().max(120).optional(),
+  kind: z.enum(["INDIVIDUAL", "ORGANISATION"]).optional(),
+  status: z.enum(["active", "deactivated"]).optional(),
+  cases: z.enum(["with", "without"]).optional(),
+  signIn: z.enum(["signed-in", "never"]).optional(),
+  website: z.enum(["shown"]).optional(),
+  sort: z.enum(["name", "name-desc", "newest", "oldest", "last-sign-in", "most-cases"]).default("name"),
+  cursor: z.string().uuid().optional(),
+  limit: z.coerce.number().int().min(1).max(200).default(100),
 });
 
 export const searchQuerySchema = z.object({
@@ -341,6 +361,9 @@ export const queryPatchSchema = z.object({
 
 export const queryListSchema = z.object({
   status: queryStatus.optional(),
+  /** Subject, message, reference, client name or case. */
+  q: z.string().trim().max(120).optional(),
+  sort: z.enum(["newest", "oldest"]).default("newest"),
   cursor: z.string().uuid().optional(),
   limit: z.coerce.number().int().min(1).max(100).default(50),
 });

@@ -1,4 +1,5 @@
 import { Router, type RequestHandler } from "express";
+import type { z } from "zod";
 import rateLimit from "express-rate-limit";
 import { prisma } from "../db.js";
 import { CNR_PATTERN, normaliseCnr } from "../integrations/ecourts.js";
@@ -8,6 +9,8 @@ import { attachHeldLookup, holdLookup, PORTAL_COOLDOWN_MS, recentPortalLookup, r
 import { env } from "../env.js";
 import { HttpError } from "../lib/http.js";
 import { audit } from "../lib/audit.js";
+import { hearingIcs } from "../lib/calendar.js";
+import { contentDisposition } from "../lib/files.js";
 import { makeCaseReference } from "../lib/ids.js";
 import { requireSignedIn } from "../middleware/auth.js";
 import {
@@ -125,6 +128,16 @@ function adminsOpenCases(principal: Principal) {
   }
 }
 
+type CaseListQuery = z.infer<typeof caseListSchema>;
+
+const CASE_ORDER: Record<CaseListQuery["sort"], Prisma.CaseOrderByWithRelationInput[]> = {
+  updated: [{ updatedAt: "desc" }],
+  "next-hearing": [{ nextHearingDate: { sort: "asc", nulls: "last" } }],
+  newest: [{ createdAt: "desc" }],
+  oldest: [{ createdAt: "asc" }],
+  title: [{ title: "asc" }],
+};
+
 casesRouter.get("/", async (req, res) => {
   const principal = req.principal!;
   const query = caseListSchema.parse(req.query);
@@ -133,6 +146,13 @@ casesRouter.get("/", async (req, res) => {
   const filters: Prisma.CaseWhereInput[] = [caseScope(principal)];
   if (query.status) filters.push({ status: query.status });
   if (query.courtLevel) filters.push({ courtLevel: query.courtLevel });
+  if (query.hearing === "none") filters.push({ nextHearingDate: null });
+  else if (query.hearing) {
+    const today = new Date(new Date().toISOString().slice(0, 10));
+    const until = new Date(today);
+    until.setUTCDate(until.getUTCDate() + (query.hearing === "week" ? 7 : 30));
+    filters.push({ nextHearingDate: { gte: today, lte: until } });
+  }
   if (query.q) {
     const q = query.q;
     filters.push({
@@ -149,7 +169,8 @@ casesRouter.get("/", async (req, res) => {
 
   const cases = await prisma.case.findMany({
     where: { AND: filters },
-    orderBy: [{ updatedAt: "desc" }, { id: "desc" }],
+    // The id breaks ties, so paging through with the cursor is stable.
+    orderBy: [...CASE_ORDER[query.sort], { id: "desc" }],
     take: query.limit + 1,
     ...(query.cursor ? { cursor: { id: query.cursor }, skip: 1 } : {}),
     select: {
@@ -755,6 +776,44 @@ casesRouter.post("/:reference/portal/submit", async (req, res) => {
   await audit(req, "court_portal.lookup", "Case", found.id, { reference: found.reference, ...summary });
   const record = await loadCaseDetail(principal, found.id);
   res.json({ case: serialiseCase(principal, record), summary });
+});
+
+/**
+ * GET /api/cases/:reference/next-hearing.ics — the next hearing as a calendar
+ * file, for "Add to calendar". Anyone who may see the case may have it; it
+ * carries what the case page already shows them.
+ */
+casesRouter.get("/:reference/next-hearing.ics", async (req, res) => {
+  const principal = req.principal!;
+  const found = await findVisibleCase(principal, String(req.params.reference));
+  if (!found.nextHearingDate) throw new HttpError(404, "This case has no next hearing listed.", "no_hearing");
+
+  const date = found.nextHearingDate.toISOString().slice(0, 10);
+  const number = found.caseNumber
+    ? `${found.caseTypeCode ? `${found.caseTypeCode} ` : ""}No. ${found.caseNumber}${found.caseYear ? ` of ${found.caseYear}` : ""}`
+    : null;
+  const ics = hearingIcs({
+    uid: `${found.reference}-${date}@adooralegalservices.com`,
+    date,
+    title: `Hearing: ${found.title}`,
+    location: [found.courtName, found.bench].filter(Boolean).join(", ") || null,
+    description: [
+      found.nextHearingPurpose ? `Listed for: ${found.nextHearingPurpose}` : null,
+      number,
+      `Case reference: ${found.reference}`,
+      "ADOORA Legal Services",
+    ]
+      .filter(Boolean)
+      .join("\n"),
+  });
+
+  res.set({
+    "Content-Type": "text/calendar; charset=utf-8",
+    "Content-Disposition": contentDisposition(`hearing-${found.reference}-${date}.ics`, true),
+    "Cache-Control": "private, no-store",
+    "X-Content-Type-Options": "nosniff",
+  });
+  res.send(ics);
 });
 
 casesRouter.get("/:reference", async (req, res) => {

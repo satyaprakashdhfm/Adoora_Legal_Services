@@ -4,10 +4,18 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { api, type ArticleRow, type ArticleStatus } from "@/lib/portal/api";
+import { ListToolbar } from "@/components/portal/list-toolbar";
+
+const ARTICLE_SORT = [
+  { value: "updated", label: "Recently edited" },
+  { value: "published", label: "Recently published" },
+  { value: "newest", label: "Newest created" },
+  { value: "title", label: "Title, A to Z" },
+] as const;
 import { formatDate, formatDateTime } from "@/lib/portal/format";
 import { STATUS_LABEL } from "@/components/portal/article-editor";
 import { HowItWorks, TrendingLeads, UrgentBanner, usePipeline, WriteNowDialog } from "@/components/portal/trending";
-import { Badge, Button, Card, EmptyState, ErrorNote, Input, PageTitle, Spinner, Table, Td, Th } from "@/components/portal/ui";
+import { Badge, Button, Card, EmptyState, ErrorNote, PageTitle, Spinner, Table, Td, Th } from "@/components/portal/ui";
 
 const TONE: Record<ArticleStatus, "gold" | "blue" | "green" | "grey"> = {
   DRAFT: "gold",
@@ -30,6 +38,8 @@ export default function AdminArticles() {
   const [error, setError] = useState<string | null>(null);
   const [filter, setFilter] = useState<ArticleStatus | "ALL">("ALL");
   const [query, setQuery] = useState("");
+  const [category, setCategory] = useState("");
+  const [sort, setSort] = useState("updated");
   const [creating, setCreating] = useState(false);
   const [tab, setTab] = useState<"articles" | "trending">("articles");
   const [writing, setWriting] = useState(false);
@@ -71,12 +81,24 @@ export default function AdminArticles() {
     return result;
   }, [rows]);
 
-  const shown = (rows ?? []).filter(
-    (row) =>
-      (filter === "ALL" || row.status === filter) &&
-      (!query.trim() ||
-        `${row.title} ${row.focusKeyword ?? ""} ${row.keywords.join(" ")}`.toLowerCase().includes(query.trim().toLowerCase())),
-  );
+  const categories = [...new Set((rows ?? []).map((row) => row.category))].sort().map((value) => ({ value, label: value }));
+  const shown = (rows ?? [])
+    .filter(
+      (row) =>
+        (filter === "ALL" || row.status === filter) &&
+        (!category || row.category === category) &&
+        (!query.trim() ||
+          `${row.title} ${row.focusKeyword ?? ""} ${row.keywords.join(" ")}`.toLowerCase().includes(query.trim().toLowerCase())),
+    )
+    .sort((a, b) =>
+      sort === "published"
+        ? (b.publishedAt ?? "").localeCompare(a.publishedAt ?? "")
+        : sort === "newest"
+          ? b.createdAt.localeCompare(a.createdAt)
+          : sort === "title"
+            ? a.title.localeCompare(b.title)
+            : b.updatedAt.localeCompare(a.updatedAt),
+    );
 
   return (
     <div className="space-y-6">
@@ -139,10 +161,20 @@ export default function AdminArticles() {
             </button>
           ))}
         </div>
-        <Input className="max-w-xs" placeholder="Search title or keyword" value={query} onChange={(event) => setQuery(event.target.value)} />
       </div>
 
       <Card>
+        <ListToolbar
+          search={{ value: query, onChange: setQuery, placeholder: "Search title or keyword" }}
+          filters={[{ key: "category", label: "Category", value: category, options: categories, onChange: setCategory }]}
+          sort={{ value: sort, options: ARTICLE_SORT, onChange: setSort }}
+          count={rows ? `${shown.length} of ${rows.length} article${rows.length === 1 ? "" : "s"}` : undefined}
+          onReset={() => {
+            setQuery("");
+            setCategory("");
+            setFilter("ALL");
+          }}
+        />
         <ErrorNote>{error}</ErrorNote>
         {!rows ? (
           <Spinner />

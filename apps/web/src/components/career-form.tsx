@@ -3,10 +3,34 @@
 import Link from "next/link";
 import { useState } from "react";
 import { apiUrl } from "@/lib/site";
+import { applicationRoles, speculativeRole } from "@/content/careers";
 
 type Status = "idle" | "submitting" | "sent" | "error";
 
 const MAX_DESCRIPTION = 500;
+const RESUME_MAX_MB = 5;
+const RESUME_EXTENSIONS = [".pdf", ".doc", ".docx"];
+
+/**
+ * The form's role choices and the one selected to start with: the role the
+ * candidate clicked Apply on ("Intern" for any internship), added to the
+ * list when it is a posted title such as "Associate — Corporate Advisory".
+ */
+function roleChoices(role: string): { options: string[]; selected: string } {
+  const standard: string[] = [...applicationRoles];
+  if (role === speculativeRole.title) return { options: standard, selected: "" };
+  const selected = /\bintern(ship)?\b/i.test(role) ? "Intern" : role;
+  return { options: standard.includes(selected) ? standard : [selected, ...standard], selected };
+}
+
+/** The same rules as the API, so a wrong file is caught before sending. */
+function checkResume(file: File | null): string | null {
+  if (!file) return "Please attach your résumé.";
+  const name = file.name.toLowerCase();
+  if (!RESUME_EXTENSIONS.some((extension) => name.endsWith(extension))) return "Please attach your résumé as a PDF or Word document.";
+  if (file.size > RESUME_MAX_MB * 1024 * 1024) return `Your résumé is ${(file.size / 1024 / 1024).toFixed(1)} MB. Please keep it under ${RESUME_MAX_MB} MB.`;
+  return null;
+}
 
 const locations = [
   "Hyderabad",
@@ -25,22 +49,21 @@ const experienceBands = [
 ];
 
 /**
- * Careers application form, one instance per role — the role a candidate is
- * applying for is fixed by the page it's rendered on (`/careers/apply/[role]`)
- * rather than chosen from a select here.
+ * Careers application form. `role` is the role the candidate clicked Apply
+ * on; it starts selected in the Role list, which they can change.
  *
- * Posts to `POST /api/careers`. The API has no column for "current
- * location", so it travels folded into the top of `message` rather than
- * being dropped silently.
- *
- * Candidates attach a CV by emailing it after submitting — the API does not
- * accept file uploads, and accepting them without virus scanning and a
- * retention policy in place would be worse than asking for an email.
+ * Posts multipart to `POST /api/careers` with the résumé (PDF or Word, up to
+ * 5 MB), which the API checks, encrypts and stores with the application. The
+ * API has no column for "current location", so it travels folded into the
+ * top of `message` rather than being dropped silently.
  */
 export function CareerForm({ role }: { role: string }) {
   const [status, setStatus] = useState<Status>("idle");
   const [error, setError] = useState<string | null>(null);
   const [description, setDescription] = useState("");
+  const [resume, setResume] = useState<File | null>(null);
+  const [resumeError, setResumeError] = useState<string | null>(null);
+  const { options: roleOptions, selected: initialRole } = roleChoices(role);
 
   async function onSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -49,24 +72,25 @@ export function CareerForm({ role }: { role: string }) {
 
     const form = event.currentTarget;
     const data = new FormData(form);
+    const problem = checkResume(resume);
+    if (problem) {
+      setResumeError(problem);
+      setStatus("idle");
+      return;
+    }
+
     const location = (data.get("location") as string) || "";
     const message = (data.get("message") as string) ?? "";
+    const body = new FormData();
+    for (const field of ["name", "email", "phone", "role", "experience", "company"]) {
+      body.set(field, String(data.get(field) ?? ""));
+    }
+    body.set("message", location ? `Current location: ${location}\n\n${message}` : message);
+    body.set("consent", data.get("consent") === "on" ? "true" : "false");
+    body.set("resume", resume!);
 
     try {
-      const response = await fetch(`${apiUrl}/api/careers`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          name: data.get("name"),
-          email: data.get("email"),
-          phone: data.get("phone"),
-          role,
-          experience: data.get("experience"),
-          message: location ? `Current location: ${location}\n\n${message}` : message,
-          consent: data.get("consent") === "on",
-          company: data.get("company"),
-        }),
-      });
+      const response = await fetch(`${apiUrl}/api/careers`, { method: "POST", body });
 
       if (!response.ok) {
         const payload = (await response.json().catch(() => null)) as
@@ -79,6 +103,7 @@ export function CareerForm({ role }: { role: string }) {
 
       form.reset();
       setDescription("");
+      setResume(null);
       setStatus("sent");
     } catch (cause) {
       setError(
@@ -112,16 +137,9 @@ export function CareerForm({ role }: { role: string }) {
           Application Received
         </h3>
         <p className="mt-3 text-sm leading-relaxed text-ink-soft">
-          Thank you. Please email your CV and a short covering note to{" "}
-          <a
-            href="mailto:info@adooralegalservices.com"
-            className="font-semibold text-gold-deep underline underline-offset-2"
-          >
-            info@adooralegalservices.com
-          </a>{" "}
-          quoting the role, so we can consider it alongside this form. We
-          respond to applications we are taking forward; we are not always
-          able to reply to every application individually.
+          Thank you. Your application and résumé have reached us. We respond
+          to applications we are taking forward; we are not always able to
+          reply to every application individually.
         </p>
         <button
           type="button"
@@ -151,6 +169,15 @@ export function CareerForm({ role }: { role: string }) {
           type="tel"
           required
           autoComplete="tel"
+        />
+
+        <SelectField
+          label="Role"
+          name="role"
+          required
+          options={roleOptions}
+          placeholder="Select role"
+          defaultValue={initialRole}
         />
 
         <SelectField
@@ -189,6 +216,44 @@ export function CareerForm({ role }: { role: string }) {
             {description.length}/{MAX_DESCRIPTION}
           </span>
         </div>
+      </div>
+
+      <div className="mt-5">
+        <span className="block text-sm font-medium text-ink">
+          Résumé <span className="text-gold-deep">*</span>
+        </span>
+        <label
+          className={`mt-2 flex cursor-pointer flex-wrap items-center gap-3 rounded-lg border border-dashed bg-paper px-3.5 py-3 text-sm transition hover:border-gold focus-within:border-gold focus-within:ring-1 focus-within:ring-gold/40 ${
+            resumeError ? "border-red-300" : "border-line-strong"
+          }`}
+        >
+          <span className="inline-flex items-center gap-2 rounded-md bg-ink px-3.5 py-2 text-xs font-semibold text-white">
+            <svg viewBox="0 0 16 16" aria-hidden="true" className="h-3.5 w-3.5">
+              <path d="M8 11V3M4.5 6.5 8 3l3.5 3.5M3 13h10" fill="none" stroke="currentColor" strokeWidth={1.6} strokeLinecap="round" strokeLinejoin="round" />
+            </svg>
+            {resume ? "Change file" : "Upload résumé"}
+          </span>
+          <span className={`min-w-0 truncate ${resume ? "font-medium text-ink" : "text-slate"}`}>
+            {resume ? resume.name : "No file chosen"}
+          </span>
+          <input
+            type="file"
+            name="resume-file"
+            accept=".pdf,.doc,.docx,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+            className="sr-only"
+            onChange={(event) => {
+              const file = event.target.files?.[0] ?? null;
+              const problem = file ? checkResume(file) : null;
+              setResumeError(problem);
+              setResume(problem ? null : file);
+            }}
+          />
+        </label>
+        {resumeError ? (
+          <p role="alert" className="mt-1.5 text-xs font-medium text-red-700">{resumeError}</p>
+        ) : (
+          <p className="mt-1.5 text-xs text-slate">PDF or Word (.doc, .docx), up to {RESUME_MAX_MB} MB.</p>
+        )}
       </div>
 
       {/* Honeypot — hidden from users, and from assistive technology. */}
@@ -291,12 +356,14 @@ function SelectField({
   options,
   placeholder,
   required,
+  defaultValue = "",
 }: {
   label: string;
   name: string;
   options: string[];
   placeholder: string;
   required?: boolean;
+  defaultValue?: string;
 }) {
   return (
     <div>
@@ -307,7 +374,7 @@ function SelectField({
         id={name}
         name={name}
         required={required}
-        defaultValue=""
+        defaultValue={defaultValue}
         className="mt-2 w-full rounded-lg border border-line-strong bg-paper px-3.5 py-2.5 text-sm text-ink transition focus:border-gold focus:outline-none focus:ring-1 focus:ring-gold/40"
       >
         <option value="" disabled>

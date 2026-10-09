@@ -2,10 +2,11 @@ import { people as staticPeople, type Person, type Spotlight } from "@/content/p
 import { practiceAreas } from "@/content/practice-areas";
 import { insights as bundledInsights, type Block, type Insight, type InsightCategory } from "@/content/insights";
 import type { ArtworkKey } from "@/components/insight-artwork";
+import { samplePartners, type PartnerItem } from "@/content/partners";
 
 /**
- * Content the firm maintains from the admin console — lawyer profiles and
- * job openings — read on the server for the public pages.
+ * Content the firm maintains from the admin console — lawyer profiles, job
+ * openings and partner logos — read on the server for the public pages.
  *
  * Fetched from the API with a five-minute revalidation, tagged so a save in
  * the console refreshes the pages straight away (see `app/revalidate`).
@@ -22,6 +23,7 @@ const apiOrigin = (process.env.API_INTERNAL_URL ?? process.env.NEXT_PUBLIC_API_U
 export const PEOPLE_TAG = "website-people";
 export const JOBS_TAG = "website-jobs";
 export const ARTICLES_TAG = "website-articles";
+export const PARTNERS_TAG = "website-partners";
 
 /** The parsed body, or null when it is missing (404) or the API is unreachable. */
 async function fromApi<T>(path: string, tag: string): Promise<T | null> {
@@ -167,6 +169,19 @@ export function teamFor(people: Person[], options: { practice?: string; slugs?: 
   }
   const bySlug = new Map(people.map((person) => [person.slug, person]));
   return (options.slugs ?? []).map((slug) => bySlug.get(slug)).filter((p): p is Person => Boolean(p));
+}
+
+// ---------------------------------------------------------------------------
+// Partners
+// ---------------------------------------------------------------------------
+
+/**
+ * The home page's partner logos, in the console's order. Until the firm adds
+ * any (or when the API is unreachable) the sample six stand in.
+ */
+export async function getPartners(): Promise<PartnerItem[]> {
+  const result = await fromApi<{ data: PartnerItem[] }>("/public/partners", PARTNERS_TAG);
+  return result?.data?.length ? result.data : samplePartners;
 }
 
 // ---------------------------------------------------------------------------
