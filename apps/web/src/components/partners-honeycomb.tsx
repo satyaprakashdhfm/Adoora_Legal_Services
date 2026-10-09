@@ -33,7 +33,7 @@ function PartnerHex({ partner, style }: { partner: PartnerItem; style?: CSSPrope
       <span aria-hidden="true" className="absolute inset-0 bg-line-strong transition group-hover:bg-gold" style={{ clipPath: HEX_CLIP }} />
       <span className="absolute inset-[1.5px] flex items-center justify-center bg-white" style={{ clipPath: HEX_CLIP }}>
         {partner.logoUrl ? (
-          <span className="relative block h-[46%] w-[62%]">
+          <span className="relative block h-[56%] w-[66%]">
             <Image src={partner.logoUrl} alt={partner.name} fill unoptimized sizes="120px" className="object-contain" />
           </span>
         ) : (
