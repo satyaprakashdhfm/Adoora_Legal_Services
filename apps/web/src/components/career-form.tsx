@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { apiUrl } from "@/lib/site";
 import { applicationRoles, speculativeRole } from "@/content/careers";
 
@@ -10,18 +10,6 @@ type Status = "idle" | "submitting" | "sent" | "error";
 const MAX_DESCRIPTION = 500;
 const RESUME_MAX_MB = 5;
 const RESUME_EXTENSIONS = [".pdf", ".doc", ".docx"];
-
-/**
- * The form's role choices and the one selected to start with: the role the
- * candidate clicked Apply on ("Intern" for any internship), added to the
- * list when it is a posted title such as "Associate — Corporate Advisory".
- */
-function roleChoices(role: string): { options: string[]; selected: string } {
-  const standard: string[] = [...applicationRoles];
-  if (role === speculativeRole.title) return { options: standard, selected: "" };
-  const selected = /\bintern(ship)?\b/i.test(role) ? "Intern" : role;
-  return { options: standard.includes(selected) ? standard : [selected, ...standard], selected };
-}
 
 /** The same rules as the API, so a wrong file is caught before sending. */
 function checkResume(file: File | null): string | null {
@@ -50,7 +38,9 @@ const experienceBands = [
 
 /**
  * Careers application form. `role` is the role the candidate clicked Apply
- * on; it starts selected in the Role list, which they can change.
+ * on: a role the firm posted is fixed, so the form sends it as it is and
+ * shows no Role list. Only the general application (old links to
+ * /careers/apply/speculative-application) asks them to pick one.
  *
  * Posts multipart to `POST /api/careers` with the résumé (PDF or Word, up to
  * 5 MB), which the API checks, encrypts and stores with the application. The
@@ -63,7 +53,15 @@ export function CareerForm({ role }: { role: string }) {
   const [description, setDescription] = useState("");
   const [resume, setResume] = useState<File | null>(null);
   const [resumeError, setResumeError] = useState<string | null>(null);
-  const { options: roleOptions, selected: initialRole } = roleChoices(role);
+  const fixedRole = role === speculativeRole.title ? null : role;
+  const fileInput = useRef<HTMLInputElement>(null);
+
+  function clearResume() {
+    setResume(null);
+    setResumeError(null);
+    // Without this, choosing the same file again would not fire onChange.
+    if (fileInput.current) fileInput.current.value = "";
+  }
 
   async function onSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -103,7 +101,7 @@ export function CareerForm({ role }: { role: string }) {
 
       form.reset();
       setDescription("");
-      setResume(null);
+      clearResume();
       setStatus("sent");
     } catch (cause) {
       setError(
@@ -171,14 +169,17 @@ export function CareerForm({ role }: { role: string }) {
           autoComplete="tel"
         />
 
-        <SelectField
-          label="Role"
-          name="role"
-          required
-          options={roleOptions}
-          placeholder="Select role"
-          defaultValue={initialRole}
-        />
+        {fixedRole ? (
+          <input type="hidden" name="role" value={fixedRole} />
+        ) : (
+          <SelectField
+            label="Role"
+            name="role"
+            required
+            options={[...applicationRoles]}
+            placeholder="Select role"
+          />
+        )}
 
         <SelectField
           label="Current location"
@@ -222,33 +223,47 @@ export function CareerForm({ role }: { role: string }) {
         <span className="block text-sm font-medium text-ink">
           Résumé <span className="text-gold-deep">*</span>
         </span>
-        <label
-          className={`mt-2 flex cursor-pointer flex-wrap items-center gap-3 rounded-lg border border-dashed bg-paper px-3.5 py-3 text-sm transition hover:border-gold focus-within:border-gold focus-within:ring-1 focus-within:ring-gold/40 ${
-            resumeError ? "border-red-300" : "border-line-strong"
+        <div
+          className={`mt-2 flex flex-wrap items-center gap-3 rounded-lg border border-dashed bg-paper px-3.5 py-3 text-sm transition focus-within:border-gold focus-within:ring-1 focus-within:ring-gold/40 ${
+            resumeError ? "border-red-300" : resume ? "border-gold/60" : "border-line-strong"
           }`}
         >
-          <span className="inline-flex items-center gap-2 rounded-md bg-ink px-3.5 py-2 text-xs font-semibold text-white">
+          <label className="inline-flex cursor-pointer items-center gap-2 rounded-md bg-ink px-3.5 py-2 text-xs font-semibold text-white transition hover:bg-ink-mid">
             <svg viewBox="0 0 16 16" aria-hidden="true" className="h-3.5 w-3.5">
               <path d="M8 11V3M4.5 6.5 8 3l3.5 3.5M3 13h10" fill="none" stroke="currentColor" strokeWidth={1.6} strokeLinecap="round" strokeLinejoin="round" />
             </svg>
             {resume ? "Change file" : "Upload résumé"}
-          </span>
-          <span className={`min-w-0 truncate ${resume ? "font-medium text-ink" : "text-slate"}`}>
+            <input
+              ref={fileInput}
+              type="file"
+              name="resume-file"
+              accept=".pdf,.doc,.docx,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+              className="sr-only"
+              onChange={(event) => {
+                const file = event.target.files?.[0] ?? null;
+                const problem = file ? checkResume(file) : null;
+                setResumeError(problem);
+                setResume(problem ? null : file);
+              }}
+            />
+          </label>
+          <span className={`min-w-0 flex-1 truncate ${resume ? "font-medium text-ink" : "text-slate"}`}>
             {resume ? resume.name : "No file chosen"}
           </span>
-          <input
-            type="file"
-            name="resume-file"
-            accept=".pdf,.doc,.docx,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
-            className="sr-only"
-            onChange={(event) => {
-              const file = event.target.files?.[0] ?? null;
-              const problem = file ? checkResume(file) : null;
-              setResumeError(problem);
-              setResume(problem ? null : file);
-            }}
-          />
-        </label>
+          {resume && (
+            <button
+              type="button"
+              onClick={clearResume}
+              aria-label={`Remove ${resume.name}`}
+              className="inline-flex shrink-0 items-center gap-1.5 rounded-md border border-line-strong px-2.5 py-1.5 text-xs font-semibold text-ink-soft transition hover:border-red-300 hover:bg-red-50 hover:text-red-700"
+            >
+              <svg viewBox="0 0 16 16" aria-hidden="true" className="h-3 w-3">
+                <path d="M4 4l8 8M12 4l-8 8" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" />
+              </svg>
+              Remove
+            </button>
+          )}
+        </div>
         {resumeError ? (
           <p role="alert" className="mt-1.5 text-xs font-medium text-red-700">{resumeError}</p>
         ) : (
