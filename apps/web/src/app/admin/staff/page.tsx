@@ -6,6 +6,7 @@ import { useUser } from "@/lib/portal/session";
 import { PASSWORD_ONLY } from "@/lib/portal/sign-in-mode";
 import { formatDate } from "@/lib/portal/format";
 import { practiceAreas } from "@/content/practice-areas";
+import { STATES_AND_UTS } from "@/lib/portal/legal";
 import { Avatar, Badge, Button, Card, EmptyState, ErrorNote, Field, Input, Modal, PageTitle, Select, Spinner, Table, Td, Textarea, Th } from "@/components/portal/ui";
 import { ListToolbar } from "@/components/portal/list-toolbar";
 
@@ -17,6 +18,10 @@ const WEBSITE_FILTER = [
   { value: "shown", label: "Shown" },
   { value: "home", label: "On the home page" },
   { value: "hidden", label: "Not shown" },
+] as const;
+const KIND_FILTER = [
+  { value: "firm", label: "Firm lawyers" },
+  { value: "third-party", label: "Third-party lawyers" },
 ] as const;
 const TEAM_SORT = [
   { value: "name", label: "Name, A to Z" },
@@ -213,6 +218,7 @@ function PersonForm({
   const [error, setError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   const [access, setAccess] = useState<Access>(user?.role ?? (profile ? "NONE" : "LAWYER"));
+  const [thirdParty, setThirdParty] = useState(profile?.thirdParty ?? false);
   const [onWebsite, setOnWebsite] = useState(profile?.published ?? false);
   const [practices, setPractices] = useState<string[]>(profile?.practices ?? []);
   const [photo, setPhoto] = useState<File | null>(null);
@@ -221,7 +227,7 @@ function PersonForm({
 
   const seniorLocked = Boolean(user && !canManageSenior && (user.role === "OWNER" || user.role === "ADMIN"));
   const roles = ROLES.filter((role) => (canManageSenior || (role.value !== "OWNER" && role.value !== "ADMIN")) && (role.value !== "NONE" || !user));
-  const hasAccount = access !== "NONE";
+  const hasAccount = !thirdParty && access !== "NONE";
 
   async function submit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -257,6 +263,11 @@ function PersonForm({
         enrolment: data.enrolment,
         published: onWebsite,
         userId,
+        thirdParty,
+        address: data.address,
+        state: data.state,
+        district: data.district,
+        court: data.court,
       };
       if (!hasAccount) body.email = data.email;
       if (onWebsite) {
@@ -339,11 +350,36 @@ function PersonForm({
       <Field label="Bar Council enrolment no.">
         <Input name="enrolment" maxLength={80} placeholder="e.g. TS/1234/2015" defaultValue={user?.barEnrolment ?? profile?.enrolment ?? ""} />
       </Field>
+      {/* A third-party lawyer is engaged case by case in another place: no
+          account, so the access is fixed at No sign-in. Someone who already
+          signs in would have to be removed from the portal first. */}
+      {!user && (
+        <div className="rounded-lg border border-line bg-paper-warm px-4 py-3 sm:col-span-2">
+          <label className="flex items-center gap-2 text-sm font-semibold text-ink">
+            <input
+              type="checkbox"
+              checked={thirdParty}
+              onChange={(e) => {
+                setThirdParty(e.target.checked);
+                if (e.target.checked) setAccess("NONE");
+              }}
+              className="accent-[var(--color-gold)]"
+            />
+            Third-party lawyer
+          </label>
+          <p className="mt-0.5 text-xs text-slate">
+            A lawyer the firm engages in another place. They do not sign in to the portal; give their address, state, district and court below.
+          </p>
+        </div>
+      )}
       {seniorLocked ? (
         <p className="self-end text-xs text-slate">Only an owner can change an owner’s or admin’s access.</p>
       ) : (
-        <Field label="Access to the portal" hint={self ? "You cannot change your own access." : ROLES.find((r) => r.value === access)?.description}>
-          <Select value={access} onChange={(e) => setAccess(e.target.value as Access)} disabled={self} options={roles} />
+        <Field
+          label="Access to the portal"
+          hint={self ? "You cannot change your own access." : thirdParty ? "Fixed for a third-party lawyer: they do not sign in." : ROLES.find((r) => r.value === access)?.description}
+        >
+          <Select value={thirdParty ? "NONE" : access} onChange={(e) => setAccess(e.target.value as Access)} disabled={self || thirdParty} options={roles} />
         </Field>
       )}
       {user && !self && !seniorLocked && (
@@ -351,6 +387,23 @@ function PersonForm({
           <Select name="isActive" defaultValue={String(user.isActive)} options={[{ value: "true", label: "Active" }, { value: "false", label: "Deactivated" }]} />
         </Field>
       )}
+
+      <SectionTitle
+        title="Where they practise"
+        hint={thirdParty ? "Required for a third-party lawyer. For the firm's records only; never shown on the website." : "Optional. For the firm's records only; never shown on the website."}
+      />
+      <Field label="Address" required={thirdParty} className="sm:col-span-2">
+        <Textarea name="address" rows={2} maxLength={500} required={thirdParty} placeholder="Chamber or office address" defaultValue={profile?.address ?? ""} />
+      </Field>
+      <Field label="State / UT" required={thirdParty}>
+        <Select name="state" required={thirdParty} defaultValue={profile?.state ?? ""} placeholder="Select" options={STATES_AND_UTS.map((state) => ({ value: state, label: state }))} />
+      </Field>
+      <Field label="District" required={thirdParty}>
+        <Input name="district" required={thirdParty} maxLength={100} placeholder="e.g. Guntur" defaultValue={profile?.district ?? ""} />
+      </Field>
+      <Field label="Court" required={thirdParty} className="sm:col-span-2" hint="The court they mainly appear in.">
+        <Input name="court" required={thirdParty} maxLength={200} placeholder="e.g. District Court, Guntur" defaultValue={profile?.court ?? ""} />
+      </Field>
 
       <div className="rounded-lg border border-line bg-paper-warm px-4 py-3 sm:col-span-2">
         <label className="flex items-center gap-2 text-sm font-semibold text-ink">
@@ -439,6 +492,9 @@ export default function AdminStaff() {
   const [access, setAccess] = useState("");
   const [account, setAccount] = useState("");
   const [website, setWebsite] = useState("");
+  const [kind, setKind] = useState("");
+  const [state, setState] = useState("");
+  const [district, setDistrict] = useState("");
   const [sort, setSort] = useState("name");
 
   const load = useCallback(() => {
@@ -460,10 +516,19 @@ export default function AdminStaff() {
         ]
       : null;
 
+  // State and district choices come from the team itself; districts follow the chosen state.
+  const unique = (values: (string | null | undefined)[]) =>
+    [...new Set(values.filter((value): value is string => Boolean(value?.trim())).map((value) => value.trim()))].sort().map((value) => ({ value, label: value }));
+  const stateOptions = unique((people ?? []).map((person) => person.profile?.state));
+  const districtOptions = unique((people ?? []).filter((person) => !state || person.profile?.state === state).map((person) => person.profile?.district));
+
   // The team is loaded whole, so search, filters and sort run here.
   const nameOf = (person: Person) => person.user?.name ?? person.profile?.name ?? "";
   const shown = (people ?? [])
     .filter((person) => !access || (person.user?.role ?? "NONE") === access)
+    .filter((person) => !kind || (kind === "third-party") === Boolean(person.profile?.thirdParty))
+    .filter((person) => !state || person.profile?.state === state)
+    .filter((person) => !district || person.profile?.district?.toLowerCase() === district.toLowerCase())
     .filter((person) => !account || (account === "active" ? person.user?.isActive !== false : person.user?.isActive === false))
     .filter((person) =>
       !website
@@ -478,7 +543,7 @@ export default function AdminStaff() {
       const q = query.trim().toLowerCase();
       if (!q) return true;
       const { user, profile } = person;
-      return [user?.name, profile?.name, user?.email, profile?.email, user?.phone, profile?.phone, profile?.designation, user?.barEnrolment]
+      return [user?.name, profile?.name, user?.email, profile?.email, user?.phone, profile?.phone, profile?.designation, user?.barEnrolment, profile?.court, profile?.district, profile?.address]
         .some((field) => field?.toLowerCase().includes(q));
     })
     .sort((a, b) =>
@@ -504,8 +569,11 @@ export default function AdminStaff() {
 
       <Card>
         <ListToolbar
-          search={{ value: query, onChange: setQuery, placeholder: "Search name, email, phone, position or enrolment" }}
+          search={{ value: query, onChange: setQuery, placeholder: "Search name, email, phone, position, court or place" }}
           filters={[
+            { key: "kind", label: "Lawyers", value: kind, options: KIND_FILTER, onChange: setKind },
+            { key: "state", label: "State", value: state, options: stateOptions, onChange: (value) => { setState(value); setDistrict(""); } },
+            { key: "district", label: "District", value: district, options: districtOptions, onChange: setDistrict },
             { key: "access", label: "Access", value: access, options: ROLES.map(({ value, label }) => ({ value, label })), onChange: setAccess },
             { key: "account", label: "Account", value: account, options: ACCOUNT_FILTER, onChange: setAccount },
             { key: "website", label: "Website", value: website, options: WEBSITE_FILTER, onChange: setWebsite },
@@ -517,6 +585,9 @@ export default function AdminStaff() {
             setAccess("");
             setAccount("");
             setWebsite("");
+            setKind("");
+            setState("");
+            setDistrict("");
           }}
         />
         <ErrorNote>{error}</ErrorNote>
@@ -553,6 +624,10 @@ export default function AdminStaff() {
                             {user?.id === me.id && <span className="font-normal text-slate"> (you)</span>}
                           </p>
                           {profile?.designation && <p className="text-xs text-slate">{profile.designation}</p>}
+                          {profile?.thirdParty && <Badge tone="blue">Third-party lawyer</Badge>}
+                          {(profile?.court || profile?.district || profile?.state) && (
+                            <p className="text-xs text-ink-soft">{[profile.court, [profile.district, profile.state].filter(Boolean).join(", ")].filter(Boolean).join(" · ")}</p>
+                          )}
                           <p className="text-xs text-slate">{[user?.email ?? profile?.email, user?.phone ?? profile?.phone].filter(Boolean).join(" · ")}</p>
                         </div>
                       </div>

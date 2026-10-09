@@ -85,6 +85,19 @@ const GUIDE_UPDATES: {
     key: "2026-10-test-logins-and-deleting",
     rewrite: ["Signing in", "Step by step: jobs, articles, enquiries and more", "Documents"],
   },
+  {
+    // Our Partners, careers (internship, résumé), Add to calendar, the search/filter/sort bar, third-party lawyers.
+    key: "2026-10-partners-team-calendar",
+    add: [{ title: "Step by step: partners, team places, calendars and finding things", after: "Step by step: jobs, articles, enquiries and more" }],
+    rewrite: [
+      "The public website",
+      "The admin console, section by section",
+      "Step by step: jobs, articles, enquiries and more",
+      "The lawyer workspace",
+      "The client dashboard",
+      "Glossary",
+    ],
+  },
 ];
 
 type Tx = Parameters<Parameters<typeof prisma.$transaction>[0]>[0];

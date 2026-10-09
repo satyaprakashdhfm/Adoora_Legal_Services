@@ -347,6 +347,13 @@ export type LawyerProfile = {
   published: boolean;
   sortOrder: number;
   userId: string | null;
+  /** Engaged case by case in another place; never signs in. */
+  thirdParty: boolean;
+  /** Where they practise: the firm's records only, never on the website. */
+  address: string | null;
+  state: string | null;
+  district: string | null;
+  court: string | null;
   user?: { id: string; name: string; email: string | null; role: StaffRole } | null;
 };
 

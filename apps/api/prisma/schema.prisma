@@ -711,6 +711,16 @@ model LawyerProfile {
   email         String?
   /// For the firm's records; never sent to the public website.
   phone         String?
+
+  /// A lawyer the firm engages case by case in other places. They never sign
+  /// in (no account), and their address and court are required.
+  thirdParty Boolean @default(false)
+  /// Where they practise, for the firm's records; never sent to the website.
+  address    String? @db.Text
+  state      String?
+  district   String?
+  /// The court they mainly appear in, e.g. "District Court, Guntur".
+  court      String?
   /// Home page introduction.
   summary       String?      @db.Text
 
@@ -735,6 +745,7 @@ model LawyerProfile {
   updatedAt DateTime @updatedAt
 
   @@index([published, sortOrder])
+  @@index([state, district])
 }
 
 enum JobStatus {

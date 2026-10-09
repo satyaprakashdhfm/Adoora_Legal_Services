@@ -87,7 +87,24 @@ const profileSchema = z.object({
   published: z.boolean().optional(),
   sortOrder: z.coerce.number().int().min(0).max(9999).optional(),
   userId: z.union([z.string().uuid(), z.literal(""), z.null()]).optional().transform((value) => (value === "" ? null : value)),
+  thirdParty: z.boolean().optional(),
+  address: text(500),
+  state: text(80),
+  district: text(100),
+  court: text(200),
 });
+
+/**
+ * A third-party lawyer never signs in, and the firm needs to know where they
+ * practise: their address, state, district and court. Checked on the profile
+ * as it will be after the save.
+ */
+function assertThirdParty(profile: { thirdParty?: boolean | null; userId?: string | null; address?: string | null; state?: string | null; district?: string | null; court?: string | null }) {
+  if (!profile.thirdParty) return;
+  if (profile.userId) throw new HttpError(400, "A third-party lawyer cannot sign in to the portal. Set their access to No sign-in.", "third_party_account");
+  const missing = (["address", "state", "district", "court"] as const).filter((field) => !profile[field]);
+  if (missing.length) throw new HttpError(400, `For a third-party lawyer, please give their ${missing.join(", ")}.`, "third_party_details");
+}
 
 const profileSelect = {
   id: true,
@@ -115,6 +132,11 @@ const profileSelect = {
   published: true,
   sortOrder: true,
   userId: true,
+  thirdParty: true,
+  address: true,
+  state: true,
+  district: true,
+  court: true,
   updatedAt: true,
 } satisfies Prisma.LawyerProfileSelect;
 
@@ -140,7 +162,8 @@ websitePublicRouter.get("/public/people", async (_req, res) => {
   res.set("Cache-Control", "public, max-age=60, stale-while-revalidate=300");
   res.json({
     data: rows.map((row) => {
-      const { userId: _user, published: _p, phone: _phone, ...profile } = serialiseProfile(row);
+      // The firm's own records (contact, where they practise) stay off the website.
+      const { userId: _user, published: _p, phone: _phone, thirdParty: _t, address: _a, state: _s, district: _d, court: _c, ...profile } = serialiseProfile(row);
       return profile;
     }),
   });
@@ -183,6 +206,7 @@ async function assertLinkable(userId: string | null | undefined, profileId?: str
 websiteAdminRouter.post("/profiles", ...adminOnly, async (req, res) => {
   const input = profileSchema.parse(req.body);
   await assertLinkable(input.userId);
+  assertThirdParty(input);
   const slug = await freeSlug(input.slug ?? input.name, async (s) =>
     Boolean(await prisma.lawyerProfile.findUnique({ where: { slug: s }, select: { id: true } })),
   );
@@ -197,9 +221,15 @@ websiteAdminRouter.post("/profiles", ...adminOnly, async (req, res) => {
 websiteAdminRouter.patch("/profiles/:id", ...adminOnly, async (req, res) => {
   const id = z.string().uuid().parse(req.params.id);
   const input = profileSchema.partial().parse(req.body);
-  const current = await prisma.lawyerProfile.findUnique({ where: { id }, select: { id: true, slug: true } });
+  const current = await prisma.lawyerProfile.findUnique({
+    where: { id },
+    select: { id: true, slug: true, thirdParty: true, userId: true, address: true, state: true, district: true, court: true },
+  });
   if (!current) throw new HttpError(404, "Profile not found.", "not_found");
   await assertLinkable(input.userId, id);
+  // Fields left out of the request keep their saved values.
+  const sent = Object.fromEntries(Object.entries(input).filter(([, value]) => value !== undefined));
+  assertThirdParty({ ...current, ...sent });
 
   const slug =
     input.slug && slugify(input.slug) !== current.slug
