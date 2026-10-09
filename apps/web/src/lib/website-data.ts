@@ -2,7 +2,7 @@ import { people as staticPeople, type Person, type Spotlight } from "@/content/p
 import { practiceAreas } from "@/content/practice-areas";
 import { insights as bundledInsights, type Block, type Insight, type InsightCategory } from "@/content/insights";
 import type { ArtworkKey } from "@/components/insight-artwork";
-import { samplePartners, type PartnerItem } from "@/content/partners";
+import type { PartnerItem } from "@/content/partners";
 
 /**
  * Content the firm maintains from the admin console — lawyer profiles, job
@@ -176,12 +176,14 @@ export function teamFor(people: Person[], options: { practice?: string; slugs?: 
 // ---------------------------------------------------------------------------
 
 /**
- * The home page's partner logos, in the console's order. Until the firm adds
- * any (or when the API is unreachable) the sample six stand in.
+ * The home page's partner logos, exactly as listed under Website → Our
+ * Partners. No bundled stand-in: when the API cannot be reached (as during a
+ * build on Railway) the section is left out until the next revalidation,
+ * rather than showing partners the console does not have.
  */
 export async function getPartners(): Promise<PartnerItem[]> {
   const result = await fromApi<{ data: PartnerItem[] }>("/public/partners", PARTNERS_TAG);
-  return result?.data?.length ? result.data : samplePartners;
+  return result?.data ?? [];
 }
 
 // ---------------------------------------------------------------------------

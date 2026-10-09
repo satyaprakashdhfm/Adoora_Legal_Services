@@ -100,7 +100,7 @@ export default function AdminPartners() {
           <Spinner />
         ) : rows.length === 0 ? (
           <EmptyState title="No partners yet" action={<Button onClick={() => setEditing("new")}>Add partner</Button>}>
-            Until the first partner is added, the home page shows six sample names as placeholders.
+            The Our Partners section is left off the home page until at least one partner is shown.
           </EmptyState>
         ) : (
           <Table>
