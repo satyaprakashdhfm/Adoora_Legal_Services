@@ -98,6 +98,15 @@ const GUIDE_UPDATES: {
       "Glossary",
     ],
   },
+  {
+    key: "2026-10-partners-are-clients",
+    rewrite: [
+      "The public website",
+      "The admin console, section by section",
+      "Step by step: jobs, articles, enquiries and more",
+      "Step by step: partners, team places, calendars and finding things",
+    ],
+  },
 ];
 
 type Tx = Parameters<Parameters<typeof prisma.$transaction>[0]>[0];

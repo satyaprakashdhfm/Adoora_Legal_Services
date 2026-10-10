@@ -441,16 +441,6 @@ const LOGO_MAX_BYTES = 1024 * 1024;
 const LOGO_MIN_PX = 200;
 const LOGO_MAX_PX = 2000;
 
-const partnerSchema = z.object({
-  name: z.string().trim().min(2, "Please enter the name.").max(120),
-  website: z
-    .union([z.string().trim().url("Please enter a full web address, starting with https://"), z.literal(""), z.null()])
-    .optional()
-    .transform((value) => (value === "" ? null : value))
-    .refine((value) => !value || /^https?:\/\//i.test(value), "Please enter a web address starting with https://"),
-  published: z.boolean().optional(),
-});
-
 const partnerSelect = {
   id: true,
   name: true,
@@ -484,27 +474,32 @@ export async function syncClientPartner(
   clientId: string,
   client: { kind: "INDIVIDUAL" | "ORGANISATION"; organisation: string | null; name: string },
   show: boolean | undefined,
+  /** The link from the logo; left as it is when not sent. */
+  website?: string | null,
 ) {
   const existing = await prisma.partner.findUnique({ where: { clientId }, select: { id: true, published: true } });
   const shouldShow = client.kind === "ORGANISATION" && (show ?? existing?.published ?? false);
   const name = (client.organisation ?? client.name).slice(0, 120);
 
   if (existing) {
-    await prisma.partner.update({ where: { id: existing.id }, data: { name, published: shouldShow } });
+    await prisma.partner.update({ where: { id: existing.id }, data: { name, published: shouldShow, ...(website !== undefined ? { website } : {}) } });
     return;
   }
   if (!shouldShow) return;
   const last = await prisma.partner.aggregate({ _max: { sortOrder: true } });
   await prisma.partner.create({
-    data: { clientId, name, published: true, sortOrder: Math.min((last._max.sortOrder ?? -10) + 10, 9999) },
+    data: { clientId, name, website: website ?? null, published: true, sortOrder: Math.min((last._max.sortOrder ?? -10) + 10, 9999) },
   });
 }
 
 /** The partner summary the Clients list shows beside an organisation. */
-export function clientPartnerSummary(partner: { id: string; published: boolean; logoType: string | null; logoUpdatedAt: Date | null } | null) {
+export function clientPartnerSummary(
+  partner: { id: string; website: string | null; published: boolean; logoType: string | null; logoUpdatedAt: Date | null } | null,
+) {
   if (!partner) return null;
   return {
     id: partner.id,
+    website: partner.website,
     published: partner.published,
     logoUrl: partner.logoType && partner.logoUpdatedAt ? `/api/public/partners/${partner.id}/logo?v=${partner.logoUpdatedAt.getTime()}` : null,
   };
@@ -541,29 +536,15 @@ websitePublicRouter.get("/public/partners/:id/logo", async (req, res) => {
   res.end(Buffer.from(found.logoData));
 });
 
+/*
+ * Partners are organisation clients ticked "Show on the home page" in
+ * Clients, which is where they are added, renamed, linked, hidden and
+ * removed. Here the console lists them, sets their order and takes logos.
+ */
 websiteAdminRouter.get("/partners", ...adminOnly, async (_req, res) => {
   const rows = await prisma.partner.findMany({ orderBy: [{ sortOrder: "asc" }, { createdAt: "asc" }], select: partnerSelect });
   res.set("Cache-Control", "no-store");
   res.json({ data: rows.map(serialisePartner) });
-});
-
-websiteAdminRouter.post("/partners", ...adminOnly, async (req, res) => {
-  const input = partnerSchema.parse(req.body);
-  // A new partner goes after everyone already listed.
-  const last = await prisma.partner.aggregate({ _max: { sortOrder: true } });
-  const sortOrder = Math.min((last._max.sortOrder ?? -10) + 10, 9999);
-  const created = await prisma.partner.create({ data: { ...input, sortOrder }, select: partnerSelect });
-  await audit(req, "partner.created", "Partner", created.id, { name: created.name });
-  res.status(201).json(serialisePartner(created));
-});
-
-websiteAdminRouter.patch("/partners/:id", ...adminOnly, async (req, res) => {
-  const id = z.string().uuid().parse(req.params.id);
-  const input = partnerSchema.partial().parse(req.body);
-  const updated = await prisma.partner.update({ where: { id }, data: input, select: partnerSelect }).catch(() => null);
-  if (!updated) throw new HttpError(404, "Partner not found.", "not_found");
-  await audit(req, "partner.updated", "Partner", id, { changes: Object.keys(input) });
-  res.json(serialisePartner(updated));
 });
 
 /** The console's new order, as the full list of ids from first to last. */
@@ -575,14 +556,6 @@ websiteAdminRouter.put("/partners/order", ...adminOnly, async (req, res) => {
   }
   await prisma.$transaction(ids.map((id, index) => prisma.partner.update({ where: { id }, data: { sortOrder: index * 10 } })));
   await audit(req, "partner.reordered", "Partner", null, { count: ids.length });
-  res.json({ ok: true });
-});
-
-websiteAdminRouter.delete("/partners/:id", ...adminOnly, async (req, res) => {
-  const id = z.string().uuid().parse(req.params.id);
-  const deleted = await prisma.partner.delete({ where: { id }, select: { name: true } }).catch(() => null);
-  if (!deleted) throw new HttpError(404, "Partner not found.", "not_found");
-  await audit(req, "partner.deleted", "Partner", id, { name: deleted.name });
   res.json({ ok: true });
 });
 

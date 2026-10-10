@@ -277,6 +277,13 @@ export const staffPatchSchema = z.object({
   barEnrolment: optionalText(80),
 });
 
+/** The organisation's own site, linked from its logo in "Our Partners". */
+const partnerWebsite = z
+  .union([z.string().trim().max(500).url("Please enter a full web address, starting with https://"), z.literal(""), z.null()])
+  .optional()
+  .transform((value) => (value === "" ? null : value))
+  .refine((value) => !value || /^https?:\/\//i.test(value), "Please enter a web address starting with https://");
+
 export const clientCreateSchema = z.object({
   email: optionalEmail,
   name: z.string().trim().min(2).max(200),
@@ -288,6 +295,7 @@ export const clientCreateSchema = z.object({
   caseIds: z.array(z.string().uuid()).max(50).optional(),
   /** An organisation's logo in the home page's "Our Partners". */
   showOnWebsite: z.boolean().optional(),
+  website: partnerWebsite,
 });
 
 export const clientPatchSchema = z.object({
@@ -303,6 +311,7 @@ export const clientPatchSchema = z.object({
   caseIds: z.array(z.string().uuid()).max(50).optional(),
   /** An organisation's logo in the home page's "Our Partners". */
   showOnWebsite: z.boolean().optional(),
+  website: partnerWebsite,
 });
 
 /** Admin → Clients: search, filters and sort. */

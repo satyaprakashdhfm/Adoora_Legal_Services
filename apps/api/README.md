@@ -24,7 +24,7 @@ Deployed from `dev` at <https://adoora-api-production.up.railway.app>.
 | GET POST PATCH | `/api/admin/users` | Staff (OWNER/ADMIN) | Lawyers and staff. Only an OWNER manages owners and admins. |
 | GET POST PATCH | `/api/admin/clients` | Staff (OWNER/ADMIN) | Client accounts, with `caseIds` to link cases, and `showOnWebsite` to put an organisation in Our Partners. Staff emails are left out. Deactivating revokes sessions. List: `?q=` (name, organisation, email, phone, or any linked case), `?kind=` `?status=` `?cases=` `?signIn=` `?website=` `?sort=`. |
 | GET | `/api/public/partners` · `/api/public/partners/:id/logo` | — | The home page's Our Partners logos, in order. |
-| GET POST PATCH DELETE | `/api/admin/partners` | Staff (OWNER/ADMIN) | Our Partners. `PUT /api/admin/partners/order` sets the order; `PUT · DELETE /api/admin/partners/:id/logo` takes a square 200–2000 px PNG, WebP or JPEG up to 1 MB (400 × 400 px asked for). |
+| GET | `/api/admin/partners` | Staff (OWNER/ADMIN) | Our Partners, read-only: each is an organisation client ticked "Show on the home page" (`showOnWebsite`, with an optional `website` link) through `POST · PATCH /api/admin/clients`. `PUT /api/admin/partners/order` sets the order; `PUT · DELETE /api/admin/partners/:id/logo` takes a square 200–2000 px PNG, WebP or JPEG up to 1 MB (400 × 400 px asked for). |
 | GET | `/api/admin/audit` | Staff (OWNER/ADMIN) | Audit log. |
 | GET | `/api/auth/google` → `/api/auth/google/callback` | — | Google sign-in (OIDC + PKCE). Sets the session cookie. |
 | POST | `/api/auth/password` | — | Staff password sign-in, session cookie. |

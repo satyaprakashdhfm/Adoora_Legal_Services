@@ -28,18 +28,12 @@ const locations = [
   "Outside India",
 ];
 
-const experienceBands = [
-  "Less than 1 year",
-  "1–2 years",
-  "2–4 years",
-  "4–6 years",
-  "6+ years",
-];
-
 /**
  * Careers application form. `role` is the role the candidate clicked Apply
  * on: a role the firm posted is fixed, so the form sends it as it is and
- * shows no Role list. Only the general application (old links to
+ * shows it read-only instead of a Role list. Years of experience are not
+ * asked: the role (Legal Intern, Associate, ...) already says it. Only the
+ * general application (old links to
  * /careers/apply/speculative-application) asks them to pick one.
  *
  * Posts multipart to `POST /api/careers` with the résumé (PDF or Word, up to
@@ -80,7 +74,7 @@ export function CareerForm({ role }: { role: string }) {
     const location = (data.get("location") as string) || "";
     const message = (data.get("message") as string) ?? "";
     const body = new FormData();
-    for (const field of ["name", "email", "phone", "role", "experience", "company"]) {
+    for (const field of ["name", "email", "phone", "role", "company"]) {
       body.set(field, String(data.get(field) ?? ""));
     }
     body.set("message", location ? `Current location: ${location}\n\n${message}` : message);
@@ -153,6 +147,26 @@ export function CareerForm({ role }: { role: string }) {
   return (
     <form onSubmit={onSubmit}>
       <div className="grid gap-5 sm:grid-cols-2">
+        <div className="sm:col-span-2">
+          {fixedRole ? (
+            <>
+              <p className="block text-sm font-medium text-ink">Role</p>
+              <p className="mt-2 rounded-lg border border-line bg-paper-warm px-3.5 py-2.5 text-sm font-semibold text-ink">
+                {fixedRole}
+              </p>
+              <input type="hidden" name="role" value={fixedRole} />
+            </>
+          ) : (
+            <SelectField
+              label="Role"
+              name="role"
+              required
+              options={[...applicationRoles]}
+              placeholder="Select role"
+            />
+          )}
+        </div>
+
         <Field label="Full name" name="name" required autoComplete="name" />
         <Field
           label="Email address"
@@ -168,32 +182,11 @@ export function CareerForm({ role }: { role: string }) {
           required
           autoComplete="tel"
         />
-
-        {fixedRole ? (
-          <input type="hidden" name="role" value={fixedRole} />
-        ) : (
-          <SelectField
-            label="Role"
-            name="role"
-            required
-            options={[...applicationRoles]}
-            placeholder="Select role"
-          />
-        )}
-
         <SelectField
           label="Current location"
           name="location"
           options={locations}
           placeholder="Select location"
-        />
-
-        <SelectField
-          label="Years of experience"
-          name="experience"
-          required
-          options={experienceBands}
-          placeholder="Select experience"
         />
       </div>
 

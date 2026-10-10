@@ -848,9 +848,10 @@ export async function keepOnlyOneCaseOnStartup() {
 const KEPT_STAFF = ["info@adooralegalservices.com", "pradeep.test@adoora.invalid", "anshu.test@adoora.invalid"];
 
 /**
- * Once, at start-up: every other firm account and every client but the demo
- * client (Kiran Kumar) is deleted, with the website profiles of the deleted
- * firm accounts, so no personal email or number is left in the console.
+ * Once, at start-up: every other firm account, and every client except the
+ * demo client (Kiran Kumar) and the organisations in Our Partners, is
+ * deleted, with the website profiles of the deleted firm accounts, so no
+ * personal email or number is left in the console.
  * Ganesh becomes the owner. Cases and files are kept.
  */
 export async function keepOnlyTestPeopleOnStartup() {
@@ -862,7 +863,10 @@ export async function keepOnlyTestPeopleOnStartup() {
     ).map((u) => u.id);
     const profiles = await prisma.lawyerProfile.deleteMany({ where: { userId: { in: goneStaff } } });
     const staff = await prisma.user.deleteMany({ where: { id: { in: goneStaff } } });
-    const clients = await prisma.client.deleteMany({ where: { OR: [{ email: null }, { email: { not: TEST_CLIENT.email } }] } });
+    // Organisations on the home page (Our Partners) are clients too: never theirs to delete.
+    const clients = await prisma.client.deleteMany({
+      where: { OR: [{ email: null }, { email: { not: TEST_CLIENT.email } }], partner: { is: null } },
+    });
     await prisma.user.updateMany({ where: { email: "info@adooralegalservices.com" }, data: { role: "OWNER" } });
 
     const summary = { staff: staff.count, profiles: profiles.count, clients: clients.count };

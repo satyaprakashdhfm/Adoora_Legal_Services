@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useCallback, useEffect, useState } from "react";
+import { use, useCallback, useEffect, useRef, useState } from "react";
 import { api, refreshWebsite, type CaseSummary, type Page } from "@/lib/portal/api";
 import { checkLogo, LOGO_GUIDE, LOGO_TYPES } from "@/lib/portal/partner-logo";
 import { ListToolbar } from "@/components/portal/list-toolbar";
@@ -50,7 +50,7 @@ type ClientRow = {
   partner: ClientPartner | null;
 };
 
-type ClientPartner = { id: string; published: boolean; logoUrl: string | null };
+type ClientPartner = { id: string; website: string | null; published: boolean; logoUrl: string | null };
 
 const KIND_FILTER = [
   { value: "INDIVIDUAL", label: "Individuals" },
@@ -105,18 +105,20 @@ function CasePicker({ value, onChange }: { value: string[]; onChange: (ids: stri
   );
 }
 
-function ClientForm({ initial, onSaved }: { initial?: ClientRow; onSaved: () => void }) {
+function ClientForm({ initial, startAs, onSaved }: { initial?: ClientRow; startAs?: "ORGANISATION"; onSaved: () => void }) {
   const [error, setError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   const [caseIds, setCaseIds] = useState<string[]>(() => initial?.cases.map((c) => c.id) ?? []);
-  const [kind, setKind] = useState<ClientRow["kind"]>(initial?.kind ?? "INDIVIDUAL");
+  const [kind, setKind] = useState<ClientRow["kind"]>(initial?.kind ?? startAs ?? "INDIVIDUAL");
   const [deleting, setDeleting] = useState(false);
   const organisation = kind === "ORGANISATION";
-  const [showOnWebsite, setShowOnWebsite] = useState(initial?.partner?.published ?? false);
+  const [showOnWebsite, setShowOnWebsite] = useState(initial?.partner?.published ?? startAs === "ORGANISATION");
   const [logo, setLogo] = useState<File | null>(null);
   const [logoPreview, setLogoPreview] = useState<string | null>(null);
   const [logoError, setLogoError] = useState<string | null>(null);
   const currentLogo = logoPreview ?? initial?.partner?.logoUrl ?? null;
+  // Partners added before they were clients have no number; the API asks for one only when an account is created.
+  const phoneRequired = !initial || Boolean(initial.phone);
 
   useEffect(() => () => {
     if (logoPreview) URL.revokeObjectURL(logoPreview);
@@ -151,9 +153,21 @@ function ClientForm({ initial, onSaved }: { initial?: ClientRow; onSaved: () => 
       const saved = initial
         ? await api<{ id: string; partner: ClientPartner | null }>(`/admin/clients/${initial.id}`, {
             method: "PATCH",
-            body: { name: data.name, kind, organisation: data.organisation ?? "", phone: data.phone, address: data.address ?? "", isActive: data.isActive === "true", caseIds, showOnWebsite: website, ...(initial?.email ? {} : { email: data.email ?? "" }) },
+            body: {
+              name: data.name,
+              kind,
+              organisation: data.organisation ?? "",
+              // An organisation added from Our Partners may have no number yet.
+              ...(data.phone ? { phone: data.phone } : {}),
+              address: data.address ?? "",
+              isActive: data.isActive === "true",
+              caseIds,
+              showOnWebsite: website,
+              ...(website ? { website: data.website ?? "" } : {}),
+              ...(initial?.email ? {} : { email: data.email ?? "" }),
+            },
           })
-        : await api<{ id: string; partner: ClientPartner | null }>("/admin/clients", { method: "POST", body: { ...data, kind, caseIds, showOnWebsite: website } });
+        : await api<{ id: string; partner: ClientPartner | null }>("/admin/clients", { method: "POST", body: { ...data, kind, caseIds, showOnWebsite: website, website: website ? data.website ?? "" : undefined } });
       if (website && logo && saved.partner) {
         const upload = new FormData();
         upload.set("logo", logo);
@@ -196,8 +210,12 @@ function ClientForm({ initial, onSaved }: { initial?: ClientRow; onSaved: () => 
       <Field label={organisation ? "Contact person" : "Name"} required>
         <Input name="name" required minLength={2} defaultValue={initial?.name} />
       </Field>
-      <Field label="Mobile number" required hint="They sign in with an OTP sent to this number.">
-        <Input name="phone" type="tel" required minLength={10} maxLength={32} defaultValue={initial?.phone ?? ""} />
+      <Field
+        label="Mobile number"
+        required={phoneRequired}
+        hint={phoneRequired ? "They sign in with an OTP sent to this number." : "Optional until someone from the organisation needs to sign in."}
+      >
+        <Input name="phone" type="tel" required={phoneRequired} minLength={10} maxLength={32} defaultValue={initial?.phone ?? ""} />
       </Field>
       <Field
         label="Email"
@@ -247,6 +265,11 @@ function ClientForm({ initial, onSaved }: { initial?: ClientRow; onSaved: () => 
                 {logoError && <p className="text-xs font-semibold text-red-700">{logoError}</p>}
               </div>
             </div>
+          )}
+          {showOnWebsite && (
+            <Field label="Website" className="mt-4" hint="Optional. Visitors who click the logo go here.">
+              <Input name="website" type="url" maxLength={500} placeholder="https://www.example.com" defaultValue={initial?.partner?.website ?? ""} />
+            </Field>
           )}
         </div>
       )}
@@ -302,17 +325,27 @@ function ClientForm({ initial, onSaved }: { initial?: ClientRow; onSaved: () => 
   );
 }
 
-export default function AdminClients() {
+/**
+ * Opened from Website → Our Partners with `?edit=<client id>` (that
+ * organisation's form), `?add=organisation` (a new one, ticked for the home
+ * page) or `?website=shown` (the organisations on the home page).
+ */
+type ClientsLink = { edit?: string; add?: string; website?: string };
+
+export default function AdminClients({ searchParams }: { searchParams: Promise<ClientsLink> }) {
+  const link = use(searchParams);
+  const openOnLoad = useRef(link.edit ?? null);
+  const [startAs] = useState(link.add === "organisation" ? ("ORGANISATION" as const) : undefined);
   const [rows, setRows] = useState<ClientRow[] | null>(null);
   const [query, setQuery] = useState("");
   const [kind, setKind] = useState("");
   const [status, setStatus] = useState("");
   const [cases, setCases] = useState("");
   const [signIn, setSignIn] = useState("");
-  const [website, setWebsite] = useState("");
+  const [website, setWebsite] = useState(link.website === "shown" ? "shown" : "");
   const [sort, setSort] = useState("name");
   const [error, setError] = useState<string | null>(null);
-  const [editing, setEditing] = useState<ClientRow | "new" | null>(null);
+  const [editing, setEditing] = useState<ClientRow | "new" | null>(startAs ? "new" : null);
 
   const load = useCallback(() => {
     const params = new URLSearchParams({ limit: "200", sort });
@@ -322,6 +355,11 @@ export default function AdminClients() {
       .then((result) => {
         setRows(result.data);
         setError(null);
+        if (openOnLoad.current) {
+          const target = result.data.find((row) => row.id === openOnLoad.current);
+          if (target) setEditing(target);
+          openOnLoad.current = null;
+        }
       })
       .catch((cause: Error) => setError(cause.message));
   }, [query, kind, status, cases, signIn, website, sort]);
@@ -449,6 +487,7 @@ export default function AdminClients() {
         {editing !== null && (
           <ClientForm
             initial={editing === "new" ? undefined : editing}
+            startAs={startAs}
             onSaved={() => {
               setEditing(null);
               load();

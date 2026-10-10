@@ -65,11 +65,8 @@ export const careerSchema = z.object({
   email,
   phone,
   role: z.string().trim().min(2, "Please select a role.").max(160),
-  experience: z
-    .string()
-    .trim()
-    .min(1, "Please tell us your years of experience.")
-    .max(80),
+  /** No longer asked: the role applied for says it. Kept for older forms. */
+  experience: z.string().trim().max(80).optional().or(z.literal("")),
   enrolment: z.string().trim().max(80).optional().or(z.literal("")),
   message: z
     .string()

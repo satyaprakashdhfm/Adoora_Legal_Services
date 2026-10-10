@@ -516,7 +516,7 @@ adminRouter.patch(
 
 async function clientPartner(clientId: string) {
   return clientPartnerSummary(
-    await prisma.partner.findUnique({ where: { clientId }, select: { id: true, published: true, logoType: true, logoUpdatedAt: true } }),
+    await prisma.partner.findUnique({ where: { clientId }, select: { id: true, website: true, published: true, logoType: true, logoUpdatedAt: true } }),
   );
 }
 
@@ -594,7 +594,7 @@ adminRouter.get(
         cases: {
           select: { case: { select: { id: true, reference: true, title: true, status: true } } },
         },
-        partner: { select: { id: true, published: true, logoType: true, logoUpdatedAt: true } },
+        partner: { select: { id: true, website: true, published: true, logoType: true, logoUpdatedAt: true } },
       },
     });
 
@@ -624,7 +624,7 @@ adminRouter.post(
       throw new HttpError(409, "Another client already has that mobile number.", "phone_in_use");
     }
 
-    const { caseIds = [], showOnWebsite, ...fields } = input;
+    const { caseIds = [], showOnWebsite, website, ...fields } = input;
     await assertCasesExist(caseIds);
 
     const client = await prisma.client.create({
@@ -636,7 +636,7 @@ adminRouter.post(
           : undefined,
       },
     });
-    await syncClientPartner(client.id, client, showOnWebsite);
+    await syncClientPartner(client.id, client, showOnWebsite, website);
     await audit(req, "client.created", "Client", client.id, { caseIds, showOnWebsite: showOnWebsite ?? false });
     res.status(201).json({ id: client.id, partner: await clientPartner(client.id) });
   },
@@ -650,7 +650,7 @@ adminRouter.patch(
     const id = z.string().uuid().parse(req.params.id);
     const input = clientPatchSchema.parse(req.body);
 
-    const { caseIds, showOnWebsite, ...fields } = input;
+    const { caseIds, showOnWebsite, website, ...fields } = input;
     if (caseIds) await assertCasesExist(caseIds);
     if (fields.phone && (await phoneOnAnother("client", fields.phone, id))) {
       throw new HttpError(409, "Another client already has that mobile number.", "phone_in_use");
@@ -681,7 +681,7 @@ adminRouter.patch(
       ]);
     }
     if (input.isActive === false) await revokeAllSessions({ clientId: id });
-    await syncClientPartner(id, updated, showOnWebsite);
+    await syncClientPartner(id, updated, showOnWebsite, website);
 
     await audit(req, "client.updated", "Client", id, { changes: Object.keys(input) });
     res.json({ id, partner: await clientPartner(id) });

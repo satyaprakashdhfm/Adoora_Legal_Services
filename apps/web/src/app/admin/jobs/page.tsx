@@ -245,7 +245,8 @@ type Application = {
   email: string;
   phone: string;
   role: string;
-  experience: string;
+  /** Only on applications from before the form stopped asking. */
+  experience: string | null;
   enrolment: string | null;
   message: string;
   status: string;
@@ -380,7 +381,7 @@ function ApplicationsTab({ onChange }: { onChange: () => void }) {
                   </Td>
                   <Td className="text-sm">
                     {row.role}
-                    <p className="text-xs text-slate">{row.experience}{row.enrolment ? ` · ${row.enrolment}` : ""}</p>
+                    <p className="text-xs text-slate">{[row.experience, row.enrolment].filter(Boolean).join(" · ")}</p>
                     <ResumeLink application={row} />
                   </Td>
                   <Td className="text-xs">{APPLICATION_STATUSES.find((s) => s.value === row.status)?.label}</Td>
@@ -403,7 +404,7 @@ function ApplicationsTab({ onChange }: { onChange: () => void }) {
         {open && (
           <form onSubmit={save} className="space-y-4">
             <div className="rounded-lg bg-paper-warm p-4 text-sm">
-              <p className="text-xs text-slate">{open.role} · {open.experience} · {open.email} · {open.phone}</p>
+              <p className="text-xs text-slate">{[open.role, open.experience, open.email, open.phone].filter(Boolean).join(" · ")}</p>
               <p className="mt-2 whitespace-pre-line text-ink">{open.message}</p>
               <p className="mt-3">
                 {open.resume ? (

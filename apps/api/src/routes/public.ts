@@ -132,7 +132,7 @@ publicRouter.post("/careers", formLimiter, resumeMiddleware, async (req, res) =>
         email: input.email,
         phone: input.phone,
         role: input.role,
-        experience: input.experience,
+        experience: input.experience || null,
         enrolment: input.enrolment || null,
         message: input.message,
         consent: input.consent,

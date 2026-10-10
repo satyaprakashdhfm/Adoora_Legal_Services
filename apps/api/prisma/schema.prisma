@@ -679,10 +679,11 @@ model Partner {
   published Boolean @default(true)
   sortOrder Int     @default(0)
 
-  /// Set when an organisation client was marked "Show on the home page" in
-  /// Clients; deleting the client takes its logo off the website too.
-  clientId String? @unique @db.Uuid
-  client   Client? @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  /// Every partner is an organisation client ticked "Show on the home page"
+  /// in Clients, where it is added and edited; deleting the client takes its
+  /// logo off the website too.
+  clientId String @unique @db.Uuid
+  client   Client @relation(fields: [clientId], references: [id], onDelete: Cascade)
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -844,7 +845,8 @@ model CareerApplication {
   email      String
   phone      String
   role       String
-  experience String
+  /// Asked by older versions of the form; the role applied for now says it.
+  experience String?
   /// Bar Council enrolment number, where the applicant is enrolled.
   enrolment  String?
   message    String            @db.Text
