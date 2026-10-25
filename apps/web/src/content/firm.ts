@@ -37,8 +37,8 @@ export const firm = {
    * the footer. Paste each full address, e.g.
    * "https://www.linkedin.com/company/…" — an empty one is not shown.
    */
-  linkedin: "",
-  instagram: "",
+  linkedin: "https://www.linkedin.com/company/adoora-legal-services/",
+  instagram: "https://www.instagram.com/adoora_legalservices/",
 } as const;
 
 /** The firm overview, as the brochure sets it out. */
