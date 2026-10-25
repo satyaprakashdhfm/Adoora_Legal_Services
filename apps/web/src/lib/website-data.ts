@@ -186,6 +186,27 @@ export async function getPeople(): Promise<(Person & { featured: boolean })[]> {
     .map((person) => ({ ...person, featured: true }));
 }
 
+/** Who an article published without a writer's name is credited to: the founder. */
+export const DEFAULT_AUTHOR = "ganesh-raghavendra";
+
+const bareName = (name: string) => name.replace(/^adv\.?\s+/i, "").replace(/\s+/g, " ").trim().toLowerCase();
+
+export type ArticleAuthor = { name: string; initials: string; person: Person | null };
+
+/**
+ * An article's writer. `author` is the full name typed under "Written by",
+ * or a profile slug (articles from before that field); empty means the
+ * founder. A name or slug that matches a profile brings the profile (link,
+ * designation); any other name is shown as typed.
+ */
+export function articleAuthor(people: Person[], author: string): ArticleAuthor | null {
+  const value = author.trim() || DEFAULT_AUTHOR;
+  const person = people.find((p) => p.slug === value || bareName(p.name) === bareName(value));
+  if (person) return { name: person.name, initials: person.initials, person };
+  if (value === DEFAULT_AUTHOR) return null;
+  return { name: value, initials: initials(value) || "—", person: null };
+}
+
 export async function getFeaturedPeople(): Promise<Person[]> {
   const all = await getPeople();
   const featured = all.filter((person) => person.featured);

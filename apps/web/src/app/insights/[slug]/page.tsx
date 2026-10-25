@@ -6,7 +6,7 @@ import { ArticleToc } from "@/components/article-toc";
 import { anchorFor } from "@/lib/anchor";
 import { insights, type Block } from "@/content/insights";
 import { ArticleBody } from "@/components/article-body";
-import { getInsight, getInsights, getPeople } from "@/lib/website-data";
+import { articleAuthor, getInsight, getInsights, getPeople } from "@/lib/website-data";
 import { practiceAreaBySlug } from "@/content/practice-areas";
 import { industryBySlug } from "@/content/industries";
 import { firm } from "@/content/firm";
@@ -50,7 +50,7 @@ export default async function InsightPage(
   if (!insight) notFound();
   const allInsights = await getInsights();
 
-  const author = (await getPeople()).find((person) => person.slug === insight.author);
+  const author = articleAuthor(await getPeople(), insight.author);
   const tags = [
     ...insight.practices.map((practiceSlug) => {
       const practice = practiceAreaBySlug.get(practiceSlug);
@@ -102,14 +102,18 @@ export default async function InsightPage(
         <div className="mt-8 flex flex-wrap items-center gap-x-6 gap-y-2 text-sm text-slate">
           {author && (
             <span>
-              By{" "}
-              <Link
-                href={`/about#${author.slug}`}
-                className="text-ink underline decoration-line-strong underline-offset-4 transition hover:text-gold-deep"
-              >
-                {author.name}
-              </Link>
-              , {author.designation}
+              Written by{" "}
+              {author.person ? (
+                <Link
+                  href={`/about#${author.person.slug}`}
+                  className="font-semibold text-ink underline decoration-line-strong underline-offset-4 transition hover:text-gold-deep"
+                >
+                  {author.name}
+                </Link>
+              ) : (
+                <span className="font-semibold text-ink">{author.name}</span>
+              )}{" "}
+              &ndash; {firm.name}
             </span>
           )}
           <time dateTime={insight.date}>{formatDate(insight.date)}</time>
@@ -185,15 +189,17 @@ export default async function InsightPage(
                   </span>
                   <div>
                     <p className="font-semibold text-ink">{author.name}</p>
-                    <p className="text-xs text-slate">{author.designation}</p>
+                    <p className="text-xs text-slate">{author.person?.designation ?? firm.name}</p>
                   </div>
                 </div>
-                <Link
-                  href={`/about#${author.slug}`}
-                  className="mt-4 inline-block text-sm font-medium text-gold-deep underline decoration-gold/30 underline-offset-4"
-                >
-                  Full profile
-                </Link>
+                {author.person && (
+                  <Link
+                    href={`/about#${author.person.slug}`}
+                    className="mt-4 inline-block text-sm font-medium text-gold-deep underline decoration-gold/30 underline-offset-4"
+                  >
+                    Full profile
+                  </Link>
+                )}
               </div>
             )}
           </aside>
@@ -228,7 +234,12 @@ export default async function InsightPage(
             ...(insight.coverUrl ? { image: `${siteUrl}${insight.coverUrl}` } : {}),
             ...(insight.keywords?.length ? { keywords: insight.keywords.join(", ") } : {}),
             author: author
-              ? { "@type": "Person", name: author.name, jobTitle: author.designation }
+              ? {
+                  "@type": "Person",
+                  name: author.name,
+                  ...(author.person ? { jobTitle: author.person.designation } : {}),
+                  worksFor: { "@type": "Organization", name: firm.name },
+                }
               : { "@type": "Organization", name: firm.name },
             publisher: { "@type": "Organization", name: firm.name },
             mainEntityOfPage: `${siteUrl}/insights/${insight.slug}`,

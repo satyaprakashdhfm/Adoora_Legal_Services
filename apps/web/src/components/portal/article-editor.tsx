@@ -352,14 +352,23 @@ export function ArticleEditor({ article, onReload }: { article: ArticleDetail; o
   );
 
   async function save(nextStatus?: ArticleStatus) {
+    // Every published article carries its writer's name: ask for it if it is missing.
+    let current = draft;
+    if (nextStatus === "PUBLISHED" && !draft.authorSlug.trim()) {
+      const founder = profiles.find((profile) => profile.slug === "ganesh-raghavendra")?.name ?? "";
+      const writer = window.prompt("Written by — the writer's full name, shown on the article:", founder)?.trim();
+      if (!writer) return;
+      current = { ...draft, authorSlug: writer };
+      setDraft(current);
+    }
     setSaving(true);
     setError(null);
     setNotice(null);
     try {
-      const body = payload(draft, nextStatus);
+      const body = payload(current, nextStatus);
       const result = await api<{ slug: string; status: ArticleStatus }>(`/admin/articles/${article.id}`, { method: "PATCH", body });
-      setDraft((current) => ({ ...current, slug: result.slug }));
-      setSaved(JSON.stringify(payload({ ...draft, slug: result.slug })));
+      setDraft((latest) => ({ ...latest, slug: result.slug }));
+      setSaved(JSON.stringify(payload({ ...current, slug: result.slug })));
       if (result.status === "PUBLISHED" || status === "PUBLISHED") await refreshWebsite(["website-articles"]);
       setNotice(
         nextStatus === "PUBLISHED" && status !== "PUBLISHED"
@@ -449,7 +458,11 @@ export function ArticleEditor({ article, onReload }: { article: ArticleDetail; o
   const previewBlocks: Block[] = cleanBlocks(draft.blocks).map((block) =>
     block.type === "image" ? { type: "image", src: articleImageUrl(article.id, block.imageId), alt: block.alt, caption: block.caption } : block,
   );
-  const author = profiles.find((profile) => profile.slug === draft.authorSlug);
+  // "Written by" holds a full name, or a profile slug on older articles.
+  const bare = (name: string) => name.replace(/^adv\.?\s+/i, "").replace(/\s+/g, " ").trim().toLowerCase();
+  const writer = draft.authorSlug.trim();
+  const authorProfile = profiles.find((profile) => profile.slug === writer || (writer && bare(profile.name) === bare(writer)));
+  const authorName = authorProfile?.name ?? writer;
   const seoTitle = draft.metaTitle || draft.title;
 
   return (
@@ -662,7 +675,7 @@ export function ArticleEditor({ article, onReload }: { article: ArticleDetail; o
                 <p className="eyebrow text-gold-deep">{draft.category}</p>
                 <h1 className="mt-4 max-w-4xl font-serif text-3xl font-semibold leading-tight tracking-tight text-ink sm:text-4xl">{draft.title}</h1>
                 <p className="mt-5 text-sm text-slate">
-                  {author ? `By ${author.name}, ${author.designation} · ` : ""}
+                  {authorName ? `Written by ${authorName} – ADOORA Legal Services · ` : ""}
                   {article.publishedAt ? formatDateTime(article.publishedAt) : "Not yet published"} · {Math.max(1, Math.round(seo.words / 200))} min read
                 </p>
               </div>
@@ -799,17 +812,26 @@ export function ArticleEditor({ article, onReload }: { article: ArticleDetail; o
             />
           </Panel>
 
-          <Panel title="Publishing" open={panel === "publishing"} onToggle={() => toggle("publishing")} summary={draft.category}>
+          <Panel title="Publishing" open={panel === "publishing"} onToggle={() => toggle("publishing")} summary={authorName || draft.category}>
+            <Field
+              label="Written by"
+              hint="The writer's full name, shown on the article as “Written by … – ADOORA Legal Services”. Needed to publish. A name on the Team page links to that profile."
+            >
+              <Input
+                value={authorProfile?.slug === writer ? authorProfile.name : draft.authorSlug}
+                maxLength={80}
+                list="article-writers"
+                onChange={(event) => set("authorSlug", event.target.value)}
+                placeholder="Full name"
+              />
+              <datalist id="article-writers">
+                {profiles.map((profile) => (
+                  <option key={profile.id} value={profile.name} />
+                ))}
+              </datalist>
+            </Field>
             <Field label="Category">
               <Select value={draft.category} onChange={(event) => set("category", event.target.value)} options={insightCategories.map((c) => ({ value: c, label: c }))} />
-            </Field>
-            <Field label="Author" hint="From Lawyer profiles.">
-              <Select
-                value={draft.authorSlug}
-                onChange={(event) => set("authorSlug", event.target.value)}
-                placeholder="The firm"
-                options={profiles.map((profile) => ({ value: profile.slug, label: `${profile.name} — ${profile.designation}` }))}
-              />
             </Field>
             <Field label="Web address" hint={`/insights/${draft.slug || "…"}`}>
               <Input value={draft.slug} onChange={(event) => set("slug", event.target.value.toLowerCase().replace(/[^a-z0-9-]+/g, "-"))} />
