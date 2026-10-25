@@ -240,6 +240,23 @@ function PhoneOtp({
     return () => window.clearTimeout(timer);
   }, [wait]);
 
+  // MSG91 refuses to send a code until its captcha is ticked, so Send OTP
+  // stays off until then. The widget offers no event for it, so it is read
+  // twice a second; a ticked captcha that expires turns the button off again.
+  const [captcha, setCaptcha] = useState({ shown: false, ticked: false });
+  useEffect(() => {
+    if (step !== "phone") return;
+    const read = () => {
+      const shown = Boolean(document.getElementById(CAPTCHA_ID)?.childElementCount);
+      const ticked = shown && Boolean(window.isCaptchaVerified?.());
+      setCaptcha((current) => (current.shown === shown && current.ticked === ticked ? current : { shown, ticked }));
+    };
+    read();
+    const timer = window.setInterval(read, 500);
+    return () => window.clearInterval(timer);
+  }, [step]);
+  const captchaPending = captcha.shown && !captcha.ticked;
+
   const validPhone = /^[6-9]\d{9}$/.test(phone);
 
   function fail(code: string, reply?: Reply) {
@@ -340,9 +357,12 @@ function PhoneOtp({
           </div>
           {/* MSG91's captcha, if it has one switched on. */}
           <div id={CAPTCHA_ID} className="mt-3 empty:hidden" />
-          <button type="submit" disabled={!validPhone || busy} className={primaryButton}>
+          <button type="submit" disabled={!validPhone || busy || captchaPending} className={primaryButton}>
             {busy ? "Sending…" : "Send OTP"}
           </button>
+          {validPhone && captchaPending && (
+            <p className="mt-2 text-xs font-semibold text-gold-deep">Tick the “I am human” box above to send the code.</p>
+          )}
           <p className="mt-2 text-xs text-slate">{hint}</p>
         </form>
       ) : (
