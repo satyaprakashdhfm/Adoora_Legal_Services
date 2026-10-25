@@ -129,6 +129,8 @@ const schema = z.object({
    * clients sign in with Google or a mobile OTP.
    */
   PASSWORD_SIGN_IN: z.enum(["on", "off"]).default("off"),
+  /** One-off: the staging database the go-live copy reads from (scripts/go-live-copy.ts). */
+  GO_LIVE_SOURCE_DATABASE_URL: optionalString(z.string().url()),
 
   ECOURTS_PRICE_DETAILS: optionalString(z.string().max(40)),
   ECOURTS_PRICE_REFRESH: optionalString(z.string().max(40)),
