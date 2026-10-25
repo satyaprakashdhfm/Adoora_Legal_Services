@@ -285,6 +285,8 @@ export function ArticleEditor({ article, onReload }: { article: ArticleDetail; o
   const router = useRouter();
   const [draft, setDraft] = useState<Draft>(() => toDraft(article));
   const [saved, setSaved] = useState(() => JSON.stringify(payload(toDraft(article))));
+  /** The web address as last saved: "View live" opens this, never an unsaved edit of it. */
+  const [liveSlug, setLiveSlug] = useState(article.slug);
   const [mode, setMode] = useState<"write" | "preview">("write");
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -368,6 +370,7 @@ export function ArticleEditor({ article, onReload }: { article: ArticleDetail; o
       const body = payload(current, nextStatus);
       const result = await api<{ slug: string; status: ArticleStatus }>(`/admin/articles/${article.id}`, { method: "PATCH", body });
       setDraft((latest) => ({ ...latest, slug: result.slug }));
+      setLiveSlug(result.slug);
       setSaved(JSON.stringify(payload({ ...current, slug: result.slug })));
       if (result.status === "PUBLISHED" || status === "PUBLISHED") await refreshWebsite(["website-articles"]);
       setNotice(
@@ -505,7 +508,7 @@ export function ArticleEditor({ article, onReload }: { article: ArticleDetail; o
               <Button size="sm" tone="ghost" onClick={() => void save("DRAFT")} disabled={saving}>
                 Unpublish
               </Button>
-              <a href={`/insights/${draft.slug}`} target="_blank" rel="noreferrer" className="text-xs font-semibold text-gold-deep underline underline-offset-2">
+              <a href={`/insights/${liveSlug}`} target="_blank" rel="noreferrer" className="text-xs font-semibold text-gold-deep underline underline-offset-2">
                 View live
               </a>
             </>

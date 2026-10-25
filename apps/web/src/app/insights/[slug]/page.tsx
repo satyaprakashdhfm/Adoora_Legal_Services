@@ -91,6 +91,9 @@ export default async function InsightPage(
           { label: "Insights", href: "/insights" },
           { label: insight.category },
         ]}
+        // The cover sits where the Lady Justice statue would, leaving bits of
+        // the statue peeking out round it, so article headers use the plain band.
+        image={false}
         aside={
           <InsightCover
             insight={insight}
