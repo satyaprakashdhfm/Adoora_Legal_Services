@@ -12,17 +12,11 @@ and document model, storage and encryption — plus the roadmap and known gaps.
 
 ## Branches
 
-- **`main`** — the single-page holding site, deployed to Vercel at
-  <https://adoora-legal-services.vercel.app>. Pushing to `main` deploys to
-  production. Leave it alone until the new site is signed off.
-- **`dev`** — the full website and API, deployed on Railway. All current work
-  happens here.
+- **`main`** — production, live at <https://www.adooralegalservices.com>.
+  Pushing to `main` deploys the website and the API on Railway.
+- **`dev`** — staging, with test data and test logins, on Railway:
   - Website: <https://adoora-web-production.up.railway.app>
   - API: <https://adoora-api-production.up.railway.app>
-
-> When `dev` merges to `main`, the Vercel project's **Root Directory** must be
-> changed to `apps/web`. The repository root is no longer a Next.js app, so the
-> Vercel build will fail otherwise.
 
 ## Getting started
 
@@ -107,17 +101,26 @@ it is already in the page. Do not treat it as a security boundary.
 
 ## Deploying
 
-### Railway (`dev`)
+### Railway
 
-Project **AdooraLegalServices**. The Postgres service is provisioned; the two
-app services are Git-connected to `dev`.
+Project **AdooraLegalServices**, Singapore. Every app service is
+Git-connected and redeploys on push to its branch.
 
-| Service | Root directory | Start | Health check |
-| --- | --- | --- | --- |
-| `adoora-api` | `apps/api` | `npm start` | `/health` |
-| `adoora-web` | `apps/web` | `npm start` | `/` |
+| Service | Branch | Root directory | Data | Notes |
+| --- | --- | --- | --- | --- |
+| `adoora-coming-soon` (production website) | `main` | `apps/web` | | Holds `www.adooralegalservices.com` (port 8080). Never sleeps |
+| `adoora-api-prod` | `main` | `apps/api` | `Postgres-CJo6`, bucket `documents-prod` | Google and OTP sign-in only |
+| `adoora-web` (staging) | `dev` | `apps/web` | | Test logins shown (`NEXT_PUBLIC_PASSWORD_SIGN_IN`, `NEXT_PUBLIC_SHOW_TEST_LOGINS`) |
+| `adoora-api` (staging) | `dev` | `apps/api` | `Postgres`, bucket `documents` | `PASSWORD_SIGN_IN=on`; sample data with `SAMPLE_DATA=add` |
 
-Both are Git-connected to `dev` and redeploy on push. Deploy from Git rather
+Production leaves `PASSWORD_SIGN_IN`, `SAMPLE_DATA` and the web's
+`NEXT_PUBLIC_*_SIGN_IN` / `TEST_LOGINS` switches unset (off).
+`BOOTSTRAP_OWNER="email,mobile,name"` keeps one owner able to sign in at
+`/admin/login`. Never copy a whole variable list between production and
+staging: `DATABASE_URL`, `S3_*`, `APP_URL`, `CORS_ORIGINS`, `JWT_SECRET` and
+`DOCUMENT_ENCRYPTION_KEY` differ per service.
+
+Deploy from Git rather
 than uploading a directory: a tarball upload is rooted at whatever you upload,
 which collides with the service's Root Directory and fails in `railpack
 prepare`.
@@ -126,29 +129,17 @@ prepare`.
 the API runs `prisma migrate deploy` first, so a deploy applies pending
 migrations before serving traffic.
 
-#### If a deploy fails right after touching the GitHub connection
+#### If staging deploys `main` after touching the GitHub connection
 
 Re-authorising the Railway GitHub App resets each service's deploy branch to
-the repository's **default branch**, which is `main`. `main` is still the
-single-page holding site and has no `apps/` directory, so with a Root
-Directory of `apps/api` or `apps/web` the build dies immediately in
-`railpack prepare`.
-
-Symptom: both services fail at the same second, on a commit that is `main`'s
-HEAD rather than `dev`'s.
-
-Fix: Settings → Source → Branch, set it back to `dev` on both services. The
-running version keeps serving throughout — Railway does not retire a healthy
-deploy for a failed build — so this is never an outage, only a stuck version.
+the repository's **default branch**, `main`. For the staging services, set
+Settings → Source → Branch back to `dev`. The running version keeps serving
+throughout — Railway does not retire a healthy deploy for a failed build.
 
 Environment variables are listed in `docs/ARCHITECTURE.md`. Set
 `DATABASE_URL` on the API as a reference to the Postgres service
 (`${{Postgres.DATABASE_URL}}`) rather than pasting the value, so it follows
 credential rotation.
-
-### Vercel (`main`)
-
-Unchanged — the holding page deploys from `main` automatically.
 
 ## Brand
 

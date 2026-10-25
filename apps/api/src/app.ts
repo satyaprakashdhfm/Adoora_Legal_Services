@@ -48,12 +48,9 @@ export function createApp() {
 
         if (corsOrigins.includes(origin)) return callback(null, true);
 
-        // Allow Railway and Vercel preview URLs so preview deploys work
+        // Allow Railway service URLs so staging and new services work
         // without adding each generated hostname to the allowlist.
-        if (
-          /^https:\/\/[a-z0-9-]+\.up\.railway\.app$/.test(origin) ||
-          /^https:\/\/[a-z0-9-]+\.vercel\.app$/.test(origin)
-        ) {
+        if (/^https:\/\/[a-z0-9-]+\.up\.railway\.app$/.test(origin)) {
           return callback(null, true);
         }
 
