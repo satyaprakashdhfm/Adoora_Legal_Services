@@ -129,6 +129,8 @@ const schema = z.object({
    * clients sign in with Google or a mobile OTP.
    */
   PASSWORD_SIGN_IN: z.enum(["on", "off"]).default("off"),
+  /** "email,mobile,name": an owner who can always sign in (auth/bootstrap-owner.ts). */
+  BOOTSTRAP_OWNER: optionalString(z.string()),
   /** One-off: the staging database the go-live copy reads from (scripts/go-live-copy.ts). */
   GO_LIVE_SOURCE_DATABASE_URL: optionalString(z.string().url()),
 
