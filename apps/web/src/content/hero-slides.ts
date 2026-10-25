@@ -56,11 +56,9 @@ export const heroSlides: HeroSlide[] = [
     body: "A team of experienced lawyers, working together with clarity, sound judgment, and a shared commitment to every client we represent.",
     href: "/about#people",
     cta: "Meet the team",
-    imageBase: "hero-team",
-    imageNote: "The team: six lawyers in a row, head-and-shoulders, against a navy backdrop.",
-    people: true,
-    imageAspect: "2125 / 740",
-    peopleCount: 6,
+    imageBase: "hero-people",
+    imageNote:
+      "Placeholder until the team's own photographs: gavel, brass scales, law volumes and a signed brief on a dark marble desk against navy panelling. For a team row again, set people, imageAspect and peopleCount (the old row is hero-team).",
   },
   {
     eyebrow: "Pro bono",
