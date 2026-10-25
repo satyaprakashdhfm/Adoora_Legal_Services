@@ -1,18 +1,18 @@
 /**
- * While the firm tries the portals, every sign-in page shows a username and
- * password form (the accounts are in apps/api/src/auth/temp-accounts.ts)
- * instead of "Continue with Google" and the mobile OTP. Set to false to
- * bring those back; their code is unchanged.
+ * Staging only (NEXT_PUBLIC_PASSWORD_SIGN_IN=on): every sign-in page shows a
+ * username and password form (the accounts are in
+ * apps/api/src/auth/temp-accounts.ts, which the API's PASSWORD_SIGN_IN=on
+ * enables) instead of "Continue with Google" and the mobile OTP. Off by
+ * default, so production offers Google and the OTP.
  */
-export const PASSWORD_ONLY = true;
+export const PASSWORD_ONLY = process.env.NEXT_PUBLIC_PASSWORD_SIGN_IN === "on";
 
 /**
- * Testing only: each sign-in page lists its test logins, password included,
- * so anyone opening the page can sign in with one tap. These accounts can
- * see everything on the sample case; set to false before real client data
- * goes in (and change the passwords in temp-accounts.ts).
+ * Staging only, and only with PASSWORD_ONLY: each sign-in page lists its test
+ * logins, password included, so anyone opening the page can sign in with one
+ * tap. Never on where real client data is.
  */
-export const SHOW_TEST_LOGINS = true;
+export const SHOW_TEST_LOGINS = PASSWORD_ONLY && process.env.NEXT_PUBLIC_SHOW_TEST_LOGINS === "on";
 
 export type TestLogin = { name: string; area: "admin" | "lawyer" | "client"; username: string; password: string };
 

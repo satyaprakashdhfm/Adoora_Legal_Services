@@ -13,10 +13,14 @@ const server = app.listen(env.PORT, () => {
     "ADOORA API listening",
   );
   startScheduler();
-  void seedSampleDataOnStartup(env.SAMPLE_DATA)
-    .then(() => trimSampleDataOnStartup())
-    .then(() => keepOnlyOneCaseOnStartup())
-    .then(() => keepOnlyTestPeopleOnStartup());
+  // Testing only. These add, trim and delete records, so production
+  // (SAMPLE_DATA=off, the default) never runs them.
+  if (env.SAMPLE_DATA === "add") {
+    void seedSampleDataOnStartup(env.SAMPLE_DATA)
+      .then(() => trimSampleDataOnStartup())
+      .then(() => keepOnlyOneCaseOnStartup())
+      .then(() => keepOnlyTestPeopleOnStartup());
+  }
 });
 
 /**

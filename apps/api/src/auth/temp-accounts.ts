@@ -1,7 +1,10 @@
+import { env } from "../env.js";
+
 /**
  * Temporary sign-in while the firm tries the portals: a username and a
  * password for each person, kept here in the code rather than in a new
- * database table, and switched off by setting PASSWORD_SIGN_IN to false.
+ * database table, and switched on only where PASSWORD_SIGN_IN=on is set
+ * (staging, never production).
  * Only bcrypt hashes are stored; the passwords themselves were handed to
  * the firm directly.
  *
@@ -15,7 +18,7 @@
  * apps/web/src/lib/portal/sign-in-mode.ts.
  */
 
-export const PASSWORD_SIGN_IN = true;
+export const PASSWORD_SIGN_IN = env.PASSWORD_SIGN_IN === "on";
 
 /** The sample case everyone is put on. */
 export const SHARED_CASE = "ALS-2026-DEMX01";

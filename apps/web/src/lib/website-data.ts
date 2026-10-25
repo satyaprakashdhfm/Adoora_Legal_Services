@@ -45,17 +45,25 @@ export const PARTNERS_TAG = "website-partners";
  * all; an answer, even an error, is final.
  */
 async function fromApi<T>(path: string, tag: string): Promise<T | null> {
-  for (const origin of apiOrigins) {
-    try {
-      const response = await fetch(`${origin}/api${path}`, {
-        next: { revalidate: 300, tags: [tag] },
-        signal: AbortSignal.timeout(4000),
-      });
-      return response.ok ? ((await response.json()) as T) : null;
-    } catch {
-      // Unreachable from here (e.g. the private network during a build): try the next address.
+  // A page built without the API's answer keeps only the bundled content
+  // until it is next revalidated (Insights once showed one article of three
+  // that way), so the build waits longer and tries every address twice.
+  const building = process.env.NEXT_PHASE === "phase-production-build";
+  const rounds = building ? 2 : 1;
+  for (let round = 0; round < rounds; round++) {
+    for (const origin of apiOrigins) {
+      try {
+        const response = await fetch(`${origin}/api${path}`, {
+          next: { revalidate: 300, tags: [tag] },
+          signal: AbortSignal.timeout(building ? 15_000 : 4000),
+        });
+        return response.ok ? ((await response.json()) as T) : null;
+      } catch {
+        // Unreachable from here (e.g. the private network during a build): try the next address.
+      }
     }
   }
+  if (building) console.warn(`[website-data] API unreachable during build for ${path}; the page falls back to bundled content`);
   return null;
 }
 
@@ -85,8 +93,11 @@ type ApiProfile = {
   featured: boolean;
 };
 
-/** The home page trio the static roster featured, for the fallback. */
-const STATIC_FEATURED = ["ganesh-raghavendra", "vidya-sagar", "kondal-rao"];
+/**
+ * Who the fallback shows when the API cannot be reached: the founder only.
+ * Everyone else is on the website through the console, not the bundled roster.
+ */
+const STATIC_FALLBACK = ["ganesh-raghavendra"];
 
 /** The firm's studio portraits in public/ (people1-3), each for its own person. */
 export const STUDIO_PORTRAITS: Record<string, string> = {
@@ -170,7 +181,9 @@ function toPerson(profile: ApiProfile): Person & { featured: boolean } {
 export async function getPeople(): Promise<(Person & { featured: boolean })[]> {
   const result = await fromApi<{ data: ApiProfile[] }>("/public/people", PEOPLE_TAG);
   if (result?.data?.length) return result.data.map(toPerson);
-  return staticPeople.map((person) => ({ ...person, featured: STATIC_FEATURED.includes(person.slug) }));
+  return staticPeople
+    .filter((person) => STATIC_FALLBACK.includes(person.slug))
+    .map((person) => ({ ...person, featured: true }));
 }
 
 export async function getFeaturedPeople(): Promise<Person[]> {

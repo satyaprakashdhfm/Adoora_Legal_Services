@@ -123,6 +123,12 @@ const schema = z.object({
   JOBS_ENABLED: z.enum(["true", "false"]).default("true"),
   /** "add" puts the fictional sample data in once, at start-up (see demo/sample-data.ts). */
   SAMPLE_DATA: z.enum(["add", "off"]).default("off"),
+  /**
+   * "on" turns on the temporary username and password sign-in
+   * (auth/temp-accounts.ts) for testing. Off in production, where staff and
+   * clients sign in with Google or a mobile OTP.
+   */
+  PASSWORD_SIGN_IN: z.enum(["on", "off"]).default("off"),
 
   ECOURTS_PRICE_DETAILS: optionalString(z.string().max(40)),
   ECOURTS_PRICE_REFRESH: optionalString(z.string().max(40)),
