@@ -94,7 +94,7 @@ export default function SeoAnalytics() {
       <PageTitle
         eyebrow="Website"
         title="SEO & Analytics"
-        description="The searches the firm's articles target, and — once the site is live on its domain — how people find it."
+        description="How each published article is doing in Google, and the searches the firm's articles target."
       />
       <ErrorNote>{error}</ErrorNote>
 
