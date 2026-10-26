@@ -146,6 +146,16 @@ const schema = z.object({
   /** One-off: the staging database the go-live copy reads from (scripts/go-live-copy.ts). */
   GO_LIVE_SOURCE_DATABASE_URL: optionalString(z.string().url()),
 
+  /**
+   * Google Search Console, for the console's SEO page (integrations/
+   * search-console.ts): a service account key, as the downloaded JSON file
+   * or that file base64-encoded on one line. The account must be a user on
+   * the site's Search Console property. Without it the page says so.
+   */
+  GOOGLE_SERVICE_ACCOUNT_JSON: optionalString(z.string().min(20)),
+  /** The property, if finding it by APP_URL's domain picks the wrong one: "sc-domain:example.com" or "https://www.example.com/". */
+  SEARCH_CONSOLE_SITE: optionalString(z.string().min(5)),
+
   ECOURTS_PRICE_DETAILS: optionalString(z.string().max(40)),
   ECOURTS_PRICE_REFRESH: optionalString(z.string().max(40)),
   /**

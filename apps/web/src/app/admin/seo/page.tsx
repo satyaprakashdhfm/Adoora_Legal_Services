@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import { api, type ArticleRow } from "@/lib/portal/api";
 import { siteUrl } from "@/lib/site";
+import { SearchConsole } from "./search-console";
 import { Badge, Card, CardHeader, EmptyState, ErrorNote, PageTitle, Spinner, Table, Td, Th } from "@/components/portal/ui";
 
 /**
@@ -11,9 +12,9 @@ import { Badge, Card, CardHeader, EmptyState, ErrorNote, PageTitle, Spinner, Tab
  *
  *  - Keywords: what the firm's articles target, from the articles themselves
  *    — works today.
- *  - Search and traffic: Google Search Console and Analytics, which need the
- *    site live on its own domain first. Until then the cards say what each
- *    one will show and what is needed to connect it.
+ *  - Search and traffic: each published article in Google (Search Console:
+ *    shown, clicks, position, indexed), the sitemap and the site address.
+ *    Analytics is still a card saying what it needs.
  */
 
 type KeywordRow = {
@@ -99,10 +100,8 @@ export default function SeoAnalytics() {
 
       <section className="space-y-4">
         <h2 className="font-serif text-xl font-semibold text-ink">Search and traffic</h2>
-        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-          <Pending title="Google Search Console" needs="the site on its own domain (production), and the domain verified in Search Console — a DNS TXT record.">
-            Which searches the site appears for, clicks, impressions and average position — per article and per keyword.
-          </Pending>
+        <SearchConsole articles={rows} />
+        <div className="grid gap-4 md:grid-cols-3">
           <Pending title="Google Analytics 4" needs="a GA4 property and its Measurement ID (G-…) added to the website, after the cookie banner's analytics consent.">
             Visitors, where they come from, which articles they read and how long for, and which lead to an enquiry.
           </Pending>
@@ -112,7 +111,7 @@ export default function SeoAnalytics() {
               <Badge tone="green">Ready</Badge>
             </div>
             <p className="mt-2 text-sm text-ink-soft">
-              Lists every page and published article, updated as articles are published. Submit it in Search Console after launch.
+              Lists every page and published article, updated as articles are published. Submit it once in Search Console → Sitemaps.
             </p>
             <a href="/sitemap.xml" target="_blank" rel="noreferrer" className="mt-3 inline-block text-xs font-semibold text-gold-deep underline underline-offset-2">
               {siteUrl}/sitemap.xml

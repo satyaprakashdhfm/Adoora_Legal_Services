@@ -5,6 +5,7 @@ import { prisma } from "../db.js";
 import { HttpError } from "../lib/http.js";
 import { audit } from "../lib/audit.js";
 import { requireAuth, requireRole } from "../middleware/auth.js";
+import { seoReport } from "../integrations/search-console.js";
 import { generateCoverImage, imageEstimate, suggestCoverPrompt } from "../pipeline/cover-image.js";
 import type { Prisma } from "../../generated/prisma/client.js";
 
@@ -177,6 +178,18 @@ articlesPublicRouter.get("/public/article-images/:id", async (req, res) => {
 articlesAdminRouter.get("/articles", ...adminOnly, async (_req, res) => {
   const rows = await prisma.article.findMany({ orderBy: { updatedAt: "desc" }, select: listSelect, take: 500 });
   res.json({ data: rows });
+});
+
+/**
+ * GET /api/admin/articles/search-console?days=28&fresh=1 — how each
+ * published article is doing in Google: shown, clicks, position, indexed.
+ * Registered before /articles/:id. Cached for half an hour; fresh=1 reloads.
+ */
+articlesAdminRouter.get("/articles/search-console", ...adminOnly, async (req, res) => {
+  const days = z.coerce.number().int().min(7).max(90).catch(28).parse(req.query.days);
+  const published = await prisma.article.findMany({ where: { status: "PUBLISHED" }, select: { slug: true }, orderBy: { publishedAt: "desc" }, take: 200 });
+  const report = await seoReport(published.map((article) => `/insights/${article.slug}`), days, { fresh: req.query.fresh === "1" });
+  res.json(report);
 });
 
 /** Registered before /articles/:id, which would otherwise take the path. GET /api/admin/articles/cover-generator — is it set up, which model, what one image costs. */

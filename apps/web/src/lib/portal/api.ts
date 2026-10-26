@@ -421,3 +421,23 @@ export type ArticleDetail = ArticleRow & {
 export function articleImageUrl(articleId: string, imageId: string) {
   return `/api/admin/articles/${articleId}/images/${imageId}`;
 }
+
+/** GET /api/admin/articles/search-console: each published article in Google. */
+export type SeoReport = {
+  connected: boolean;
+  problem: string | null;
+  site: string | null;
+  days: number;
+  from: string;
+  to: string;
+  totals: { clicks: number; impressions: number; position: number | null } | null;
+  pages: {
+    path: string;
+    clicks: number;
+    impressions: number;
+    position: number | null;
+    queries: { query: string; clicks: number; impressions: number; position: number }[];
+    index: { verdict: string; coverage: string; lastCrawl: string | null } | null;
+  }[];
+  generatedAt: string;
+};
