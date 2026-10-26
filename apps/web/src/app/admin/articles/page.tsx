@@ -3,8 +3,11 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { api, type ArticleRow, type ArticleStatus } from "@/lib/portal/api";
+import { api, type ArticleRow, type ArticleStatus, type SeoReport } from "@/lib/portal/api";
+
+type SeoPage = SeoReport["pages"][number];
 import { ListToolbar } from "@/components/portal/list-toolbar";
+import { SeoPanel } from "@/components/portal/seo-panel";
 
 const ARTICLE_SORT = [
   { value: "updated", label: "Recently edited" },
@@ -41,7 +44,7 @@ export default function AdminArticles() {
   const [category, setCategory] = useState("");
   const [sort, setSort] = useState("updated");
   const [creating, setCreating] = useState(false);
-  const [tab, setTab] = useState<"articles" | "trending">("articles");
+  const [tab, setTab] = useState<"articles" | "trending" | "seo">("articles");
   const [writing, setWriting] = useState(false);
   const pipeline = usePipeline();
 
@@ -52,6 +55,14 @@ export default function AdminArticles() {
   }, []);
 
   useEffect(load, [load]);
+
+  /** Google's numbers for the published articles; null until loaded or when Search Console is not connected. */
+  const [google, setGoogle] = useState<Map<string, SeoPage> | null>(null);
+  useEffect(() => {
+    api<SeoReport>("/admin/articles/search-console?days=28")
+      .then((report) => report.connected && setGoogle(new Map(report.pages.map((page) => [page.path, page]))))
+      .catch(() => undefined);
+  }, []);
 
   async function create() {
     setCreating(true);
@@ -124,6 +135,7 @@ export default function AdminArticles() {
           [
             ["articles", "Articles"],
             ["trending", `Trending judgments${pipeline?.urgent ? ` (${pipeline.urgent} urgent)` : ""}`],
+            ["seo", "SEO & Google"],
           ] as const
         ).map(([value, label]) => (
           <button
@@ -143,6 +155,8 @@ export default function AdminArticles() {
 
       {tab === "trending" ? (
         <TrendingLeads pipeline={pipeline} />
+      ) : tab === "seo" ? (
+        <SeoPanel rows={rows} />
       ) : (
       <>
 
@@ -191,6 +205,7 @@ export default function AdminArticles() {
                 <Th>Article</Th>
                 <Th>Keywords</Th>
                 <Th>Status</Th>
+                {google && <Th>In Google · 28 days</Th>}
                 <Th>Updated</Th>
                 <Th>
                   <span className="sr-only">Actions</span>
@@ -230,6 +245,11 @@ export default function AdminArticles() {
                       row.source === "PIPELINE" && <p className="mt-1 whitespace-nowrap text-xs text-slate">AI draft · {formatDateTime(row.createdAt)}</p>
                     )}
                   </Td>
+                  {google && (
+                    <Td>
+                      <GoogleCell page={row.status === "PUBLISHED" ? google.get(`/insights/${row.slug}`) : undefined} published={row.status === "PUBLISHED"} />
+                    </Td>
+                  )}
                   <Td className="whitespace-nowrap text-xs text-slate">{formatDateTime(row.updatedAt)}</Td>
                   <Td className="text-right">
                     <Button size="sm" tone="danger" onClick={() => void remove(row)}>
@@ -243,6 +263,29 @@ export default function AdminArticles() {
         )}
       </Card>
       </>
+      )}
+    </div>
+  );
+}
+
+/** One article's line from Search Console: indexed or not, position, shown and clicks. */
+function GoogleCell({ page, published }: { page: SeoPage | undefined; published: boolean }) {
+  if (!published) return <span className="text-xs text-slate">After publishing</span>;
+  if (!page) return <span className="text-xs text-slate">No numbers yet</span>;
+  const indexed = page.index?.verdict === "PASS";
+  return (
+    <div className="whitespace-nowrap text-xs">
+      <Badge tone={indexed ? "green" : page.index ? "gold" : "grey"}>{indexed ? "In Google" : page.index ? "Not in Google yet" : "Not checked"}</Badge>
+      {page.position === null ? (
+        <p className="mt-1 text-slate">Not shown in searches yet</p>
+      ) : (
+        <p className="mt-1 text-slate">
+          <span className={`font-semibold ${page.position <= 10 ? "text-emerald-700" : "text-ink"}`}>
+            #{page.position < 10 ? page.position.toFixed(1) : Math.round(page.position)}
+          </span>{" "}
+          · <span className="font-semibold text-ink">{page.impressions.toLocaleString("en-IN")}</span> shown ·{" "}
+          <span className="font-semibold text-ink">{page.clicks.toLocaleString("en-IN")}</span> clicks
+        </p>
       )}
     </div>
   );
