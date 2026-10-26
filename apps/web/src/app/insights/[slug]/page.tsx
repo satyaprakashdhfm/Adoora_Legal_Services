@@ -3,6 +3,7 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { InsightCard, InsightCover, PageHero, formatDate } from "@/components/ui";
 import { ArticleToc } from "@/components/article-toc";
+import { ShareArticle } from "@/components/share-article";
 import { anchorFor } from "@/lib/anchor";
 import { insights, type Block } from "@/content/insights";
 import { ArticleBody } from "@/components/article-body";
@@ -121,6 +122,7 @@ export default async function InsightPage(
           )}
           <time dateTime={insight.date}>{formatDate(insight.date)}</time>
           <span>{insight.readingTime}</span>
+          <ShareArticle url={`${siteUrl}/insights/${insight.slug}`} title={insight.title} />
         </div>
       </PageHero>
 
@@ -141,8 +143,24 @@ export default async function InsightPage(
               <ArticleBody blocks={insight.body} />
             </div>
 
+            {/* After the article, a way to ask for help on WhatsApp (the
+                firm's own number, as the floating button uses), centred. */}
+            <div className="mt-12 flex justify-center">
+              <a
+                href={`https://wa.me/${firm.phoneE164.replace(/^\+/, "")}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-3 rounded-full bg-gold px-8 py-4 text-lg font-semibold text-white transition hover:bg-gold-deep active:scale-[0.98]"
+              >
+                Click Here for Legal Assistance
+                <svg viewBox="0 0 16 16" aria-hidden="true" className="h-4 w-4 shrink-0">
+                  <path d="M2 8h11M9 4l4 4-4 4" fill="none" stroke="currentColor" strokeWidth={1.6} strokeLinecap="round" strokeLinejoin="round" />
+                </svg>
+              </a>
+            </div>
+
             {/* Not-legal-advice notice — required on every article. */}
-            <aside className="mt-12 rounded-xl border border-line bg-paper-warm p-6">
+            <aside className="mt-8 rounded-xl border border-line bg-paper-warm p-6">
               <h2 className="eyebrow text-gold-deep">Please note</h2>
               <p className="mt-3 text-sm leading-relaxed text-ink-soft">
                 This article is for general information only. It reflects the
