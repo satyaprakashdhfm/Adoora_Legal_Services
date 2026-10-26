@@ -13,6 +13,7 @@ import { clientIp, HttpError, makeReference, userAgent } from "../lib/http.js";
 import { checkUpload } from "../lib/files.js";
 import { encryptDocument } from "../lib/crypto.js";
 import { storage } from "../storage/index.js";
+import { mailApplication, mailEnquiry } from "../lib/mail.js";
 
 /**
  * Public, unauthenticated endpoints used by the website forms.
@@ -57,8 +58,7 @@ publicRouter.post("/enquiries", formLimiter, async (req, res) => {
   // Deliberately no enquiry content in the log line.
   logger.info({ reference: enquiry.reference }, "Enquiry received");
 
-  // TODO: notify NOTIFY_EMAIL once a mail provider is configured. Until then
-  // enquiries are read from the database / admin portal.
+  mailEnquiry({ reference: enquiry.reference, ...input });
 
   res.status(201).json({
     reference: enquiry.reference,
@@ -153,6 +153,16 @@ publicRouter.post("/careers", formLimiter, resumeMiddleware, async (req, res) =>
     { reference: application.reference, role: input.role, resume: Boolean(resume) },
     "Career application received",
   );
+  mailApplication({
+    reference: application.reference,
+    name: input.name,
+    email: input.email,
+    phone: input.phone,
+    role: input.role,
+    enrolment: input.enrolment || null,
+    message: input.message,
+    hasResume: Boolean(resume),
+  });
 
   res.status(201).json({
     reference: application.reference,

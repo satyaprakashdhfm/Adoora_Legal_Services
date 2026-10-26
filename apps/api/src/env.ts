@@ -37,8 +37,20 @@ const schema = z.object({
    */
   JWT_SECRET: optionalString(z.string().min(32)),
 
-  /** Where enquiry notifications are sent, once mail delivery is wired up. */
-  NOTIFY_EMAIL: optionalString(z.string().email()),
+  /**
+   * Resend, for the emails the website forms send (lib/mail.ts). Without a
+   * key nothing is mailed and the forms still save to the console. The API
+   * key may be set as RESEND_KEY or RESEND_API_KEY (Resend's own name).
+   */
+  RESEND_KEY: optionalString(z.string().startsWith("re_")),
+  RESEND_API_KEY: optionalString(z.string().startsWith("re_")),
+  /** The sender; its domain must be verified in Resend. */
+  MAIL_FROM: z.string().min(3).default("Adoora Legal Services <website@adooralegalservices.com>"),
+  /** The firm's inbox: new enquiries and applications are sent here, and replies to the acknowledgements go here. */
+  NOTIFY_EMAIL: z.preprocess(
+    (value) => (typeof value === "string" && value.trim() === "" ? undefined : value),
+    z.string().email().default("info@adooralegalservices.com"),
+  ),
 
   LOG_LEVEL: z
     .enum(["fatal", "error", "warn", "info", "debug", "trace"])
