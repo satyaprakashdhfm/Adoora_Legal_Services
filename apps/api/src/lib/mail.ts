@@ -112,7 +112,7 @@ export function mailApplication(application: {
 }) {
   sendAll([
     {
-      to: env.NOTIFY_EMAIL,
+      to: env.HR_EMAIL,
       replyTo: application.email,
       subject: `New application ${application.reference}: ${application.role}`,
       lines: [
@@ -133,7 +133,7 @@ export function mailApplication(application: {
     },
     {
       to: application.email,
-      replyTo: env.NOTIFY_EMAIL,
+      replyTo: env.HR_EMAIL,
       subject: `We have received your application (${application.reference})`,
       lines: [
         `Dear ${application.name},`,

@@ -75,44 +75,6 @@ export default async function CareersPage() {
         image
       />
 
-      {/* Culture */}
-      <section className="container-page py-12 sm:py-14">
-        <div className="grid gap-6 lg:grid-cols-[0.85fr_1.5fr] lg:gap-12">
-          <SectionHeading
-            eyebrow="Working here"
-            title="What the work is actually like"
-          />
-          <div className="space-y-5 leading-relaxed text-ink-soft">
-            <p>
-              We work in small, closely connected teams, which means lawyers are
-              involved in the work rather than being on the sidelines. You will
-              work directly with senior lawyers, participate in client
-              discussions, contribute to drafts and research, and be involved in
-              the thinking behind a case.
-            </p>
-            <p>
-              The work is varied, and so is the responsibility. You may be
-              working through a legal question, preparing a draft, discussing an
-              issue with a client, or helping shape the approach to a case. We
-              expect you to understand the facts properly, ask questions, and
-              think through the reasoning before forming a view.
-            </p>
-            <p>
-              We are direct about feedback. Work is reviewed closely, and you
-              will understand not just what needs to change, but why. We believe
-              that is one of the best ways to develop good legal judgment, and we
-              expect lawyers to be open to feedback and willing to keep learning.
-            </p>
-            <p>
-              As you grow, the expectation is that you take on more
-              responsibility and become increasingly independent in your work.
-              The aim is not simply to give you more work, but to give you the
-              opportunity to become a thoughtful, capable lawyer.
-            </p>
-          </div>
-        </div>
-      </section>
-
       {/* Roles — title, a short description, and an Apply button that opens
           the application form for that role in a popup. */}
       <section className="border-y border-line bg-paper-warm">

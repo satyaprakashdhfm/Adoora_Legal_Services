@@ -46,10 +46,15 @@ const schema = z.object({
   RESEND_API_KEY: optionalString(z.string().startsWith("re_")),
   /** The sender; its domain must be verified in Resend. */
   MAIL_FROM: z.string().min(3).default("Adoora Legal Services <website@adooralegalservices.com>"),
-  /** The firm's inbox: new enquiries and applications are sent here, and replies to the acknowledgements go here. */
+  /** The firm's inbox: new enquiries are sent here, and replies to their acknowledgements go here. */
   NOTIFY_EMAIL: z.preprocess(
     (value) => (typeof value === "string" && value.trim() === "" ? undefined : value),
     z.string().email().default("info@adooralegalservices.com"),
+  ),
+  /** The careers inbox: new applications are sent here, and replies to their acknowledgements go here. */
+  HR_EMAIL: z.preprocess(
+    (value) => (typeof value === "string" && value.trim() === "" ? undefined : value),
+    z.string().email().default("hr@adooralegalservices.com"),
   ),
 
   LOG_LEVEL: z

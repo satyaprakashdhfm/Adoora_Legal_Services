@@ -22,7 +22,7 @@ export default function ContactPage() {
       <PageHero
         eyebrow="Contact"
         title="Request information"
-        lead="Tell us briefly what the case concerns and we will point you to the right person in the firm. This form is for information requests; it is not an offer of legal services and sending it does not create a lawyer–client relationship."
+        lead="Tell us about your matter and we will get back to you."
         trail={[{ label: "Home", href: "/" }, { label: "Contact Us" }]}
         image
       />
