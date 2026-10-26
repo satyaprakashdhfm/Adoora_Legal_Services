@@ -68,6 +68,8 @@ export function e164(value: string): string {
   return bare.length === 10 ? `+91${bare}` : `+${bare}`;
 }
 
+const WHATSAPP_MESSAGE = "Hello ADOORA Legal Services, I need some legal assistance. Could you please help me?";
+
 const line = (label: string): Line => ({ label, href: label ? `tel:${e164(label)}` : "" });
 
 export function toPublicContact(input: Partial<ContactSettings>): PublicContact {
@@ -80,7 +82,8 @@ export function toPublicContact(input: Partial<ContactSettings>): PublicContact 
     mobiles,
     primary: mobiles[0] ?? landline,
     landline,
-    whatsappHref: whatsappE164 ? `https://wa.me/${whatsappE164.replace(/^\+/, "")}` : "",
+    // Opens the chat with this message already typed, as on Deeds & Co.
+    whatsappHref: whatsappE164 ? `https://wa.me/${whatsappE164.replace(/^\+/, "")}?text=${encodeURIComponent(WHATSAPP_MESSAGE)}` : "",
     whatsappE164,
     email: settings.email,
     emailHref: settings.email ? `mailto:${settings.email}` : "",

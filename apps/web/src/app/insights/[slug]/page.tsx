@@ -151,7 +151,7 @@ export default async function InsightPage(
                 href={contact.whatsappHref}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex items-center gap-3 rounded-full bg-gold px-8 py-4 text-lg font-semibold text-white transition hover:bg-gold-deep active:scale-[0.98]"
+                className="inline-flex items-center gap-3 rounded-full bg-gold px-8 py-4 text-lg font-semibold text-ink-deep transition hover:bg-gold-bright active:scale-[0.98]"
               >
                 Click Here for Legal Assistance
                 <svg viewBox="0 0 16 16" aria-hidden="true" className="h-4 w-4 shrink-0">

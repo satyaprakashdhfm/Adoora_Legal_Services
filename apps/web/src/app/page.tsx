@@ -53,12 +53,15 @@ const practiceGridOrder = [
 
 export default async function Home() {
   /* Profiles marked "Feature on the home page" in the admin console. The
-     founder and the two partners use the firm's studio portraits (people1-3
-     in public/) unless a portrait has been uploaded for them in the console;
-     anyone else shows their uploaded portrait. */
-  const featuredPeople = (await getFeaturedPeople()).map((person) =>
-    !person.photoUrl && STUDIO_PORTRAITS[person.slug] ? { ...person, photo: STUDIO_PORTRAITS[person.slug] } : person,
-  );
+     two partners use the firm's studio portraits (people1-3 in public/)
+     unless a portrait has been uploaded for them in the console; the founder
+     shows the silhouette placeholder for now; anyone else shows their
+     uploaded portrait. */
+  const featuredPeople = (await getFeaturedPeople()).map((person) => {
+    const portrait = STUDIO_PORTRAITS[person.slug];
+    if (portrait === null) return { ...person, photo: undefined, photoUrl: undefined };
+    return portrait && !person.photoUrl ? { ...person, photo: portrait } : person;
+  });
   const latestInsights = (await getInsights()).slice(0, 3);
   const partners = await getPartners();
   const contact = await getContact();

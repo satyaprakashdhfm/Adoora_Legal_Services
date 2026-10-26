@@ -101,9 +101,13 @@ type ApiProfile = {
  */
 const STATIC_FALLBACK = ["ganesh-raghavendra"];
 
-/** The firm's studio portraits in public/ (people1-3), each for its own person. */
-export const STUDIO_PORTRAITS: Record<string, string> = {
-  "ganesh-raghavendra": "people1",
+/**
+ * The home page's portrait for each person: a studio portrait in public/
+ * (people1-3), or null for the silhouette placeholder until a better photo
+ * is supplied (the founder, for now).
+ */
+export const STUDIO_PORTRAITS: Record<string, string | null> = {
+  "ganesh-raghavendra": null,
   "vidya-sagar": "people2",
   "kondal-rao": "people3",
 };
@@ -190,6 +194,8 @@ export async function getPeople(): Promise<(Person & { featured: boolean })[]> {
 
 /** Who an article published without a writer's name is credited to: the founder. */
 export const DEFAULT_AUTHOR = "ganesh-raghavendra";
+/** The founder's full name, always used for him on articles, whatever his profile is called. */
+export const FOUNDER_NAME = "Adv. K. L. Ganesh Raghavendra";
 
 const bareName = (name: string) => name.replace(/^adv\.?\s+/i, "").replace(/\s+/g, " ").trim().toLowerCase();
 
@@ -198,14 +204,17 @@ export type ArticleAuthor = { name: string; initials: string; person: Person | n
 /**
  * An article's writer. `author` is the full name typed under "Written by",
  * or a profile slug (articles from before that field); empty means the
- * founder. A name or slug that matches a profile brings the profile (link,
+ * founder, who is always shown by his full name (FOUNDER_NAME). A name or slug that matches a profile brings the profile (link,
  * designation); any other name is shown as typed.
  */
-export function articleAuthor(people: Person[], author: string): ArticleAuthor | null {
+export function articleAuthor(people: Person[], author: string): ArticleAuthor {
   const value = author.trim() || DEFAULT_AUTHOR;
-  const person = people.find((p) => p.slug === value || bareName(p.name) === bareName(value));
+  const person = people.find((p) => p.slug === value || bareName(p.name) === bareName(value)) ?? null;
+  if (person?.slug === DEFAULT_AUTHOR || value === DEFAULT_AUTHOR || bareName(value) === bareName(FOUNDER_NAME)) {
+    const founder = person ?? people.find((p) => p.slug === DEFAULT_AUTHOR) ?? null;
+    return { name: FOUNDER_NAME, initials: initials(FOUNDER_NAME), person: founder ? { ...founder, name: FOUNDER_NAME } : null };
+  }
   if (person) return { name: person.name, initials: person.initials, person };
-  if (value === DEFAULT_AUTHOR) return null;
   return { name: value, initials: initials(value) || "—", person: null };
 }
 

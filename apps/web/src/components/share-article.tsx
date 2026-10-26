@@ -33,7 +33,7 @@ export function ShareArticle({ url, title }: { url: string; title: string }) {
     <button
       type="button"
       onClick={() => void share()}
-      className="inline-flex items-center gap-2 rounded-full bg-gold px-4 py-2 text-sm font-semibold text-white shadow-[0_10px_24px_-12px_rgba(154,98,36,0.7)] transition hover:bg-gold-deep active:scale-[0.98]"
+      className="inline-flex items-center gap-2 rounded-full bg-gold px-4 py-2 text-sm font-semibold text-ink-deep transition hover:bg-gold-bright active:scale-[0.98]"
     >
       <svg aria-hidden="true" viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth={2.4} strokeLinecap="round" strokeLinejoin="round">
         {copied ? (

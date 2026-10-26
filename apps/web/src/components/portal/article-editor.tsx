@@ -22,6 +22,9 @@ import { ArticleBody } from "@/components/article-body";
 import { CoverGenerator } from "@/components/portal/cover-generator";
 import { Badge, Button, ErrorNote, Field, Input, Select, Textarea } from "@/components/portal/ui";
 
+/** Who an article is credited to when no writer is given (as on the website, lib/website-data.ts). */
+const FOUNDER_NAME = "Adv. K. L. Ganesh Raghavendra";
+
 // ---------------------------------------------------------------------------
 // State
 // ---------------------------------------------------------------------------
@@ -354,13 +357,10 @@ export function ArticleEditor({ article, onReload }: { article: ArticleDetail; o
   );
 
   async function save(nextStatus?: ArticleStatus) {
-    // Every published article carries its writer's name: ask for it if it is missing.
+    // Every published article carries its writer's name: the founder's when none is given.
     let current = draft;
     if (nextStatus === "PUBLISHED" && !draft.authorSlug.trim()) {
-      const founder = profiles.find((profile) => profile.slug === "ganesh-raghavendra")?.name ?? "";
-      const writer = window.prompt("Written by — the writer's full name, shown on the article:", founder)?.trim();
-      if (!writer) return;
-      current = { ...draft, authorSlug: writer };
+      current = { ...draft, authorSlug: FOUNDER_NAME };
       setDraft(current);
     }
     setSaving(true);
@@ -465,7 +465,8 @@ export function ArticleEditor({ article, onReload }: { article: ArticleDetail; o
   const bare = (name: string) => name.replace(/^adv\.?\s+/i, "").replace(/\s+/g, " ").trim().toLowerCase();
   const writer = draft.authorSlug.trim();
   const authorProfile = profiles.find((profile) => profile.slug === writer || (writer && bare(profile.name) === bare(writer)));
-  const authorName = authorProfile?.name ?? writer;
+  // The founder always by his full name; nobody named means the founder.
+  const authorName = !writer || authorProfile?.slug === "ganesh-raghavendra" ? FOUNDER_NAME : (authorProfile?.name ?? writer);
   const seoTitle = draft.metaTitle || draft.title;
 
   return (
@@ -818,14 +819,14 @@ export function ArticleEditor({ article, onReload }: { article: ArticleDetail; o
           <Panel title="Publishing" open={panel === "publishing"} onToggle={() => toggle("publishing")} summary={authorName || draft.category}>
             <Field
               label="Written by"
-              hint="The writer's full name, shown on the article as “Written by … – ADOORA Legal Services”. Needed to publish. A name on the Team page links to that profile."
+              hint={`The writer's full name, shown on the article as “Written by … – ADOORA Legal Services”. Left empty, it is ${FOUNDER_NAME}. A name on the Team page links to that profile.`}
             >
               <Input
-                value={authorProfile?.slug === writer ? authorProfile.name : draft.authorSlug}
+                value={authorProfile?.slug === writer ? authorName : draft.authorSlug}
                 maxLength={80}
                 list="article-writers"
                 onChange={(event) => set("authorSlug", event.target.value)}
-                placeholder="Full name"
+                placeholder={FOUNDER_NAME}
               />
               <datalist id="article-writers">
                 {profiles.map((profile) => (
