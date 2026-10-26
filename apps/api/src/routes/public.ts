@@ -153,16 +153,19 @@ publicRouter.post("/careers", formLimiter, resumeMiddleware, async (req, res) =>
     { reference: application.reference, role: input.role, resume: Boolean(resume) },
     "Career application received",
   );
-  mailApplication({
-    reference: application.reference,
-    name: input.name,
-    email: input.email,
-    phone: input.phone,
-    role: input.role,
-    enrolment: input.enrolment || null,
-    message: input.message,
-    hasResume: Boolean(resume),
-  });
+  mailApplication(
+    {
+      reference: application.reference,
+      name: input.name,
+      email: input.email,
+      phone: input.phone,
+      role: input.role,
+      experience: input.experience ?? "",
+      enrolment: input.enrolment ?? "",
+      message: input.message,
+    },
+    req.file && resume ? { filename: resume.resumeFilename, content: req.file.buffer } : null,
+  );
 
   res.status(201).json({
     reference: application.reference,

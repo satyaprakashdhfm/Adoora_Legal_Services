@@ -12,7 +12,6 @@ import {
   type AuthClaims,
 } from "../middleware/auth.js";
 import { z } from "zod";
-import { addSampleData, removeSampleData, sampleDataStatus, shareCasesForTesting } from "../demo/sample-data.js";
 import { audit } from "../lib/audit.js";
 import { clientPartnerSummary, syncClientPartner } from "./website.js";
 import { decryptDocument } from "../lib/crypto.js";
@@ -738,29 +737,3 @@ adminRouter.get(
   },
 );
 
-// ---------------------------------------------------------------------------
-// Sample data — fictional records for showing the system (owners only)
-// ---------------------------------------------------------------------------
-
-adminRouter.get("/sample-data", requireAuth, requireRole("OWNER"), async (_req, res) => {
-  res.json(await sampleDataStatus());
-});
-
-adminRouter.post("/sample-data", requireAuth, requireRole("OWNER"), async (req, res) => {
-  const result = await addSampleData(typeof req.body?.clientEmail === "string" ? req.body.clientEmail : undefined);
-  await audit(req, "sample_data.added", "SampleData", null, result);
-  res.status(result.added ? 201 : 200).json(result);
-});
-
-/** Gives the sample case to everyone again (after more people are added), and a lawyer and client to any case without one. */
-adminRouter.post("/sample-data/share", requireAuth, requireRole("OWNER"), async (req, res) => {
-  const result = await shareCasesForTesting();
-  await audit(req, "sample_data.shared", "SampleData", null, result);
-  res.json(result);
-});
-
-adminRouter.delete("/sample-data", requireAuth, requireRole("OWNER"), async (req, res) => {
-  const result = await removeSampleData();
-  await audit(req, "sample_data.removed", "SampleData", null, result);
-  res.json(result);
-});

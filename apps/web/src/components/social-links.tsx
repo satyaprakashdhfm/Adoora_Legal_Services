@@ -1,9 +1,11 @@
 import { firm } from "@/content/firm";
+import type { PublicContact } from "@/lib/contact";
 
 /**
- * The firm's social profiles: LinkedIn and Instagram, and in the footer
- * WhatsApp too (the firm's own number, via wa.me). Set the LinkedIn and
- * Instagram addresses in `content/firm.ts`.
+ * The firm's social profiles: LinkedIn and Instagram always, YouTube, X and
+ * Facebook once Site settings has their address, and in the footer WhatsApp
+ * too (the firm's own number, via wa.me). The addresses are edited in the
+ * console (Website → Site settings).
  *
  * - `ribbon`  small icons in the utility bar above the header
  * - `drawer`  the mobile menu
@@ -14,43 +16,44 @@ import { firm } from "@/content/firm";
  * address yet is drawn but is not a link, so nothing points at a dead page.
  */
 
-type Profile = {
-  name: string;
-  href: string;
-  path: string;
-  fill: boolean;
-  viewBox?: string;
-};
+type Icon = { path: string; fill: boolean; viewBox?: string };
 
-const ALL_PROFILES: Profile[] = [
-  {
-    name: "LinkedIn",
-    href: firm.linkedin,
+type Network = PublicContact["social"][number]["name"] | "WhatsApp";
+
+const ICONS: Record<Network, Icon> = {
+  LinkedIn: {
     path: "M4.6 7.4h2.7V17H4.6zM5.95 3a1.6 1.6 0 110 3.2 1.6 1.6 0 010-3.2zM9.2 7.4h2.6v1.3h.04c.36-.66 1.24-1.36 2.56-1.36 2.74 0 3.25 1.7 3.25 3.9V17h-2.7v-4.24c0-1.01-.02-2.31-1.45-2.31-1.45 0-1.67 1.1-1.67 2.24V17H9.2z",
     fill: true,
   },
-  {
-    name: "WhatsApp",
-    href: `https://wa.me/${firm.phoneE164.replace(/^\+/, "")}`,
+  WhatsApp: {
     viewBox: "0 0 24 24",
     path: "M17.47 14.38c-.3-.15-1.76-.87-2.03-.97-.27-.1-.47-.15-.67.15-.2.3-.77.97-.94 1.16-.17.2-.35.22-.64.08-.3-.15-1.26-.46-2.39-1.48-.88-.79-1.48-1.76-1.65-2.06-.17-.3-.02-.46.13-.6.13-.14.3-.35.44-.52.15-.18.2-.3.3-.5.1-.2.05-.37-.02-.52-.08-.15-.67-1.61-.92-2.2-.24-.58-.49-.5-.67-.51h-.57c-.2 0-.52.07-.79.37-.27.3-1.04 1.02-1.04 2.48 0 1.46 1.07 2.88 1.21 3.07.15.2 2.1 3.2 5.08 4.49.71.31 1.26.49 1.7.63.71.22 1.36.19 1.87.12.57-.09 1.76-.72 2-1.42.25-.69.25-1.29.18-1.41-.08-.12-.27-.2-.57-.35zM12.05 21.79h-.01a9.87 9.87 0 01-5.03-1.38l-.36-.21-3.74.98 1-3.65-.24-.37a9.86 9.86 0 01-1.51-5.26c0-5.45 4.44-9.88 9.89-9.88 2.64 0 5.12 1.03 6.99 2.9a9.82 9.82 0 012.89 6.99c0 5.45-4.44 9.88-9.89 9.88zm8.41-18.3A11.82 11.82 0 0012.05 0C5.5 0 .16 5.34.16 11.89c0 2.1.55 4.14 1.59 5.95L.06 24l6.3-1.65a11.88 11.88 0 005.69 1.45c6.55 0 11.89-5.34 11.89-11.89 0-3.18-1.24-6.17-3.48-8.42z",
     fill: true,
   },
-  {
-    name: "Instagram",
-    href: firm.instagram,
+  Instagram: {
     path: "M6.5 2.75h7a3.75 3.75 0 013.75 3.75v7a3.75 3.75 0 01-3.75 3.75h-7a3.75 3.75 0 01-3.75-3.75v-7A3.75 3.75 0 016.5 2.75zM10 6.6a3.4 3.4 0 110 6.8 3.4 3.4 0 010-6.8zM14.4 5.35h.01",
     fill: false,
   },
-];
+  YouTube: {
+    viewBox: "0 0 24 24",
+    path: "M21.6 7.2a2.5 2.5 0 00-1.77-1.77C18.27 5 12 5 12 5s-6.27 0-7.83.43A2.5 2.5 0 002.4 7.2 26 26 0 002 12a26 26 0 00.4 4.8 2.5 2.5 0 001.77 1.77C5.73 19 12 19 12 19s6.27 0 7.83-.43a2.5 2.5 0 001.77-1.77A26 26 0 0022 12a26 26 0 00-.4-4.8zM10 15V9l5.2 3z",
+    fill: true,
+  },
+  X: {
+    viewBox: "0 0 24 24",
+    path: "M17.75 3h3.07l-6.7 7.66L22 21h-6.17l-4.83-6.32L5.47 21H2.4l7.17-8.2L2 3h6.33l4.37 5.78zm-1.08 16.17h1.7L7.4 4.74H5.58z",
+    fill: true,
+  },
+  Facebook: {
+    viewBox: "0 0 24 24",
+    path: "M13.5 21v-7.5h2.53l.38-2.94H13.5V8.69c0-.85.24-1.43 1.46-1.43h1.56V4.64A21 21 0 0014.25 4.5c-2.25 0-3.79 1.37-3.79 3.89v2.17H7.92v2.94h2.54V21z",
+    fill: true,
+  },
+};
 
-/* The ribbon and drawer: LinkedIn and Instagram. */
-const PROFILES = ALL_PROFILES.filter((profile) => profile.name !== "WhatsApp");
+type Props = { variant: "ribbon" | "drawer" | "footer"; contact: PublicContact };
 
-export const hasSocialLinks = PROFILES.length > 0;
-
-export function SocialLinks({ variant }: { variant: "ribbon" | "drawer" | "footer" }) {
-  if (variant !== "footer" && !hasSocialLinks) return null;
+export function SocialLinks({ variant, contact }: Props) {
 
   const link =
     variant === "drawer"
@@ -58,9 +61,9 @@ export function SocialLinks({ variant }: { variant: "ribbon" | "drawer" | "foote
         : "inline-flex items-center transition hover:text-gold-bright";
   const size = variant === "ribbon" ? "h-3.5 w-3.5" : "h-4 w-4";
 
-  if (variant === "footer") return <FooterBrandIcons />;
+  if (variant === "footer") return <FooterBrandIcons contact={contact} />;
 
-  const profiles = PROFILES;
+  const profiles = contact.social.map((profile) => ({ ...profile, ...ICONS[profile.name] }));
 
   return (
     <div className={`flex items-center ${variant === "ribbon" ? "gap-3" : "gap-2"}`}>
@@ -93,7 +96,25 @@ export function SocialLinks({ variant }: { variant: "ribbon" | "drawer" | "foote
  * The footer's row: each network's own mark in its own colours, with no
  * frame around it. A profile with no address yet is drawn but not linked.
  */
-const brandMarks: Record<string, React.JSX.Element> = {
+const brandMarks: Record<Network, React.JSX.Element> = {
+  YouTube: (
+    <svg viewBox="0 0 24 24" aria-hidden="true" className="h-6 w-6">
+      <rect width="24" height="24" rx="5" fill="#FF0000" />
+      <path fill="#fff" d="M10 15.2V8.8l5.5 3.2z" />
+    </svg>
+  ),
+  X: (
+    <svg viewBox="0 0 24 24" aria-hidden="true" className="h-6 w-6">
+      <rect width="24" height="24" rx="5" fill="#000" />
+      <path fill="#fff" d="M15.9 6h1.95l-4.26 4.87L18.6 18h-3.92l-3.07-4.02L8.1 18H6.14l4.56-5.21L5.9 6h4.02l2.78 3.67zm-.69 10.76h1.08L9.32 7.18H8.16z" />
+    </svg>
+  ),
+  Facebook: (
+    <svg viewBox="0 0 24 24" aria-hidden="true" className="h-6 w-6">
+      <rect width="24" height="24" rx="5" fill="#1877F2" />
+      <path fill="#fff" d="M13.2 19v-5.6h1.9l.28-2.2H13.2V9.8c0-.64.18-1.07 1.1-1.07h1.17V6.76a15.6 15.6 0 00-1.7-.09c-1.69 0-2.84 1.03-2.84 2.92v1.62H9v2.2h1.9V19z" />
+    </svg>
+  ),
   LinkedIn: (
     <svg viewBox="0 0 24 24" aria-hidden="true" className="h-6 w-6">
       <rect width="24" height="24" rx="4" fill="#0A66C2" />
@@ -131,10 +152,13 @@ const brandMarks: Record<string, React.JSX.Element> = {
   ),
 };
 
-function FooterBrandIcons() {
+function FooterBrandIcons({ contact }: { contact: PublicContact }) {
+  // WhatsApp sits after LinkedIn, as it always has.
+  const [first, ...rest] = contact.social;
+  const profiles = [...(first ? [first] : []), { name: "WhatsApp" as const, href: contact.whatsappHref }, ...rest];
   return (
     <div className="flex items-center gap-3">
-      {ALL_PROFILES.map((profile) => {
+      {profiles.map((profile) => {
         const mark = brandMarks[profile.name];
         return profile.href ? (
           <a

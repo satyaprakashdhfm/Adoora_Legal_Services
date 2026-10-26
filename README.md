@@ -110,11 +110,9 @@ Git-connected and redeploys on push to its branch.
 | --- | --- | --- | --- | --- |
 | `adoora-coming-soon` (production website) | `main` | `apps/web` | | Holds `www.adooralegalservices.com` (port 8080). Never sleeps |
 | `adoora-api-prod` | `main` | `apps/api` | `Postgres-CJo6`, bucket `documents-prod` | Google and OTP sign-in only |
-| `adoora-web` (staging) | `dev` | `apps/web` | | Test logins shown (`NEXT_PUBLIC_PASSWORD_SIGN_IN`, `NEXT_PUBLIC_SHOW_TEST_LOGINS`) |
-| `adoora-api` (staging) | `dev` | `apps/api` | `Postgres`, bucket `documents` | `PASSWORD_SIGN_IN=on`; sample data with `SAMPLE_DATA=add` |
+| `adoora-web` (staging) | `dev` | `apps/web` | | |
+| `adoora-api` (staging) | `dev` | `apps/api` | `Postgres`, bucket `documents` | |
 
-Production leaves `PASSWORD_SIGN_IN`, `SAMPLE_DATA` and the web's
-`NEXT_PUBLIC_*_SIGN_IN` / `TEST_LOGINS` switches unset (off).
 `BOOTSTRAP_OWNER="email,mobile,name"` keeps one owner able to sign in at
 `/admin/login`. Never copy a whole variable list between production and
 staging: `DATABASE_URL`, `S3_*`, `APP_URL`, `CORS_ORIGINS`, `JWT_SECRET` and

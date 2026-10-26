@@ -12,10 +12,8 @@ export const metadata: Metadata = {
 };
 
 /*
- * The firm's pro bono and community work, and how an organisation can work
- * with it. The copy describes the kinds of work and partner the firm is open
- * to; it names no partner organisation, because none has been confirmed.
- * Add named partners here once the firm has agreed to list them.
+ * The firm's pro bono and community work, and the way in for an
+ * organisation that wants to work with it.
  */
 
 const work = [
@@ -42,44 +40,6 @@ const work = [
   {
     title: "Help after emergencies",
     body: "Replacing lost documents, insurance claims and compensation applications for families affected by floods, accidents and other emergencies.",
-  },
-];
-
-const partners = [
-  {
-    title: "Legal services authorities",
-    body: "District and State Legal Services Authorities, and the legal aid panels and Lok Adalats they run.",
-  },
-  {
-    title: "NGOs and community groups",
-    body: "Organisations working with women, children, workers, senior citizens and persons with disabilities.",
-  },
-  {
-    title: "Law schools and legal aid clinics",
-    body: "Clinics run by law colleges, and student programmes that take legal awareness into the community.",
-  },
-  {
-    title: "Companies with community programmes",
-    body: "Businesses that want legal awareness or legal aid to be part of the work they do in their communities.",
-  },
-  {
-    title: "Welfare associations",
-    body: "Resident, worker and farmer associations that want their members to understand their rights.",
-  },
-];
-
-const steps = [
-  {
-    title: "Tell us about the need",
-    body: "Write to us with what your organisation does, who it serves and the kind of legal help that would make a difference.",
-  },
-  {
-    title: "Agree the scope",
-    body: "We agree what we will take on, who from the firm will lead it, and how cases or sessions will be referred to us.",
-  },
-  {
-    title: "Review it together",
-    body: "We look back at the arrangement at regular intervals and adjust it to what is working.",
   },
 ];
 
@@ -140,50 +100,9 @@ export default function CommunityPage() {
         </div>
       </section>
 
-      {/* Who we work with. */}
+      {/* The way in. */}
       <section className="container-page py-12 sm:py-14">
-        <SectionHeading
-          eyebrow="Tie-ups"
-          title="Organisations we work with"
-          lead="We are open to working with organisations of these kinds. Every case goes through the same conflict check as any other, and we take work on as our capacity allows."
-        />
-        <ul className="mt-8 grid gap-x-10 gap-y-6 border-t border-line pt-8 sm:grid-cols-2 lg:grid-cols-3">
-          {partners.map((item) => (
-            <li key={item.title} className="flex gap-4">
-              <span aria-hidden="true" className="mt-2 h-px w-6 shrink-0 bg-gold" />
-              <div>
-                <h3 className="font-serif text-lg font-semibold tracking-tight text-ink">
-                  {titleCase(item.title)}
-                </h3>
-                <p className="mt-1.5 text-[0.95rem] leading-relaxed text-ink-soft">{item.body}</p>
-              </div>
-            </li>
-          ))}
-        </ul>
-      </section>
-
-      {/* How a tie-up works, and the way in. */}
-      <section className="border-t border-line bg-paper-warm">
-        <div className="container-page grid gap-10 py-12 sm:py-14 lg:grid-cols-[minmax(0,1.4fr)_minmax(0,1fr)] lg:gap-14">
-          <div>
-            <SectionHeading eyebrow="Working together" title="How a tie-up works" />
-            <ol className="mt-8 space-y-6">
-              {steps.map((step, index) => (
-                <li key={step.title} className="grid grid-cols-[3rem_1fr] gap-4">
-                  <span aria-hidden="true" className="font-serif text-2xl font-semibold text-gold/50">
-                    {String(index + 1).padStart(2, "0")}
-                  </span>
-                  <div>
-                    <h3 className="font-serif text-lg font-semibold tracking-tight text-ink">
-                      {titleCase(step.title)}
-                    </h3>
-                    <p className="mt-1.5 text-[0.95rem] leading-relaxed text-ink-soft">{step.body}</p>
-                  </div>
-                </li>
-              ))}
-            </ol>
-          </div>
-
+        <div className="mx-auto max-w-2xl">
           <div className="flex flex-col justify-center rounded-2xl border border-mist-line bg-mist p-7 sm:p-9">
             <h2 className="font-serif text-2xl font-semibold leading-tight tracking-tight text-ink sm:text-3xl">
               Work With Us on a Cause

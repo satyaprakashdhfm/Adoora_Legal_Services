@@ -84,56 +84,7 @@ export default async function AboutPage() {
               ))}
             </div>
 
-            <p className="mt-6 font-serif text-sm italic leading-relaxed text-slate">
-              {coreValues.close}
-            </p>
           </div>
-        </div>
-      </section>
-
-      {/* Approach */}
-      <section id="approach" className="border-y border-line bg-paper-warm">
-        <div className="container-page py-12 sm:py-14">
-          <SectionHeading eyebrow="Our approach" title="Key strengths" />
-
-          <ul className="mt-8 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
-            {[
-              {
-                title: "Regional Expertise",
-                body: "Extensive knowledge of legal and regulatory frameworks across Andhra Pradesh, Karnataka and Telangana, ensuring precise jurisdictional compliance.",
-              },
-              {
-                title: "Strategic Legal Solutions",
-                body: "Tailored legal counsel designed to mitigate risks, ensure regulatory adherence and address industry-specific challenges.",
-              },
-              {
-                title: "Proven Legal Expertise",
-                body: "A highly skilled team of attorneys and legal professionals with extensive experience in corporate law, dispute resolution and compliance.",
-              },
-              {
-                title: "Client-Focused Advocacy",
-                body: "Dedicated to safeguarding clients' interests through proactive legal representation, strategic advisory and result-oriented solutions.",
-              },
-            ].map((item, index) => (
-              <li
-                key={item.title}
-                className="rounded-xl border border-line bg-paper p-6"
-              >
-                <span
-                  aria-hidden="true"
-                  className="font-serif text-2xl font-semibold text-gold/40"
-                >
-                  {String(index + 1).padStart(2, "0")}
-                </span>
-                <h3 className="mt-3 font-serif text-lg font-semibold leading-snug tracking-tight text-ink">
-                  {item.title}
-                </h3>
-                <p className="mt-2.5 text-sm leading-relaxed text-ink-soft">
-                  {item.body}
-                </p>
-              </li>
-            ))}
-          </ul>
         </div>
       </section>
 

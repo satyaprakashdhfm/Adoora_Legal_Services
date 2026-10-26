@@ -1059,3 +1059,13 @@ model DocGuideUpdate {
   key       String   @id
   appliedAt DateTime @default(now())
 }
+
+/// The website's contact details, social profiles, careers line and form
+/// emails, edited in the console (Website → Site settings). One JSON row per
+/// key; only "contact" is used. Empty fields fall back to the firm's
+/// defaults (lib/site-settings.ts).
+model SiteSetting {
+  key       String   @id
+  value     Json
+  updatedAt DateTime @updatedAt
+}

@@ -41,7 +41,8 @@ const locations = [
  * API has no column for "current location", so it travels folded into the
  * top of `message` rather than being dropped silently.
  */
-export function CareerForm({ role }: { role: string }) {
+/** `email` is the careers address from Site settings, offered if sending fails. */
+export function CareerForm({ role, email }: { role: string; email: string }) {
   const [status, setStatus] = useState<Status>("idle");
   const [error, setError] = useState<string | null>(null);
   const [description, setDescription] = useState("");
@@ -298,7 +299,7 @@ export function CareerForm({ role }: { role: string }) {
           role="alert"
           className="mt-5 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800"
         >
-          {error} You can also email info@adooralegalservices.com directly.
+          {error}{email ? ` You can also email ${email} directly.` : ""}
         </p>
       )}
 

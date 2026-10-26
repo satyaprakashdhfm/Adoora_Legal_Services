@@ -4,6 +4,7 @@ import { PageHero } from "@/components/ui";
 import { publicImage } from "@/lib/public-image";
 import { EnquiryForm } from "@/components/enquiry-form";
 import { firm, offices } from "@/content/firm";
+import { getContact } from "@/lib/website-data";
 
 export const metadata: Metadata = {
   title: "Contact Us",
@@ -12,7 +13,8 @@ export const metadata: Metadata = {
   alternates: { canonical: "/contact" },
 };
 
-export default function ContactPage() {
+export default async function ContactPage() {
+  const contact = await getContact();
   /* The same photograph and wash as the careers panel on the home page, so the
      two calls to action read as one family. */
   const cardImage = publicImage("careers-office");
@@ -73,28 +75,71 @@ export default function ContactPage() {
             <div className="rounded-2xl border border-line bg-paper-warm p-7">
               <h2 className="eyebrow text-gold-deep">Direct</h2>
               <div className="mt-4 space-y-4">
-                <div>
-                  <p className="text-xs uppercase tracking-[0.14em] text-slate-light">
-                    Telephone
-                  </p>
-                  <a
-                    href={firm.phoneHref}
-                    className="mt-1 block font-serif text-xl font-semibold text-ink transition hover:text-gold-deep"
-                  >
-                    {firm.phone}
-                  </a>
-                </div>
-                <div>
-                  <p className="text-xs uppercase tracking-[0.14em] text-slate-light">
-                    Email
-                  </p>
-                  <a
-                    href={firm.emailHref}
-                    className="mt-1 block break-all font-medium text-ink transition hover:text-gold-deep"
-                  >
-                    {firm.email}
-                  </a>
-                </div>
+                {contact.mobiles.length > 0 && (
+                  <div>
+                    <p className="text-xs uppercase tracking-[0.14em] text-slate-light">
+                      {contact.mobiles.length > 1 ? "Mobiles" : "Telephone"}
+                    </p>
+                    {contact.mobiles.map((mobile) => (
+                      <a
+                        key={mobile.href}
+                        href={mobile.href}
+                        className="mt-1 block font-serif text-xl font-semibold text-ink transition hover:text-gold-deep"
+                      >
+                        {mobile.label}
+                      </a>
+                    ))}
+                  </div>
+                )}
+                {contact.landline.href && (
+                  <div>
+                    <p className="text-xs uppercase tracking-[0.14em] text-slate-light">
+                      Landline
+                    </p>
+                    <a
+                      href={contact.landline.href}
+                      className="mt-1 block font-serif text-xl font-semibold text-ink transition hover:text-gold-deep"
+                    >
+                      {contact.landline.label}
+                    </a>
+                  </div>
+                )}
+                {contact.whatsappHref && (
+                  <div>
+                    <p className="text-xs uppercase tracking-[0.14em] text-slate-light">
+                      WhatsApp
+                    </p>
+                    <a
+                      href={contact.whatsappHref}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="mt-1 block font-medium text-ink transition hover:text-gold-deep"
+                    >
+                      Chat with us on WhatsApp
+                    </a>
+                  </div>
+                )}
+                {contact.email && (
+                  <div>
+                    <p className="text-xs uppercase tracking-[0.14em] text-slate-light">
+                      Email
+                    </p>
+                    <a
+                      href={contact.emailHref}
+                      className="mt-1 block break-all font-medium text-ink transition hover:text-gold-deep"
+                    >
+                      {contact.email}
+                    </a>
+                  </div>
+                )}
+                {contact.hours && (
+                  <div>
+                    <p className="text-xs uppercase tracking-[0.14em] text-slate-light">
+                      Office hours
+                    </p>
+                    <p className="mt-1 font-medium text-ink">{contact.hours}</p>
+                  </div>
+                )}
               </div>
             </div>
 

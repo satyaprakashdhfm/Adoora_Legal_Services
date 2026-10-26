@@ -85,7 +85,7 @@ export async function api<T = unknown>(
  * cached copy so the change shows on the next visit. Best-effort: the pages
  * refresh within five minutes regardless.
  */
-export async function refreshWebsite(tags: ("website-people" | "website-jobs" | "website-articles" | "website-partners")[]) {
+export async function refreshWebsite(tags: ("website-people" | "website-jobs" | "website-articles" | "website-partners" | "website-settings")[]) {
   await fetch("/revalidate", {
     method: "POST",
     credentials: "same-origin",

@@ -8,7 +8,7 @@ import { CityIcon } from "@/components/city-icon";
 import { OurApproach } from "@/components/our-approach";
 import { PartnersHoneycomb } from "@/components/partners-honeycomb";
 import { firm, firmOverview, differentiators, offices } from "@/content/firm";
-import { getFeaturedPeople, getInsights, getPartners, STUDIO_PORTRAITS } from "@/lib/website-data";
+import { getContact, getFeaturedPeople, getInsights, getPartners, STUDIO_PORTRAITS } from "@/lib/website-data";
 import { PeopleCards } from "@/components/people-cards";
 import { practiceAreas } from "@/content/practice-areas";
 import { heroSlides } from "@/content/hero-slides";
@@ -61,6 +61,7 @@ export default async function Home() {
   );
   const latestInsights = (await getInsights()).slice(0, 3);
   const partners = await getPartners();
+  const contact = await getContact();
   const practiceGridItems = practiceGridOrder
     .map((slug) => practiceAreas.find((area) => area.slug === slug))
     .filter((area): area is (typeof practiceAreas)[number] => Boolean(area))
@@ -152,7 +153,6 @@ export default async function Home() {
           <SectionHeading
             eyebrow="Our practices"
             title="Practice areas"
-            lead="Our practice brings together diverse areas of law, with a shared focus on clear, practical legal advice."
           />
           <Link
             href="/services"
@@ -176,7 +176,6 @@ export default async function Home() {
             <SectionHeading
               eyebrow="Insights"
               title="Articles &amp; publications"
-              lead="Perspectives from our lawyers on evolving laws, important developments, and the issues shaping legal practice."
             />
             <Link
               href="/insights"
@@ -210,7 +209,7 @@ export default async function Home() {
           photograph beside a mosaic of five numbered cards. */}
       <section>
         <div className="container-page pb-8 pt-6 sm:pb-10 sm:pt-7">
-          <SectionHeading eyebrow="The Standard" title="Our Approach" lead="What you can expect when you work with us." />
+          <SectionHeading eyebrow="The Standard" title="Our Approach" />
 
           <div className="mt-6">
             <OurApproach items={differentiators} />
@@ -345,8 +344,9 @@ export default async function Home() {
             name: firm.name,
             description: firm.descriptor,
             url: siteUrl,
-            telephone: firm.phoneE164,
-            email: firm.email,
+            telephone: contact.primary.href.replace(/^tel:/, "") || undefined,
+            email: contact.email || undefined,
+            sameAs: contact.social.map((profile) => profile.href).filter(Boolean),
             areaServed: ["Telangana", "Andhra Pradesh", "Karnataka"],
             address: offices.map((office) => ({
               "@type": "PostalAddress",

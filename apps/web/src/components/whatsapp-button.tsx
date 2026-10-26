@@ -1,12 +1,11 @@
-import { firm } from "@/content/firm";
+import type { PublicContact } from "@/lib/contact";
 
 /**
  * Floating WhatsApp button, fixed to the bottom-right corner of every page
  * (see the root layout, which keeps it off `/notice`).
  *
- * It opens a chat with the firm's contact number. There is deliberately no
- * separate WhatsApp number to keep in step: `wa.me` wants the E.164 number
- * with the `+` dropped, which `firm.phoneE164` already is.
+ * It opens a chat with the WhatsApp number in Site settings (Mobile 1 unless
+ * another is set there).
  *
  * Two thin rings expand from the button's edge and fade to nothing,
  * staggered so there is always one mid-flight (`.whatsapp-ripple` in
@@ -27,8 +26,9 @@ import { firm } from "@/content/firm";
  * part of the mark, and it should read as WhatsApp against any band it
  * happens to float over.
  */
-export function WhatsAppButton() {
-  const href = `https://wa.me/${firm.phoneE164.replace(/^\+/, "")}`;
+export function WhatsAppButton({ contact }: { contact: PublicContact }) {
+  const href = contact.whatsappHref;
+  if (!href) return null;
 
   return (
     <a

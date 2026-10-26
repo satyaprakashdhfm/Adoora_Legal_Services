@@ -138,14 +138,6 @@ const schema = z.object({
   GEMINI_IMAGE_MODEL: z.string().min(3).default("gemini-3.1-flash-lite-image"),
   /** "false" stops the in-process jobs (feed reading, morning drafts). */
   JOBS_ENABLED: z.enum(["true", "false"]).default("true"),
-  /** "add" puts the fictional sample data in once, at start-up (see demo/sample-data.ts). */
-  SAMPLE_DATA: z.enum(["add", "off"]).default("off"),
-  /**
-   * "on" turns on the temporary username and password sign-in
-   * (auth/temp-accounts.ts) for testing. Off in production, where staff and
-   * clients sign in with Google or a mobile OTP.
-   */
-  PASSWORD_SIGN_IN: z.enum(["on", "off"]).default("off"),
   /** "email,mobile,name": an owner who can always sign in (auth/bootstrap-owner.ts). */
   BOOTSTRAP_OWNER: optionalString(z.string()),
   /** One-off: the staging database the go-live copy reads from (scripts/go-live-copy.ts). */

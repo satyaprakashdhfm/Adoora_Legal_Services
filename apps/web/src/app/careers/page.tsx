@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { PageHero, SectionHeading } from "@/components/ui";
 import { ApplyDialog } from "@/components/apply-dialog";
 import { roles as staticRoles } from "@/content/careers";
-import { getJobs, type Job } from "@/lib/website-data";
+import { getContact, getJobs, type Job } from "@/lib/website-data";
 import { practiceAreaBySlug } from "@/content/practice-areas";
 
 export const metadata: Metadata = {
@@ -48,7 +48,7 @@ function jobMeta(job: Job) {
  * careers.ts rather than claiming there are none.
  */
 export default async function CareersPage() {
-  const live = await getJobs();
+  const [live, contact] = await Promise.all([getJobs(), getContact()]);
   const jobs: Job[] =
     live ??
     staticRoles.map((role) => ({
@@ -116,6 +116,7 @@ export default async function CareersPage() {
 
                       <ApplyDialog
                         role={job.title}
+                        email={contact.careersEmail}
                         className="inline-flex shrink-0 items-center gap-2 self-start rounded-full bg-ink px-6 py-3 text-sm font-semibold text-white transition hover:bg-ink-mid"
                       >
                         Apply
@@ -157,6 +158,28 @@ export default async function CareersPage() {
             </ul>
           )}
 
+          {/* The careers line from Site settings, for questions about a role. */}
+          {(contact.careersEmail || contact.careersPhone.href) && (
+            <p className="mt-8 text-sm text-ink-soft">
+              Questions about a role?{" "}
+              {contact.careersEmail && (
+                <>
+                  Write to{" "}
+                  <a href={`mailto:${contact.careersEmail}`} className="font-semibold text-gold-deep underline decoration-gold/30 underline-offset-4">
+                    {contact.careersEmail}
+                  </a>
+                </>
+              )}
+              {contact.careersEmail && contact.careersPhone.href && " or call "}
+              {!contact.careersEmail && contact.careersPhone.href && "Call "}
+              {contact.careersPhone.href && (
+                <a href={contact.careersPhone.href} className="font-semibold text-gold-deep underline decoration-gold/30 underline-offset-4">
+                  {contact.careersPhone.label}
+                </a>
+              )}
+              .
+            </p>
+          )}
         </div>
       </section>
     </>

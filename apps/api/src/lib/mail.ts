@@ -1,12 +1,15 @@
 import { Resend } from "resend";
 import { env } from "../env.js";
 import { logger } from "../logger.js";
+import { readSettings } from "./site-settings.js";
 
 /**
- * Email through Resend, for the website forms: the firm is told of each new
- * enquiry and career application, and the person who sent it gets a short
- * acknowledgement with their reference. Without a key nothing is mailed; the
- * forms still save, and the console lists them as before.
+ * Email through Resend, for the website forms, set out as Deeds & Co. sends
+ * them: one email to the firm for each new enquiry and each career
+ * application (with the résumé attached), a plain table of what was sent.
+ * Where each goes, and the sender, are in Site settings (lib/site-settings.ts;
+ * NOTIFY_EMAIL, HR_EMAIL and MAIL_FROM are the defaults). Reply goes to the person who sent the form. Without a key
+ * nothing is mailed; the forms still save, and the console lists them.
  *
  * Sending never holds up or fails a form: the record is already saved, so a
  * mail that cannot go is logged and the visitor still sees their reference.
@@ -15,38 +18,54 @@ import { logger } from "../logger.js";
 const apiKey = env.RESEND_KEY ?? env.RESEND_API_KEY;
 const resend = apiKey ? new Resend(apiKey) : null;
 
-const FIRM = "Adoora Legal Services";
+type Attachment = { filename: string; content: Buffer };
 
 type Mail = {
-  to: string;
+  /** Which Site settings address it goes to. */
+  to: "notifyEmail" | "notifyCareersEmail";
   subject: string;
-  /** Paragraphs; a line of the form "Label: value" is kept as it is. */
-  lines: string[];
+  html: string;
+  text: string;
   replyTo?: string;
+  attachments?: Attachment[];
   /** Resend drops a repeat of the same key for 24 hours, so a retry is never sent twice. */
   idempotencyKey: string;
 };
 
-const escape = (text: string) =>
-  text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+const escape = (value: string) =>
+  value.replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c] ?? c);
 
-function html(lines: string[]) {
-  const body = lines
-    .map((line) => `<p style="margin:0 0 12px">${escape(line).replace(/\n/g, "<br>")}</p>`)
-    .join("");
-  return `<div style="font-family:Georgia,serif;font-size:15px;line-height:1.55;color:#14213d;max-width:560px">${body}</div>`;
+/** A plain two-column table of the submitted fields, and the same as text. */
+function render(title: string, rows: [string, string][], footer: string) {
+  const filled = rows.filter(([, value]) => value);
+  const html = `<div style="font-family:Arial,sans-serif;font-size:14px;color:#14213d">
+<h2 style="color:#9a6224;margin:0 0 12px">${escape(title)}</h2>
+<table cellpadding="6" style="border-collapse:collapse">${filled
+    .map(
+      ([label, value]) =>
+        `<tr><td style="vertical-align:top;color:#5b6475;white-space:nowrap"><b>${escape(label)}</b></td><td style="white-space:pre-wrap">${escape(value)}</td></tr>`,
+    )
+    .join("")}</table>
+<p style="color:#5b6475;font-size:12px;margin-top:16px">${escape(footer)}</p></div>`;
+  const text = `${title}\n\n${filled.map(([label, value]) => `${label}: ${value}`).join("\n")}\n\n${footer}`;
+  return { html, text };
 }
 
 async function send(mail: Mail) {
-  if (!resend) return;
+  if (!resend) {
+    logger.warn({ key: mail.idempotencyKey }, "Email not sent: RESEND_KEY is not set");
+    return;
+  }
+  const settings = await readSettings();
   const { error } = await resend.emails.send(
     {
-      from: env.MAIL_FROM,
-      to: mail.to,
+      from: settings.emailFrom,
+      to: settings[mail.to],
       replyTo: mail.replyTo,
       subject: mail.subject,
-      html: html(mail.lines),
-      text: mail.lines.join("\n\n"),
+      html: mail.html,
+      text: mail.text,
+      attachments: mail.attachments?.length ? mail.attachments : undefined,
     },
     { idempotencyKey: mail.idempotencyKey },
   );
@@ -55,13 +74,9 @@ async function send(mail: Mail) {
   else logger.info({ key: mail.idempotencyKey }, "Email sent");
 }
 
-function sendAll(mails: Mail[]) {
-  for (const mail of mails) {
-    void send(mail).catch((error: unknown) => logger.error({ key: mail.idempotencyKey, err: error }, "Email not sent"));
-  }
+function sendInBackground(mail: Mail) {
+  void send(mail).catch((error: unknown) => logger.error({ key: mail.idempotencyKey, err: error }, "Email not sent"));
 }
-
-const consoleLink = (path: string) => new URL(path, env.APP_URL).toString();
 
 export function mailEnquiry(enquiry: {
   reference: string;
@@ -71,80 +86,61 @@ export function mailEnquiry(enquiry: {
   matterType: string;
   description: string;
 }) {
-  sendAll([
-    {
-      to: env.NOTIFY_EMAIL,
-      replyTo: enquiry.email,
-      subject: `New enquiry ${enquiry.reference}: ${enquiry.matterType}`,
-      lines: [
-        `A new enquiry has come in through the website.`,
-        `Reference: ${enquiry.reference}\nName: ${enquiry.name}\nEmail: ${enquiry.email}\nPhone: ${enquiry.phone}\nCase type: ${enquiry.matterType}`,
-        enquiry.description,
-        `Reply to this email to write to ${enquiry.name}, or open it in the console: ${consoleLink("/admin/enquiries")}`,
-      ],
-      idempotencyKey: `enquiry-notify/${enquiry.reference}`,
-    },
-    {
-      to: enquiry.email,
-      replyTo: env.NOTIFY_EMAIL,
-      subject: `We have received your enquiry (${enquiry.reference})`,
-      lines: [
-        `Dear ${enquiry.name},`,
-        `Thank you for contacting ${FIRM}. Your enquiry has reached us and we aim to acknowledge every enquiry within one working day.`,
-        `Your reference is ${enquiry.reference}. Please quote it if you write to us about this matter.`,
-        `This is an acknowledgement only; it does not create a lawyer–client relationship. Please do not send confidential documents until we have been in touch.`,
-        `${FIRM}`,
-      ],
-      idempotencyKey: `enquiry-ack/${enquiry.reference}`,
-    },
-  ]);
+  const { html, text } = render(
+    `New enquiry ${enquiry.reference}`,
+    [
+      ["Name", enquiry.name],
+      ["Email", enquiry.email],
+      ["Phone", enquiry.phone],
+      ["Matter", enquiry.matterType],
+      ["Description", enquiry.description],
+    ],
+    "Sent from the contact form on the website. Reply to this email to answer the enquirer; it is also in the admin console under Enquiries.",
+  );
+  sendInBackground({
+    to: "notifyEmail",
+    subject: `New enquiry: ${enquiry.matterType} — ${enquiry.name}`,
+    html,
+    text,
+    replyTo: enquiry.email,
+    idempotencyKey: `enquiry-notify/${enquiry.reference}`,
+  });
 }
 
-export function mailApplication(application: {
-  reference: string;
-  name: string;
-  email: string;
-  phone: string;
-  role: string;
-  enrolment: string | null;
-  message: string;
-  hasResume: boolean;
-}) {
-  sendAll([
-    {
-      to: env.HR_EMAIL,
-      replyTo: application.email,
-      subject: `New application ${application.reference}: ${application.role}`,
-      lines: [
-        `A new career application has come in through the website.`,
-        [
-          `Reference: ${application.reference}`,
-          `Name: ${application.name}`,
-          `Email: ${application.email}`,
-          `Phone: ${application.phone}`,
-          `Role: ${application.role}`,
-          ...(application.enrolment ? [`Enrolment: ${application.enrolment}`] : []),
-          `Résumé: ${application.hasResume ? "attached to the application in the console" : "not uploaded"}`,
-        ].join("\n"),
-        ...(application.message ? [application.message] : []),
-        `Reply to this email to write to ${application.name}, or open it in the console: ${consoleLink("/admin/applications")}`,
-      ],
-      idempotencyKey: `application-notify/${application.reference}`,
-    },
-    {
-      to: application.email,
-      replyTo: env.HR_EMAIL,
-      subject: `We have received your application (${application.reference})`,
-      lines: [
-        `Dear ${application.name},`,
-        `Thank you for applying for ${application.role} at ${FIRM}. Your application has reached us.`,
-        application.hasResume
-          ? `Your reference is ${application.reference}.`
-          : `Your reference is ${application.reference}. Please reply to this email with your CV, quoting the reference, so we can consider it alongside your application.`,
-        `We read every application and will be in touch if your profile matches what we are looking for.`,
-        `${FIRM}`,
-      ],
-      idempotencyKey: `application-ack/${application.reference}`,
-    },
-  ]);
+export function mailApplication(
+  application: {
+    reference: string;
+    name: string;
+    email: string;
+    phone: string;
+    role: string;
+    experience: string;
+    enrolment: string;
+    message: string;
+  },
+  resume: Attachment | null,
+) {
+  const { html, text } = render(
+    `New job application ${application.reference}`,
+    [
+      ["Name", application.name],
+      ["Email", application.email],
+      ["Phone", application.phone],
+      ["Position", application.role],
+      ["Experience", application.experience],
+      ["Enrolment", application.enrolment],
+      ["Message", application.message],
+      ["Resume", resume ? `Attached (${resume.filename})` : "Not uploaded"],
+    ],
+    "Sent from the careers form on the website. It is also in the admin console under Applications.",
+  );
+  sendInBackground({
+    to: "notifyCareersEmail",
+    subject: `New application: ${application.role} — ${application.name}`,
+    html,
+    text,
+    replyTo: application.email,
+    attachments: resume ? [resume] : [],
+    idempotencyKey: `application-notify/${application.reference}`,
+  });
 }

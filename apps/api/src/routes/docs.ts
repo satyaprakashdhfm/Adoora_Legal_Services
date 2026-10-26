@@ -107,6 +107,16 @@ const GUIDE_UPDATES: {
       "Step by step: partners, team places, calendars and finding things",
     ],
   },
+  {
+    // Live: no test logins, no sample data, no sample partners.
+    key: "2026-10-no-test-logins-or-sample-data",
+    rewrite: [
+      "Signing in",
+      "Cases and the court's own record",
+      "Step by step: jobs, articles, enquiries and more",
+      "Step by step: partners, team places, calendars and finding things",
+    ],
+  },
 ];
 
 type Tx = Parameters<Parameters<typeof prisma.$transaction>[0]>[0];

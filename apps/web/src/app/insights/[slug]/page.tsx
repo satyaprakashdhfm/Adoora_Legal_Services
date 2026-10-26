@@ -7,7 +7,7 @@ import { ShareArticle } from "@/components/share-article";
 import { anchorFor } from "@/lib/anchor";
 import { insights, type Block } from "@/content/insights";
 import { ArticleBody } from "@/components/article-body";
-import { articleAuthor, getInsight, getInsights, getPeople } from "@/lib/website-data";
+import { articleAuthor, getContact, getInsight, getInsights, getPeople } from "@/lib/website-data";
 import { practiceAreaBySlug } from "@/content/practice-areas";
 import { industryBySlug } from "@/content/industries";
 import { firm } from "@/content/firm";
@@ -49,7 +49,7 @@ export default async function InsightPage(
   const insight = await getInsight(slug);
 
   if (!insight) notFound();
-  const allInsights = await getInsights();
+  const [allInsights, contact] = await Promise.all([getInsights(), getContact()]);
 
   const author = articleAuthor(await getPeople(), insight.author);
   const tags = [
@@ -144,10 +144,11 @@ export default async function InsightPage(
             </div>
 
             {/* After the article, a way to ask for help on WhatsApp (the
-                firm's own number, as the floating button uses), centred. */}
+                number in Site settings, as the floating button uses), centred. */}
+            {contact.whatsappHref && (
             <div className="mt-12 flex justify-center">
               <a
-                href={`https://wa.me/${firm.phoneE164.replace(/^\+/, "")}`}
+                href={contact.whatsappHref}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="inline-flex items-center gap-3 rounded-full bg-gold px-8 py-4 text-lg font-semibold text-white transition hover:bg-gold-deep active:scale-[0.98]"
@@ -158,6 +159,7 @@ export default async function InsightPage(
                 </svg>
               </a>
             </div>
+            )}
 
             {/* Not-legal-advice notice — required on every article. */}
             <aside className="mt-8 rounded-xl border border-line bg-paper-warm p-6">

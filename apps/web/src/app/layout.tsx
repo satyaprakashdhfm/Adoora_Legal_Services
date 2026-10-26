@@ -10,6 +10,7 @@ import { HideOnRoutes } from "@/components/hide-on-routes";
 import { WhatsAppButton } from "@/components/whatsapp-button";
 import { LoginDialog } from "@/components/login-dialog";
 import { siteUrl } from "@/lib/site";
+import { getContact } from "@/lib/website-data";
 
 const inter = Inter({
   variable: "--font-inter",
@@ -45,7 +46,9 @@ export const viewport: Viewport = {
   themeColor: "#0b1834",
 };
 
-export default function RootLayout({ children }: LayoutProps<"/">) {
+export default async function RootLayout({ children }: LayoutProps<"/">) {
+  // Site settings: the header, footer and WhatsApp button all show them.
+  const contact = await getContact();
   return (
     <html
       lang="en-IN"
@@ -62,13 +65,13 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
         {/* `/notice` stands alone — no nav, no firm information. The admin
             console brings its own chrome. */}
         <HideOnRoutes routes={["/notice"]} prefixes={["/admin"]}>
-          <SiteHeader />
+          <SiteHeader contact={contact} />
         </HideOnRoutes>
         <main id="main" className="flex-1">
           {children}
         </main>
         <HideOnRoutes routes={["/notice"]} prefixes={["/admin", "/dashboard"]}>
-          <SiteFooter />
+          <SiteFooter contact={contact} />
         </HideOnRoutes>
 
         {/* Bar Council of India gate, then granular cookie consent. Firm staff
@@ -82,7 +85,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
             on `/notice`, which must offer no way to reach the firm, and not
             over the working screens of the dashboards. */}
         <HideOnRoutes routes={["/notice"]} prefixes={["/admin", "/dashboard"]}>
-          <WhatsAppButton />
+          <WhatsAppButton contact={contact} />
         </HideOnRoutes>
 
         {/* The sign-in popup the header's Login button opens. */}

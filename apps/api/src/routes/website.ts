@@ -6,11 +6,13 @@ import { HttpError } from "../lib/http.js";
 import { audit } from "../lib/audit.js";
 import { imageSize, imageType } from "../lib/images.js";
 import { requireAuth, requireRole } from "../middleware/auth.js";
+import { publicSettings, readSettings, settingsSchema, writeSettings } from "../lib/site-settings.js";
 import type { Prisma } from "../../generated/prisma/client.js";
 
 /**
  * What the public website shows that the firm maintains from the console:
- * the lawyers it showcases, its job openings, and its partners' logos.
+ * the lawyers it showcases, its job openings, its partners' logos, and the
+ * contact details and social profiles in Site settings.
  *
  *   websitePublicRouter   /api/public/...   read-only, no sign-in, cacheable
  *   websiteAdminRouter    /api/admin/...    OWNER / ADMIN
@@ -601,4 +603,24 @@ websiteAdminRouter.delete("/partners/:id/logo", ...adminOnly, async (req, res) =
   if (!updated) throw new HttpError(404, "Partner not found.", "not_found");
   await audit(req, "partner.logo_removed", "Partner", id, {});
   res.json(serialisePartner(updated));
+});
+
+// ---------------------------------------------------------------------------
+// Site settings (contact details, social profiles, careers line, form emails)
+// ---------------------------------------------------------------------------
+
+websitePublicRouter.get("/public/settings", async (_req, res) => {
+  res.json(publicSettings(await readSettings()));
+});
+
+/** Empty fields come back filled with the firm's defaults, which is what the website uses. */
+websiteAdminRouter.get("/settings", ...adminOnly, async (_req, res) => {
+  res.json(await readSettings());
+});
+
+websiteAdminRouter.put("/settings", ...adminOnly, async (req, res) => {
+  const input = settingsSchema.parse(req.body);
+  const settings = await writeSettings(input);
+  await audit(req, "settings.updated", "SiteSetting", null, {});
+  res.json(settings);
 });

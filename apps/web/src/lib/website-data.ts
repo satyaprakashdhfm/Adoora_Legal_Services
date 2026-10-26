@@ -3,6 +3,7 @@ import { practiceAreas } from "@/content/practice-areas";
 import { insights as bundledInsights, type Block, type Insight, type InsightCategory } from "@/content/insights";
 import type { ArtworkKey } from "@/components/insight-artwork";
 import type { PartnerItem } from "@/content/partners";
+import { DEFAULT_CONTACT, toPublicContact, type ContactSettings, type PublicContact } from "@/lib/contact";
 
 /**
  * Content the firm maintains from the admin console — lawyer profiles, job
@@ -38,6 +39,7 @@ export const PEOPLE_TAG = "website-people";
 export const JOBS_TAG = "website-jobs";
 export const ARTICLES_TAG = "website-articles";
 export const PARTNERS_TAG = "website-partners";
+export const SETTINGS_TAG = "website-settings";
 
 /**
  * The parsed body, or null when it is missing (404) or no address for the
@@ -358,4 +360,14 @@ export async function insightsFor(kind: "practice" | "industry", slug: string, l
   return (await getInsights())
     .filter((insight) => (kind === "practice" ? insight.practices : insight.industries).includes(slug))
     .slice(0, limit);
+}
+
+// ---------------------------------------------------------------------------
+// Site settings
+// ---------------------------------------------------------------------------
+
+/** The contact details and social profiles from Site settings; the firm's defaults if the API cannot be reached. */
+export async function getContact(): Promise<PublicContact> {
+  const settings = await fromApi<Partial<ContactSettings>>("/public/settings", SETTINGS_TAG);
+  return settings ? toPublicContact(settings) : DEFAULT_CONTACT;
 }

@@ -3,6 +3,7 @@ import Link from "next/link";
 import { Wordmark } from "@/components/brand";
 import { footerNav } from "@/lib/nav";
 import { firm } from "@/content/firm";
+import type { PublicContact } from "@/lib/contact";
 
 /** 14×14 stroke icons for the contact lines. */
 function FooterIcon({ path }: { path: string }) {
@@ -26,7 +27,7 @@ const icons = {
   mail: "M1.8 3.2h10.4v7.6H1.8zM1.8 3.6L7 7.4l5.2-3.8",
 } as const;
 
-export function SiteFooter() {
+export function SiteFooter({ contact }: { contact: PublicContact }) {
   return (
     <footer className="mt-auto bg-ink text-white/85">
       <div className="container-page pb-6 pt-10 sm:pt-12">
@@ -37,24 +38,29 @@ export function SiteFooter() {
               {firm.descriptor}
             </p>
             <div className="mt-5 flex flex-col text-sm">
-              <a
-                href={firm.phoneHref}
-                className="flex items-center gap-2.5 py-1 transition hover:text-gold-bright"
-              >
-                <FooterIcon path={icons.phone} />
-                {firm.phone}
-              </a>
-              <a
-                href={firm.emailHref}
-                className="flex items-center gap-2.5 py-1 transition hover:text-gold-bright"
-              >
-                <FooterIcon path={icons.mail} />
-                {firm.email}
-              </a>
+              {[...contact.mobiles, ...(contact.landline.href ? [contact.landline] : [])].map((number) => (
+                <a
+                  key={number.href}
+                  href={number.href}
+                  className="flex items-center gap-2.5 py-1 transition hover:text-gold-bright"
+                >
+                  <FooterIcon path={icons.phone} />
+                  {number.label}
+                </a>
+              ))}
+              {contact.email && (
+                <a
+                  href={contact.emailHref}
+                  className="flex items-center gap-2.5 py-1 transition hover:text-gold-bright"
+                >
+                  <FooterIcon path={icons.mail} />
+                  {contact.email}
+                </a>
+              )}
             </div>
 
             <div className="mt-4">
-              <SocialLinks variant="footer" />
+              <SocialLinks variant="footer" contact={contact} />
             </div>
           </div>
 

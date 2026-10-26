@@ -3,7 +3,7 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { CareerForm } from "@/components/career-form";
 import { speculativeRole } from "@/content/careers";
-import { getJob } from "@/lib/website-data";
+import { getContact, getJob } from "@/lib/website-data";
 
 /**
  * Only the speculative application is known at build time; posted roles
@@ -76,7 +76,7 @@ export default async function ApplyPage(
         </p>
 
         <div className="mt-10 rounded-2xl border border-line bg-paper-warm p-6 sm:p-10">
-          <CareerForm role={role.title} />
+          <CareerForm role={role.title} email={(await getContact()).careersEmail} />
         </div>
       </div>
     </section>

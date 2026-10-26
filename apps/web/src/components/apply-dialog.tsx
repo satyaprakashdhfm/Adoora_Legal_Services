@@ -21,10 +21,13 @@ import { CareerForm } from "@/components/career-form";
  */
 export function ApplyDialog({
   role,
+  email,
   className,
   children,
 }: {
   role: string;
+  /** The careers address from Site settings. */
+  email: string;
   className?: string;
   children: ReactNode;
 }) {
@@ -103,7 +106,7 @@ export function ApplyDialog({
               </div>
 
               <div className="mt-8 rounded-2xl border border-line bg-paper-warm p-5 sm:p-8">
-                <CareerForm role={role} />
+                <CareerForm role={role} email={email} />
               </div>
             </div>
           </dialog>,

@@ -47,6 +47,7 @@ const NAV: { title: string; items: NavItem[] }[] = [
 
       { href: "/admin/articles", label: "Articles", icon: "M4 3.5h9l3 3v10H4zM7 8h6M7 11h6M7 14h4" },
       ...(SHOW_SEO ? [SEO] : []),
+      { href: "/admin/settings", label: "Site settings", icon: "M10 7.2a2.8 2.8 0 110 5.6 2.8 2.8 0 010-5.6zM10 2.5v2M10 15.5v2M2.5 10h2M15.5 10h2M4.7 4.7l1.4 1.4M13.9 13.9l1.4 1.4M4.7 15.3l1.4-1.4M13.9 6.1l1.4-1.4" },
     ],
   },
 ];

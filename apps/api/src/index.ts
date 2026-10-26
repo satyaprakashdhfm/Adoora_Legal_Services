@@ -5,7 +5,6 @@ import { prisma } from "./db.js";
 import { startScheduler } from "./jobs/scheduler.js";
 import { copyForGoLiveOnStartup } from "./scripts/go-live-copy.js";
 import { bootstrapOwnerOnStartup } from "./auth/bootstrap-owner.js";
-import { keepOnlyOneCaseOnStartup, keepOnlyTestPeopleOnStartup, seedSampleDataOnStartup, trimSampleDataOnStartup } from "./demo/sample-data.js";
 
 const app = createApp();
 
@@ -17,14 +16,6 @@ const server = app.listen(env.PORT, () => {
   startScheduler();
   void copyForGoLiveOnStartup();
   void bootstrapOwnerOnStartup();
-  // Testing only. These add, trim and delete records, so production
-  // (SAMPLE_DATA=off, the default) never runs them.
-  if (env.SAMPLE_DATA === "add") {
-    void seedSampleDataOnStartup(env.SAMPLE_DATA)
-      .then(() => trimSampleDataOnStartup())
-      .then(() => keepOnlyOneCaseOnStartup())
-      .then(() => keepOnlyTestPeopleOnStartup());
-  }
 });
 
 /**

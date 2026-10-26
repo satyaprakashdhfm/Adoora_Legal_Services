@@ -1,6 +1,7 @@
 "use client";
 
-import { SocialLinks, hasSocialLinks } from "@/components/social-links";
+import { SocialLinks } from "@/components/social-links";
+import type { PublicContact } from "@/lib/contact";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
@@ -32,7 +33,7 @@ const icons = {
   mail: "M1.8 3.2h10.4v7.6H1.8zM1.8 3.6L7 7.4l5.2-3.8",
 } as const;
 
-export function SiteHeader() {
+export function SiteHeader({ contact }: { contact: PublicContact }) {
   const pathname = usePathname();
   /** Label of the open desktop mega-menu, or null. */
   const [openMenu, setOpenMenu] = useState<string | null>(null);
@@ -187,23 +188,27 @@ export function SiteHeader() {
             {firm.regions}
           </p>
           <div className="flex items-center gap-6">
-            <a
-              href={firm.phoneHref}
-              className="flex items-center gap-1.5 transition hover:text-gold-bright"
-            >
-              <UtilityIcon path={icons.phone} />
-              {firm.phone}
-            </a>
-            <a
-              href={firm.emailHref}
-              className="flex items-center gap-1.5 transition hover:text-gold-bright"
-            >
-              <UtilityIcon path={icons.mail} />
-              {firm.email}
-            </a>
-            {hasSocialLinks && (
+            {contact.primary.href && (
+              <a
+                href={contact.primary.href}
+                className="flex items-center gap-1.5 transition hover:text-gold-bright"
+              >
+                <UtilityIcon path={icons.phone} />
+                {contact.primary.label}
+              </a>
+            )}
+            {contact.email && (
+              <a
+                href={contact.emailHref}
+                className="flex items-center gap-1.5 transition hover:text-gold-bright"
+              >
+                <UtilityIcon path={icons.mail} />
+                {contact.email}
+              </a>
+            )}
+            {contact.social.length > 0 && (
               <div className="flex items-center border-l border-white/20 pl-5">
-                <SocialLinks variant="ribbon" />
+                <SocialLinks variant="ribbon" contact={contact} />
               </div>
             )}
           </div>
@@ -448,11 +453,11 @@ export function SiteHeader() {
                 Enquiry
               </Link>
               <div className="mt-4 flex flex-col gap-1.5 text-sm text-white/75">
-                <a href={firm.phoneHref}>{firm.phone}</a>
-                <a href={firm.emailHref}>{firm.email}</a>
+                {contact.primary.href && <a href={contact.primary.href}>{contact.primary.label}</a>}
+                {contact.email && <a href={contact.emailHref}>{contact.email}</a>}
               </div>
               <div className="mt-4">
-                <SocialLinks variant="drawer" />
+                <SocialLinks variant="drawer" contact={contact} />
               </div>
             </div>
           </div>
