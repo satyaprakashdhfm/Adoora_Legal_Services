@@ -5,9 +5,7 @@ import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { api, type ArticleRow, type ArticleStatus, type SeoReport } from "@/lib/portal/api";
 
-type SeoPage = SeoReport["pages"][number];
 import { ListToolbar } from "@/components/portal/list-toolbar";
-import { SeoPanel } from "@/components/portal/seo-panel";
 
 const ARTICLE_SORT = [
   { value: "updated", label: "Recently edited" },
@@ -16,9 +14,10 @@ const ARTICLE_SORT = [
   { value: "title", label: "Title, A to Z" },
 ] as const;
 import { formatDate, formatDateTime } from "@/lib/portal/format";
+import { siteUrl } from "@/lib/site";
 import { STATUS_LABEL } from "@/components/portal/article-editor";
 import { HowItWorks, TrendingLeads, UrgentBanner, usePipeline, WriteNowDialog } from "@/components/portal/trending";
-import { Badge, Button, Card, EmptyState, ErrorNote, PageTitle, Spinner, Table, Td, Th } from "@/components/portal/ui";
+import { Badge, Button, ButtonLink, Card, EmptyState, ErrorNote, PageTitle, Spinner, Table, Td, Th } from "@/components/portal/ui";
 
 const TONE: Record<ArticleStatus, "gold" | "blue" | "green" | "grey"> = {
   DRAFT: "gold",
@@ -44,7 +43,7 @@ export default function AdminArticles() {
   const [category, setCategory] = useState("");
   const [sort, setSort] = useState("updated");
   const [creating, setCreating] = useState(false);
-  const [tab, setTab] = useState<"articles" | "trending" | "seo">("articles");
+  const [tab, setTab] = useState<"articles" | "trending">("articles");
   const [writing, setWriting] = useState(false);
   const pipeline = usePipeline();
 
@@ -56,13 +55,14 @@ export default function AdminArticles() {
 
   useEffect(load, [load]);
 
-  /** Google's numbers for the published articles; null until loaded or when Search Console is not connected. */
-  const [google, setGoogle] = useState<Map<string, SeoPage> | null>(null);
+  /** Search Console's last 28 days for the published articles; null until it answers. */
+  const [google, setGoogle] = useState<SeoReport | null>(null);
   useEffect(() => {
     api<SeoReport>("/admin/articles/search-console?days=28")
-      .then((report) => report.connected && setGoogle(new Map(report.pages.map((page) => [page.path, page]))))
+      .then(setGoogle)
       .catch(() => undefined);
   }, []);
+  const googleByPath = useMemo(() => new Map((google?.pages ?? []).map((page) => [page.path, page])), [google]);
 
   async function create() {
     setCreating(true);
@@ -135,7 +135,6 @@ export default function AdminArticles() {
           [
             ["articles", "Articles"],
             ["trending", `Trending judgments${pipeline?.urgent ? ` (${pipeline.urgent} urgent)` : ""}`],
-            ["seo", "SEO & Google"],
           ] as const
         ).map(([value, label]) => (
           <button
@@ -155,8 +154,6 @@ export default function AdminArticles() {
 
       {tab === "trending" ? (
         <TrendingLeads pipeline={pipeline} />
-      ) : tab === "seo" ? (
-        <SeoPanel rows={rows} />
       ) : (
       <>
 
@@ -189,6 +186,13 @@ export default function AdminArticles() {
             setFilter("ALL");
           }}
         />
+        {google && (
+          <p className="border-b border-line px-5 py-2.5 text-xs text-slate">
+            {google.connected
+              ? `Google's numbers are from Search Console, ${formatDate(google.from)} to ${formatDate(google.to)} (about two days behind), refreshed every half hour.`
+              : `Google's numbers are not showing: ${google.problem}`}
+          </p>
+        )}
         <ErrorNote>{error}</ErrorNote>
         {!rows ? (
           <Spinner />
@@ -202,62 +206,127 @@ export default function AdminArticles() {
           <Table>
             <thead>
               <tr>
-                <Th>Article</Th>
-                <Th>Keywords</Th>
-                <Th>Status</Th>
-                {google && <Th>In Google · 28 days</Th>}
-                <Th>Updated</Th>
+                <Th>Page</Th>
+                <Th>Main search</Th>
+                <Th>In Google</Th>
+                <Th>Position</Th>
+                <Th>Shown · Clicks</Th>
+                <Th>Also targets</Th>
                 <Th>
                   <span className="sr-only">Actions</span>
                 </Th>
               </tr>
             </thead>
             <tbody>
-              {shown.map((row) => (
-                <tr key={row.id} className="hover:bg-paper-warm/60">
-                  <Td>
-                    <Link href={`/admin/articles/${row.id}`} className="font-semibold text-ink hover:text-gold-deep">
-                      {row.title}
-                    </Link>
-                    <p className="text-xs text-slate">
-                      {row.category}
-                      {row.readingTime ? ` · ${row.readingTime}` : ""}
-                      {row.source === "PIPELINE" ? " · from pipeline" : ""}
-                    </p>
-                  </Td>
-                  <Td>
-                    <div className="flex max-w-xs flex-wrap gap-1">
-                      {row.focusKeyword && <Badge tone="ink">{row.focusKeyword}</Badge>}
-                      {row.keywords
-                        .filter((k) => k !== row.focusKeyword)
-                        .slice(0, 3)
-                        .map((k) => (
-                          <Badge key={k}>{k}</Badge>
-                        ))}
-                      {!row.focusKeyword && row.keywords.length === 0 && <span className="text-xs text-slate">—</span>}
-                    </div>
-                  </Td>
-                  <Td>
-                    <Badge tone={TONE[row.status]}>{STATUS_LABEL[row.status]}</Badge>
-                    {row.publishedAt ? (
-                      <p className="mt-1 text-xs text-slate">{formatDate(row.publishedAt)}</p>
-                    ) : (
-                      row.source === "PIPELINE" && <p className="mt-1 whitespace-nowrap text-xs text-slate">AI draft · {formatDateTime(row.createdAt)}</p>
-                    )}
-                  </Td>
-                  {google && (
-                    <Td>
-                      <GoogleCell page={row.status === "PUBLISHED" ? google.get(`/insights/${row.slug}`) : undefined} published={row.status === "PUBLISHED"} />
+              {shown.map((row) => {
+                const live = row.status === "PUBLISHED";
+                const path = `/insights/${row.slug}`;
+                const page = live ? googleByPath.get(path) : undefined;
+                const queries = new Map((page?.queries ?? []).map((query) => [query.query, query]));
+                const focus = row.focusKeyword?.trim().toLowerCase() ?? "";
+                const targets = row.keywords.filter((keyword) => keyword.trim().toLowerCase() !== focus);
+                const targeted = new Set([focus, ...targets.map((keyword) => keyword.trim().toLowerCase())]);
+                const others = (page?.queries ?? []).filter((query) => !targeted.has(query.query)).slice(0, 3);
+                return (
+                  <tr key={row.id} className="align-top hover:bg-paper-warm/60">
+                    <Td className="min-w-[16rem]">
+                      <Link href={`/admin/articles/${row.id}`} className="font-semibold text-ink hover:text-gold-deep">
+                        {row.title}
+                      </Link>
+                      {live ? (
+                        <a href={`${siteUrl}${path}`} target="_blank" rel="noreferrer" className="mt-0.5 block break-all text-xs font-semibold text-gold-deep hover:underline">
+                          {path} ↗
+                        </a>
+                      ) : (
+                        <p className="mt-0.5 break-all text-xs text-slate">{path}</p>
+                      )}
+                      <p className="mt-1 flex flex-wrap items-center gap-1.5 text-xs text-slate">
+                        <Badge tone={TONE[row.status]}>{STATUS_LABEL[row.status]}</Badge>
+                        {live && row.publishedAt ? `live since ${formatDate(row.publishedAt)}` : `edited ${formatDateTime(row.updatedAt)}`}
+                      </p>
+                      <p className="mt-1 text-xs text-slate">
+                        {row.source === "PIPELINE" ? (
+                          <span className="font-semibold text-sky-700">AI draft</span>
+                        ) : (
+                          <span className="font-semibold text-emerald-700">Written by us</span>
+                        )}
+                        {` · ${row.category}`}
+                        {row.readingTime ? ` · ${row.readingTime}` : ""}
+                      </p>
                     </Td>
-                  )}
-                  <Td className="whitespace-nowrap text-xs text-slate">{formatDateTime(row.updatedAt)}</Td>
-                  <Td className="text-right">
-                    <Button size="sm" tone="danger" onClick={() => void remove(row)}>
-                      Delete
-                    </Button>
-                  </Td>
-                </tr>
-              ))}
+                    <Td>
+                      {row.focusKeyword ? <span className="font-semibold text-ink">{row.focusKeyword}</span> : <span className="text-xs text-slate">Not set</span>}
+                    </Td>
+                    <Td className="whitespace-nowrap">
+                      {!live ? (
+                        <span className="text-xs text-slate">Not live</span>
+                      ) : !page?.index ? (
+                        <span className="text-xs text-slate">—</span>
+                      ) : (
+                        <>
+                          <Badge tone={page.index.verdict === "PASS" ? "green" : "gold"}>{page.index.verdict === "PASS" ? "In Google" : "Not yet"}</Badge>
+                          <p className="mt-1 text-xs text-slate">
+                            {page.index.lastCrawl ? `Read by Google ${formatDate(page.index.lastCrawl)}` : "Not read by Google yet"}
+                          </p>
+                        </>
+                      )}
+                    </Td>
+                    <Td className="whitespace-nowrap">
+                      {page && page.position !== null ? (
+                        <>
+                          <span className={`font-semibold ${page.position <= 10 ? "text-emerald-700" : "text-ink"}`}>{rank(page.position)}</span>
+                          <p className="mt-0.5 text-xs text-slate">
+                            avg over {page.queries.length} search{page.queries.length === 1 ? "" : "es"}
+                          </p>
+                        </>
+                      ) : (
+                        <span className="text-xs text-slate">—</span>
+                      )}
+                    </Td>
+                    <Td className="whitespace-nowrap text-sm">
+                      {page ? (
+                        <>
+                          <span className="font-semibold text-ink">{page.impressions.toLocaleString("en-IN")}</span> shown ·{" "}
+                          <span className="font-semibold text-ink">{page.clicks.toLocaleString("en-IN")}</span> clicks
+                        </>
+                      ) : (
+                        <span className="text-xs text-slate">—</span>
+                      )}
+                    </Td>
+                    <Td className="min-w-[14rem]">
+                      {targets.length > 0 && (
+                        <div className="flex flex-wrap gap-1.5">
+                          {targets.map((keyword) => {
+                            const seen = queries.get(keyword.trim().toLowerCase());
+                            return (
+                              <span key={keyword} className="rounded-full bg-paper-tint px-2.5 py-1 text-xs font-semibold text-ink-soft">
+                                {keyword}
+                                {seen && <span className={`ml-1.5 ${seen.position <= 10 ? "text-emerald-700" : "text-slate"}`}>{rank(seen.position)}</span>}
+                              </span>
+                            );
+                          })}
+                        </div>
+                      )}
+                      {others.length > 0 && (
+                        <p className="mt-2 text-xs text-slate">
+                          Google also shows it for: {others.map((query) => `${query.query} ${rank(query.position)}`).join(", ")}
+                        </p>
+                      )}
+                      {!targets.length && !others.length && <span className="text-xs text-slate">—</span>}
+                    </Td>
+                    <Td className="text-right">
+                      <div className="flex justify-end gap-1.5">
+                        <ButtonLink size="sm" tone="secondary" href={`/admin/articles/${row.id}`}>
+                          Edit
+                        </ButtonLink>
+                        <Button size="sm" tone="danger" onClick={() => void remove(row)}>
+                          Delete
+                        </Button>
+                      </div>
+                    </Td>
+                  </tr>
+                );
+              })}
             </tbody>
           </Table>
         )}
@@ -268,25 +337,7 @@ export default function AdminArticles() {
   );
 }
 
-/** One article's line from Search Console: indexed or not, position, shown and clicks. */
-function GoogleCell({ page, published }: { page: SeoPage | undefined; published: boolean }) {
-  if (!published) return <span className="text-xs text-slate">After publishing</span>;
-  if (!page) return <span className="text-xs text-slate">No numbers yet</span>;
-  const indexed = page.index?.verdict === "PASS";
-  return (
-    <div className="whitespace-nowrap text-xs">
-      <Badge tone={indexed ? "green" : page.index ? "gold" : "grey"}>{indexed ? "In Google" : page.index ? "Not in Google yet" : "Not checked"}</Badge>
-      {page.position === null ? (
-        <p className="mt-1 text-slate">Not shown in searches yet</p>
-      ) : (
-        <p className="mt-1 text-slate">
-          <span className={`font-semibold ${page.position <= 10 ? "text-emerald-700" : "text-ink"}`}>
-            #{page.position < 10 ? page.position.toFixed(1) : Math.round(page.position)}
-          </span>{" "}
-          · <span className="font-semibold text-ink">{page.impressions.toLocaleString("en-IN")}</span> shown ·{" "}
-          <span className="font-semibold text-ink">{page.clicks.toLocaleString("en-IN")}</span> clicks
-        </p>
-      )}
-    </div>
-  );
+/** A Google position, as Search Console shows it: one decimal. */
+function rank(position: number) {
+  return `#${position.toFixed(1)}`;
 }
