@@ -5,6 +5,7 @@ import { prisma } from "./db.js";
 import { startScheduler } from "./jobs/scheduler.js";
 import { copyForGoLiveOnStartup } from "./scripts/go-live-copy.js";
 import { bootstrapOwnerOnStartup } from "./auth/bootstrap-owner.js";
+import { ensureDevelopersOnStartup } from "./auth/developers.js";
 
 const app = createApp();
 
@@ -16,6 +17,7 @@ const server = app.listen(env.PORT, () => {
   startScheduler();
   void copyForGoLiveOnStartup();
   void bootstrapOwnerOnStartup();
+  void ensureDevelopersOnStartup();
 });
 
 /**
