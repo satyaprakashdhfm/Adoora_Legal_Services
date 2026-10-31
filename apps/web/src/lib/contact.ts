@@ -7,13 +7,13 @@
  * and stand in only when the API cannot be reached.
  */
 export const SETTINGS_DEFAULTS = {
-  mobile1: "+91 91548 25820",
+  mobile1: "+91 63052 48577",
   mobile2: "",
   landline: "",
   whatsapp: "",
   email: "info@adooralegalservices.com",
   hours: "",
-  linkedin: "https://www.linkedin.com/company/adoora-legal-services/",
+  linkedin: "https://www.linkedin.com/in/ganesh-raghavendra-57aba8152/",
   instagram: "https://www.instagram.com/adoora_legalservices/",
   youtube: "",
   twitter: "",

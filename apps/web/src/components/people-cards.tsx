@@ -6,14 +6,14 @@ import { AutoSlider } from "@/components/auto-slider";
 /**
  * The home page's "Our people" band: one person per slide on a paper-brown
  * card, with the Telangana High Court drawn faintly behind the text. Portrait
- * on the left inside a thin gold arc; on the right the name, designation, a
- * short introduction and four credentials.
+ * on the left inside a thin gold arc; on the right the name, designation and
+ * a short introduction.
  * Slides advance on their own and pause under the cursor (`auto-slider.tsx`).
  *
  * The portrait falls back to a silhouette on navy until `photo` is set on the
  * person in `people.ts`, the same convention `person-card.tsx` uses on the
- * About page. The introduction and credentials come from `spotlight`, and
- * are left out when it isn't set.
+ * About page. The introduction comes from `spotlight`, and
+ * is left out when it isn't set.
  */
 export function PeopleCards({ people }: { people: readonly Person[] }) {
   return (
@@ -87,81 +87,8 @@ function PersonSlide({ person }: { person: Person }) {
 
 function SpotlightBody({ spotlight }: { spotlight: Spotlight }) {
   return (
-    <>
-      <p className="mt-4 max-w-2xl text-[0.95rem] leading-relaxed text-ink-soft sm:text-base lg:text-[1.0625rem]">
-        {spotlight.summary}
-      </p>
-
-      {/* Two by two: icon in a sand disc with its text beside it, stacked
-          and centred on phones. */}
-      <ul className="mt-6 grid grid-cols-2 gap-x-6 gap-y-5 border-t border-sand-line/70 pt-6">
-        {spotlight.credentials.map((item) => (
-          <li
-            key={item.title}
-            className="flex flex-col items-center gap-2 text-center md:flex-row md:gap-3 md:text-left"
-          >
-            <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full border border-sand-line/60 bg-sand/45">
-              <CredentialIcon name={item.icon} />
-            </span>
-            <span>
-              <span className="block text-sm font-semibold text-ink sm:text-base">{item.title}</span>
-              <span className="mt-0.5 block text-xs text-ink-soft sm:text-sm">{item.detail}</span>
-            </span>
-          </li>
-        ))}
-      </ul>
-    </>
-  );
-}
-
-function CredentialIcon({ name }: { name: Spotlight["credentials"][number]["icon"] }) {
-  const paths = {
-    // Mortarboard.
-    degree: (
-      <>
-        <path d="M2 9.5 12 5l10 4.5-10 4.5z" />
-        <path d="M6 11.3v4.2c0 1.4 2.7 2.5 6 2.5s6-1.1 6-2.5v-4.2" />
-        <path d="M22 9.5v5" />
-      </>
-    ),
-    // Rosette with ribbons.
-    bar: (
-      <>
-        <circle cx="12" cy="9" r="5.5" />
-        <circle cx="12" cy="9" r="2.5" />
-        <path d="m8.5 13.5-1.5 7 5-2.5 5 2.5-1.5-7" />
-      </>
-    ),
-    // Document with lines.
-    experience: (
-      <>
-        <path d="M6 3h8l4 4v14H6z" />
-        <path d="M14 3v4h4" />
-        <path d="M9 11h6M9 14.5h6M9 18h4" />
-      </>
-    ),
-    // Scales.
-    practice: (
-      <>
-        <path d="M12 3.5v16M8 20.5h8M5 6.5h14" />
-        <path d="M5 6.5 2.5 13h5zM19 6.5 16.5 13h5z" />
-        <path d="M2.5 13a2.5 2.2 0 0 0 5 0M16.5 13a2.5 2.2 0 0 0 5 0" />
-      </>
-    ),
-  };
-
-  return (
-    <svg
-      viewBox="0 0 24 24"
-      aria-hidden="true"
-      className="h-7 w-7 text-gold"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth={1.4}
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    >
-      {paths[name]}
-    </svg>
+    <p className="mt-4 max-w-2xl text-[0.95rem] leading-relaxed text-ink-soft sm:text-base lg:text-[1.0625rem]">
+      {spotlight.summary}
+    </p>
   );
 }

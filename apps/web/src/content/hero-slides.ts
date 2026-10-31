@@ -17,6 +17,8 @@ export type HeroSlide = {
   body: string;
   href: string;
   cta: string;
+  /** The outlined second button. Unset: "Request information", to /contact. */
+  secondary?: { href: string; label: string };
   imageBase: string;
   /** Alt is empty — these are decorative; this is the description for editors. */
   imageNote: string;
@@ -54,8 +56,9 @@ export const heroSlides: HeroSlide[] = [
     heading: "Experienced minds,",
     accent: "trusted counsels",
     body: "A team of experienced lawyers, working together with clarity, sound judgment, and a shared commitment to every client we represent.",
-    href: "/about#people",
-    cta: "Meet the team",
+    href: "/contact",
+    cta: "Contact us",
+    secondary: { href: "/services", label: "Our practices" },
     imageBase: "hero-people",
     imageNote:
       "Placeholder until the team's own photographs: gavel, brass scales, law volumes and a signed brief on a dark marble desk against navy panelling. For a team row again, set people, imageAspect and peopleCount (the old row is hero-team).",

@@ -1,5 +1,4 @@
 import { people as staticPeople, type Person, type Spotlight } from "@/content/people";
-import { practiceAreas } from "@/content/practice-areas";
 import { insights as bundledInsights, type Block, type Insight, type InsightCategory } from "@/content/insights";
 import type { ArtworkKey } from "@/components/insight-artwork";
 import type { PartnerItem } from "@/content/partners";
@@ -103,11 +102,11 @@ const STATIC_FALLBACK = ["ganesh-raghavendra"];
 
 /**
  * The home page's portrait for each person: a studio portrait in public/
- * (people1-3), or null for the silhouette placeholder until a better photo
- * is supplied (the founder, for now).
+ * (people1-3 and the founder's), or null for the silhouette placeholder until
+ * a better photo is supplied.
  */
 export const STUDIO_PORTRAITS: Record<string, string | null> = {
-  "ganesh-raghavendra": null,
+  "ganesh-raghavendra": "person-ganesh-raghavendra",
   "vidya-sagar": "people2",
   "kondal-rao": "people3",
 };
@@ -123,36 +122,13 @@ function initials(name: string): string {
 }
 
 /*
- * The card's four credentials. Each one comes from the console profile when
- * that field is filled in; a field left empty falls back to the same
- * credential in the bundled roster (`content/people.ts`) for that slug, so a
- * profile with only a summary still shows all four rather than none. The
- * fourth is the first practice ticked on the profile.
+ * The card's introduction: the console profile's, else the bundled roster's
+ * (`content/people.ts`) for that slug.
  */
 function spotlight(profile: ApiProfile): Spotlight | undefined {
   const bundled = staticPeople.find((person) => person.slug === profile.slug)?.spotlight;
   const summary = profile.summary ?? bundled?.summary;
-  if (!summary) return undefined;
-  const fallback = (icon: Spotlight["credentials"][number]["icon"]) =>
-    bundled?.credentials.find((item) => item.icon === icon);
-
-  const credentials: Spotlight["credentials"] = [];
-  const degree = profile.qualification
-    ? { icon: "degree" as const, title: profile.qualification, detail: "Qualification" }
-    : fallback("degree");
-  const bar =
-    profile.enrolment || profile.stateBar
-      ? { icon: "bar" as const, title: "Admitted to the Bar", detail: profile.stateBar ?? profile.enrolment ?? "" }
-      : fallback("bar");
-  const experience = profile.experience
-    ? { icon: "experience" as const, title: profile.experience, detail: "Experience" }
-    : fallback("experience");
-  const practiceName = practiceAreas.find((area) => area.slug === profile.practices[0])?.name;
-  const practice = practiceName
-    ? { icon: "practice" as const, title: practiceName, detail: "Practice focus" }
-    : fallback("practice");
-  for (const item of [degree, bar, experience, practice]) if (item) credentials.push(item);
-  return { summary, credentials };
+  return summary ? { summary } : undefined;
 }
 
 const undef = <T,>(value: T | null): T | undefined => value ?? undefined;

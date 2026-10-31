@@ -19,9 +19,9 @@ export const firm = {
 
   /* `phone` is the display string; `phoneE164` is the form the structured
      data needs. */
-  phone: "+91 91548 25820",
-  phoneHref: "tel:+919154825820",
-  phoneE164: "+919154825820",
+  phone: "+91 63052 48577",
+  phoneHref: "tel:+916305248577",
+  phoneE164: "+916305248577",
   email: "info@adooralegalservices.com",
   emailHref: "mailto:info@adooralegalservices.com",
   responseTime: "We aim to acknowledge every enquiry within one working day.",
@@ -37,7 +37,7 @@ export const firm = {
    * the footer. Paste each full address, e.g.
    * "https://www.linkedin.com/company/…" — an empty one is not shown.
    */
-  linkedin: "https://www.linkedin.com/company/adoora-legal-services/",
+  linkedin: "https://www.linkedin.com/in/ganesh-raghavendra-57aba8152/",
   instagram: "https://www.instagram.com/adoora_legalservices/",
 } as const;
 
@@ -149,8 +149,8 @@ export const offices = [
       "Hyderabad 500018",
       "Telangana, India",
     ],
-    phone: "+91 91548 25820",
-    phoneHref: "tel:+919154825820",
+    phone: "+91 63052 48577",
+    phoneHref: "tel:+916305248577",
   },
   {
     city: "Bengaluru",
@@ -161,8 +161,8 @@ export const offices = [
       "Bengaluru 560011",
       "Karnataka, India",
     ],
-    phone: "+91 91548 25820",
-    phoneHref: "tel:+919154825820",
+    phone: "+91 63052 48577",
+    phoneHref: "tel:+916305248577",
   },
   {
     city: "Guntur",
@@ -173,8 +173,8 @@ export const offices = [
       "Guntur 522007",
       "Andhra Pradesh, India",
     ],
-    phone: "+91 91548 25820",
-    phoneHref: "tel:+919154825820",
+    phone: "+91 63052 48577",
+    phoneHref: "tel:+916305248577",
   },
 ] as const;
 

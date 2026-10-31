@@ -445,7 +445,7 @@ function PersonForm({
             <p className="mb-2 mt-0.5 text-xs text-slate">They appear on the Team tab of each practice page ticked here.</p>
             <PracticePicker value={practices} onChange={setPractices} />
           </div>
-          <Field label="Home page introduction" className="sm:col-span-2" hint="Two or three sentences for the “Our people” slides.">
+          <Field label="Home page introduction" className="sm:col-span-2" hint="Three or four lines for the home page’s “Our people” slide.">
             <Textarea name="summary" rows={3} maxLength={1200} defaultValue={profile?.summary ?? ""} />
           </Field>
           <Field label="Biography" className="sm:col-span-2" hint="Separate paragraphs with a blank line. A biography earns a full profile on the About page.">

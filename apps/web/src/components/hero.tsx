@@ -7,7 +7,7 @@ import { useEffect, useMemo, useRef, useState, useSyncExternalStore, type Pointe
 import { heroSlides } from "@/content/hero-slides";
 import { firm } from "@/content/firm";
 
-const ROTATE_MS = 7000;
+const ROTATE_MS = 6000;
 
 /* Phones show the team photograph a few people at a time (see `peopleCount`). */
 const PHONE_QUERY = "(max-width: 639px)";
@@ -60,14 +60,15 @@ export function Hero({ images }: { images: (string | null)[] }) {
   const [position, setPosition] = useState(0);
   const step = steps[position % steps.length];
   const index = step.slideIndex;
-  /* The slideshow holds while the cursor is over the hero, while keyboard
-     focus is inside it, and during a drag. Kept apart so ending one (a
-     click's pointer-up, say) cannot restart the rotation while another
-     still applies. */
-  const [hovering, setHovering] = useState(false);
+  /* The slideshow holds while keyboard focus is inside it and during a
+     drag, but not under the cursor: the hero fills the top of the page, so
+     the cursor is usually resting on it when the page opens, and the first
+     slide would then never move on. Kept apart so ending one (a click's
+     pointer-up, say) cannot restart the rotation while another still
+     applies. */
   const [focused, setFocused] = useState(false);
   const [dragging, setDragging] = useState(false);
-  const paused = hovering || focused || dragging;
+  const paused = focused || dragging;
   const reducedMotion = useRef(false);
   /* Drag tracking for the swipe gesture. `startX` is null when no drag is in
      progress, which also doubles as "ignore this pointer's move/up events". */
@@ -79,15 +80,17 @@ export function Hero({ images }: { images: (string | null)[] }) {
     ).matches;
   }, []);
 
+  /* A fresh timer for each slide, so every one is shown for the same
+     ROTATE_MS, including after a click or swipe moves the slideshow. */
   useEffect(() => {
     if (paused || reducedMotion.current) return;
 
-    const timer = window.setInterval(
+    const timer = window.setTimeout(
       () => setPosition((current) => ((current % steps.length) + 1) % steps.length),
       ROTATE_MS,
     );
-    return () => window.clearInterval(timer);
-  }, [paused, steps.length]);
+    return () => window.clearTimeout(timer);
+  }, [paused, position, steps.length]);
 
   const active = heroSlides[index];
 
@@ -117,9 +120,6 @@ export function Hero({ images }: { images: (string | null)[] }) {
   }
 
   function onPointerMove(event: ReactPointerEvent<HTMLElement>) {
-    /* Also catches a cursor that was already resting on the hero when the
-       page loaded, which never fires an enter event. */
-    if (event.pointerType === "mouse" && !hovering) setHovering(true);
     if (!dragRef.current) return;
     if (Math.abs(event.clientX - dragRef.current.startX) > 4) {
       dragRef.current.moved = true;
@@ -142,8 +142,6 @@ export function Hero({ images }: { images: (string | null)[] }) {
   return (
     <section
       className="relative isolate touch-pan-y overflow-hidden bg-ink-mid text-white select-none"
-      onMouseEnter={() => setHovering(true)}
-      onMouseLeave={() => setHovering(false)}
       onFocusCapture={(event) => {
         /* Keyboard focus only: a mouse click also focuses the button it
            lands on, and that should not hold the slideshow once the cursor
@@ -275,10 +273,10 @@ export function Hero({ images }: { images: (string | null)[] }) {
                       <Arrow />
                     </Link>
                     <Link
-                      href="/contact"
+                      href={slide.secondary?.href ?? "/contact"}
                       className="inline-flex items-center justify-center rounded-md border border-white/30 px-6 py-3 text-sm font-semibold sm:px-7 sm:py-3.5 text-white transition hover:border-white hover:bg-white/5"
                     >
-                      Request information
+                      {slide.secondary?.label ?? "Request information"}
                     </Link>
                   </div>
                 </div>
@@ -334,10 +332,10 @@ export function Hero({ images }: { images: (string | null)[] }) {
                     <Arrow />
                   </Link>
                   <Link
-                    href="/contact"
+                    href={slide.secondary?.href ?? "/contact"}
                     className="inline-flex items-center justify-center rounded-md border border-white/30 px-6 py-3 text-sm font-semibold text-white transition hover:border-white hover:bg-white/5"
                   >
-                    Request information
+                    {slide.secondary?.label ?? "Request information"}
                   </Link>
                 </div>
               </div>

@@ -53,10 +53,9 @@ const practiceGridOrder = [
 
 export default async function Home() {
   /* Profiles marked "Feature on the home page" in the admin console. The
-     two partners use the firm's studio portraits (people1-3 in public/)
-     unless a portrait has been uploaded for them in the console; the founder
-     shows the silhouette placeholder for now; anyone else shows their
-     uploaded portrait. */
+     founder and the two partners use the firm's studio portraits in public/
+     unless a portrait has been uploaded for them in the console; anyone else
+     shows their uploaded portrait. */
   const featuredPeople = (await getFeaturedPeople()).map((person) => {
     const portrait = STUDIO_PORTRAITS[person.slug];
     if (portrait === null) return { ...person, photo: undefined, photoUrl: undefined };
@@ -128,7 +127,7 @@ export default async function Home() {
           <div className="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
             <SectionHeading
               eyebrow="Our people"
-              title="The lawyers who lead each practice"
+              title="Guided by experience"
             />
             <Link
               href="/about#people"
