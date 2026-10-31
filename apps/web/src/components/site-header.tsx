@@ -35,6 +35,9 @@ const icons = {
 
 export function SiteHeader({ contact }: { contact: PublicContact }) {
   const pathname = usePathname();
+  /** Inside the lawyer or client dashboard the logo leads to that dashboard's home. */
+  const home =
+    pathname.startsWith("/lawyer") && pathname !== "/lawyer/login" ? "/lawyer" : pathname.startsWith("/dashboard") ? "/dashboard" : "/";
   /** Label of the open desktop mega-menu, or null. */
   const [openMenu, setOpenMenu] = useState<string | null>(null);
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -229,7 +232,7 @@ export function SiteHeader({ contact }: { contact: PublicContact }) {
         >
         <div className="flex items-center justify-between gap-6 py-4">
             <div className="shrink-0">
-              <Wordmark tone="dark" />
+              <Wordmark tone="dark" href={home} />
             </div>
 
             {/* Desktop navigation */}

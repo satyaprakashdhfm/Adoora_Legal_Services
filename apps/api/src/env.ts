@@ -73,7 +73,7 @@ const schema = z.object({
   GOOGLE_CLIENT_SECRET: optionalString(z.string()),
 
   /**
-   * Comma-separated emails that become OWNER staff accounts on their first
+   * Comma-separated emails that become Admin staff accounts on their first
    * Google sign-in. Bootstraps the first administrator without a password.
    */
   ADMIN_EMAILS: z.string().default(""),

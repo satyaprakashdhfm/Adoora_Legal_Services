@@ -85,7 +85,7 @@ function NavLink({ item, pathname, muted }: { item: NavItem; pathname: string; m
 
 /**
  * The admin console at `/admin`: full screen, its own navigation, none of
- * the marketing site's chrome. Owners and admins only — lawyers work from
+ * the marketing site's chrome. Admins only — lawyers work from
  * `/lawyer`, clients from `/dashboard`, each with its own sign-in.
  */
 export function AdminShell({ children }: { children: ReactNode }) {
@@ -101,7 +101,7 @@ export function AdminShell({ children }: { children: ReactNode }) {
   return (
     <RequireSession
       allow={isFirmAdmin}
-      deniedMessage="The admin console is for the firm's owners and administrators. Lawyers work in the lawyer workspace; clients in the client dashboard."
+      deniedMessage="The admin console is for the firm's administrators. Lawyers work in the lawyer workspace; clients in the client dashboard."
     >
       {(user) => (
         <div className="min-h-dvh bg-paper-warm lg:grid lg:grid-cols-[15.5rem_1fr] lg:bg-ink">
@@ -111,7 +111,7 @@ export function AdminShell({ children }: { children: ReactNode }) {
             {/* On phones this bar stays at the top while the page scrolls, so the menu is always in reach. */}
             <div className="flex items-center justify-between gap-3 border-b border-white/10 px-4 py-3 sm:px-5 lg:py-4">
               <div className="min-w-0">
-                <Wordmark tone="dark" />
+                <Wordmark tone="dark" href="/admin" />
                 <p className="eyebrow mt-2 text-gold-bright lg:mt-3">Admin console</p>
               </div>
               <button
@@ -148,7 +148,7 @@ export function AdminShell({ children }: { children: ReactNode }) {
               <Avatar name={user.name} src={user.avatarUrl} size={34} />
               <div className="min-w-0 flex-1">
                 <p className="truncate text-sm font-semibold">{user.name}</p>
-                <p className="text-xs text-white/55">{user.role === "OWNER" ? "Owner" : "Administrator"}</p>
+                <p className="text-xs text-white/55">Administrator</p>
               </div>
               <button type="button" onClick={() => void signOut()} className="text-xs text-white/60 hover:text-white">
                 Sign out

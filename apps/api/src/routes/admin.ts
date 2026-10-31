@@ -45,7 +45,7 @@ import {
   staffCreateSchema,
   staffPatchSchema,
 } from "../portal-schemas.js";
-import type { EnquiryStatus, ApplicationStatus, Prisma, UserRole } from "../../generated/prisma/client.js";
+import type { EnquiryStatus, ApplicationStatus, Prisma } from "../../generated/prisma/client.js";
 
 /**
  * Admin API, consumed by the console at `/admin` on the website. Cases and
@@ -128,7 +128,7 @@ const LIST_ORDER = {
 adminRouter.get(
   "/enquiries",
   requireAuth,
-  requireRole("OWNER", "ADMIN"),
+  requireRole("ADMIN"),
   async (req, res) => {
     const query = listQuerySchema.parse(req.query);
 
@@ -180,7 +180,7 @@ adminRouter.get(
 adminRouter.get(
   "/applications",
   requireAuth,
-  requireRole("OWNER", "ADMIN"),
+  requireRole("ADMIN"),
   async (req, res) => {
     const query = listQuerySchema.parse(req.query);
 
@@ -226,7 +226,7 @@ adminRouter.get(
 adminRouter.get(
   "/applications/:id/resume",
   requireAuth,
-  requireRole("OWNER", "ADMIN"),
+  requireRole("ADMIN"),
   async (req, res) => {
     const id = z.string().uuid().parse(req.params.id);
     const found = await prisma.careerApplication.findUnique({ where: { id } });
@@ -267,7 +267,7 @@ adminRouter.get(
 adminRouter.get(
   "/stats",
   requireAuth,
-  requireRole("OWNER", "ADMIN"),
+  requireRole("ADMIN"),
   async (_req, res) => {
     const today = new Date(new Date().toISOString().slice(0, 10));
     const fortnight = new Date(today.getTime() + 14 * 24 * 60 * 60 * 1000);
@@ -332,7 +332,7 @@ adminRouter.get(
 adminRouter.patch(
   "/enquiries/:id",
   requireAuth,
-  requireRole("OWNER", "ADMIN"),
+  requireRole("ADMIN"),
   async (req, res) => {
     const input = enquiryPatchSchema.parse(req.body);
     const id = z.string().uuid().parse(req.params.id);
@@ -355,7 +355,7 @@ adminRouter.patch(
 adminRouter.patch(
   "/applications/:id",
   requireAuth,
-  requireRole("OWNER", "ADMIN"),
+  requireRole("ADMIN"),
   async (req, res) => {
     const input = applicationPatchSchema.parse(req.body);
     const id = z.string().uuid().parse(req.params.id);
@@ -370,24 +370,12 @@ adminRouter.patch(
 // ---------------------------------------------------------------------------
 
 /**
- * Only an OWNER can create, promote to, or change an OWNER or ADMIN. An ADMIN
- * manages lawyers and editors. Nobody can demote or deactivate themselves —
- * that is how a firm locks itself out of its own console.
- */
-function assertCanManageRole(actorRole: UserRole, ...roles: (UserRole | undefined)[]) {
-  if (actorRole === "OWNER") return;
-  if (roles.some((role) => role === "OWNER" || role === "ADMIN")) {
-    throw new HttpError(403, "Only an owner can manage owner and admin accounts.", "forbidden");
-  }
-}
-
-/**
  * GET /api/admin/access — the emails in the server's ADMIN_EMAILS setting.
- * Each becomes an Owner the first time it signs in at /admin/login with
+ * Each becomes an Admin the first time it signs in at /admin/login with
  * Google; `role` is the account it already has, if any. (Everyone else's
  * access is their role on the Team page.)
  */
-adminRouter.get("/access", requireAuth, requireRole("OWNER", "ADMIN"), async (_req, res) => {
+adminRouter.get("/access", requireAuth, requireRole("ADMIN"), async (_req, res) => {
   const accounts = await prisma.user.findMany({
     where: { email: { in: adminEmails, mode: "insensitive" } },
     select: { email: true, role: true, isActive: true },
@@ -403,7 +391,7 @@ adminRouter.get("/access", requireAuth, requireRole("OWNER", "ADMIN"), async (_r
 adminRouter.get(
   "/users",
   requireAuth,
-  requireRole("OWNER", "ADMIN"),
+  requireRole("ADMIN"),
   async (req, res) => {
     const query = searchQuerySchema.parse(req.query);
     const users = await prisma.user.findMany({
@@ -425,6 +413,7 @@ adminRouter.get(
         email: true,
         name: true,
         role: true,
+        isLawyer: true,
         isActive: true,
         phone: true,
         barEnrolment: true,
@@ -451,10 +440,9 @@ adminRouter.get(
 adminRouter.post(
   "/users",
   requireAuth,
-  requireRole("OWNER", "ADMIN"),
+  requireRole("ADMIN"),
   async (req, res) => {
     const input = staffCreateSchema.parse(req.body);
-    assertCanManageRole(req.auth!.role, input.role);
 
     // A client account with the same email or number is fine: the two sign in at separate pages.
     if (input.email && (await prisma.user.findUnique({ where: { email: input.email } }))) {
@@ -466,7 +454,7 @@ adminRouter.post(
 
     // No password: the new member signs in with an OTP on this number, or Google with the email.
     const user = await prisma.user.create({ data: input });
-    await audit(req, "user.created", "User", user.id, { role: user.role });
+    await audit(req, "user.created", "User", user.id, { role: user.role, isLawyer: user.isLawyer });
     res.status(201).json({ id: user.id });
   },
 );
@@ -474,18 +462,20 @@ adminRouter.post(
 adminRouter.patch(
   "/users/:id",
   requireAuth,
-  requireRole("OWNER", "ADMIN"),
+  requireRole("ADMIN"),
   async (req, res) => {
     const id = z.string().uuid().parse(req.params.id);
     const input = staffPatchSchema.parse(req.body);
     const target = await prisma.user.findUnique({ where: { id } });
     if (!target) throw new HttpError(404, "Staff member not found.", "not_found");
 
-    assertCanManageRole(req.auth!.role, target.role, input.role);
-
+    // Nobody can take away their own Admin tick or deactivate themselves —
+    // that is how a firm locks itself out of its own console.
     if (id === req.auth!.sub && (input.isActive === false || (input.role && input.role !== target.role))) {
-      throw new HttpError(400, "You cannot change your own role or deactivate yourself.", "self_change");
+      throw new HttpError(400, "You cannot remove your own admin access or deactivate yourself.", "self_change");
     }
+    // A LAWYER is always a lawyer; an ADMIN may or may not be one.
+    if ((input.role ?? target.role) === "LAWYER") input.isLawyer = true;
     if (input.phone && (await phoneOnAnother("user", input.phone, id))) {
       throw new HttpError(409, "Someone on the team already has that mobile number.", "phone_in_use");
     }
@@ -503,6 +493,7 @@ adminRouter.patch(
     await audit(req, "user.updated", "User", id, {
       changes: Object.keys(input),
       role: input.role ?? null,
+      isLawyer: input.isLawyer ?? null,
       isActive: input.isActive ?? null,
     });
     res.json({ id: updated.id });
@@ -559,7 +550,7 @@ const CLIENT_ORDER: Record<z.infer<typeof clientListQuerySchema>["sort"], Prisma
 adminRouter.get(
   "/clients",
   requireAuth,
-  requireRole("OWNER", "ADMIN"),
+  requireRole("ADMIN"),
   async (req, res) => {
     const query = clientListQuerySchema.parse(req.query);
     const filters: Prisma.ClientWhereInput[] = [
@@ -611,7 +602,7 @@ adminRouter.get(
 adminRouter.post(
   "/clients",
   requireAuth,
-  requireRole("OWNER", "ADMIN"),
+  requireRole("ADMIN"),
   async (req, res) => {
     const input = clientCreateSchema.parse(req.body);
 
@@ -644,7 +635,7 @@ adminRouter.post(
 adminRouter.patch(
   "/clients/:id",
   requireAuth,
-  requireRole("OWNER", "ADMIN"),
+  requireRole("ADMIN"),
   async (req, res) => {
     const id = z.string().uuid().parse(req.params.id);
     const input = clientPatchSchema.parse(req.body);
@@ -695,7 +686,7 @@ adminRouter.patch(
 adminRouter.delete(
   "/clients/:id",
   requireAuth,
-  requireRole("OWNER", "ADMIN"),
+  requireRole("ADMIN"),
   async (req, res) => {
     const id = z.string().uuid().parse(req.params.id);
     await revokeAllSessions({ clientId: id });
@@ -713,7 +704,7 @@ adminRouter.delete(
 adminRouter.get(
   "/audit",
   requireAuth,
-  requireRole("OWNER", "ADMIN"),
+  requireRole("ADMIN"),
   async (req, res) => {
     const query = auditQuerySchema.parse(req.query);
     const entries = await prisma.auditLog.findMany({

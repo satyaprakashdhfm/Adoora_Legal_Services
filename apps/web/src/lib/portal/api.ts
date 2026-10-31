@@ -117,7 +117,7 @@ export function googleSignInUrl(next = "", audience: "admin" | "lawyer" | "clien
 // Shapes returned by the API
 // ---------------------------------------------------------------------------
 
-export type StaffRole = "OWNER" | "ADMIN" | "LAWYER" | "EDITOR";
+export type StaffRole = "ADMIN" | "LAWYER";
 
 export type SessionUser = {
   kind: "staff" | "client";
@@ -126,7 +126,7 @@ export type SessionUser = {
   name: string;
   avatarUrl: string | null;
   role: StaffRole | null;
-  /** The area this session is for. In "lawyer" an owner or admin has role LAWYER. */
+  /** The area this session is for. In "lawyer" an admin has role LAWYER. */
   area?: Area;
   /** Clients only: their mobile, or null when they have not given one. */
   phone?: string | null;

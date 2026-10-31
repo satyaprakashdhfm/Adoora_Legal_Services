@@ -12,21 +12,18 @@ import type { UserRole } from "../../generated/prisma/client.js";
  * to all three at once in the same browser, and signing out of one leaves
  * the others alone:
  *
- *   admin   /admin    owners, admins, editors
- *   lawyer  /lawyer   lawyers, and owners/admins for the cases assigned to them
+ *   admin   /admin    people ticked Admin
+ *   lawyer  /lawyer   people ticked Lawyer, for the cases assigned to them
  *   client  /dashboard  any client account
  */
 export type Area = "admin" | "lawyer" | "client";
 export const AREAS: readonly Area[] = ["admin", "lawyer", "client"];
 
-/** Which firm roles may open a staff area. Checked at sign-in and on every request. */
-const STAFF_AREA_ROLES: Record<"admin" | "lawyer", readonly UserRole[]> = {
-  admin: ["OWNER", "ADMIN", "EDITOR"],
-  lawyer: ["LAWYER", "OWNER", "ADMIN"],
-};
-
-export function staffAllowed(role: UserRole, area: Area): area is "admin" | "lawyer" {
-  return area !== "client" && STAFF_AREA_ROLES[area].includes(role);
+/** Whether a team member may open a staff area. Checked at sign-in and on every request. */
+export function staffAllowed(user: { role: UserRole; isLawyer: boolean }, area: Area): area is "admin" | "lawyer" {
+  if (area === "admin") return user.role === "ADMIN";
+  if (area === "lawyer") return user.role === "LAWYER" || user.isLawyer;
+  return false;
 }
 
 /** Who is making the request. Staff and clients never share a shape. */
@@ -39,7 +36,7 @@ export type Principal =
       name: string;
       /**
        * The role the request acts with. In the lawyer area this is always
-       * LAWYER, whatever the account's own role, so an owner or admin there
+       * LAWYER, whatever the account's own role, so an admin there
        * sees exactly what a lawyer sees: the cases assigned to them.
        */
       role: UserRole;
@@ -118,7 +115,7 @@ export async function readSession(req: Request, area: Area): Promise<Principal |
 
   if (session.user) {
     // Rechecked every request, so a role change takes effect at once.
-    if (!session.user.isActive || !staffAllowed(session.user.role, area)) return null;
+    if (!session.user.isActive || !staffAllowed(session.user, area)) return null;
     return {
       kind: "staff",
       id: session.user.id,

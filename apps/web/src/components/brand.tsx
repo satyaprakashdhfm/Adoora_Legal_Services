@@ -25,20 +25,23 @@ export function BrandMark({ className = "" }: { className?: string }) {
 /**
  * Full lockup: mark, "ADOORA" in the display serif, a gold rule, and the
  * letterspaced descriptor beneath. `tone` switches it for the navy bands
- * (the footer, the mobile drawer) without duplicating the markup.
+ * (the footer, the mobile drawer) without duplicating the markup. `href` is
+ * where it leads: the website's home, or a signed-in area's own home.
  */
 export function Wordmark({
   tone = "light",
   className = "",
+  href = "/",
 }: {
   tone?: "light" | "dark";
   className?: string;
+  href?: string;
 }) {
   const isDark = tone === "dark";
 
   return (
     <Link
-      href="/"
+      href={href}
       className={`group inline-flex items-center gap-3 ${className}`}
       aria-label={`${firm.name} — home`}
     >

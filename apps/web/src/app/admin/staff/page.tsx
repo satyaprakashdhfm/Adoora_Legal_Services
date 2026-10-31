@@ -41,6 +41,7 @@ type StaffRow = {
   email: string | null;
   name: string;
   role: StaffRole;
+  isLawyer: boolean;
   isActive: boolean;
   phone: string | null;
   barEnrolment: string | null;
@@ -57,11 +58,10 @@ type Person = { key: string; user: StaffRow | null; profile: LawyerProfile | nul
 type ServerEmail = { email: string; role: StaffRole | null; isActive: boolean | null };
 
 /**
- * Who can sign in where, by email: the admin console (owners, admins and
- * editors), the lawyers' dashboard, and the emails the server itself admits
- * as owners (ADMIN_EMAILS). One email holds one firm role; owners and admins
- * can also be put on cases, so a lawyer who helps run the firm is made an
- * admin and keeps their cases.
+ * Who can sign in where, by email: the admin console (people ticked Admin),
+ * the lawyers' dashboard (people ticked Lawyer), and the emails the server
+ * itself admits as admins (ADMIN_EMAILS). A lawyer who helps run the firm is
+ * ticked as both.
  */
 function SignInAccess({ users }: { users: StaffRow[] }) {
   const [serverEmails, setServerEmails] = useState<ServerEmail[] | null>(null);
@@ -72,13 +72,8 @@ function SignInAccess({ users }: { users: StaffRow[] }) {
   }, []);
 
   const active = users.filter((u) => u.isActive);
-  const consoleUsers = active
-    .filter((u) => u.role !== "LAWYER")
-    .sort((a, b) => ["OWNER", "ADMIN", "EDITOR"].indexOf(a.role) - ["OWNER", "ADMIN", "EDITOR"].indexOf(b.role));
-  // The lawyers' sign-in admits lawyers, and owners and admins for their own cases.
-  const lawyers = active
-    .filter((u) => u.role === "LAWYER" || u.role === "OWNER" || u.role === "ADMIN")
-    .sort((a, b) => ["LAWYER", "ADMIN", "OWNER"].indexOf(a.role) - ["LAWYER", "ADMIN", "OWNER"].indexOf(b.role));
+  const consoleUsers = active.filter(isAdmin);
+  const lawyers = active.filter(isLawyer);
   const pending = (serverEmails ?? []).filter((entry) => !entry.role);
 
   const row = (u: StaffRow) => (
@@ -90,10 +85,7 @@ function SignInAccess({ users }: { users: StaffRow[] }) {
         </p>
       </div>
       <div className="flex gap-1">
-        <Badge tone={u.role === "OWNER" ? "ink" : u.role === "ADMIN" ? "gold" : u.role === "LAWYER" ? "blue" : "grey"}>
-          {ROLES.find((r) => r.value === u.role)?.label}
-        </Badge>
-        {u._count.assignments > 0 && u.role !== "LAWYER" && <Badge tone="blue">On {u._count.assignments} case{u._count.assignments === 1 ? "" : "s"}</Badge>}
+        <AccessBadges user={u} />
       </div>
     </li>
   );
@@ -103,7 +95,7 @@ function SignInAccess({ users }: { users: StaffRow[] }) {
       <div className="border-b border-line px-5 py-4">
         <h2 className="font-serif text-lg font-semibold text-ink">Who can sign in</h2>
         <p className="mt-1 text-sm text-slate">
-          Access goes by email and role. To give someone access, add them below or change their role with Edit.
+          Access goes by email and the Admin and Lawyer ticks. To give someone access, add them below or change their ticks with Edit.
         </p>
       </div>
       <div className="grid gap-6 p-5 lg:grid-cols-2">
@@ -111,7 +103,7 @@ function SignInAccess({ users }: { users: StaffRow[] }) {
           <h3 className="text-sm font-semibold text-ink">
             Admin console <span className="font-normal text-slate">· /admin/login</span>
           </h3>
-          <p className="mt-0.5 text-xs text-slate">Owners and admins see every case; editors manage the website only.</p>
+          <p className="mt-0.5 text-xs text-slate">Admins see every case and manage the website and the team.</p>
           {consoleUsers.length ? (
             <ul className="mt-2 divide-y divide-line">{consoleUsers.map(row)}</ul>
           ) : (
@@ -123,7 +115,7 @@ function SignInAccess({ users }: { users: StaffRow[] }) {
               <ul className="mt-1.5 space-y-1">
                 {pending.map((entry) => (
                   <li key={entry.email} className="text-sm text-ink-soft">
-                    {entry.email} <span className="text-xs text-slate">· becomes an Owner on first Google sign-in</span>
+                    {entry.email} <span className="text-xs text-slate">· becomes an Admin on first Google sign-in</span>
                   </li>
                 ))}
               </ul>
@@ -135,7 +127,7 @@ function SignInAccess({ users }: { users: StaffRow[] }) {
           <h3 className="text-sm font-semibold text-ink">
             Lawyer dashboard <span className="font-normal text-slate">· /lawyer/login</span>
           </h3>
-          <p className="mt-0.5 text-xs text-slate">Lawyers, owners and admins: each sees only the cases assigned to them here.</p>
+          <p className="mt-0.5 text-xs text-slate">Everyone ticked Lawyer: each sees only the cases assigned to them here.</p>
           {lawyers.length ? (
             <ul className="mt-2 divide-y divide-line">{lawyers.map(row)}</ul>
           ) : (
@@ -144,24 +136,32 @@ function SignInAccess({ users }: { users: StaffRow[] }) {
         </section>
       </div>
       <p className="border-t border-line px-5 py-3.5 text-xs leading-relaxed text-slate">
-        Sign-in is by the email (Gmail) or mobile number saved on each person below. The three sign-ins are independent: an owner or
-        admin can be signed in to the admin console, the lawyer dashboard and, with a client account, the client dashboard at the same
-        time. A lawyer who also runs the firm: set their access to <strong className="text-ink">Admin</strong>. Deactivated people
-        are not listed.
+        Sign-in is by the email (Gmail) or mobile number saved on each person below. The three sign-ins are independent: someone
+        ticked as both can be signed in to the admin console, the lawyer dashboard and, with a client account, the client dashboard at
+        the same time. A lawyer who also runs the firm: tick both <strong className="text-ink">Admin</strong> and{" "}
+        <strong className="text-ink">Lawyer</strong>. Deactivated people are not listed.
       </p>
     </Card>
   );
 }
 
-type Access = StaffRole | "NONE";
+const isAdmin = (user: StaffRow | null | undefined) => user?.role === "ADMIN";
+const isLawyer = (user: StaffRow | null | undefined) => Boolean(user && (user.role === "LAWYER" || user.isLawyer));
 
-const ROLES: { value: Access; label: string; description: string }[] = [
-  { value: "OWNER", label: "Owner", description: "Everything, including managing owners and admins." },
-  { value: "ADMIN", label: "Admin", description: "All cases, documents, clients, lawyers and the console." },
-  { value: "LAWYER", label: "Lawyer", description: "Only the cases they are assigned to, from the dashboard." },
-  { value: "EDITOR", label: "Editor", description: "Website content only. No case access." },
-  { value: "NONE", label: "No sign-in", description: "Shown on the website only; cannot open the portal." },
-];
+const ACCESS_FILTER = [
+  { value: "admin", label: "Admin" },
+  { value: "lawyer", label: "Lawyer" },
+] as const;
+
+function AccessBadges({ user }: { user: StaffRow | null }) {
+  if (!isAdmin(user) && !isLawyer(user)) return <span className="text-slate">—</span>;
+  return (
+    <>
+      {isAdmin(user) && <Badge tone="gold">Admin</Badge>}
+      {isLawyer(user) && <Badge tone="blue">Lawyer</Badge>}
+    </>
+  );
+}
 
 /** Uploaded portrait, or one bundled with the website (all shipped as .jpg). */
 const portrait = (p: LawyerProfile | null) => (p ? (p.photoUrl ?? (p.photo ? `/${p.photo}.jpg` : null)) : null);
@@ -200,22 +200,14 @@ function SectionTitle({ title, hint }: { title: string; hint?: string }) {
   );
 }
 
-function PersonForm({
-  person,
-  self,
-  canManageSenior,
-  onSaved,
-}: {
-  person: Person | null;
-  self: boolean;
-  canManageSenior: boolean;
-  onSaved: () => void;
-}) {
+function PersonForm({ person, self, onSaved }: { person: Person | null; self: boolean; onSaved: () => void }) {
   const user = person?.user ?? null;
   const profile = person?.profile ?? null;
   const [error, setError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
-  const [access, setAccess] = useState<Access>(user?.role ?? (profile ? "NONE" : "LAWYER"));
+  // A new person starts as a lawyer; someone on the website only starts with neither.
+  const [admin, setAdmin] = useState(isAdmin(user));
+  const [lawyer, setLawyer] = useState(user ? isLawyer(user) : !profile);
   const [thirdParty, setThirdParty] = useState(profile?.thirdParty ?? false);
   const [onWebsite, setOnWebsite] = useState(profile?.published ?? false);
   const [practices, setPractices] = useState<string[]>(profile?.practices ?? []);
@@ -223,9 +215,7 @@ function PersonForm({
   // Kept across a failed save, so a retry updates what was already created.
   const created = useRef<{ userId?: string; profileId?: string }>({});
 
-  const seniorLocked = Boolean(user && !canManageSenior && (user.role === "OWNER" || user.role === "ADMIN"));
-  const roles = ROLES.filter((role) => (canManageSenior || (role.value !== "OWNER" && role.value !== "ADMIN")) && (role.value !== "NONE" || !user));
-  const hasAccount = !thirdParty && access !== "NONE";
+  const hasAccount = !thirdParty && (admin || lawyer);
 
   async function submit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -235,20 +225,26 @@ function PersonForm({
       setError("To feature someone on the home page, write their home page introduction first. It is the text shown beside the portrait.");
       return;
     }
+    if (user && !admin && !lawyer) {
+      setError("Tick Admin, Lawyer or both. To stop them signing in, set Account to Deactivated.");
+      return;
+    }
     setSaving(true);
     setError(null);
     try {
       // 1. The sign-in account.
       let userId = user?.id ?? created.current.userId ?? null;
-      if (hasAccount && !seniorLocked) {
+      if (hasAccount) {
         const account = { name: data.name, phone: data.phone, barEnrolment: data.enrolment, ...(user?.email ? {} : { email: data.email ?? "" }) };
+        const access = { role: admin ? "ADMIN" : "LAWYER", isLawyer: lawyer };
         if (userId) {
           await api(`/admin/users/${userId}`, {
             method: "PATCH",
-            body: self ? account : { ...account, role: access, isActive: data.isActive !== "false" },
+            // You cannot take away your own Admin tick or deactivate yourself.
+            body: self ? { ...account, isLawyer: lawyer } : { ...account, ...access, isActive: data.isActive !== "false" },
           });
         } else {
-          const result = await api<{ id: string }>("/admin/users", { method: "POST", body: { ...account, role: access } });
+          const result = await api<{ id: string }>("/admin/users", { method: "POST", body: { ...account, ...access } });
           userId = created.current.userId = result.id;
         }
       }
@@ -349,7 +345,7 @@ function PersonForm({
         <Input name="enrolment" maxLength={80} placeholder="e.g. TS/1234/2015" defaultValue={user?.barEnrolment ?? profile?.enrolment ?? ""} />
       </Field>
       {/* A third-party lawyer is engaged case by case in another place: no
-          account, so the access is fixed at No sign-in. Someone who already
+          account, so both access ticks are cleared. Someone who already
           signs in would have to be removed from the portal first. */}
       {!user && (
         <div className="rounded-lg border border-line bg-paper-warm px-4 py-3 sm:col-span-2">
@@ -359,7 +355,10 @@ function PersonForm({
               checked={thirdParty}
               onChange={(e) => {
                 setThirdParty(e.target.checked);
-                if (e.target.checked) setAccess("NONE");
+                if (e.target.checked) {
+                  setAdmin(false);
+                  setLawyer(false);
+                }
               }}
               className="accent-[var(--color-gold)]"
             />
@@ -370,17 +369,36 @@ function PersonForm({
           </p>
         </div>
       )}
-      {seniorLocked ? (
-        <p className="self-end text-xs text-slate">Only an owner can change an owner’s or admin’s access.</p>
-      ) : (
-        <Field
-          label="Access to the portal"
-          hint={self ? "You cannot change your own access." : thirdParty ? "Fixed for a third-party lawyer: they do not sign in." : ROLES.find((r) => r.value === access)?.description}
-        >
-          <Select value={thirdParty ? "NONE" : access} onChange={(e) => setAccess(e.target.value as Access)} disabled={self || thirdParty} options={roles} />
-        </Field>
-      )}
-      {user && !self && !seniorLocked && (
+      <div className="sm:col-span-2">
+        <p className="text-xs font-semibold uppercase tracking-wide text-ink-soft">Access to the portal</p>
+        <div className="mt-2 grid gap-2 sm:grid-cols-2">
+          {[
+            { label: "Admin", description: "The admin console: all cases, documents, clients, the team and the website.", checked: admin, set: setAdmin, locked: self },
+            { label: "Lawyer", description: "The lawyer dashboard, and can be put on cases. Sees only the cases assigned to them.", checked: lawyer, set: setLawyer, locked: false },
+          ].map((option) => (
+            <label
+              key={option.label}
+              className={`flex gap-2.5 rounded-lg border px-4 py-3 ${option.checked && !thirdParty ? "border-gold bg-gold/10" : "border-line"} ${thirdParty || option.locked ? "opacity-60" : "cursor-pointer"}`}
+            >
+              <input
+                type="checkbox"
+                checked={option.checked && !thirdParty}
+                disabled={thirdParty || option.locked}
+                onChange={(e) => option.set(e.target.checked)}
+                className="mt-0.5 accent-[var(--color-gold)]"
+              />
+              <span>
+                <span className="block text-sm font-semibold text-ink">{option.label}</span>
+                <span className="block text-xs text-slate">{option.description}</span>
+              </span>
+            </label>
+          ))}
+        </div>
+        <p className="mt-1.5 text-xs text-slate">
+          {thirdParty ? "A third-party lawyer does not sign in." : self ? "You cannot remove your own Admin access." : "Tick one or both."}
+        </p>
+      </div>
+      {user && !self && (
         <Field label="Account" hint="Deactivating signs them out everywhere at once. Their case history is kept.">
           <Select name="isActive" defaultValue={String(user.isActive)} options={[{ value: "true", label: "Active" }, { value: "false", label: "Deactivated" }]} />
         </Field>
@@ -485,7 +503,6 @@ export default function AdminStaff() {
   const [profiles, setProfiles] = useState<LawyerProfile[] | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [editing, setEditing] = useState<Person | "new" | null>(null);
-  const canManageSenior = me.role === "OWNER";
   const [query, setQuery] = useState("");
   const [access, setAccess] = useState("");
   const [account, setAccount] = useState("");
@@ -523,7 +540,7 @@ export default function AdminStaff() {
   // The team is loaded whole, so search, filters and sort run here.
   const nameOf = (person: Person) => person.user?.name ?? person.profile?.name ?? "";
   const shown = (people ?? [])
-    .filter((person) => !access || (person.user?.role ?? "NONE") === access)
+    .filter((person) => !access || (access === "admin" ? isAdmin(person.user) : isLawyer(person.user)))
     .filter((person) => !kind || (kind === "third-party") === Boolean(person.profile?.thirdParty))
     .filter((person) => !state || person.profile?.state === state)
     .filter((person) => !district || person.profile?.district?.toLowerCase() === district.toLowerCase())
@@ -559,7 +576,7 @@ export default function AdminStaff() {
       <PageTitle
         eyebrow="Team (Lawyers)"
         title="The firm's team"
-        description="Everyone at the firm. Add a person here with their photo, position and contact details, choose what they can open in the portal, and whether the website shows them. Lawyers see only the cases they are assigned to; admins and owners see everything."
+        description="Everyone at the firm. Add a person here with their photo, position and contact details, tick what they can open in the portal (Admin, Lawyer or both), and whether the website shows them. Lawyers see only the cases they are assigned to; admins see everything."
         actions={<Button onClick={() => setEditing("new")}>Add a person</Button>}
       />
 
@@ -572,7 +589,7 @@ export default function AdminStaff() {
             { key: "kind", label: "Lawyers", value: kind, options: KIND_FILTER, onChange: setKind },
             { key: "state", label: "State", value: state, options: stateOptions, onChange: (value) => { setState(value); setDistrict(""); } },
             { key: "district", label: "District", value: district, options: districtOptions, onChange: setDistrict },
-            { key: "access", label: "Access", value: access, options: ROLES.map(({ value, label }) => ({ value, label })), onChange: setAccess },
+            { key: "access", label: "Access", value: access, options: ACCESS_FILTER, onChange: setAccess },
             { key: "account", label: "Account", value: account, options: ACCOUNT_FILTER, onChange: setAccount },
             { key: "website", label: "Website", value: website, options: WEBSITE_FILTER, onChange: setWebsite },
           ]}
@@ -610,7 +627,6 @@ export default function AdminStaff() {
             <tbody>
               {shown.map((person) => {
                 const { user, profile } = person;
-                const role = ROLES.find((r) => r.value === (user?.role ?? "NONE"));
                 return (
                   <tr key={person.key} className={user && !user.isActive ? "opacity-60" : ""}>
                     <Td>
@@ -631,7 +647,9 @@ export default function AdminStaff() {
                       </div>
                     </Td>
                     <Td>
-                      <Badge tone={user?.role === "OWNER" ? "ink" : user?.role === "ADMIN" ? "gold" : user?.role === "LAWYER" ? "blue" : "grey"}>{role?.label}</Badge>
+                      <div className="flex flex-wrap gap-1">
+                        <AccessBadges user={user} />
+                      </div>
                       {user && !user.isActive && <div className="mt-1"><Badge tone="red">Deactivated</Badge></div>}
                     </Td>
                     <Td className="text-sm">{user ? user._count.assignments : "—"}</Td>
@@ -676,7 +694,6 @@ export default function AdminStaff() {
           <PersonForm
             person={editing === "new" ? null : editing}
             self={editing !== "new" && editing.user?.id === me.id}
-            canManageSenior={canManageSenior}
             onSaved={() => {
               setEditing(null);
               load();

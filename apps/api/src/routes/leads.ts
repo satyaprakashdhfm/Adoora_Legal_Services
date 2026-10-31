@@ -10,7 +10,7 @@ import { jobState, runTrending } from "../jobs/scheduler.js";
 import { AUTO_DRAFT_MIN_SCORE, DAILY_AUTO_DRAFTS, draftArticle, geminiConfigured, startOfTodayIst } from "../pipeline/draft.js";
 
 /**
- * Trending judgments and AI drafts, for the console (OWNER / ADMIN):
+ * Trending judgments and AI drafts, for the console (ADMIN):
  *
  *   GET   /api/admin/leads            leads of the last three days, urgent first
  *   PATCH /api/admin/leads/:id        shortlist / reject
@@ -20,7 +20,7 @@ import { AUTO_DRAFT_MIN_SCORE, DAILY_AUTO_DRAFTS, draftArticle, geminiConfigured
  */
 export const leadsRouter = Router();
 
-const adminOnly = [requireAuth, requireRole("OWNER", "ADMIN")];
+const adminOnly = [requireAuth, requireRole("ADMIN")];
 
 /** Each draft is a paid AI call with search; a stuck button should not run up a bill. */
 const draftLimiter = rateLimit({

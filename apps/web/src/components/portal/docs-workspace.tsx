@@ -61,7 +61,7 @@ function PencilIcon() {
  * Admin console → Documentation: the firm's guide to the system, kept here
  * so it stays current instead of drifting in a Word file. A chapter list on
  * the left (the open chapter shows its headings), the chapter on the right,
- * and an Edit button for owners and admins.
+ * and an Edit button for admins.
  */
 export function DocsWorkspace() {
   const [pages, setPages] = useState<DocPage[] | null>(null);

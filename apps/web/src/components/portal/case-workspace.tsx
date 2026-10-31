@@ -257,7 +257,7 @@ export function CaseWorkspace({ reference, user, basePath }: { reference: string
   );
 }
 
-/** Owners and administrators: delete the case, after a confirmation that lists what goes with it. */
+/** Administrators: delete the case, after a confirmation that lists what goes with it. */
 function DeleteCaseCard({ record, basePath }: { record: CaseDetail; basePath: string }) {
   const [open, setOpen] = useState(false);
   const files = record.documents.length;
@@ -290,7 +290,7 @@ function DeleteCaseCard({ record, basePath }: { record: CaseDetail; basePath: st
   );
 }
 
-type StaffOption = { id: string; name: string; role: string; isActive: boolean; phone?: string | null; email?: string | null };
+type StaffOption = { id: string; name: string; role: string; isLawyer: boolean; isActive: boolean; phone?: string | null; email?: string | null };
 
 function TeamCard({ record, onChange }: { record: CaseDetail; onChange: () => void }) {
   const [editing, setEditing] = useState(false);
@@ -301,7 +301,7 @@ function TeamCard({ record, onChange }: { record: CaseDetail; onChange: () => vo
   useEffect(() => {
     if (!editing) return;
     api<{ data: StaffOption[] }>("/admin/users")
-      .then((result) => setStaff(result.data.filter((u) => u.isActive && u.role !== "EDITOR")))
+      .then((result) => setStaff(result.data.filter((u) => u.isActive && u.isLawyer)))
       .catch((cause: Error) => setError(cause.message));
   }, [editing]);
 

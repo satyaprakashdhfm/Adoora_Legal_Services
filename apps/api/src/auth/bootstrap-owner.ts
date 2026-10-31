@@ -4,9 +4,9 @@ import { logger } from "../logger.js";
 
 /**
  * BOOTSTRAP_OWNER="email,mobile,name": at start-up, makes sure that person is
- * an active owner who can sign in at /admin/login with Google (the email) or
- * the mobile OTP (the number). Safe to leave set: it only ever creates the
- * account, or puts back its owner access, email and number.
+ * an active admin and lawyer who can sign in at /admin/login and /lawyer/login
+ * with Google (the email) or the mobile OTP (the number). Safe to leave set: it
+ * only ever creates the account, or puts back its access, email and number.
  */
 export async function bootstrapOwnerOnStartup() {
   if (!env.BOOTSTRAP_OWNER) return;
@@ -20,8 +20,8 @@ export async function bootstrapOwnerOnStartup() {
   try {
     const existing = email ? await prisma.user.findUnique({ where: { email } }) : null;
     const user = existing
-      ? await prisma.user.update({ where: { id: existing.id }, data: { role: "OWNER", isActive: true, ...(phone ? { phone } : {}) } })
-      : await prisma.user.create({ data: { email, phone, name, role: "OWNER" } });
+      ? await prisma.user.update({ where: { id: existing.id }, data: { role: "ADMIN", isLawyer: true, isActive: true, ...(phone ? { phone } : {}) } })
+      : await prisma.user.create({ data: { email, phone, name, role: "ADMIN", isLawyer: true } });
     logger.info({ userId: user.id }, "Bootstrap owner ready");
   } catch (error) {
     logger.error({ err: error }, "Bootstrap owner failed");

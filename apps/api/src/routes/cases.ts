@@ -49,12 +49,6 @@ export const casesRouter = Router();
 
 casesRouter.use(requireSignedIn);
 
-/** Editors work on content and have no business in case files. */
-casesRouter.use((req, _res, next) => {
-  const principal = req.principal!;
-  next(principal.kind === "staff" && principal.role === "EDITOR" ? notFound() : undefined);
-});
-
 const STATUS_LABELS: Record<string, string> = {
   INTAKE: "Intake",
   ACTIVE: "Active",
@@ -334,10 +328,10 @@ casesRouter.post("/", async (req, res) => {
 async function assertAssignable(userIds: string[]) {
   if (!userIds.length) return;
   const found = await prisma.user.count({
-    where: { id: { in: userIds }, isActive: true, role: { in: ["OWNER", "ADMIN", "LAWYER"] } },
+    where: { id: { in: userIds }, isActive: true, OR: [{ role: "LAWYER" }, { isLawyer: true }] },
   });
   if (found !== new Set(userIds).size) {
-    throw new HttpError(400, "Cases can only be assigned to active lawyers and administrators.", "bad_assignment");
+    throw new HttpError(400, "Cases can only be assigned to active team members ticked as lawyers.", "bad_assignment");
   }
 }
 

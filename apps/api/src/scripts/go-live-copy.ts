@@ -42,8 +42,8 @@ export async function copyForGoLiveOnStartup() {
     if (ganesh) {
       await prisma.user.upsert({
         where: { email: GANESH_EMAIL },
-        create: { ...ganesh, role: "OWNER", isActive: true, lastLoginAt: null },
-        update: { role: "OWNER", isActive: true },
+        create: { ...ganesh, role: "ADMIN", isLawyer: true, isActive: true, lastLoginAt: null },
+        update: { role: "ADMIN", isLawyer: true, isActive: true },
       });
     }
     const profile = await source.lawyerProfile.findUnique({ where: { slug: GANESH_SLUG } });
