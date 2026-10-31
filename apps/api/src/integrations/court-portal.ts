@@ -1,5 +1,7 @@
 import { randomUUID } from "node:crypto";
 import { parse, type HTMLElement } from "node-html-parser";
+import { fetch, ProxyAgent, type Dispatcher } from "undici";
+import { env } from "../env.js";
 import { logger } from "../logger.js";
 import { HttpError } from "../lib/http.js";
 import { date, isHighCourtCase, partyName, splitCaseType, splitRegistration, text, type CourtRecord } from "./court-record.js";
@@ -19,6 +21,10 @@ import { date, isHighCourtCase, partyName, splitCaseType, splitRegistration, tex
  * The request details come from the portals' own public JavaScript
  * (components.js, searchByCNR.js, main.php). When eCourts changes them, this
  * file is what needs updating; failures are logged with the step that broke.
+ *
+ * The courts refuse connections from the server's region, so requests go
+ * through the proxies in COURT_PROXIES (see `routes`). A lookup keeps the
+ * proxy it started on: the court ties its captcha to the address asking.
  */
 
 const DISTRICT = "https://services.ecourts.gov.in/ecourtindia_v6";
@@ -26,6 +32,8 @@ const HIGH_COURT = "https://hcservices.ecourts.gov.in/hcservices";
 const USER_AGENT =
   "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0 Safari/537.36";
 const TIMEOUT_MS = 30_000;
+/** Opening a lookup: short, so a dead proxy gives way to the next one quickly. */
+const OPEN_TIMEOUT_MS = 12_000;
 const SESSION_TTL_MS = 5 * 60 * 1000;
 
 export type Portal = "district" | "hc";
@@ -36,12 +44,32 @@ export function portalFor(cnr: string, courtName?: string | null): Portal {
 }
 
 // ---------------------------------------------------------------------------
+// Routes: each proxy in COURT_PROXIES, then a direct connection
+// ---------------------------------------------------------------------------
+
+type Route = { label: string; dispatcher?: Dispatcher };
+
+const routes: Route[] = [
+  ...env.COURT_PROXIES.map((url) => ({ label: new URL(url).host, dispatcher: new ProxyAgent(url) })),
+  { label: "direct" },
+];
+
+/** The route that last worked is tried first next time. */
+let preferred = 0;
+
+function routesToTry(): Route[] {
+  return [...routes.slice(preferred), ...routes.slice(0, preferred)];
+}
+
+type PortalResponse = Awaited<ReturnType<typeof fetch>>;
+
+// ---------------------------------------------------------------------------
 // Sessions (in memory — a captcha is only good for a minute or two anyway)
 // ---------------------------------------------------------------------------
 
 class CookieJar {
   private cookies = new Map<string, string>();
-  absorb(response: Response) {
+  absorb(response: PortalResponse) {
     for (const cookie of response.headers.getSetCookie()) {
       const pair = cookie.split(";")[0] ?? "";
       const at = pair.indexOf("=");
@@ -56,6 +84,7 @@ class CookieJar {
 type Session = {
   id: string;
   portal: Portal;
+  route: Route;
   cnr: string;
   caseId: string;
   owner: string;
@@ -85,8 +114,8 @@ function sessionFor(id: string, owner: string, caseId: string): Session {
 async function request(
   session: Session,
   url: string,
-  options: { form?: Record<string, string>; ajax?: boolean } = {},
-): Promise<Response> {
+  options: { form?: Record<string, string>; ajax?: boolean; timeoutMs?: number } = {},
+): Promise<PortalResponse> {
   const base = session.portal === "hc" ? HIGH_COURT : DISTRICT;
   const headers: Record<string, string> = {
     "User-Agent": USER_AGENT,
@@ -101,16 +130,17 @@ async function request(
   }
   if (options.ajax) Object.assign(headers, session.ajaxHeaders);
 
-  let response: Response;
+  let response: PortalResponse;
   try {
     response = await fetch(url, {
       method: options.form ? "POST" : "GET",
       headers,
       body: options.form ? new URLSearchParams(options.form).toString() : undefined,
-      signal: AbortSignal.timeout(TIMEOUT_MS),
+      signal: AbortSignal.timeout(options.timeoutMs ?? TIMEOUT_MS),
+      dispatcher: session.route.dispatcher,
     });
   } catch (error) {
-    logger.warn({ err: error, url: url.replace(/\?.*/, "") }, "Court portal unreachable");
+    logger.warn({ err: error, url: url.replace(/\?.*/, ""), route: session.route.label }, "Court portal unreachable");
     throw new HttpError(504, "The court's website is not responding. Please try again in a while.", "portal_unreachable");
   }
   session.jar.absorb(response);
@@ -175,33 +205,51 @@ export async function startPortalLookup(cnr: string, caseId: string, owner: stri
   sweep();
   // The person may pick the other website when the first says "no such case".
   const portal = chosen ?? portalFor(cnr, courtName);
-  const session: Session = {
-    id: randomUUID(),
-    portal,
-    cnr,
-    caseId,
-    owner,
-    jar: new CookieJar(),
-    appToken: "",
-    ajaxHeaders: {},
-    createdAt: Date.now(),
-    attempts: 0,
-  };
 
-  if (portal === "district") {
-    const home = await request(session, `${DISTRICT}/`);
+  // Each route in turn until one reaches the court; the last one's error is the answer.
+  let failure: unknown;
+  for (const route of routesToTry()) {
+    const session: Session = {
+      id: randomUUID(),
+      portal,
+      route,
+      cnr,
+      caseId,
+      owner,
+      jar: new CookieJar(),
+      appToken: "",
+      ajaxHeaders: {},
+      createdAt: Date.now(),
+      attempts: 0,
+    };
+    try {
+      const captcha = await openSession(session);
+      sessions.set(session.id, session);
+      preferred = routes.indexOf(route);
+      return { sessionId: session.id, portal, captcha };
+    } catch (error) {
+      failure = error;
+      const code = error instanceof HttpError ? error.code : null;
+      if (code !== "portal_unreachable" && code !== "portal_no_captcha") throw error;
+    }
+  }
+  throw failure;
+}
+
+/** The court website's first pages and its captcha, as its own page loads them. */
+async function openSession(session: Session): Promise<string> {
+  const timeoutMs = OPEN_TIMEOUT_MS;
+  if (session.portal === "district") {
+    const home = await request(session, `${DISTRICT}/`, { timeoutMs });
     const html = await home.text();
     session.appToken = html.match(/id=['"]app_token['"][^>]*value=['"]([^'"]*)['"]/)?.[1] ?? html.match(/value=['"]([^'"]*)['"][^>]*id=['"]app_token['"]/)?.[1] ?? "";
-    const js = await (await request(session, `${DISTRICT}/js/components.js`)).text();
+    const js = await (await request(session, `${DISTRICT}/js/components.js`, { timeoutMs })).text();
     session.ajaxHeaders = readAjaxHeaders(js);
     await districtAjax(session, "casestatus/getCaptcha", {}).catch(() => undefined);
   } else {
-    await request(session, `${HIGH_COURT}/main.php`);
+    await request(session, `${HIGH_COURT}/main.php`, { timeoutMs });
   }
-
-  const captcha = await captchaImage(session);
-  sessions.set(session.id, session);
-  return { sessionId: session.id, portal, captcha };
+  return captchaImage(session);
 }
 
 /** A fresh captcha image for the same session, when the first is unreadable. */
