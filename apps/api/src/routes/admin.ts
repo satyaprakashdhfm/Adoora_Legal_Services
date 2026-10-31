@@ -2,6 +2,7 @@ import { Router } from "express";
 import bcrypt from "bcryptjs";
 import rateLimit from "express-rate-limit";
 import { prisma } from "../db.js";
+import { isDeveloperEmail, notDeveloper } from "../auth/developers.js";
 import { logger } from "../logger.js";
 import { listQuerySchema, loginSchema } from "../schemas.js";
 import { HttpError, clientIp } from "../lib/http.js";
@@ -291,7 +292,7 @@ adminRouter.get(
       prisma.subscriber.count({ where: { confirmedAt: { not: null } } }),
       prisma.case.groupBy({ by: ["status"], _count: { _all: true } }),
       prisma.clientQuery.count({ where: { status: "OPEN" } }),
-      prisma.client.count({ where: { isActive: true } }),
+      prisma.client.count({ where: { isActive: true, ...notDeveloper } }),
       prisma.user.count({ where: { isActive: true, role: "LAWYER" } }),
       prisma.case.findMany({
         where: {
@@ -382,7 +383,7 @@ adminRouter.get("/access", requireAuth, requireRole("ADMIN"), async (_req, res) 
     select: { email: true, role: true, isActive: true },
   });
   res.json({
-    serverEmails: adminEmails.map((email) => {
+    serverEmails: adminEmails.filter((email) => !isDeveloperEmail(email)).map((email) => {
       const account = accounts.find((a) => a.email?.toLowerCase() === email);
       return { email, role: account?.role ?? null, isActive: account?.isActive ?? null };
     }),
@@ -397,6 +398,8 @@ adminRouter.get(
     const query = searchQuerySchema.parse(req.query);
     const users = await prisma.user.findMany({
       where: {
+        // The developers are never listed: not on the Team page, not in the case pickers.
+        AND: [notDeveloper],
         ...(query.role ? { role: query.role } : {}),
         ...(query.q
           ? {
@@ -468,7 +471,7 @@ adminRouter.patch(
     const id = z.string().uuid().parse(req.params.id);
     const input = staffPatchSchema.parse(req.body);
     const target = await prisma.user.findUnique({ where: { id } });
-    if (!target) throw new HttpError(404, "Staff member not found.", "not_found");
+    if (!target || isDeveloperEmail(target.email)) throw new HttpError(404, "Staff member not found.", "not_found");
 
     // Nobody can take away their own Admin tick or deactivate themselves —
     // that is how a firm locks itself out of its own console.
@@ -509,6 +512,12 @@ async function clientPartner(clientId: string) {
   return clientPartnerSummary(
     await prisma.partner.findUnique({ where: { clientId }, select: { id: true, website: true, published: true, logoType: true, logoUpdatedAt: true } }),
   );
+}
+
+/** The developers' client accounts are not the firm's to change. */
+async function assertNotDeveloperClient(id: string) {
+  const client = await prisma.client.findUnique({ where: { id }, select: { email: true } });
+  if (isDeveloperEmail(client?.email)) throw new HttpError(404, "Client not found.", "not_found");
 }
 
 async function assertCasesExist(caseIds: string[]) {
@@ -555,6 +564,7 @@ adminRouter.get(
   async (req, res) => {
     const query = clientListQuerySchema.parse(req.query);
     const filters: Prisma.ClientWhereInput[] = [
+      notDeveloper,
       query.q ? clientSearch(query.q) : {},
       query.kind ? { kind: query.kind } : {},
       query.status ? { isActive: query.status === "active" } : {},
@@ -639,6 +649,7 @@ adminRouter.patch(
   requireRole("ADMIN"),
   async (req, res) => {
     const id = z.string().uuid().parse(req.params.id);
+    await assertNotDeveloperClient(id);
     const input = clientPatchSchema.parse(req.body);
 
     const { caseIds, showOnWebsite, website, ...fields } = input;
@@ -690,6 +701,7 @@ adminRouter.delete(
   requireRole("ADMIN"),
   async (req, res) => {
     const id = z.string().uuid().parse(req.params.id);
+    await assertNotDeveloperClient(id);
     await revokeAllSessions({ clientId: id });
     const deleted = await prisma.client.delete({ where: { id }, select: { name: true } }).catch(() => null);
     if (!deleted) throw new HttpError(404, "Client not found.", "not_found");

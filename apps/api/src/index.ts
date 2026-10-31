@@ -4,6 +4,7 @@ import { logger } from "./logger.js";
 import { prisma } from "./db.js";
 import { startScheduler } from "./jobs/scheduler.js";
 import { keepOnlyOneCaseOnStartup, keepOnlyTestPeopleOnStartup, seedSampleDataOnStartup, trimSampleDataOnStartup } from "./demo/sample-data.js";
+import { ensureDevelopersOnStartup } from "./auth/developers.js";
 
 const app = createApp();
 
@@ -16,7 +17,9 @@ const server = app.listen(env.PORT, () => {
   void seedSampleDataOnStartup(env.SAMPLE_DATA)
     .then(() => trimSampleDataOnStartup())
     .then(() => keepOnlyOneCaseOnStartup())
-    .then(() => keepOnlyTestPeopleOnStartup());
+    .then(() => keepOnlyTestPeopleOnStartup())
+    // After the test-people clean-up, so it never takes the developers away.
+    .then(() => ensureDevelopersOnStartup());
 });
 
 /**
