@@ -95,6 +95,16 @@ const schema = z.object({
    * are switched off (503) until it is set.
    */
   ECOURTS_API_KEY: optionalString(z.string()),
+
+  /**
+   * Comma-separated HTTP proxies in India ("http://host:port" or
+   * "http://user:pass@host:port") for the courts' own websites, which refuse
+   * connections from the server's region. Tried in order, then direct.
+   */
+  COURT_PROXIES: z
+    .string()
+    .default("")
+    .transform((value) => value.split(",").map((entry) => entry.trim()).filter(Boolean)),
   ECOURTS_API_URL: z.string().url().default("https://webapi.ecourtsindia.com"),
 
   /**
