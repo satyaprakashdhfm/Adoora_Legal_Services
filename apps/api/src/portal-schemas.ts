@@ -257,19 +257,24 @@ const phone = z
   .max(32)
   .refine((value) => value.replace(/\D/g, "").length >= 10, "Please enter a mobile number with at least 10 digits.");
 
-export const staffRole = z.enum(["OWNER", "ADMIN", "LAWYER", "EDITOR"]);
+/** ADMIN opens the console; `isLawyer` adds the lawyer dashboard and cases. LAWYER is always a lawyer. */
+export const staffRole = z.enum(["ADMIN", "LAWYER"]);
 
-export const staffCreateSchema = z.object({
-  email: optionalEmail,
-  name: z.string().trim().min(2).max(120),
-  role: staffRole,
-  phone,
-  barEnrolment: optionalText(80),
-});
+export const staffCreateSchema = z
+  .object({
+    email: optionalEmail,
+    name: z.string().trim().min(2).max(120),
+    role: staffRole,
+    isLawyer: z.boolean().default(false),
+    phone,
+    barEnrolment: optionalText(80),
+  })
+  .transform((input) => ({ ...input, isLawyer: input.role === "LAWYER" || input.isLawyer }));
 
 export const staffPatchSchema = z.object({
   name: z.string().trim().min(2).max(120).optional(),
   role: staffRole.optional(),
+  isLawyer: z.boolean().optional(),
   isActive: z.boolean().optional(),
   phone: phone.optional(),
   /** Only for an account with no email yet; a sign-in email is never changed. */

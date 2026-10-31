@@ -29,7 +29,7 @@ function ProfileIcon({ className = "h-4 w-4" }: { className?: string }) {
  *
  * Signed out it is a "Login" button that opens the sign-in popup (mobile
  * OTP and Google), coming back to the current page afterwards. Signed in it becomes the account menu, with a link into the
- * right workspace: `/admin` for owners and admins, `/lawyer` for lawyers,
+ * right workspace: `/admin` for admins, `/lawyer` for lawyers,
  * `/dashboard` for clients.
  *
  * Until the session is known it renders the signed-out button, which is the

@@ -10,7 +10,7 @@ import { CourtCaptcha } from "@/components/portal/court-captcha";
 import { Button, ErrorNote, Field, Input, Modal, type ButtonTone } from "@/components/portal/ui";
 import { PeoplePicker, TeamPicker, personDetail, type TeamEntry } from "@/components/portal/people-picker";
 
-type Person = { id: string; name: string; email: string | null; phone?: string | null; role?: string; isActive: boolean };
+type Person = { id: string; name: string; email: string | null; phone?: string | null; role?: string; isLawyer?: boolean; isActive: boolean };
 
 /**
  * Opening a case, in a dialog, from either dashboard.
@@ -44,7 +44,7 @@ function NewCaseFlow({ admin, onDone }: { admin: boolean; onDone: (reference: st
 
   useEffect(() => {
     if (!admin) return;
-    api<{ data: Person[] }>("/admin/users").then((r) => setLawyers(r.data.filter((u) => u.isActive && u.role !== "EDITOR"))).catch(() => undefined);
+    api<{ data: Person[] }>("/admin/users").then((r) => setLawyers(r.data.filter((u) => u.isActive && u.isLawyer))).catch(() => undefined);
     api<{ data: Person[] }>("/admin/clients?limit=200").then((r) => setClients(r.data.filter((c) => c.isActive))).catch(() => undefined);
   }, [admin]);
 

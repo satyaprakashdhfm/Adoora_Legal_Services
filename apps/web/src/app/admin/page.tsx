@@ -97,7 +97,7 @@ export default function AdminOverview() {
         )}
       </Card>
 
-      {user.role === "OWNER" && <SampleDataCard />}
+      {user.role === "ADMIN" && <SampleDataCard />}
     </div>
   );
 }

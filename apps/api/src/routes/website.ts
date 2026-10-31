@@ -13,12 +13,12 @@ import type { Prisma } from "../../generated/prisma/client.js";
  * the lawyers it showcases, its job openings, and its partners' logos.
  *
  *   websitePublicRouter   /api/public/...   read-only, no sign-in, cacheable
- *   websiteAdminRouter    /api/admin/...    OWNER / ADMIN
+ *   websiteAdminRouter    /api/admin/...    ADMIN
  */
 export const websitePublicRouter = Router();
 export const websiteAdminRouter = Router();
 
-const adminOnly = [requireAuth, requireRole("OWNER", "ADMIN")];
+const adminOnly = [requireAuth, requireRole("ADMIN")];
 
 function slugify(value: string): string {
   return value

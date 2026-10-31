@@ -12,8 +12,8 @@ export { areaOfPath, type Area } from "@/lib/portal/api";
  * There are three areas, each with its own sign-in and its own session, and
  * one person may be signed in to all three at once:
  *
- *   /admin      owners, admins (and editors)          /admin/login
- *   /lawyer     lawyers, owners and admins: their cases /lawyer/login
+ *   /admin      admins                                 /admin/login
+ *   /lawyer     people ticked as lawyers: their cases  /lawyer/login
  *   /dashboard  clients (and the public site's header)  /login
  *
  * So the state is kept per area, and a page reads the area it belongs to.
@@ -71,7 +71,7 @@ export async function signOut() {
 }
 
 export function isFirmAdmin(user: State) {
-  return user?.kind === "staff" && (user.role === "OWNER" || user.role === "ADMIN");
+  return user?.kind === "staff" && user.role === "ADMIN";
 }
 
 export function areaOf(user: SessionUser): Area {

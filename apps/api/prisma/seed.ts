@@ -35,7 +35,7 @@ async function main() {
   if (existing) {
     await prisma.user.update({
       where: { email },
-      data: { name, role: "OWNER", isActive: true },
+      data: { name, role: "ADMIN", isActive: true },
     });
     console.log(`Owner account already existed; refreshed ${email}.`);
     return;
@@ -46,7 +46,7 @@ async function main() {
       email: email.toLowerCase(),
       name,
       passwordHash: await bcrypt.hash(password, 12),
-      role: "OWNER",
+      role: "ADMIN",
     },
   });
 

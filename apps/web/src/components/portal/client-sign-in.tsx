@@ -22,7 +22,7 @@ export const SIGN_IN_ERRORS: Record<string, string> = {
   signup_closed: "New accounts are created by the firm. Please contact us and we will set one up for you.",
   client_not_registered:
     "You are not registered as a client yet. Please contact us first: once you are onboarded, the firm will give you access to the client portal.",
-  use_admin_login: "This account is an owner's or administrator's. Please sign in at the admin console.",
+  use_admin_login: "This account is an administrator's. Please sign in at the admin console.",
   use_lawyer_login: "Lawyers sign in on the lawyer sign-in page.",
   not_staff: "This email is not registered with the firm. Please ask the firm's administrator to add you, or sign in as a client.",
   staff_not_registered: "This email or mobile number is not registered with the firm. Please ask the firm's administrator to add it on the Team page.",

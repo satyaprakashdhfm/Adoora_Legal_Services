@@ -20,10 +20,8 @@ datasource db {
 // ---------------------------------------------------------------------------
 
 enum UserRole {
-  OWNER // full access, can manage other users
-  ADMIN // manage cases, documents, clients, enquiries, applications, content
+  ADMIN // the console: cases, documents, clients, enquiries, applications, content, the team
   LAWYER // the cases they are assigned to
-  EDITOR // content only
 }
 
 /// A member of the firm. Clients are not users — see `Client`. Keeping the
@@ -42,7 +40,11 @@ model User {
   phone        String?
   /// Bar Council enrolment number, for advocates.
   barEnrolment String?
-  role         UserRole  @default(EDITOR)
+  /// ADMIN opens the console. A person ticked only as a lawyer is LAWYER.
+  role         UserRole  @default(LAWYER)
+  /// Signs in to the lawyer dashboard and can be put on cases. Always true
+  /// for LAWYER; an ADMIN who also practises has it too.
+  isLawyer     Boolean   @default(false)
   isActive     Boolean   @default(true)
   lastLoginAt  DateTime?
   createdAt    DateTime  @default(now())

@@ -100,12 +100,12 @@ const checkLimiter = rateLimit({
  * Team page, with a role allowed there, and active. Throws the reason otherwise.
  */
 async function staffForOtp(identity: VerifiedIdentity, audience: "admin" | "lawyer") {
-  const select = { id: true, email: true, name: true, role: true, isActive: true, avatarUrl: true, phone: true } as const;
+  const select = { id: true, email: true, name: true, role: true, isLawyer: true, isActive: true, avatarUrl: true, phone: true } as const;
   const matches =
     identity.kind === "email"
       ? await prisma.user.findMany({ where: { email: identity.email }, select })
       : (await prisma.user.findMany({ where: { phone: { not: null } }, select })).filter((u) => samePhone(u.phone, identity.digits));
-  const allowed = matches.filter((u) => staffAllowed(u.role, audience));
+  const allowed = matches.filter((u) => staffAllowed(u, audience));
   if (allowed.length === 0) {
     const code = matches.length ? "not_allowed_here" : "staff_not_registered";
     throw new HttpError(403, code, code);
@@ -249,10 +249,10 @@ authRouter.post("/login", loginLimiter, async (req, res) => {
 
   const existing = await prisma.user.findUnique({ where: { email: account.email } });
   const user = existing
-    ? existing.role === "OWNER" || existing.role === "ADMIN"
+    ? existing.role === "ADMIN" && existing.isLawyer
       ? existing
-      : await prisma.user.update({ where: { id: existing.id }, data: { role: "ADMIN" } })
-    : await prisma.user.create({ data: { email: account.email, name: account.name, role: "ADMIN" } });
+      : await prisma.user.update({ where: { id: existing.id }, data: { role: "ADMIN", isLawyer: true } })
+    : await prisma.user.create({ data: { email: account.email, name: account.name, role: "ADMIN", isLawyer: true } });
   if (!user.isActive) throw new HttpError(403, "account_inactive", "account_inactive");
   if (shared) await prisma.caseAssignment.createMany({ data: [{ caseId: shared.id, userId: user.id, role: "ASSOCIATE" }], skipDuplicates: true });
 
@@ -335,8 +335,8 @@ async function resolveAccount(identity: GoogleIdentity, audience: Audience): Pro
 
   if (staff) {
     if (!staff.isActive) throw new HttpError(403, "account_inactive");
-    // Owners, admins and editors at the console; lawyers, owners and admins at the lawyers' page.
-    if (!staffAllowed(staff.role, audience)) throw new HttpError(403, "not_allowed_here");
+    // Admins at the console; lawyers (and admins ticked as lawyers) at the lawyers' page.
+    if (!staffAllowed(staff, audience)) throw new HttpError(403, "not_allowed_here");
     // An email already linked to a different Google account is not taken over.
     if (staff.googleSub && staff.googleSub !== identity.sub) {
       throw new HttpError(403, "account_mismatch");
@@ -355,11 +355,11 @@ async function resolveAccount(identity: GoogleIdentity, audience: Audience): Pro
         name: identity.name,
         googleSub: identity.sub,
         avatarUrl: identity.picture,
-        role: "OWNER",
+        role: "ADMIN",
         lastLoginAt: now,
       },
     });
-    logger.info({ userId: owner.id }, "Bootstrapped owner account from ADMIN_EMAILS");
+    logger.info({ userId: owner.id }, "Bootstrapped admin account from ADMIN_EMAILS");
     return { kind: "staff", id: owner.id, role: owner.role };
   }
 
@@ -475,7 +475,7 @@ authRouter.post("/password", loginLimiter, async (req, res) => {
     throw new HttpError(401, "Incorrect email or password.", "invalid_credentials");
   }
   const area = req.body?.audience === "lawyer" ? "lawyer" : "admin";
-  if (!staffAllowed(user.role, area)) throw new HttpError(403, "This account cannot sign in here.", "not_allowed_here");
+  if (!staffAllowed(user, area)) throw new HttpError(403, "This account cannot sign in here.", "not_allowed_here");
 
   await prisma.user.update({ where: { id: user.id }, data: { lastLoginAt: new Date() } });
   await startSession(req, res, { userId: user.id }, "password", area);

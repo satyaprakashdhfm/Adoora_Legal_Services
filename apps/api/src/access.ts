@@ -7,22 +7,21 @@ import type { Prisma } from "../generated/prisma/client.js";
  * Who may see and change which cases and documents. Every case and document
  * query in the API goes through these scopes, so the rules live in one place:
  *
- *   OWNER, ADMIN  every case, every document, internal items included
- *   LAWYER        cases they are assigned to, internal items included
- *   EDITOR        no case access (content only)
- *   Client        cases they are linked to; only items marked CLIENT
+ *   ADMIN    every case, every document, internal items included
+ *   LAWYER   cases they are assigned to, internal items included
+ *   Client   cases they are linked to; only items marked CLIENT
  *
  * A case outside the caller's scope is reported as not found, not as
  * forbidden, so references cannot be probed to learn which ones exist.
  */
 
 export function isFirmAdmin(principal: Principal | undefined): boolean {
-  return principal?.kind === "staff" && (principal.role === "OWNER" || principal.role === "ADMIN");
+  return principal?.kind === "staff" && principal.role === "ADMIN";
 }
 
-/** Staff who work on cases (everyone but EDITOR). */
+/** Staff who work on cases (every team member who signs in). */
 export function isCaseStaff(principal: Principal | undefined): boolean {
-  return principal?.kind === "staff" && principal.role !== "EDITOR";
+  return principal?.kind === "staff";
 }
 
 /** A where-clause matching exactly the cases the caller may see. */
@@ -32,7 +31,6 @@ export function caseScope(principal: Principal): Prisma.CaseWhereInput {
   }
 
   switch (principal.role) {
-    case "OWNER":
     case "ADMIN":
       return {};
     case "LAWYER":

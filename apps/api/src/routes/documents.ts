@@ -298,7 +298,6 @@ documentsRouter.post("/team", uploadMiddleware, async (req, res) => {
 
 documentsRouter.get("/", async (req, res) => {
   const principal = req.principal!;
-  if (principal.kind === "staff" && principal.role === "EDITOR") throw notFound("document");
   const query = documentListSchema.parse(req.query);
 
   const filters: Prisma.DocumentWhereInput[] = [documentScope(principal)];

@@ -20,8 +20,8 @@ import { DEFAULT_DOC_PAGES } from "../docs/default-pages.js";
  */
 export const docsRouter = Router();
 
-const readers = [requireAuth, requireRole("OWNER", "ADMIN", "EDITOR")];
-const editors = [requireAuth, requireRole("OWNER", "ADMIN")];
+const readers = [requireAuth, requireRole("ADMIN")];
+const editors = [requireAuth, requireRole("ADMIN")];
 
 const SEED_DIR = new URL("../../docs-seed/", import.meta.url);
 
@@ -204,7 +204,7 @@ async function syncGuide() {
 docsRouter.get("/docs", ...readers, async (req, res) => {
   await syncGuide();
   const pages = await prisma.docPage.findMany({ orderBy: [{ position: "asc" }, { createdAt: "asc" }], select: pageSelect });
-  res.json({ pages, canEdit: req.auth!.role === "OWNER" || req.auth!.role === "ADMIN" });
+  res.json({ pages, canEdit: req.auth!.role === "ADMIN" });
 });
 
 const pageBody = z.object({

@@ -6,7 +6,7 @@ export const metadata: Metadata = {
   robots: { index: false, follow: false },
 };
 
-/** The console's sign-in: owners and admins. Lawyers sign in at /lawyer/login, clients at /login. */
+/** The console's sign-in: admins. Lawyers sign in at /lawyer/login, clients at /login. */
 export default async function AdminLoginPage({ searchParams }: PageProps<"/admin/login">) {
   const params = await searchParams;
   const error = typeof params.error === "string" ? params.error : null;

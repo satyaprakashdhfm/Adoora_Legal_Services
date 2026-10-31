@@ -9,16 +9,16 @@ import { ClientSignIn } from "@/components/portal/client-sign-in";
  * signing in here never signs anyone out of another area.
  *
  *   /login          clients: any mobile number or Gmail; new ones sign up
- *   /lawyer/login   lawyers (and owners and admins, for their own cases):
+ *   /lawyer/login   people ticked as lawyers, for their own cases:
  *                   a mobile number or Gmail registered on the Team page
- *   /admin/login    owners, admins and editors: the same, registered only
+ *   /admin/login    admins: the same, registered only
  *
  * The console's page is reached only by its address: the other two do not
  * link to it. Staff password sign-in still exists on the API
  * (`POST /api/auth/password`) for emergencies, but is not offered here.
  */
 const TITLES: Record<Area, { title: string; lead: string }> = {
-  admin: { title: "Admin console", lead: "For the firm's owners, administrators and editors." },
+  admin: { title: "Admin console", lead: "For the firm's administrators." },
   lawyer: { title: "Lawyer sign in", lead: "Your assigned cases: court updates, documents and client queries." },
   client: { title: "Client sign in", lead: "Follow your cases, documents and queries." },
 };

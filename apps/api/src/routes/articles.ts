@@ -13,7 +13,7 @@ import type { Prisma } from "../../generated/prisma/client.js";
  * later, drafted by the judgments pipeline for a person to review).
  *
  *   articlesPublicRouter  /api/public/articles…   published only, cacheable
- *   articlesAdminRouter   /api/admin/articles…    OWNER / ADMIN
+ *   articlesAdminRouter   /api/admin/articles…    ADMIN
  *
  * The body is a list of blocks — the same small vocabulary the website's
  * bundled articles use (paragraph, headings, lists, quote) plus images.
@@ -23,7 +23,7 @@ import type { Prisma } from "../../generated/prisma/client.js";
 export const articlesPublicRouter = Router();
 export const articlesAdminRouter = Router();
 
-const adminOnly = [requireAuth, requireRole("OWNER", "ADMIN")];
+const adminOnly = [requireAuth, requireRole("ADMIN")];
 
 // ---------------------------------------------------------------------------
 // Shapes

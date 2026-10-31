@@ -6,7 +6,7 @@ import { ARTICLES_TAG, JOBS_TAG, PARTNERS_TAG, PEOPLE_TAG } from "@/lib/website-
  * console after it saves a lawyer profile, a job opening or a partner, so the public
  * pages show the change on their next visit instead of within five minutes.
  *
- * Only an owner or admin may call it: the caller's session cookie is passed
+ * Only an admin may call it: the caller's session cookie is passed
  * to the API's /auth/me and the role checked there.
  */
 const apiOrigin = (process.env.API_INTERNAL_URL ?? process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:4000").replace(/\/$/, "");
@@ -22,7 +22,7 @@ export async function POST(request: Request) {
     .catch(() => null);
 
   const role = me?.user?.kind === "staff" ? me.user.role : null;
-  if (role !== "OWNER" && role !== "ADMIN") {
+  if (role !== "ADMIN") {
     return Response.json({ error: "forbidden" }, { status: 403 });
   }
 

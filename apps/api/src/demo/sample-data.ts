@@ -748,7 +748,7 @@ export async function trimSampleData() {
  * nobody already on a case is taken off it.
  */
 export async function shareCasesForTesting() {
-  const staff = (await prisma.user.findMany({ where: { isActive: true, role: { in: ["OWNER", "ADMIN", "LAWYER"] }, ...notDemo }, select: { id: true } })).map((u) => u.id);
+  const staff = (await prisma.user.findMany({ where: { isActive: true, AND: [{ OR: [{ role: "LAWYER" }, { isLawyer: true }] }, notDemo] }, select: { id: true } })).map((u) => u.id);
   const clients = (await prisma.client.findMany({ where: { isActive: true, ...notDemo }, select: { id: true } })).map((c) => c.id);
   const cases = await prisma.case.findMany({
     select: { id: true, reference: true, _count: { select: { assignments: true, clients: true } } },
@@ -867,7 +867,7 @@ export async function keepOnlyTestPeopleOnStartup() {
     const clients = await prisma.client.deleteMany({
       where: { OR: [{ email: null }, { email: { not: TEST_CLIENT.email } }], partner: { is: null } },
     });
-    await prisma.user.updateMany({ where: { email: "info@adooralegalservices.com" }, data: { role: "OWNER" } });
+    await prisma.user.updateMany({ where: { email: "info@adooralegalservices.com" }, data: { role: "ADMIN", isLawyer: true } });
 
     const summary = { staff: staff.count, profiles: profiles.count, clients: clients.count };
     await prisma.auditLog.create({ data: { action: "accounts.test_only", entityType: "User", metadata: summary } });
