@@ -55,96 +55,6 @@ type StaffRow = {
 
 type Person = { key: string; user: StaffRow | null; profile: LawyerProfile | null };
 
-type ServerEmail = { email: string; role: StaffRole | null; isActive: boolean | null };
-
-/**
- * Who can sign in where, by email: the admin console (people ticked Admin),
- * the lawyers' dashboard (people ticked Lawyer), and the emails the server
- * itself admits as admins (ADMIN_EMAILS). A lawyer who helps run the firm is
- * ticked as both.
- */
-function SignInAccess({ users }: { users: StaffRow[] }) {
-  const [serverEmails, setServerEmails] = useState<ServerEmail[] | null>(null);
-  useEffect(() => {
-    api<{ serverEmails: ServerEmail[] }>("/admin/access")
-      .then((result) => setServerEmails(result.serverEmails))
-      .catch(() => setServerEmails([]));
-  }, []);
-
-  const active = users.filter((u) => u.isActive);
-  const consoleUsers = active.filter(isAdmin);
-  const lawyers = active.filter(isLawyer);
-  const pending = (serverEmails ?? []).filter((entry) => !entry.role);
-
-  const row = (u: StaffRow) => (
-    <li key={u.id} className="flex flex-wrap items-center justify-between gap-2 py-2.5">
-      <div className="min-w-0">
-        <p className="truncate text-sm font-semibold text-ink">{u.email}</p>
-        <p className="text-xs text-slate">
-          {u.name} · {u.lastLoginAt ? `last signed in ${formatDate(u.lastLoginAt)}` : "has not signed in yet"}
-        </p>
-      </div>
-      <div className="flex gap-1">
-        <AccessBadges user={u} />
-      </div>
-    </li>
-  );
-
-  return (
-    <Card>
-      <div className="border-b border-line px-5 py-4">
-        <h2 className="font-serif text-lg font-semibold text-ink">Who can sign in</h2>
-        <p className="mt-1 text-sm text-slate">
-          Access goes by email and the Admin and Lawyer ticks. To give someone access, add them below or change their ticks with Edit.
-        </p>
-      </div>
-      <div className="grid gap-6 p-5 lg:grid-cols-2">
-        <section>
-          <h3 className="text-sm font-semibold text-ink">
-            Admin console <span className="font-normal text-slate">· /admin/login</span>
-          </h3>
-          <p className="mt-0.5 text-xs text-slate">Admins see every case and manage the website and the team.</p>
-          {consoleUsers.length ? (
-            <ul className="mt-2 divide-y divide-line">{consoleUsers.map(row)}</ul>
-          ) : (
-            <p className="mt-2 text-sm text-slate">No one yet.</p>
-          )}
-          {pending.length > 0 && (
-            <div className="mt-3 rounded-lg border border-line bg-paper-warm px-3.5 py-3">
-              <p className="text-xs font-semibold text-ink">Also allowed by the server settings (ADMIN_EMAILS)</p>
-              <ul className="mt-1.5 space-y-1">
-                {pending.map((entry) => (
-                  <li key={entry.email} className="text-sm text-ink-soft">
-                    {entry.email} <span className="text-xs text-slate">· becomes an Admin on first Google sign-in</span>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          )}
-        </section>
-
-        <section>
-          <h3 className="text-sm font-semibold text-ink">
-            Lawyer dashboard <span className="font-normal text-slate">· /lawyer/login</span>
-          </h3>
-          <p className="mt-0.5 text-xs text-slate">Everyone ticked Lawyer: each sees only the cases assigned to them here.</p>
-          {lawyers.length ? (
-            <ul className="mt-2 divide-y divide-line">{lawyers.map(row)}</ul>
-          ) : (
-            <p className="mt-2 text-sm text-slate">No lawyers yet.</p>
-          )}
-        </section>
-      </div>
-      <p className="border-t border-line px-5 py-3.5 text-xs leading-relaxed text-slate">
-        Sign-in is by the email (Gmail) or mobile number saved on each person below. The three sign-ins are independent: someone
-        ticked as both can be signed in to the admin console, the lawyer dashboard and, with a client account, the client dashboard at
-        the same time. A lawyer who also runs the firm: tick both <strong className="text-ink">Admin</strong> and{" "}
-        <strong className="text-ink">Lawyer</strong>. Deactivated people are not listed.
-      </p>
-    </Card>
-  );
-}
-
 const isAdmin = (user: StaffRow | null | undefined) => user?.role === "ADMIN";
 const isLawyer = (user: StaffRow | null | undefined) => Boolean(user && (user.role === "LAWYER" || user.isLawyer));
 
@@ -579,8 +489,6 @@ export default function AdminStaff() {
         description="Everyone at the firm. Add a person here with their photo, position and contact details, tick what they can open in the portal (Admin, Lawyer or both), and whether the website shows them. Lawyers see only the cases they are assigned to; admins see everything."
         actions={<Button onClick={() => setEditing("new")}>Add a person</Button>}
       />
-
-      {users && <SignInAccess users={users} />}
 
       <Card>
         <ListToolbar
