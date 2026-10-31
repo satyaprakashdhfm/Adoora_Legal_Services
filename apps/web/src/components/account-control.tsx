@@ -35,7 +35,7 @@ function ProfileIcon({ className = "h-4 w-4" }: { className?: string }) {
  * Until the session is known it renders the signed-out button, which is the
  * right answer for nearly every visitor and avoids an empty gap.
  *
- * - `nav`     desktop, beside "Enquiry"
+ * - `nav`     desktop, beside "Contact Us"
  * - `compact` mobile, an icon beside the menu button
  * - `drawer`  inside the mobile menu
  */

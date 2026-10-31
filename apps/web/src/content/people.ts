@@ -71,7 +71,7 @@ export const people: Person[] = [
     photo: "person-ganesh-raghavendra",
     spotlight: {
       summary:
-        "Adv. K. L. Ganesh Raghavendra leads the firm's litigation and advisory practice, advising businesses and individuals on commercial disputes, corporate matters and regulatory questions before courts and tribunals across South India. He founded ADOORA Legal Services on a simple idea: candid advice, careful preparation, and a client who always knows where their case stands.",
+        "Ganesh built ADOORA Legal Services on the belief that good legal counsel should be clear, accessible and dependable. Leading the firm's litigation and advisory practice, he works closely with every client, explaining their options plainly and pursuing their interests with diligence and integrity.",
     },
   },
   {

@@ -57,7 +57,7 @@ export default async function ContactPage() {
 
             <p className="eyebrow inline-flex items-center gap-2.5 text-gold-bright">
               <span aria-hidden="true" className="h-px w-8 bg-gold-bright/60" />
-              Enquiry
+              Contact Us
             </p>
             <h2 className="mt-4 font-serif text-2xl font-semibold tracking-tight text-white sm:text-3xl">
               Send an Enquiry
