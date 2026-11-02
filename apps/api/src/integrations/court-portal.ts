@@ -140,7 +140,18 @@ async function request(
       dispatcher: session.route.dispatcher,
     });
   } catch (error) {
-    logger.warn({ err: error, url: url.replace(/\?.*/, ""), route: session.route.label }, "Court portal unreachable");
+    const err = error as { name?: string; message?: string; cause?: { code?: string; message?: string } };
+    logger.warn(
+      {
+        url: url.replace(/\?.*/, ""),
+        route: session.route.label,
+        cnr: session.cnr,
+        // "TimeoutError" = no answer in time; cause.code says how the connection broke (ECONNRESET, UND_ERR_CONNECT_TIMEOUT …).
+        reason: err?.name === "TimeoutError" ? "timeout" : (err?.cause?.code ?? err?.message ?? String(error)),
+        detail: err?.cause?.message ?? err?.message,
+      },
+      "Court portal unreachable",
+    );
     throw new HttpError(504, "The court's website is not responding. Please try again in a while.", "portal_unreachable");
   }
   session.jar.absorb(response);
@@ -207,8 +218,12 @@ export async function startPortalLookup(cnr: string, caseId: string, owner: stri
   const portal = chosen ?? portalFor(cnr, courtName);
 
   // Each route in turn until one reaches the court; the last one's error is the answer.
+  // One log line per lookup says which route gave the captcha, or how each one failed.
   let failure: unknown;
+  const started = Date.now();
+  const tried: { route: string; ms: number; error: string }[] = [];
   for (const route of routesToTry()) {
+    const routeStarted = Date.now();
     const session: Session = {
       id: randomUUID(),
       portal,
@@ -226,13 +241,25 @@ export async function startPortalLookup(cnr: string, caseId: string, owner: stri
       const captcha = await openSession(session);
       sessions.set(session.id, session);
       preferred = routes.indexOf(route);
+      logger.info(
+        { cnr, portal, route: route.label, ms: Date.now() - routeStarted, totalMs: Date.now() - started, failedFirst: tried },
+        "Court portal: captcha ready",
+      );
       return { sessionId: session.id, portal, captcha };
     } catch (error) {
       failure = error;
       const code = error instanceof HttpError ? error.code : null;
-      if (code !== "portal_unreachable" && code !== "portal_no_captcha") throw error;
+      tried.push({ route: route.label, ms: Date.now() - routeStarted, error: code ?? String(error) });
+      if (code !== "portal_unreachable" && code !== "portal_no_captcha") {
+        logger.error({ err: error, cnr, portal, route: route.label, tried }, "Court portal: lookup failed");
+        throw error;
+      }
     }
   }
+  logger.error(
+    { cnr, portal, totalMs: Date.now() - started, tried, proxies: env.COURT_PROXIES.length },
+    "Court portal: no route reached the court — every proxy and the direct connection failed",
+  );
   throw failure;
 }
 
@@ -290,24 +317,35 @@ export async function submitPortalCaptcha(sessionId: string, caseId: string, own
   if (session.portal === "district") {
     const { body, raw } = await districtAjax(session, "cnr_status/searchByCNR/", { cino: session.cnr, fcaptcha_code: typed });
     const status = body ? Number(body.status) : NaN;
-    if (status === 0 || /invalid captcha/i.test(raw)) return { ok: false, reason: "captcha", captcha: await captchaImage(session) };
+    if (status === 0 || /invalid captcha/i.test(raw)) {
+      logger.info({ cnr: session.cnr, portal: session.portal, route: session.route.label, attempt: session.attempts }, "Court portal: wrong captcha");
+      return { ok: false, reason: "captcha", captcha: await captchaImage(session) };
+    }
     html = typeof body?.casetype_list === "string" ? body.casetype_list : "";
   } else {
     const response = await request(session, `${HIGH_COURT}/cases_qry/index_qry.php`, {
       form: { captcha: typed, cino: session.cnr, appFlag: "web", action_code: "fetchStateDistCourtNew", caseStatusSearchType: "CNRNumber" },
     });
     html = (await response.text()).trim();
-    if (/^invalid captcha$/i.test(html)) return { ok: false, reason: "captcha", captcha: await captchaImage(session) };
+    if (/^invalid captcha$/i.test(html)) {
+      logger.info({ cnr: session.cnr, portal: session.portal, route: session.route.label, attempt: session.attempts }, "Court portal: wrong captcha");
+      return { ok: false, reason: "captcha", captcha: await captchaImage(session) };
+    }
     if (html === "THERE IS AN ERROR") html = "";
   }
 
   if (!html || html.length < 200 || /does not exist|record not found|not found/i.test(html.slice(0, 400))) {
     sessions.delete(session.id);
+    logger.info({ cnr: session.cnr, portal: session.portal, route: session.route.label, bytes: html.length }, "Court portal: no case with this CNR");
     throw new HttpError(404, "The court's website has no case with this CNR.", "portal_not_found");
   }
 
   const record = readCasePage(html, session.portal);
   const orders = readOrders(html, session.portal);
+  logger.info(
+    { cnr: session.cnr, portal: session.portal, route: session.route.label, hearings: record.hearings.length, orders: orders.length },
+    "Court portal: case fetched",
+  );
   if (!record.hearings.length && !orders.length) {
     logger.warn({ portal: session.portal, bytes: html.length }, "Court portal: case page had nothing we could read — layout may have changed");
   }
