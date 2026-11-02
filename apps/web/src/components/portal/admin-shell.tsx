@@ -51,7 +51,8 @@ const NAV: { title: string; items: NavItem[] }[] = [
   },
 ];
 
-const AUDIT: NavItem = { href: "/admin/audit", label: "Audit log", icon: "M10 3a7 7 0 110 14 7 7 0 010-14zM10 6.5V10l2.5 2" };
+// Audit log hidden from the console for now; the API still records every entry.
+// const AUDIT: NavItem = { href: "/admin/audit", label: "Audit log", icon: "M10 3a7 7 0 110 14 7 7 0 010-14zM10 6.5V10l2.5 2" };
 const DOCS: NavItem = { href: "/admin/docs", label: "Documentation", icon: "M4 4.5A1.5 1.5 0 015.5 3H16v12H5.5A1.5 1.5 0 004 16.5zM4 16.5A1.5 1.5 0 005.5 18H16M7.5 6.5h5M7.5 9h5" };
 
 function NavIcon({ d }: { d: string }) {
@@ -139,7 +140,7 @@ export function AdminShell({ children }: { children: ReactNode }) {
 
               <div className="mt-5 space-y-0.5 border-t border-white/10 pt-4">
                 <NavLink item={DOCS} pathname={pathname} />
-                <NavLink item={AUDIT} pathname={pathname} muted />
+                {/* <NavLink item={AUDIT} pathname={pathname} muted /> */}
               </div>
             </nav>
 
